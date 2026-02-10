@@ -27,16 +27,26 @@ interface ScanData {
 
 interface V2PipelineResult {
   discogs_id?: number | null;
+  discogs_url?: string | null;
   status: string;
   confidence_score?: number | null;
-  artist?: string;
-  title?: string;
-  artwork_url?: string;
-  country?: string;
-  year?: number;
+  artist?: string | null;
+  title?: string | null;
+  artwork_url?: string | null;
+  country?: string | null;
+  year?: number | null;
+  label?: string | null;
+  catalog_number?: string | null;
+  barcode?: string | null;
+  matrix_number?: string | null;
+  format?: string | null;
+  genre?: string | null;
   suggestions?: V2Suggestion[];
   rights_society_exclusions?: string[];
-  audit_entries?: string[];
+  audit_entries?: any[];
+  pricing_stats?: PricingData | null;
+  verification?: { status: string; score: number; confirmations?: string[] } | null;
+  match_status?: string;
 }
 
 interface V2Suggestion {
@@ -146,24 +156,39 @@ export function ScanChatTab() {
 
       if (error) throw error;
 
+      console.log('📊 V2 pipeline raw response:', JSON.stringify(data, null, 2).slice(0, 2000));
+
       // Edge function returns { success, result: { discogs_id, ... } }
       const result = data?.result || data;
 
+      // Extract rights society exclusions from collector_audit
+      const auditEntries = result?.collector_audit || [];
+      const rsExclusions = auditEntries
+        .filter((a: any) => a.detail?.includes('⛔'))
+        .map((a: any) => a.detail);
+
       return {
         discogs_id: result?.discogs_id || null,
-        status: result?.match_status || result?.status || 'no_match',
+        discogs_url: result?.discogs_url || null,
+        status: result?.match_status || 'no_match',
         confidence_score: result?.confidence_score || null,
         artist: result?.artist || null,
         title: result?.title || null,
         artwork_url: result?.artwork_url || null,
         country: result?.country || null,
         year: result?.year || null,
+        label: result?.label || null,
+        catalog_number: result?.catalog_number || null,
+        barcode: result?.barcode || null,
+        matrix_number: result?.matrix_number || null,
+        format: result?.format || null,
+        genre: result?.genre || null,
         suggestions: result?.suggestions || [],
-        rights_society_exclusions: result?.rights_society_exclusions || 
-          (result?.collector_audit || [])
-            .filter((a: any) => a.step?.includes('rights_society') || a.detail?.includes('⛔'))
-            .map((a: any) => a.detail),
-        audit_entries: result?.collector_audit || [],
+        rights_society_exclusions: rsExclusions,
+        audit_entries: auditEntries,
+        pricing_stats: result?.pricing_stats || null,
+        verification: result?.verification || null,
+        match_status: result?.match_status || null,
       };
     } catch (err) {
       console.error('V2 pipeline error:', err);
@@ -360,17 +385,27 @@ export function ScanChatTab() {
         // Remove loading message
         setMessages(prev => prev.filter(m => !m.content.includes('Scanner-pipeline gestart')));
 
-        if (v2Result && v2Result.discogs_id && (v2Result.status === 'single_match' || v2Result.status === 'verified' || v2Result.status === 'likely' || v2Result.status === 'suggested_match' || v2Result.status === 'multiple_candidates')) {
+        if (v2Result && v2Result.discogs_id) {
           // ── MATCH FOUND ──
-          const statusEmoji = (v2Result.status === 'single_match' || v2Result.status === 'verified') ? '✅' : v2Result.status === 'likely' ? '🟡' : '🔵';
-          const statusLabel = (v2Result.status === 'single_match' || v2Result.status === 'verified') ? 'Geverifieerd' : v2Result.status === 'likely' ? 'Waarschijnlijk correct' : 'Voorgestelde match';
+          const isVerified = v2Result.verification?.status === 'verified' || v2Result.status === 'single_match';
+          const isLikely = v2Result.verification?.status === 'likely' || v2Result.status === 'multiple_candidates';
+          const statusEmoji = isVerified ? '✅' : isLikely ? '🟡' : '🔵';
+          const statusLabel = isVerified ? 'Geverifieerd' : isLikely ? 'Waarschijnlijk correct' : 'Voorgestelde match';
 
           let resultMsg = `${statusEmoji} **${statusLabel}** — **${v2Result.artist} - ${v2Result.title}**\n`;
+          if (v2Result.label) resultMsg += `🏷️ ${v2Result.label}`;
+          if (v2Result.catalog_number) resultMsg += ` (${v2Result.catalog_number})`;
+          if (v2Result.label || v2Result.catalog_number) resultMsg += `\n`;
           if (v2Result.country || v2Result.year) {
             resultMsg += `📀 ${v2Result.country || ''}${v2Result.year ? ` (${v2Result.year})` : ''}\n`;
           }
           resultMsg += `📊 Confidence: ${((v2Result.confidence_score || 0) * 100).toFixed(0)}%\n`;
           resultMsg += `🔗 [Bekijk op Discogs](https://www.discogs.com/release/${v2Result.discogs_id})\n`;
+
+          // Show verification details
+          if (v2Result.verification?.confirmations?.length) {
+            resultMsg += `\n🔒 **Verificatie:** ${v2Result.verification.confirmations.join(', ')}\n`;
+          }
 
           // Show rights society exclusions
           if (v2Result.rights_society_exclusions && v2Result.rights_society_exclusions.length > 0) {
@@ -380,16 +415,12 @@ export function ScanChatTab() {
             }
           }
 
-          // Fetch pricing
-          const { data: pricingResp } = await supabase.functions.invoke('fetch-discogs-pricing', {
-            body: { discogs_id: v2Result.discogs_id }
-          });
-
+          // Use pricing_stats from V2 response (already fetched by the edge function)
           const pricing: PricingData = {
-            lowest_price: pricingResp?.lowest_price || null,
-            median_price: pricingResp?.median_price || null,
-            highest_price: pricingResp?.highest_price || null,
-            num_for_sale: pricingResp?.num_for_sale || null,
+            lowest_price: v2Result.pricing_stats?.lowest_price || null,
+            median_price: v2Result.pricing_stats?.median_price || null,
+            highest_price: v2Result.pricing_stats?.highest_price || null,
+            num_for_sale: v2Result.pricing_stats?.num_for_sale || null,
           };
 
           if (pricing.lowest_price || pricing.median_price || pricing.highest_price) {

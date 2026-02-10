@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Send, Loader2, MessageCircle, Disc3, Disc, RotateCcw, Camera, Upload, X, CheckCircle } from 'lucide-react';
+import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,108 +10,87 @@ import ReactMarkdown from 'react-markdown';
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  images?: string[]; // preview URLs for display
 }
 
 const SUPABASE_URL = "https://ssxbpyqnjfiyubsuonar.supabase.co";
-
-const PHOTO_LABELS: Record<string, string[]> = {
-  vinyl: ['Voorkant hoes', 'Achterkant hoes', 'Label (plaat)'],
-  cd: ['Voorkant', 'Achterkant', 'CD Label', 'Binnenkant booklet'],
-};
 
 export function ScanChatTab() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: `🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets weten over een **CD** of **LP**? Ik help je de exacte release te vinden!\n\nKies hieronder wat je hebt, dan vraag ik je om een paar foto's.`,
+      content: `🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets weten over een **CD** of **LP**?\n\nKies hieronder wat je hebt 👇`,
     },
   ]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
 
-  // Media & photo state
   const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | ''>('');
-  const [files, setFiles] = useState<File[]>([]);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
-  const [photosUploaded, setPhotosUploaded] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, pendingFiles]);
 
-  const requiredCount = mediaType === 'vinyl' ? 3 : mediaType === 'cd' ? 4 : 0;
-  const labels = mediaType ? PHOTO_LABELS[mediaType] || [] : [];
-
-  // When user picks media type, Magic Mike responds
   const pickMediaType = (type: 'vinyl' | 'cd') => {
     setMediaType(type);
     const label = type === 'vinyl' ? 'vinyl plaat' : 'CD';
-    const count = type === 'vinyl' ? 3 : 4;
-    const photoNames = PHOTO_LABELS[type].join(', ');
-
     setMessages(prev => [
       ...prev,
       { role: 'user', content: type === 'vinyl' ? '🎵 Vinyl' : '💿 CD' },
       {
         role: 'assistant',
-        content: `Top! Een ${label} dus. 📸\n\nUpload ${count} foto's zodat ik je kan helpen:\n**${photoNames}**\n\nGebruik de upload-vakjes hieronder 👇`,
+        content: `Top, een ${label}! 📸\n\nUpload je foto's — hoe meer hoe beter! Voorkant, achterkant, label, matrix... Alles helpt.\n\nKlik op het 📷 icoon hieronder om foto's te selecteren.`,
       },
     ]);
   };
 
-  // File handling
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const file = e.target.files?.[0];
-    if (!file || !file.type.startsWith('image/')) return;
-    if (file.size > 10 * 1024 * 1024) return;
-
-    setFiles(prev => {
-      const next = [...prev];
-      next[index] = file;
-      return next;
-    });
-
-    if (inputRefs.current[index]) {
-      inputRefs.current[index]!.value = '';
-    }
+  // Handle multi-file select
+  const handleFilesSelected = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/') && f.size <= 10 * 1024 * 1024);
+    if (selected.length === 0) return;
+    setPendingFiles(prev => [...prev, ...selected]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
-  const removeFile = useCallback((index: number) => {
-    setFiles(prev => {
-      const next = [...prev];
-      next.splice(index, 1);
-      return next;
-    });
+  const removePendingFile = useCallback((index: number) => {
+    setPendingFiles(prev => prev.filter((_, i) => i !== index));
   }, []);
 
-  // Upload & start analysis
-  const uploadAndAnalyze = async () => {
-    if (files.length === 0 || !mediaType) return;
+  // Upload pending files and send to Magic Mike
+  const uploadAndSend = async () => {
+    if (pendingFiles.length === 0 || !mediaType) return;
     setIsUploading(true);
 
     try {
       const urls: string[] = [];
-      for (const file of files) {
-        const uniqueId = Math.random().toString(36).substring(2, 10);
+      for (const file of pendingFiles) {
+        const uid = Math.random().toString(36).substring(2, 10);
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const fileName = `scan-chat/${Date.now()}-${uniqueId}-${safeName}`;
+        const fileName = `scan-chat/${Date.now()}-${uid}-${safeName}`;
         const { error } = await supabase.storage.from('vinyl_images').upload(fileName, file, { upsert: true });
         if (error) throw new Error(`Upload mislukt: ${error.message}`);
         const { data: { publicUrl } } = supabase.storage.from('vinyl_images').getPublicUrl(fileName);
         urls.push(publicUrl);
       }
-      setPhotoUrls(urls);
-      setPhotosUploaded(true);
 
-      // Magic Mike acknowledges and starts analyzing
-      const autoMsg = `Ik heb ${files.length} foto's van mijn ${mediaType === 'vinyl' ? 'vinyl plaat' : 'CD'} geüpload. Wat kun je hierover vertellen?`;
-      await sendMessage(autoMsg, urls);
+      // Show thumbnails in user message
+      const previews = pendingFiles.map(f => URL.createObjectURL(f));
+      const allUrls = [...photoUrls, ...urls];
+      setPhotoUrls(allUrls);
+
+      const userContent = `Ik heb ${pendingFiles.length} foto's geüpload van mijn ${mediaType === 'vinyl' ? 'vinyl plaat' : 'CD'}. Bekijk ze en vertel me wat je ziet!`;
+      const userMsg: ChatMessage = { role: 'user', content: userContent, images: previews };
+
+      setPendingFiles([]);
+      await sendMessage(userContent, allUrls, userMsg);
     } catch (err) {
       console.error('Upload error:', err);
       toast({ title: "Upload mislukt", description: err instanceof Error ? err.message : "Fout", variant: "destructive" });
@@ -120,9 +99,9 @@ export function ScanChatTab() {
     }
   };
 
-  // Stream message
-  const sendMessage = async (text: string, urls?: string[]) => {
-    const userMsg: ChatMessage = { role: 'user', content: text };
+  // Stream message to AI
+  const sendMessage = async (text: string, urls?: string[], customUserMsg?: ChatMessage) => {
+    const userMsg: ChatMessage = customUserMsg || { role: 'user', content: text };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsStreaming(true);
@@ -140,7 +119,7 @@ export function ScanChatTab() {
     };
 
     try {
-      const allMessages = [...messages, userMsg];
+      const allMessages = [...messages, { role: userMsg.role, content: userMsg.content }];
       const resp = await fetch(`${SUPABASE_URL}/functions/v1/scan-chat`, {
         method: 'POST',
         headers: {
@@ -168,7 +147,6 @@ export function ScanChatTab() {
         const { done, value } = await reader.read();
         if (done) break;
         buf += decoder.decode(value, { stream: true });
-
         let nl: number;
         while ((nl = buf.indexOf('\n')) !== -1) {
           let line = buf.slice(0, nl);
@@ -187,7 +165,6 @@ export function ScanChatTab() {
           }
         }
       }
-      // flush
       for (let raw of buf.split('\n')) {
         if (!raw || !raw.startsWith('data: ')) continue;
         const j = raw.slice(6).trim();
@@ -219,87 +196,12 @@ export function ScanChatTab() {
   const resetChat = () => {
     setMessages([{
       role: 'assistant',
-      content: `🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets weten over een **CD** of **LP**? Ik help je de exacte release te vinden!\n\nKies hieronder wat je hebt, dan vraag ik je om een paar foto's.`,
+      content: `🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets weten over een **CD** of **LP**?\n\nKies hieronder wat je hebt 👇`,
     }]);
     setMediaType('');
-    setFiles([]);
+    setPendingFiles([]);
     setPhotoUrls([]);
-    setPhotosUploaded(false);
     setInput('');
-  };
-
-  // Render inline upload grid
-  const renderUploadGrid = () => {
-    if (!mediaType || photosUploaded) return null;
-
-    const actualFiles = files.filter(Boolean);
-    const allDone = actualFiles.length >= requiredCount;
-
-    return (
-      <div className="mx-4 my-3">
-        <Card>
-          <CardContent className="pt-4 space-y-3">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>Foto's: {actualFiles.length}/{requiredCount}</span>
-              {allDone && <span className="flex items-center gap-1 text-green-600"><CheckCircle className="h-4 w-4" /> Klaar!</span>}
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {labels.slice(0, requiredCount).map((label, index) => {
-                const file = files[index];
-                return (
-                  <div key={label} className="relative">
-                    <input
-                      ref={el => inputRefs.current[index] = el}
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={(e) => handleFileChange(e, index)}
-                      className="hidden"
-                      disabled={isUploading}
-                    />
-                    {file ? (
-                      <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-green-500 bg-muted">
-                        <img src={URL.createObjectURL(file)} alt={label} className="w-full h-full object-cover" />
-                        {!isUploading && (
-                          <button onClick={() => removeFile(index)}
-                            className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90">
-                            <X className="h-3 w-3" />
-                          </button>
-                        )}
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 text-center truncate">{label}</div>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => inputRefs.current[index]?.click()}
-                        disabled={isUploading}
-                        className="aspect-square w-full rounded-lg border-2 border-dashed border-primary bg-primary/5 hover:bg-primary/10 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors"
-                      >
-                        <div className="flex gap-1">
-                          <Camera className="h-5 w-5 text-muted-foreground" />
-                          <Upload className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                        <span className="text-xs text-muted-foreground text-center px-1">{label}</span>
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {actualFiles.length > 0 && (
-              <Button onClick={uploadAndAnalyze} disabled={isUploading} className="w-full" size="sm">
-                {isUploading ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Uploaden...</>
-                ) : (
-                  <><Send className="mr-2 h-4 w-4" />Stuur naar Magic Mike ({actualFiles.length} foto's)</>
-                )}
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    );
   };
 
   return (
@@ -309,14 +211,22 @@ export function ScanChatTab() {
         <div className="flex items-center gap-2 text-sm font-medium">
           <span>🎩</span>
           <span>Magic Mike</span>
-          {mediaType && (
-            <span className="text-xs text-muted-foreground">· {mediaType === 'vinyl' ? 'Vinyl' : 'CD'}</span>
-          )}
+          {mediaType && <span className="text-xs text-muted-foreground">· {mediaType === 'vinyl' ? 'Vinyl' : 'CD'}</span>}
         </div>
         <Button variant="ghost" size="sm" onClick={resetChat}>
           <RotateCcw className="h-4 w-4 mr-1" /> Opnieuw
         </Button>
       </div>
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleFilesSelected}
+        className="hidden"
+      />
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 mb-4 pr-1">
@@ -330,13 +240,22 @@ export function ScanChatTab() {
                   <ReactMarkdown>{msg.content || '...'}</ReactMarkdown>
                 </div>
               ) : (
-                <p className="whitespace-pre-wrap">{msg.content}</p>
+                <>
+                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                  {msg.images && msg.images.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {msg.images.map((src, j) => (
+                        <img key={j} src={src} alt={`Foto ${j + 1}`} className="h-16 w-16 object-cover rounded" />
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
         ))}
 
-        {/* Media type buttons inline in chat */}
+        {/* Media type picker */}
         {!mediaType && (
           <div className="flex gap-3 justify-center my-2">
             <Button variant="outline" size="lg" onClick={() => pickMediaType('vinyl')} className="h-14 px-6 flex flex-col gap-1">
@@ -350,8 +269,39 @@ export function ScanChatTab() {
           </div>
         )}
 
-        {/* Upload grid inline in chat */}
-        {renderUploadGrid()}
+        {/* Pending files preview */}
+        {pendingFiles.length > 0 && (
+          <div className="mx-2 my-2">
+            <Card>
+              <CardContent className="pt-3 space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  {pendingFiles.map((file, i) => (
+                    <div key={i} className="relative h-20 w-20">
+                      <img src={URL.createObjectURL(file)} alt={file.name} className="h-full w-full object-cover rounded-lg border" />
+                      <button onClick={() => removePendingFile(i)}
+                        className="absolute -top-1 -right-1 p-0.5 bg-destructive text-destructive-foreground rounded-full">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="h-20 w-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 transition-colors"
+                  >
+                    <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                </div>
+                <Button onClick={uploadAndSend} disabled={isUploading} className="w-full" size="sm">
+                  {isUploading ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Uploaden...</>
+                  ) : (
+                    <><Send className="mr-2 h-4 w-4" />Stuur {pendingFiles.length} foto's naar Magic Mike</>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {isStreaming && messages[messages.length - 1]?.role !== 'assistant' && (
           <div className="flex justify-start">
@@ -362,20 +312,28 @@ export function ScanChatTab() {
         )}
       </div>
 
-      {/* Quick prompts after first analysis */}
-      {photosUploaded && messages.length <= 4 && !isStreaming && (
+      {/* Quick prompts */}
+      {photoUrls.length > 0 && messages.length <= 5 && !isStreaming && (
         <div className="flex flex-wrap gap-2 mb-3">
-          {["Zoek op barcode", "Welke persing is dit?", "Wat is de waarde?"].map(p => (
-            <Button key={p} variant="outline" size="sm" onClick={() => sendMessage(p)} className="text-xs">
-              {p}
-            </Button>
+          {["Zoek op barcode", "Welke persing is dit?", "Wat is de waarde?", "Heb je meer foto's nodig?"].map(p => (
+            <Button key={p} variant="outline" size="sm" onClick={() => sendMessage(p)} className="text-xs">{p}</Button>
           ))}
         </div>
       )}
 
-      {/* Input - always visible after media type chosen */}
+      {/* Input bar */}
       {mediaType && (
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isStreaming || isUploading}
+            className="shrink-0 h-[44px] w-[44px]"
+            title="Foto's toevoegen"
+          >
+            <Camera className="h-4 w-4" />
+          </Button>
           <Textarea
             value={input}
             onChange={e => setInput(e.target.value)}

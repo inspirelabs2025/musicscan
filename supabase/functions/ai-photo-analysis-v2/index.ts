@@ -1754,11 +1754,12 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
             console.log(`   ⚠️ HARD GATE: Technische identifiers aanwezig maar geen directe match`);
             console.log(`   🔍 Verifying strategy 3 candidates against identifiers...`);
             
-            // Still verify candidates - if label+artist+title match, allow suggested_match
+            // Still verify candidates - track ALL with scores for disambiguation
+            const scoredCandidates: Array<{candidate: any, verification: any, points: number}> = [];
+            
             for (const candidate of results.slice(0, 10)) {
               const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens, matrixValid);
               
-              // Point-based selection: pick highest-scoring candidate above threshold
               const hasLabel = verification.technical_matches?.label;
               const hasCatno = verification.technical_matches?.catno;
               const hasYear = verification.technical_matches?.year;
@@ -1766,23 +1767,93 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
               
               console.log(`   📋 Candidate ${candidate.id}: ${candidate.title} | label=${hasLabel} catno=${hasCatno} year=${hasYear} matrix=${hasMatrix} points=${verification.points}`);
               
-              if (verification.points >= 30 && verification.points > bestConfidencePoints) {
-                bestConfidencePoints = verification.points;
-                bestMatch = candidate;
-                bestMatchDetails = verification;
-                searchMetadata.matched_on = verification.matched_on || [];
-                searchMetadata.technical_matches = verification.technical_matches;
-                searchMetadata.explain = verification.explain || [];
-                searchMetadata.explain.push(`Strategy 3 candidate verified via point-based selection (${verification.points} pts)`);
-                console.log(`   ✅ SOFT MATCH: ${candidate.title} (${verification.points} pts)`);
+              if (verification.points >= 30) {
+                scoredCandidates.push({ candidate, verification, points: verification.points });
               }
             }
             
-            if (!bestMatch) {
+            // Sort by points descending
+            scoredCandidates.sort((a, b) => b.points - a.points);
+            
+            if (scoredCandidates.length > 0) {
+              const topScore = scoredCandidates[0].points;
+              const tiedCandidates = scoredCandidates.filter(c => c.points === topScore);
+              
+              if (tiedCandidates.length > 1) {
+                // DISAMBIGUATION: Multiple candidates tied - use country, format, catno proximity
+                console.log(`   🔍 DISAMBIGUATION: ${tiedCandidates.length} candidates tied at ${topScore} pts`);
+                
+                let bestTied = tiedCandidates[0];
+                let bestDisambigScore = 0;
+                
+                for (const tied of tiedCandidates) {
+                  let disambigScore = 0;
+                  const rd = tied.verification.releaseDetails;
+                  
+                  // Country match bonus
+                  if (rd?.country && analysisData.country) {
+                    const euPattern = /europe|eu|netherlands|holland|germany|france|uk|united kingdom/i;
+                    if (rd.country.toLowerCase().includes(analysisData.country.toLowerCase())) {
+                      disambigScore += 10;
+                      console.log(`      🌍 ${tied.candidate.id}: Country match "${rd.country}" → +10`);
+                    } else if (euPattern.test(analysisData.country) && euPattern.test(rd.country)) {
+                      disambigScore += 5;
+                    }
+                  }
+                  
+                  // Format match bonus (CD vs Vinyl)
+                  if (rd?.formats) {
+                    const hasCD = rd.formats.some((f: any) => f.name === 'CD');
+                    if (hasCD && mediaType === 'cd') {
+                      disambigScore += 5;
+                      console.log(`      💿 ${tied.candidate.id}: Format CD match → +5`);
+                    }
+                  }
+                  
+                  // Catno proximity bonus: check if matrix digits appear in the catno
+                  if (rd?.labels && matrixTokens.length > 0) {
+                    for (const label of rd.labels) {
+                      if (label.catno) {
+                        const catnoDigits = label.catno.replace(/[^0-9]/g, '');
+                        for (const token of matrixTokens) {
+                          const tokenDigits = token.replace(/[^0-9]/g, '');
+                          if (tokenDigits.length >= 4 && catnoDigits.includes(tokenDigits)) {
+                            disambigScore += 15;
+                            console.log(`      🔗 ${tied.candidate.id}: Matrix-Catno overlap "${token}" in "${label.catno}" → +15`);
+                            break;
+                          }
+                        }
+                        if (disambigScore >= 15) break;
+                      }
+                    }
+                  }
+                  
+                  console.log(`      📊 ${tied.candidate.id}: Disambig score = ${disambigScore}`);
+                  
+                  if (disambigScore > bestDisambigScore) {
+                    bestDisambigScore = disambigScore;
+                    bestTied = tied;
+                  }
+                }
+                
+                console.log(`   ✅ DISAMBIGUATED: ${bestTied.candidate.id} (disambig: ${bestDisambigScore})`);
+                bestConfidencePoints = bestTied.points;
+                bestMatch = bestTied.candidate;
+                bestMatchDetails = bestTied.verification;
+              } else {
+                bestConfidencePoints = scoredCandidates[0].points;
+                bestMatch = scoredCandidates[0].candidate;
+                bestMatchDetails = scoredCandidates[0].verification;
+              }
+              
+              searchMetadata.matched_on = bestMatchDetails.matched_on || [];
+              searchMetadata.technical_matches = bestMatchDetails.technical_matches;
+              searchMetadata.explain = bestMatchDetails.explain || [];
+              searchMetadata.explain.push(`Strategy 3 candidate verified via point-based selection (${bestConfidencePoints} pts)`);
+              console.log(`   ✅ BEST MATCH: ${bestMatch.title} (${bestConfidencePoints} pts)`);
+            } else {
               console.log(`   ❌ No candidates passed soft verification`);
               searchMetadata.verification_level = 'no_match';
-            } else {
-              console.log(`   🟡 Best soft match: ${bestMatch.title} (${bestConfidencePoints} pts)`);
             }
             console.log(`   ✅ ${suggestions.length} suggesties opgeslagen voor review`);
           } else if (results.length > 0) {
@@ -1846,6 +1917,13 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
           bestConfidencePoints = Math.min(bestConfidencePoints, Math.floor(160 * 0.79));
           searchMetadata.matched_on.push('soft_gate_matrix_label');
           searchMetadata.explain.push('Matrix + Label match met artist/title context → suggested_match');
+        } else if (hasLabelMatch && searchMetadata.technical_matches.year && hasArtistTitleContext) {
+          // Label + Year + Artist/Title = suggested_match (weakest but valid soft gate)
+          console.log(`🟡 SOFT GATE: label ✅ + year ✅ + artist/title context → suggested_match`);
+          searchMetadata.verification_level = 'suggested_match';
+          bestConfidencePoints = Math.min(bestConfidencePoints, Math.floor(160 * 0.60));
+          searchMetadata.matched_on.push('soft_gate_label_year');
+          searchMetadata.explain.push('Label + Year match met artist/title context → suggested_match');
         } else {
           console.log(`⛔ DISQUALIFIED: Niet genoeg identifier matches (${identifierMatchCount}/2 vereist)`);
           console.log(`   barcode: ${searchMetadata.technical_matches.barcode ? '✅' : '❌'}`);
@@ -2134,6 +2212,47 @@ async function verifyCandidate(
             console.log(`      ✅ Catno match: +25 points`);
             break;
           }
+        }
+      }
+    }
+    
+    // === MATRIX-CATNO CROSS-REFERENCE (25 points) ===
+    // Sometimes the disc hub shows the catalog number, not a traditional matrix
+    // Cross-check matrix OCR tokens against candidate catalog numbers
+    if (!result.technical_matches.catno && !result.technical_matches.matrix && 
+        matrixValid && matrixTokens.length > 0 && releaseDetails.labels) {
+      for (const label of releaseDetails.labels) {
+        if (label.catno) {
+          const discogsCatnoDigits = label.catno.replace(/[^0-9]/g, '');
+          const discogsCatnoAlpha = label.catno.toUpperCase().replace(/[^A-Z0-9]/g, '');
+          
+          // Check if the primary matrix token (digits) appears in the catno
+          for (const token of matrixTokens) {
+            if (token.length >= 4) {
+              const tokenDigits = token.replace(/[^0-9]/g, '');
+              const tokenAlpha = token.replace(/[^A-Z0-9]/g, '');
+              
+              // Digit-based match: e.g. matrix "468531" matches catno "468 531-2"  
+              if (tokenDigits.length >= 4 && discogsCatnoDigits.includes(tokenDigits)) {
+                result.points += 25;
+                result.matched_on.push('matrix_catno_crossref');
+                result.technical_matches.catno = true;
+                result.explain.push(`Matrix OCR "${token}" matches catalog number "${label.catno}" (cross-reference)`);
+                console.log(`      ✅ Matrix-Catno cross-reference: "${token}" found in catno "${label.catno}" → +25 points`);
+                break;
+              }
+              // Alpha-numeric match
+              if (tokenAlpha.length >= 4 && discogsCatnoAlpha.includes(tokenAlpha)) {
+                result.points += 25;
+                result.matched_on.push('matrix_catno_crossref');
+                result.technical_matches.catno = true;
+                result.explain.push(`Matrix OCR "${token}" matches catalog number "${label.catno}" (cross-reference)`);
+                console.log(`      ✅ Matrix-Catno cross-reference: "${token}" found in catno "${label.catno}" → +25 points`);
+                break;
+              }
+            }
+          }
+          if (result.technical_matches.catno) break;
         }
       }
     }

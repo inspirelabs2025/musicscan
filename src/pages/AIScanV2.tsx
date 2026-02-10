@@ -348,7 +348,7 @@ export default function AIScanV2() {
           <Tabs defaultValue="scanner" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="scanner">📷 Foto Scanner</TabsTrigger>
-              <TabsTrigger value="chat">💬 Chat</TabsTrigger>
+              <TabsTrigger value="chat">🎩 Scan met Mike</TabsTrigger>
             </TabsList>
 
             <TabsContent value="scanner" className="space-y-6 mt-4">

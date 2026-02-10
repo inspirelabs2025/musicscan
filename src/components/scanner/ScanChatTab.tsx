@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
+import magicMikeAvatar from '@/assets/magic-mike-avatar.png';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -208,10 +209,13 @@ export function ScanChatTab() {
     <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-220px)]">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <span>🎩</span>
-          <span>Magic Mike</span>
-          {mediaType && <span className="text-xs text-muted-foreground">· {mediaType === 'vinyl' ? 'Vinyl' : 'CD'}</span>}
+        <div className="flex items-center gap-3">
+          <img src={magicMikeAvatar} alt="Magic Mike" className="h-10 w-10 rounded-full object-cover ring-2 ring-primary/30 shadow-md" />
+          <div>
+            <span className="text-sm font-semibold">Magic Mike</span>
+            {mediaType && <span className="text-xs text-muted-foreground ml-1">· {mediaType === 'vinyl' ? 'Vinyl' : 'CD'}</span>}
+            <p className="text-xs text-muted-foreground">Muziek-detective 🕵️‍♂️</p>
+          </div>
         </div>
         <Button variant="ghost" size="sm" onClick={resetChat}>
           <RotateCcw className="h-4 w-4 mr-1" /> Opnieuw
@@ -231,9 +235,12 @@ export function ScanChatTab() {
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 mb-4 pr-1">
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-lg px-4 py-3 text-sm ${
-              msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}>
+            {msg.role === 'assistant' && (
+              <img src={magicMikeAvatar} alt="Magic Mike" className="h-7 w-7 rounded-full object-cover shrink-0 mt-1 ring-1 ring-primary/20" />
+            )}
+            <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+              msg.role === 'user' ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-muted rounded-bl-sm'
             }`}>
               {msg.role === 'assistant' ? (
                 <div className="prose prose-sm dark:prose-invert max-w-none">

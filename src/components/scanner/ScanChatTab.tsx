@@ -86,7 +86,7 @@ export function ScanChatTab() {
       const allUrls = [...photoUrls, ...urls];
       setPhotoUrls(allUrls);
 
-      const userContent = `Ik heb ${pendingFiles.length} foto's geüpload van mijn ${mediaType === 'vinyl' ? 'vinyl plaat' : 'CD'}. Bekijk ze en vertel me wat je ziet!`;
+      const userContent = `Ik heb ${pendingFiles.length} foto's geüpload van mijn ${mediaType === 'vinyl' ? 'vinyl plaat' : 'CD'}. Analyseer deze foto's. Bevestig eerst de artiest en titel. Zoek dan naar barcode, catalogusnummer en matrix-nummer op de foto's. Geef je bevindingen.`;
       const userMsg: ChatMessage = { role: 'user', content: userContent, images: previews };
 
       setPendingFiles([]);

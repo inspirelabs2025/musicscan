@@ -1,60 +1,77 @@
 
 
-## Bevestigingen & Uitsluiters: Rights Society Gating
+## Magic Mike Chat: V2 Pipeline Integratie + Rights Society Gating
 
-### Probleem
-BIEM/STEMRA op de disc betekent dat het een Europese (Nederlandse) persing is. De huidige scoring geeft alleen een -25 penalty op basis van "Made in" tekst, maar negeert harde juridische markers zoals rechtenorganisaties. Hierdoor kan een Japanse release toch winnen als die op andere punten hoog scoort.
+### Kernprobleem
+De Magic Mike chat laat het AI-model een Discogs ID **raden** op basis van kennis. Dit levert vaak verkeerde IDs op omdat het model geen toegang heeft tot de Discogs API of de deterministische matching-logica. De V2 scanner (`ai-photo-analysis-v2`) heeft dit wel: barcode-zoeken, scoring, rights society gating, local-first lookup, etc.
 
-### Oplossing: Twee nieuwe mechanismen
+### Oplossing: Chat moet de V2 pipeline aanroepen
 
-**1. Rights Society Region Map (harde uitsluiter)**
-
-Een mapping van rechtenorganisaties naar hun regio:
+In plaats van het AI-model te laten gokken, wordt de flow:
 
 ```text
-BIEM/STEMRA, STEMRA     --> NL/EU
-GEMA                     --> DE/EU  
-SACEM                    --> FR/EU
-PRS, MCPS               --> UK/EU
-JASRAC                   --> JP
-ASCAP, BMI               --> US
-SOCAN                    --> CA
-APRA, AMCOS              --> AU/NZ
+1. Gebruiker uploadt foto's
+2. Magic Mike chat beschrijft wat hij ziet (artiest, titel, identifiers) -- GEEN Discogs ID meer
+3. Na de AI-stream: automatisch ai-photo-analysis-v2 aanroepen met de foto's
+4. V2 pipeline doet deterministische matching (incl. rights society gating)
+5. Resultaat terug in chat tonen (met verificatie + prijzen)
 ```
 
-Als STEMRA gedetecteerd is en de kandidaat-release komt uit Japan --> **hard exclude** (score naar 0, skip).
+### Concrete wijzigingen
 
-**2. Twee-laags logica in de scoring-functie**
+**1. System Prompt aanpassen (`supabase/functions/scan-chat/index.ts`)**
 
-Stap A - **Exclude**: Als de gedetecteerde rechtenorganisatie een regio impliceert die NIET compatibel is met het land van de kandidaat, dan wordt de kandidaat volledig uitgesloten (score = 0). Dit is geen penalty maar een eliminatie.
+- **Verwijder** de instructie om een Discogs ID te geven (`[[DISCOGS:123456]]`)
+- **Behoud** de `[[SCAN_DATA:...]]` tag -- Magic Mike noteert wat hij op de foto's leest
+- **Nieuwe instructie**: "Geef NOOIT een Discogs URL of ID. Het systeem zoekt automatisch de juiste release via de scanner-pipeline."
+- **Toevoeging rights society awareness**: Instrueer Magic Mike om rechtenorganisaties (BIEM/STEMRA, JASRAC, etc.) expliciet te benoemen als hij ze ziet, zodat de gebruiker begrijpt waarom bepaalde releases worden uitgesloten
 
-Stap B - **Confirm**: Als de rechtenorganisatie WEL past bij het kandidaat-land, geeft dit +15 bevestigingspunten. STEMRA + "Netherlands" = sterke bevestiging.
+**2. ScanChatTab.tsx: V2 pipeline integreren**
 
-### Wat verandert er concreet
+Na het streamen van het AI-antwoord:
 
-**File: `supabase/functions/ai-photo-analysis-v2/index.ts`**
+- **Verwijder** de logica die `[[DISCOGS:...]]` uit de AI-tekst haalt en als ID gebruikt
+- **Nieuw**: Roep `ai-photo-analysis-v2` aan met de geuploadde `photoUrls` en `mediaType`
+- De V2 pipeline retourneert het juiste `discogs_id` met scoring, rights society exclusions, en audit trail
+- Toon het resultaat in de chat (artiest, titel, status, pricing)
+- Als V2 meerdere suggesties retourneert, toon die als keuzeknopen
 
-1. **Nieuwe constante**: `RIGHTS_SOCIETY_REGIONS` -- map van society-naam naar compatible landen/regio's
-2. **Nieuwe helper**: `detectRightsSocieties(text)` -- zoekt in alle geextraheerde tekst naar bekende rechtenorganisaties
-3. **Aanpassing scoring-functie** (`verifyAndScoreCandidate` rond regel 2652):
-   - Voeg een check toe VOOR de bestaande country-check
-   - Als een rights society is gedetecteerd:
-     - Kandidaat-land valt BUITEN de society-regio --> `points = 0`, `excluded = true`, explain: "STEMRA detected: excludes Japan"
-     - Kandidaat-land valt BINNEN de society-regio --> `points += 15`, explain: "STEMRA confirms Netherlands origin"
-4. **`analysisData` uitbreiden**: Het bestaande `rights_societies` veld wordt doorgegeven aan de scoring-functie zodat het beschikbaar is voor de exclude/confirm logica
-5. **Audit trail**: Elke exclude/confirm wordt gelogd in de `explain` array zodat het zichtbaar is in de Audit Log UI
+**3. ScanData interface uitbreiden**
 
-### Voorbeeld flow (jouw CBS CD)
+Voeg `rights_societies` toe aan de `ScanData` interface zodat de chat ook kan tonen welke rechtenorganisaties gedetecteerd zijn en waarom bepaalde releases zijn uitgesloten.
+
+**4. Flow detail**
 
 ```text
-Gedetecteerd: BIEM/STEMRA
-Kandidaat 1: Japan (35DP-93) --> EXCLUDED (STEMRA = EU only)
-Kandidaat 2: Netherlands (CBS 450227 2) --> +15 confirm, totaal hoger
-Resultaat: Nederlandse persing wint
+Stap 1: Stream AI antwoord (Magic Mike beschrijft foto's, noemt identifiers)
+Stap 2: Extract [[SCAN_DATA:{...}]] uit AI tekst (behouden)
+Stap 3: Roep ai-photo-analysis-v2 aan met photoUrls + mediaType
+Stap 4: V2 retourneert:
+         - discogs_id (deterministic match)
+         - confidence_score
+         - rights_society exclusions (audit trail)
+         - suggestions (alternatieven)
+Stap 5: Automatisch verify-and-enrich-release + fetch-discogs-pricing
+Stap 6: Toon resultaat in chat
 ```
 
-### Impact op bestaande logica
-- De EU country penalty (-25) blijft bestaan als fallback voor "Made in" tekst
-- Rights society gating heeft HOGERE prioriteit en is een harde exclude (niet alleen penalty)
-- Geen impact op scans zonder rechtenorganisatie-detectie
+### Technische details
+
+**scan-chat/index.ts wijzigingen:**
+- System prompt: verwijder `[[DISCOGS:...]]` vereiste, voeg toe: "Benoem rechtenorganisaties die je ziet (BIEM, STEMRA, JASRAC, GEMA, etc.)"
+- Geen functie-logica wijzigingen nodig -- het blijft een streaming chat
+
+**ScanChatTab.tsx wijzigingen:**
+- `sendMessage()` functie (regel 296-496): na de stream-loop, vervang de `extractDiscogsId` + `verify-and-enrich-release` logica door een aanroep naar `ai-photo-analysis-v2`
+- Nieuwe functie `runV2Pipeline(photoUrls, mediaType)` die de edge function aanroept en het resultaat verwerkt
+- Toon V2 resultaat inclusief: match status, rights society audit entries, en pricing
+- Bij `needs_review` of meerdere suggesties: toon keuzeknopen per kandidaat
+- `extractDiscogsId()` functie kan verwijderd worden (niet meer nodig)
+- `cleanDisplayText()` hoeft `[[DISCOGS:...]]` niet meer te strippen
+
+### Impact
+- Rights society gating (STEMRA = exclude Japan) werkt nu ook in de chat
+- Deterministische matching in plaats van AI-gokken
+- Dezelfde scoring, local-first lookup, en audit trail als de V2 scanner
+- Gebruiker ziet waarom een release is gekozen of uitgesloten
 

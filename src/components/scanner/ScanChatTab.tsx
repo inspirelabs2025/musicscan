@@ -228,6 +228,7 @@ export function ScanChatTab() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -279,6 +280,7 @@ export function ScanChatTab() {
     if (selected.length === 0) return;
     setPendingFiles(prev => [...prev, ...selected]);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
   }, []);
 
   const removePendingFile = useCallback((index: number) => {
@@ -811,6 +813,14 @@ export function ScanChatTab() {
         onChange={handleFilesSelected}
         className="hidden"
       />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFilesSelected}
+        className="hidden"
+      />
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 mb-4 pr-1">
@@ -1051,8 +1061,16 @@ export function ScanChatTab() {
                     </div>
                   ))}
                   <button
+                    onClick={() => cameraInputRef.current?.click()}
+                    className="h-20 w-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 transition-colors"
+                    title="Maak een foto"
+                  >
+                    <Camera className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                  <button
                     onClick={() => fileInputRef.current?.click()}
                     className="h-20 w-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 transition-colors"
+                    title="Kies uit galerij"
                   >
                     <ImagePlus className="h-5 w-5 text-muted-foreground" />
                   </button>
@@ -1084,12 +1102,22 @@ export function ScanChatTab() {
           <Button
             variant="outline"
             size="icon"
+            onClick={() => cameraInputRef.current?.click()}
+            disabled={isStreaming || isUploading || isRunningV2}
+            className="shrink-0 h-[44px] w-[44px]"
+            title="Maak een foto"
+          >
+            <Camera className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => fileInputRef.current?.click()}
             disabled={isStreaming || isUploading || isRunningV2}
             className="shrink-0 h-[44px] w-[44px]"
-            title="Foto's toevoegen"
+            title="Kies uit galerij"
           >
-            <Camera className="h-4 w-4" />
+            <ImagePlus className="h-4 w-4" />
           </Button>
           <Textarea
             value={input}

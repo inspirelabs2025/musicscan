@@ -105,6 +105,7 @@ export function ScanChatTab() {
   const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | ''>('');
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [verifiedResult, setVerifiedResult] = useState<V2PipelineResult | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -316,7 +317,12 @@ export function ScanChatTab() {
     };
 
     try {
-      const allMessages = [...messages, { role: userMsg.role, content: userMsg.content }];
+      // If we already have a verified result, prepend context so Mike knows the release
+      const effectiveContent = verifiedResult
+        ? `[CONTEXT: Release al geïdentificeerd - ${verifiedResult.artist} - ${verifiedResult.title}, Discogs ID: ${verifiedResult.discogs_id}. Beantwoord de vraag van de gebruiker over deze release zonder opnieuw te scannen.]\n\n${userMsg.content}`
+        : userMsg.content;
+
+      const allMessages = [...messages, { role: userMsg.role, content: effectiveContent }];
       const resp = await fetch(`${SUPABASE_URL}/functions/v1/scan-chat`, {
         method: 'POST',
         headers: {
@@ -371,9 +377,10 @@ export function ScanChatTab() {
 
       setIsStreaming(false);
 
-      // ─── AUTO-RUN V2 PIPELINE after stream completes (only if photos were sent) ────
+      // ─── AUTO-RUN V2 PIPELINE after stream completes (only if photos were sent AND no verified result yet) ────
       const activeUrls = urls || photoUrls;
-      if (activeUrls.length > 0 && mediaType) {
+      const shouldRunV2 = activeUrls.length > 0 && mediaType && !verifiedResult;
+      if (shouldRunV2) {
         setIsRunningV2(true);
         
         // Extract rights_societies from Magic Mike's SCAN_DATA to forward to V2 pipeline
@@ -444,6 +451,9 @@ export function ScanChatTab() {
             resultMsg += `\n\n📋 **Andere mogelijke releases:**`;
           }
 
+          // Save verified result so follow-up questions don't re-trigger the pipeline
+          setVerifiedResult(v2Result);
+
           setMessages(prev => [...prev, {
             role: 'assistant',
             content: resultMsg,
@@ -510,7 +520,17 @@ export function ScanChatTab() {
 
   const handleSend = () => {
     if (!input.trim() || isStreaming || isRunningV2) return;
-    sendMessage(input.trim());
+    const trimmed = input.trim();
+
+    // Check if user rejects the current result
+    const rejectKeywords = ['niet juist', 'niet correct', 'verkeerde', 'fout', 'klopt niet',
+      'andere release', 'niet goed', 'opnieuw zoeken', 'wrong', 'incorrect'];
+    const isRejection = rejectKeywords.some(kw => trimmed.toLowerCase().includes(kw));
+    if (isRejection) {
+      setVerifiedResult(null);
+    }
+
+    sendMessage(trimmed);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -526,6 +546,7 @@ export function ScanChatTab() {
     setPendingFiles([]);
     setPhotoUrls([]);
     setInput('');
+    setVerifiedResult(null);
   };
 
   return (

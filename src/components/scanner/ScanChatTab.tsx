@@ -58,11 +58,21 @@ interface V2Suggestion {
   reason: string[];
 }
 
+interface MarketplaceListing {
+  price: number;
+  currency: string;
+  condition_media: string;
+  condition_sleeve: string;
+  seller: string;
+  ships_from: string;
+}
+
 interface PricingData {
   lowest_price: number | null;
   median_price: number | null;
   highest_price: number | null;
   num_for_sale: number | null;
+  marketplace_listings?: MarketplaceListing[];
 }
 
 const SUPABASE_URL = "https://ssxbpyqnjfiyubsuonar.supabase.co";
@@ -446,6 +456,21 @@ export function ScanChatTab() {
             if (pricing.num_for_sale) resultMsg += `\n🏪 **${pricing.num_for_sale}** exemplaren te koop op Discogs`;
           }
 
+          // Fetch marketplace listings in parallel (non-blocking for UI)
+          try {
+            const { data: marketplaceData } = await supabase.functions.invoke('fetch-discogs-marketplace-listings', {
+              body: { discogs_id: v2Result.discogs_id }
+            });
+            if (marketplaceData?.listings?.length > 0) {
+              pricing.marketplace_listings = marketplaceData.listings;
+              if (marketplaceData.total_for_sale) {
+                pricing.num_for_sale = marketplaceData.total_for_sale;
+              }
+            }
+          } catch (mlErr) {
+            console.error('Marketplace listings fetch error:', mlErr);
+          }
+
           // Show alternative suggestions if available
           if (v2Result.suggestions && v2Result.suggestions.length > 1) {
             resultMsg += `\n\n📋 **Andere mogelijke releases:**`;
@@ -650,10 +675,41 @@ export function ScanChatTab() {
                       </div>
                     )}
                   </div>
-                  {msg.pricingData.num_for_sale != null && msg.pricingData.num_for_sale > 0 && (
+              {msg.pricingData.num_for_sale != null && msg.pricingData.num_for_sale > 0 && (
                     <div className="text-xs text-muted-foreground text-center mt-2">
                       {msg.pricingData.num_for_sale} exemplaren te koop op Discogs
                     </div>
+                  )}
+                </div>
+              )}
+
+              {/* Marketplace listings */}
+              {msg.pricingData?.marketplace_listings && msg.pricingData.marketplace_listings.length > 0 && (
+                <div className="mt-3 p-3 bg-background/60 rounded-lg border border-border/50">
+                  <div className="text-xs font-semibold mb-2 flex items-center gap-1">
+                    🏪 {msg.pricingData.num_for_sale || msg.pricingData.marketplace_listings.length} exemplaren te koop
+                  </div>
+                  <div className="space-y-1.5">
+                    {msg.pricingData.marketplace_listings.slice(0, 5).map((listing, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-xs gap-2 py-1 border-b border-border/30 last:border-0">
+                        <span className="font-semibold text-primary min-w-[60px]">€{listing.price.toFixed(2)}</span>
+                        <span className="text-muted-foreground truncate flex-1">
+                          {listing.condition_media}{listing.condition_sleeve && listing.condition_sleeve !== 'Unknown' ? ` / ${listing.condition_sleeve}` : ''}
+                        </span>
+                        <span className="text-muted-foreground text-right min-w-[70px]">{listing.ships_from}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {msg.v2Result?.discogs_id && (
+                    <a
+                      href={`https://www.discogs.com/sell/release/${msg.v2Result.discogs_id}?curr=EUR`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      Bekijk alle aanbiedingen
+                    </a>
                   )}
                 </div>
               )}

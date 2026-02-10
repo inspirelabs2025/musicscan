@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import magicMikeAvatar from '@/assets/magic-mike-avatar.png';
 
 interface ChatMessage {
@@ -339,6 +340,7 @@ export function ScanChatTab() {
               {msg.role === 'assistant' ? (
                 <div className="prose prose-sm dark:prose-invert max-w-none">
                   <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
                     components={{
                       a: ({ href, children }) => (
                         <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:text-primary/80 break-all">

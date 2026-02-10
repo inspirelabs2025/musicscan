@@ -1,32 +1,43 @@
 
 
-## Magic Mike Chat: V2 Pipeline Integratie + Rights Society Gating
+## Fix: Chat V2 Pipeline - Ontbrekende `conditionGrade`
 
-### Status: ✅ GEÏMPLEMENTEERD
+### Oorzaak
 
-### Wat is gedaan
+De edge function logs tonen het probleem:
 
-**1. System Prompt (`scan-chat/index.ts`)**
-- ✅ `[[DISCOGS:...]]` tag verwijderd — Magic Mike geeft NOOIT meer een Discogs ID
-- ✅ Rights society awareness toegevoegd — Magic Mike benoemt expliciet BIEM/STEMRA, JASRAC, etc.
-- ✅ `[[SCAN_DATA:...]]` tag uitgebreid met `rights_societies` veld
-- ✅ Rechtenorganisaties kennis-sectie toegevoegd aan system prompt
-
-**2. ScanChatTab.tsx — V2 Pipeline Integratie**
-- ✅ `extractDiscogsId()` verwijderd — niet meer nodig
-- ✅ `cleanDisplayText()` vereenvoudigd — geen `[[DISCOGS:...]]` meer te strippen
-- ✅ `runV2Pipeline()` toegevoegd — roept `ai-photo-analysis-v2` aan na AI-stream
-- ✅ Auto-run na foto-upload: V2 pipeline start automatisch na Magic Mike's analyse
-- ✅ Resultaten met match status, confidence, rights society exclusions, en pricing
-- ✅ Suggestie-knoppen bij meerdere kandidaten of `needs_review`
-- ✅ `selectCandidate()` voor handmatige selectie van alternatieve releases
-
-**3. Flow**
-```text
-1. Gebruiker uploadt foto's
-2. Magic Mike beschrijft wat hij ziet (artiest, titel, identifiers, rechtenorganisaties)
-3. [[SCAN_DATA:{...}]] tag met rights_societies
-4. Automatisch ai-photo-analysis-v2 aanroepen
-5. V2 pipeline: deterministische matching + rights society gating
-6. Resultaat in chat: match status + pricing + exclusions
 ```
+null value in column "condition_grade" of relation "ai_scan_results" 
+violates not-null constraint
+```
+
+De chat roept `ai-photo-analysis-v2` aan ZONDER `conditionGrade`:
+
+```js
+// Chat stuurt:
+{ photoUrls: urls, mediaType: mType, skipSave: true }
+
+// Scanner stuurt:
+{ photoUrls, mediaType, conditionGrade }  // <-- dit werkt
+```
+
+De edge function probeert altijd een database-record aan te maken met `condition_grade`, wat crasht als dit veld `null` is.
+
+### Oplossing (2 wijzigingen)
+
+**1. `ScanChatTab.tsx` — `conditionGrade` meesturen**
+
+De chat stuurt een default waarde mee (`"Not Graded"` of `"unknown"`) omdat de conditie pas later in de flow wordt bepaald. Het belangrijkste is dat de V2 pipeline draait voor de identificatie.
+
+**2. `supabase/functions/ai-photo-analysis-v2/index.ts` — `skipSave` ondersteunen**
+
+Voeg een `skipSave` optie toe zodat de chat-flow GEEN database-record aanmaakt. De chat wil alleen het match-resultaat, niet een apart scan-record.
+
+Concreet:
+- Lees `skipSave` uit de request body (default `false`)
+- Als `skipSave === true`: sla de database insert over, sla de database update over, maar voer WEL de volledige analyse + matching + rights society gating uit
+- Retourneer het resultaat direct zonder DB-side-effects
+- `conditionGrade` wordt optioneel (default `"Not Graded"`) wanneer `skipSave` actief is
+
+Dit zorgt ervoor dat de chat exact dezelfde matching-logica gebruikt als de scanner, inclusief barcode-zoeken, scoring, rights society gating en local-first lookup.
+

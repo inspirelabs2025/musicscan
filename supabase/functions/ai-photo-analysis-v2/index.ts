@@ -2370,6 +2370,13 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
           bestConfidencePoints = Math.min(bestConfidencePoints, Math.floor(160 * 0.60));
           searchMetadata.matched_on.push('soft_gate_label_year');
           searchMetadata.explain.push('Label + Year match met artist/title context → suggested_match');
+        } else if (hasCatnoMatch && searchMetadata.technical_matches.year && hasArtistTitleContext) {
+          // Catno + Year + Artist/Title = suggested_match (catno is strong technical identifier)
+          console.log(`🟡 SOFT GATE: catno ✅ + year ✅ + artist/title context → suggested_match`);
+          searchMetadata.verification_level = 'suggested_match';
+          bestConfidencePoints = Math.min(bestConfidencePoints, Math.floor(160 * 0.75));
+          searchMetadata.matched_on.push('soft_gate_catno_year');
+          searchMetadata.explain.push('Catno + Year match met artist/title context → suggested_match');
         } else {
           console.log(`⛔ DISQUALIFIED: Niet genoeg identifier matches (${identifierMatchCount}/2 vereist)`);
           console.log(`   barcode: ${searchMetadata.technical_matches.barcode ? '✅' : '❌'}`);
@@ -2716,15 +2723,19 @@ async function verifyCandidate(
     
     // === CHECK LABEL (15 points) ===
     if (analysisData.label && releaseDetails.labels) {
-      const extractedLabel = analysisData.label.toLowerCase();
+      const extractedLabel = analysisData.label.toLowerCase().trim();
       for (const label of releaseDetails.labels) {
-        if (label.name && label.name.toLowerCase().includes(extractedLabel)) {
-          result.points += 15;
-          result.matched_on.push('label');
-          result.technical_matches.label = true;
-          result.explain.push('Label and year consistent');
-          console.log(`      ✅ Label match: +15 points`);
-          break;
+        if (label.name) {
+          const discogsLabel = label.name.toLowerCase().trim();
+          // Bidirectional match: either contains the other
+          if (discogsLabel.includes(extractedLabel) || extractedLabel.includes(discogsLabel)) {
+            result.points += 15;
+            result.matched_on.push('label');
+            result.technical_matches.label = true;
+            result.explain.push(`Label match: "${analysisData.label}" ↔ "${label.name}"`);
+            console.log(`      ✅ Label match: "${analysisData.label}" ↔ "${label.name}" → +15 points`);
+            break;
+          }
         }
       }
     }

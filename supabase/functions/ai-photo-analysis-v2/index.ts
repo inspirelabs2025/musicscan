@@ -2172,12 +2172,14 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
             seenIds.add(r.id);
             return {
               id: r.id,
+              release_id: r.id,
               title: r.title,
               catno: r.catno,
               label: r.label,
               year: r.year,
               country: r.country,
               thumb: r.thumb,
+              score: 0,
               url: `https://www.discogs.com/release/${r.id}`
             };
           }).filter(Boolean);
@@ -2194,7 +2196,7 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
             });
           }
           
-          suggestions = rawSuggestions.slice(0, 5);
+          suggestions = rawSuggestions.slice(0, 4);
           
           if (hasTechnicalIdentifiers) {
             console.log(`   ⚠️ HARD GATE: Technische identifiers aanwezig maar geen directe match`);

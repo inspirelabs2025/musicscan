@@ -53,11 +53,14 @@ interface V2PipelineResult {
 
 interface V2Suggestion {
   release_id: number;
+  id?: number;
   title: string;
-  score: number;
+  score?: number;
   country?: string;
   year?: number;
-  reason: string[];
+  catno?: string;
+  label?: string;
+  reason?: string[];
 }
 
 interface MarketplaceListing {
@@ -571,7 +574,8 @@ export function ScanChatTab() {
 
         } else if (v2Result && v2Result.suggestions && v2Result.suggestions.length > 0) {
           // ── MULTIPLE SUGGESTIONS, NO CLEAR WINNER ──
-          let sugMsg = `🔍 **Geen eenduidige match gevonden.** De scanner heeft ${v2Result.suggestions.length} mogelijke releases gevonden:\n\n`;
+          let sugMsg = `🔍 **Geen eenduidige match gevonden.**\n\n`;
+          sugMsg += `De scanner heeft **${v2Result.artist || 'onbekend'} - ${v2Result.title || 'onbekend'}** herkend, maar kan de exacte persing niet bevestigen.\n\n`;
 
           if (v2Result.rights_society_exclusions && v2Result.rights_society_exclusions.length > 0) {
             sugMsg += `⛔ **Uitgesloten op basis van rechtenorganisaties:**\n`;
@@ -581,7 +585,7 @@ export function ScanChatTab() {
             sugMsg += `\n`;
           }
 
-          sugMsg += `Selecteer de juiste release hieronder:`;
+          sugMsg += `Selecteer de juiste release hieronder, of upload extra foto's voor een betere match:`;
 
           setMessages(prev => [...prev, {
             role: 'assistant',
@@ -593,6 +597,10 @@ export function ScanChatTab() {
           // ── NO MATCH ──
           let noMatchMsg = `⚠️ **Geen match gevonden** in de Discogs-database.\n\n`;
           
+          if (v2Result?.artist || v2Result?.title) {
+            noMatchMsg += `🔎 Herkend: **${v2Result.artist || '?'} - ${v2Result.title || '?'}**\n\n`;
+          }
+
           if (v2Result?.rights_society_exclusions && v2Result.rights_society_exclusions.length > 0) {
             noMatchMsg += `⛔ **Uitgesloten releases:**\n`;
             for (const excl of v2Result.rights_society_exclusions) {
@@ -905,19 +913,20 @@ export function ScanChatTab() {
               {/* V2 Suggestions buttons */}
               {msg.v2Result?.suggestions && msg.v2Result.suggestions.length > 0 && !msg.pricingData && (
                 <div className="mt-3 space-y-2">
-                  {msg.v2Result.suggestions.slice(0, 5).map((sug) => (
+                  {msg.v2Result.suggestions.slice(0, 4).map((sug) => (
                     <Button
                       key={sug.release_id}
                       variant="outline"
                       size="sm"
                       className="w-full justify-between text-left h-auto py-2"
-                      onClick={() => selectCandidate(sug.release_id)}
+                      onClick={() => selectCandidate(sug.release_id || sug.id)}
                       disabled={isRunningV2}
                     >
                       <div className="flex flex-col items-start min-w-0">
                         <span className="text-xs font-medium truncate w-full">{sug.title}</span>
                         <span className="text-xs text-muted-foreground">
-                          {sug.country || ''}{sug.year ? ` (${sug.year})` : ''} · Score: {(sug.score * 100).toFixed(0)}%
+                          {sug.country || ''}{sug.year ? ` (${sug.year})` : ''}
+                          {sug.catno ? ` · ${sug.catno}` : ''}
                         </span>
                       </div>
                       <ExternalLink className="h-3.5 w-3.5 shrink-0 ml-2" />

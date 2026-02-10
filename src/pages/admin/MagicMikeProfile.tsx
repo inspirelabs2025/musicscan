@@ -141,7 +141,11 @@ export default function MagicMikeProfile() {
       }
 
       if (!content?.trim()) {
-        toast.error('Content is verplicht');
+        if (newSourceType === 'website') {
+          toast.error('Kon geen content ophalen van de website. Probeer het opnieuw of voer handmatig content in.');
+        } else {
+          toast.error('Content is verplicht');
+        }
         setAddingSource(false);
         return;
       }

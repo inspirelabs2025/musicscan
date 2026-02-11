@@ -1043,7 +1043,7 @@ export function ScanChatTab() {
       <div className="flex items-center justify-between mb-4 px-3 py-3 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <img src={magicMikeAvatar} alt="Magic Mike" className="h-11 w-11 rounded-full object-cover ring-2 ring-primary/40 shadow-lg" />
+            <img src={magicMikeAvatar} alt="Magic Mike" className="h-11 w-11 rounded-full object-cover object-top ring-2 ring-primary/40 shadow-lg" />
             <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-card" />
           </div>
           <div>
@@ -1080,7 +1080,7 @@ export function ScanChatTab() {
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2.5 animate-fadeIn`}>
             {msg.role === 'assistant' && (
-              <img src={magicMikeAvatar} alt="Magic Mike" className="h-8 w-8 rounded-full object-cover shrink-0 mt-1 ring-2 ring-primary/20 shadow-sm" />
+              <img src={magicMikeAvatar} alt="Magic Mike" className="h-8 w-8 rounded-full object-cover object-top shrink-0 mt-1 ring-2 ring-primary/20 shadow-sm" />
             )}
             <div className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm shadow-sm transition-colors ${
               msg.role === 'user' 
@@ -1378,7 +1378,7 @@ export function ScanChatTab() {
 
         {(isStreaming || isRunningV2) && messages[messages.length - 1]?.role !== 'assistant' && (
           <div className="flex justify-start gap-2.5">
-            <img src={magicMikeAvatar} alt="Magic Mike" className="h-8 w-8 rounded-full object-cover shrink-0 ring-2 ring-primary/20 shadow-sm" />
+            <img src={magicMikeAvatar} alt="Magic Mike" className="h-8 w-8 rounded-full object-cover object-top shrink-0 ring-2 ring-primary/20 shadow-sm" />
             <div className="bg-card/90 backdrop-blur-sm border border-border/40 rounded-2xl rounded-bl-md px-5 py-3.5 shadow-sm">
               <div className="flex gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '0ms' }} />

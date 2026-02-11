@@ -325,7 +325,7 @@ export default function AIScanV2() {
               <Badge variant="secondary" className="ml-2">BETA</Badge>
             </h1>
             <p className="text-muted-foreground">
-              Ontdek supersnel de juiste release ID - verbeterde analyse met GPT-4.1 en multi-pass technologie
+              Ontdek supersnel de juiste release ID
             </p>
             <div className="flex items-center justify-center gap-3">
               {user && <p className="text-sm text-muted-foreground">

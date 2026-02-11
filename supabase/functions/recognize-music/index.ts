@@ -36,7 +36,7 @@ serve(async (req) => {
     const formData = new FormData();
     formData.append("api_token", AUDD_API_TOKEN);
     formData.append("audio", audio);
-    formData.append("return", "spotify");
+    formData.append("return", "spotify,apple_music,deezer");
 
     const response = await fetch("https://api.audd.io/", {
       method: "POST",

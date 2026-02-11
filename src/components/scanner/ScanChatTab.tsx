@@ -417,17 +417,31 @@ export function ScanChatTab() {
 
   const startListening = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { 
+          echoCancellation: false, 
+          noiseSuppression: false, 
+          autoGainControl: false,
+          sampleRate: 44100,
+          channelCount: 1
+        } 
+      });
       setIsListening(true);
       setListeningProgress(0);
       setShowWelcomeActions(false);
 
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg' });
+      // Prefer audio/webm;codecs=opus for best quality
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+        ? 'audio/webm;codecs=opus' 
+        : MediaRecorder.isTypeSupported('audio/webm') 
+          ? 'audio/webm' 
+          : 'audio/ogg';
+      const mediaRecorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 128000 });
       const chunks: Blob[] = [];
       mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
 
-      // Countdown timer
-      const totalSeconds = 8;
+      // Countdown timer - 12 seconds for better recognition
+      const totalSeconds = 12;
       let elapsed = 0;
       const interval = setInterval(() => {
         elapsed++;
@@ -442,6 +456,16 @@ export function ScanChatTab() {
         stream.getTracks().forEach(t => t.stop());
 
         const blob = new Blob(chunks, { type: mediaRecorder.mimeType });
+        
+        // Check minimum size - too small means no real audio captured
+        if (blob.size < 5000) {
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: `⚠️ **Te weinig audio opgenomen.** Zorg dat muziek duidelijk hoorbaar is en probeer het opnieuw.`,
+          }]);
+          return;
+        }
+        
         const reader = new FileReader();
         reader.onloadend = async () => {
           const base64 = (reader.result as string).split(',')[1];
@@ -492,7 +516,8 @@ export function ScanChatTab() {
         reader.readAsDataURL(blob);
       };
 
-      mediaRecorder.start();
+      // Use timeslice for continuous data collection
+      mediaRecorder.start(1000);
       setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();

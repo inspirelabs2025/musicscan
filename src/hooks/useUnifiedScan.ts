@@ -339,8 +339,8 @@ export function useUnifiedScan() {
   }, []);
 
   // Manual search
-  const searchManual = useCallback(async (artist: string, title: string, catalogNumber?: string) => {
-    if (!artist && !title && !catalogNumber) {
+  const searchManual = useCallback(async (artist: string, title: string, barcode?: string, year?: string, country?: string, matrix?: string) => {
+    if (!artist && !title && !barcode && !year && !country && !matrix) {
       toast({
         title: 'Vul zoekgegevens in',
         description: 'Minimaal artiest of titel is vereist',
@@ -354,9 +354,12 @@ export function useUnifiedScan() {
     try {
       const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
         body: {
-          catalog_number: catalogNumber?.trim() || '',
+          catalog_number: barcode?.trim() || '',
           artist: artist?.trim(),
           title: title?.trim(),
+          year: year?.trim() || undefined,
+          country: country?.trim() || undefined,
+          matrix_number: matrix?.trim() || undefined,
           include_pricing: true,
         },
       });

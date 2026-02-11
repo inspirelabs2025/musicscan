@@ -321,7 +321,7 @@ export default function AIScanV2() {
             <h1 className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
               <Brain className="h-8 w-8" />
               <Sparkles className="h-6 w-6 text-yellow-500" />
-              Smart Foto Analyse V2
+              Smart Scan
               <Badge variant="secondary" className="ml-2">BETA</Badge>
             </h1>
             <p className="text-muted-foreground">

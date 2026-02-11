@@ -124,6 +124,17 @@ const translations = {
       noResults: "Geen resultaten",
       menu: "Menu",
     },
+    shazam: {
+      listening: "Luisteren...",
+      recognized: "Nummer herkend!",
+      noMatch: "Niet herkend",
+      micPermission: "Microfoon toestemming nodig",
+      tapToListen: "Tik om te luisteren",
+      recognizing: "Herkennen...",
+      addToCollection: "Voeg toe aan collectie",
+      moreAboutArtist: "Meer over deze artiest",
+      listenAgain: "Herken nog een nummer",
+    },
   },
   en: {
     nav: {
@@ -246,6 +257,17 @@ const translations = {
       search: "Search",
       noResults: "No results",
       menu: "Menu",
+    },
+    shazam: {
+      listening: "Listening...",
+      recognized: "Song recognized!",
+      noMatch: "Not recognized",
+      micPermission: "Microphone permission needed",
+      tapToListen: "Tap to listen",
+      recognizing: "Recognizing...",
+      addToCollection: "Add to collection",
+      moreAboutArtist: "More about this artist",
+      listenAgain: "Recognize another song",
     },
   },
 } as const;

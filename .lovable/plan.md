@@ -1,36 +1,51 @@
 
 
-## Camera-functie toevoegen aan Magic Mike Chat
+# Chat Visueel Verbeteren
 
-### Probleem
-De huidige file input in de chat (`<input type="file" accept="image/*">`) opent op mobiel alleen de bestandskiezer. Er ontbreekt een `capture="environment"` attribuut en een aparte camera-knop, waardoor gebruikers niet direct een foto kunnen maken.
+Hier zijn concrete verbeteringen om de Collection Chat er moderner en aantrekkelijker uit te laten zien:
 
-### Oplossing
-Twee aanpassingen in `src/components/scanner/ScanChatTab.tsx`:
+## 1. Avatar-iconen bij berichten
+- Gebruiker-berichten krijgen een klein profielfoto/avatar icoontje
+- AI-berichten krijgen een herkenbaar bot-icoon (Brain/Bot icon met een gouden ring)
+- Geeft het gevoel van een echt gesprek
 
-1. **Aparte camera-knop** naast de bestaande foto-knop in de input bar (onderaan de chat). De bestaande knop blijft voor het uploaden van bestanden uit de galerij; de nieuwe knop opent direct de camera.
+## 2. Typing indicator met animatie
+- Drie pulserende bolletjes in plaats van alleen tekst "AI denkt na..."
+- Smooth bounce-animatie zoals bij WhatsApp/iMessage
 
-2. **Twee hidden file inputs**:
-   - De bestaande `fileInputRef` (galerij/bestanden kiezen, zonder `capture`)
-   - Een nieuwe `cameraInputRef` met `capture="environment"` die direct de camera opent op mobiel
+## 3. Betere message bubbles
+- Subtiele schaduw en afrondingen verbeteren
+- Tijdstempel onder elk bericht (nu alleen tokens/ms info)
+- Lichte glasmorphism-stijl voor AI-berichten
 
-3. **UI aanpassing input bar**: Twee knoppen naast het tekstveld:
-   - Camera-icoon (`Camera`) -- opent de camera direct
-   - Galerij-icoon (`ImagePlus`) -- opent bestandskiezer
+## 4. Welkomstscherm vernieuwen
+- Groot welkom-icoon met animatie
+- Suggestie-knoppen als "chips" in een grid (2 kolommen) in plaats van een lange lijst
+- Categorie-labels bij suggesties (bijv. "Waarde", "Smaak", "Spotify")
 
-4. **Zelfde aanpassing in de pending-files preview**: De "+" knop voor extra foto's krijgt ook een camera-optie.
+## 5. Input-balk verbeteren
+- Grotere, mooiere input met afgeronde hoeken
+- Gradient send-knop (vinyl-gold)
+- Sticky input aan de onderkant
 
-### Technische details
+## 6. ReactMarkdown voor AI-responses
+- Huidige handmatige regex-parsing vervangen door `react-markdown` (al geinstalleerd)
+- Betere ondersteuning voor lijsten, headers, bold/italic
 
-**Bestand:** `src/components/scanner/ScanChatTab.tsx`
+---
 
-- Nieuwe `useRef`: `const cameraInputRef = useRef<HTMLInputElement>(null);`
-- Tweede hidden input:
-  ```html
-  <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFilesSelected} className="hidden" />
-  ```
-- Input bar wordt aangepast van 1 knop naar 2 knoppen:
-  - `Camera` icoon -> `cameraInputRef.current?.click()`
-  - `ImagePlus` icoon -> `fileInputRef.current?.click()`
-- In de pending-files preview-area: extra camera-knop naast de bestaande "+" knop
+## Technische Details
+
+### Bestanden die aangepast worden:
+- `src/pages/CollectionChat.tsx` - Hoofdbestand met alle visuele verbeteringen
+
+### Aanpak:
+1. Import `react-markdown` en `Avatar` componenten
+2. `renderMessage` functie herschrijven met avatars, timestamps en markdown
+3. Typing indicator component met CSS animatie
+4. Welkomstscherm met 2-koloms grid suggesties
+5. Input-balk stylen met gradient button
+
+### Geen nieuwe dependencies nodig
+Alles is al beschikbaar: `react-markdown`, `Avatar`, `framer-motion`, Tailwind animaties.
 

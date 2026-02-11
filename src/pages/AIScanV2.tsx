@@ -347,7 +347,7 @@ export default function AIScanV2() {
           {/* Tabs: Foto Scanner | Chat */}
           <Tabs defaultValue="chat" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="chat">🎩 Scan met Mike</TabsTrigger>
+              <TabsTrigger value="chat" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">🎩 Scan met Mike</TabsTrigger>
               <TabsTrigger value="scanner">📷 Foto Scanner</TabsTrigger>
             </TabsList>
 

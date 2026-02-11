@@ -1553,48 +1553,50 @@ export function ScanChatTab() {
       {/* Input bar - floating fixed at bottom */}
       {true && (
         <div className="fixed bottom-14 left-0 right-0 z-40 px-3 pb-2">
-        <div className="max-w-2xl mx-auto flex gap-2 p-3 rounded-2xl bg-card/95 backdrop-blur-md border border-border/50 shadow-[0_-2px_15px_rgba(0,0,0,0.1)]">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => cameraInputRef.current?.click()}
-            disabled={isStreaming || isUploading || isRunningV2 || isListening || isRecognizing}
-            className="shrink-0 h-10 w-10 rounded-full hover:bg-primary/10"
-            title="Maak een foto"
-          >
-            <Camera className="h-4 w-4 text-muted-foreground" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isStreaming || isUploading || isRunningV2 || isListening || isRecognizing}
-            className="shrink-0 h-10 w-10 rounded-full hover:bg-primary/10"
-            title="Kies uit galerij"
-          >
-            <ImagePlus className="h-4 w-4 text-muted-foreground" />
-          </Button>
-          <Button
-            variant={isListening ? "default" : "ghost"}
-            size="icon"
-            onClick={startListening}
-            disabled={isStreaming || isUploading || isRunningV2 || isListening || isRecognizing}
-            className={`shrink-0 h-10 w-10 rounded-full transition-all ${
-              isListening 
-                ? 'bg-primary text-primary-foreground animate-pulse shadow-lg shadow-primary/30' 
-                : 'hover:bg-primary/10'
-            }`}
-            title={isListening ? "Luisteren..." : "Herken muziek"}
-          >
-            {isRecognizing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Mic className={`h-4 w-4 ${isListening ? '' : 'text-muted-foreground'}`} />
-            )}
-          </Button>
+        <div className="max-w-2xl mx-auto flex items-end gap-1.5 p-2 rounded-2xl bg-card/95 backdrop-blur-md border border-border/50 shadow-[0_-2px_15px_rgba(0,0,0,0.1)]">
+          <div className="flex items-center gap-0.5 shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => cameraInputRef.current?.click()}
+              disabled={isStreaming || isUploading || isRunningV2 || isListening || isRecognizing}
+              className="h-8 w-8 rounded-full hover:bg-primary/10"
+              title="Maak een foto"
+            >
+              <Camera className="h-3.5 w-3.5 text-muted-foreground" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isStreaming || isUploading || isRunningV2 || isListening || isRecognizing}
+              className="h-8 w-8 rounded-full hover:bg-primary/10"
+              title="Kies uit galerij"
+            >
+              <ImagePlus className="h-3.5 w-3.5 text-muted-foreground" />
+            </Button>
+            <Button
+              variant={isListening ? "default" : "ghost"}
+              size="icon"
+              onClick={startListening}
+              disabled={isStreaming || isUploading || isRunningV2 || isListening || isRecognizing}
+              className={`h-8 w-8 rounded-full transition-all ${
+                isListening 
+                  ? 'bg-primary text-primary-foreground animate-pulse shadow-lg shadow-primary/30' 
+                  : 'hover:bg-primary/10'
+              }`}
+              title={isListening ? "Luisteren..." : "Herken muziek"}
+            >
+              {isRecognizing ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Mic className={`h-3.5 w-3.5 ${isListening ? '' : 'text-muted-foreground'}`} />
+              )}
+            </Button>
+          </div>
           {isListening && (
             <div className="flex items-center gap-2 shrink-0">
-              <div className="relative h-2 w-16 bg-muted rounded-full overflow-hidden">
+              <div className="relative h-2 w-12 bg-muted rounded-full overflow-hidden">
                 <div 
                   className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-1000"
                   style={{ width: `${listeningProgress}%` }}
@@ -1610,12 +1612,12 @@ export function ScanChatTab() {
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={isListening ? "🎵 Luisteren..." : "Stel Magic Mike een vraag..."}
-            className="min-h-[40px] max-h-[120px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60"
+            className="min-h-[44px] max-h-[120px] flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60 text-sm py-3"
             rows={1}
             disabled={isStreaming || isRunningV2 || isListening || isRecognizing}
           />
-          <Button onClick={handleSend} disabled={!input.trim() || isStreaming || isRunningV2 || isListening || isRecognizing} size="icon" className="shrink-0 h-10 w-10 rounded-full shadow-sm">
-            {(isStreaming || isRunningV2) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          <Button onClick={handleSend} disabled={!input.trim() || isStreaming || isRunningV2 || isListening || isRecognizing} size="icon" className="shrink-0 h-8 w-8 rounded-full shadow-sm">
+            {(isStreaming || isRunningV2) ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
           </Button>
         </div>
         </div>

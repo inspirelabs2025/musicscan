@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SitePopupProvider } from "@/components/popups/SitePopupProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -553,23 +554,25 @@ const AppContent = () => {
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <CartProvider>
-          <AudioProvider>
-            <TooltipProvider>
-              <ErrorBoundary showDetails={true}>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <SitePopupProvider>
-                    <AppContent />
-                  </SitePopupProvider>
-                </BrowserRouter>
-              </ErrorBoundary>
-            </TooltipProvider>
-          </AudioProvider>
-        </CartProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <CartProvider>
+            <AudioProvider>
+              <TooltipProvider>
+                <ErrorBoundary showDetails={true}>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    <SitePopupProvider>
+                      <AppContent />
+                    </SitePopupProvider>
+                  </BrowserRouter>
+                </ErrorBoundary>
+              </TooltipProvider>
+            </AudioProvider>
+          </CartProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 };

@@ -16,6 +16,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { SubscriptionStatus } from "@/components/SubscriptionStatus";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ShoppingCartWidget } from "@/components/ShoppingCartWidget";
 
 // SHOP MENU ITEMS
@@ -303,6 +304,7 @@ export function Navigation() {
         
         {/* Notifications Bell - Only show when logged in */}
         <div className="flex items-center gap-2 flex-shrink-0">
+          <LanguageSwitcher />
           {user && <NotificationsDropdown />}
           
           {/* Shopping Cart Widget */}
@@ -434,8 +436,10 @@ export function Navigation() {
           <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-[58px] cursor-pointer" />
         </Link>
         
-        {/* Mobile Shopping Cart Widget */}
-        <ShoppingCartWidget />
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
+          <ShoppingCartWidget />
+        </div>
       </div>
       </div>
     </header>

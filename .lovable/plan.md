@@ -1,56 +1,29 @@
 
 
-# Magic Mike Chat Verrijken met Platform Content
+# Slimmere suggesties na "Uitleg scannen" en andere fases
 
-## Wat gaan we doen?
+## Probleem
+Na de scan-uitleg van Magic Mike worden generieke suggesties getoond (bijv. "Vertel daar meer over") in plaats van logische vervolgacties zoals het starten van een scan of het handmatig invoeren.
 
-Na een succesvolle scan of wanneer een artiest ter sprake komt, toont Magic Mike automatisch relevante content uit het MusicScan platform: verhalen, producten, anekdotes en singles. Dit maakt de chat een ontdekkingsinterface voor al je content.
+## Oplossing
+Een nieuw suggestie-pool toevoegen voor de "scan guide" context, en de detectielogica verbeteren zodat na scan-gerelateerde uitleg altijd de juiste vervolgacties worden aangeboden.
 
-## 3 Verbeteringen
+## Wijzigingen in `ScanChatTab.tsx`
 
-### 1. Content Cards na Scan-resultaat
-Wanneer een album/artiest is geidentificeerd, zoekt de chat automatisch naar gerelateerde platform-content en toont die als visuele kaartjes direct in de chat.
+### 1. Nieuw suggestie-pool: `SCAN_GUIDE_FOLLOWUP_SUGGESTIONS`
+```
+- 📸 Scan een CD of LP (triggert foto-flow)
+- ✏️ Ik typ de artiest en titel zelf in (opent handmatig formulier)  
+- 💡 Uitleg scannen (nogmaals de gids)
+```
 
-- **Artiesten-verhaal** -- link naar `/artists/{slug}`
-- **Album-verhalen** -- link naar `/muziek-verhaal/{slug}`
-- **Singles** -- link naar `/singles/{slug}`
-- **Producten** (posters, t-shirts, canvas) -- link naar `/product/{slug}`
-- **Anekdotes** -- link naar `/anekdotes/{slug}`
+### 2. Detectielogica uitbreiden in `detectFollowupPool`
+Toevoegen van herkenning voor scan-guide-gerelateerde antwoorden (trefwoorden: "belichting", "matrixnummer", "scannen", "barcode", "foto", "hoek") die naar het nieuwe pool verwijzen.
 
-De kaartjes verschijnen als een horizontaal scrollbare strip met artwork, titel en type-badge.
+### 3. "Scan nog een CD of LP" chip slimmer maken
+Wanneer er nog geen `verifiedResult` is (dus geen eerdere scan gedaan), wordt de tekst "Scan een CD of LP" i.p.v. "Scan nog een CD of LP".
 
-### 2. Slimmere Suggestie-chips met Platform Links
-Na een scan worden de suggestie-chips uitgebreid met content-specifieke opties:
-- "Lees het verhaal van [artiest]" (alleen als er een artist_story bestaat)
-- "Bekijk [artiest] producten" (alleen als er producten bestaan)
-- "Ken je deze anekdote?" (alleen als er anekdotes bestaan)
-
-### 3. Context-injectie naar de Edge Function
-Bij een gescande artiest sturen we een samenvatting van beschikbare platform-content mee naar de AI, zodat Magic Mike er actief naar kan verwijzen:
-> "We hebben een verhaal over David Bowie, 3 singles en 12 producten op het platform."
-
-Dit maakt dat Mike kan zeggen: *"Wist je dat we een uitgebreid verhaal over deze artiest hebben? Bekijk het eens!"*
-
----
-
-## Technische Details
-
-### Nieuwe component: `ArtistContentCards.tsx`
-Een compacte, horizontaal scrollbare strip met content-kaartjes. Gebruikt de bestaande `useArtistContent` hook.
-
-### Wijzigingen in `ScanChatTab.tsx`
-1. Na `setVerifiedResult(v2Result)` wordt `useArtistContent` getriggerd met de artiestnaam
-2. Content cards worden gerenderd onder het scan-resultaat bericht
-3. Suggestie-chips worden verrijkt op basis van beschikbare content
-4. Bij het versturen van berichten wordt een `[PLATFORM_CONTENT: ...]` context-tag meegegeven aan de edge function
-
-### Wijzigingen in `scan-chat/index.ts`
-- System prompt krijgt een extra instructie: "Als er platform-content beschikbaar is (aangegeven met PLATFORM_CONTENT tag), verwijs hier actief naar en moedig de gebruiker aan om deze te bekijken."
-
-### Bestanden
-| Bestand | Actie |
-|---|---|
-| `src/components/scanner/ArtistContentCards.tsx` | Nieuw -- content strip component |
-| `src/components/scanner/ScanChatTab.tsx` | Wijzigen -- content cards integreren, chips verrijken, context meesturen |
-| `supabase/functions/scan-chat/index.ts` | Wijzigen -- prompt instructie voor platform-content verwijzingen |
-
+Dit zorgt ervoor dat na elke fase logische vervolgacties worden geboden:
+- Na uitleg scannen: foto maken, handmatig invoeren
+- Na scan-resultaat: feitjes, artiest info, opnieuw scannen
+- Na artiest-info: meer weetjes, andere albums, opnieuw scannen

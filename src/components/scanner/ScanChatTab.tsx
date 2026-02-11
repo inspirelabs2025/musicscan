@@ -243,16 +243,13 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
       return UPLOAD_PHASE_SUGGESTIONS;
     }
     
-    // Fase: Welkomstbericht
-    const isWelcome = lastAssistantContent?.includes('Magic Mike') && lastAssistantContent?.includes('Kies hieronder');
-    if (isWelcome) {
-      return WELCOME_SUGGESTIONS;
-    }
-    
-    // Skip setup messages without suggestions
-    const skipPhrases = ['Typ je vraag hieronder'];
-    const isSetupMessage = skipPhrases.some(p => lastAssistantContent?.includes(p));
-    if (isSetupMessage) return [];
+    // Fase: Welkomstbericht — GEEN suggesties (Scannen/Stel een vraag knoppen zijn al zichtbaar)
+    const isWelcome = lastAssistantContent?.includes('Magic Mike');
+    const isSetupMessage = lastAssistantContent?.includes('Kies hieronder') || 
+      lastAssistantContent?.includes('Typ je vraag hieronder') ||
+      lastAssistantContent?.includes('Wil je iets **scannen**') ||
+      lastAssistantContent?.includes('Wat wil je scannen');
+    if (isWelcome || isSetupMessage) return [];
     
     // Fase: Context-afhankelijke follow-ups na inhoudelijk antwoord
     if (lastAssistantContent && lastAssistantContent.length > 50) {

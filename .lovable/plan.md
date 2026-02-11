@@ -1,93 +1,72 @@
 
-# Meertalig Platform (NL/EN) - Stapsgewijze Aanpak
+# Shazam-integratie in Magic Mike Chat
 
-## Overzicht
-Het hele publieke platform wordt tweetalig (Nederlands + Engels). Admin pagina's blijven Nederlands. We bouwen eerst de infrastructuur, dan pagina voor pagina.
+## Wat we bouwen
+Een microfoon-knop in de Magic Mike chat input-balk waarmee gebruikers muziek kunnen herkennen door een audiofragment op te nemen. Het resultaat verschijnt direct in het chatgesprek.
 
-## Fase 1: Infrastructuur (eerste stap)
+## Vereiste: AudD API Key
 
-### 1.1 Taal Context & Hook
-- Nieuw bestand `src/contexts/LanguageContext.tsx` met:
-  - Taalstatus (`nl` | `en`), opgeslagen in `localStorage`
-  - Auto-detectie via browser `navigator.language`
-  - `useLanguage()` hook die `{ language, setLanguage, t }` teruggeeft
-- Nieuw bestand `src/i18n/translations.ts` als centraal vertaalbestand met geneste objecten per sectie
+Er is nog geen `AUDD_API_TOKEN` geconfigureerd. Je hebt een gratis account nodig op [audd.io](https://dashboard.audd.io/) (300 gratis requests).
 
-### 1.2 Vertaalstructuur
+We voegen de secret toe voordat we de edge function bouwen.
+
+## Technische Aanpak
+
+### 1. Edge Function: `recognize-music`
+Nieuw bestand: `supabase/functions/recognize-music/index.ts`
+
+- Ontvangt base64-encoded audio (WebM/OGG, ~8 seconden)
+- Stuurt naar AudD API (`https://api.audd.io/` met `return=spotify`)
+- Retourneert: artiest, titel, album, release date, Spotify-link, albumcover
+
+### 2. ScanChatTab.tsx aanpassingen
+
+**Nieuwe state:**
+- `isListening` - of de microfoon actief is
+- `listeningProgress` - countdown timer (8 seconden)
+
+**Nieuwe knop in input-balk:**
+- Microfoon-icoon (van Lucide: `Mic`) naast de camera/galerij knoppen
+- Bij klikken: vraag microfoon-toestemming, neem 8 sec op
+- Geanimeerde pulse-ring tijdens opname + countdown
+- Na opname: base64 encode, stuur naar edge function, toon resultaat als chatbericht
+
+**Resultaat in chat:**
+- Assistent-bericht met artiest, titel, album
+- Spotify-link als die beschikbaar is
+- Suggestie-chips: "Voeg toe aan collectie", "Meer over deze artiest", "Herken nog een nummer"
+
+### 3. Vertalingen (i18n)
+Nieuwe keys in `src/i18n/translations.ts` onder `shazam`:
+
+| Key | NL | EN |
+|-----|----|----|
+| listening | Luisteren... | Listening... |
+| recognized | Nummer herkend! | Song recognized! |
+| noMatch | Niet herkend | Not recognized |
+| micPermission | Microfoon toestemming nodig | Microphone permission needed |
+| tapToListen | Tik om te luisteren | Tap to listen |
+
+### 4. Gebruikersflow
+
 ```text
-src/i18n/
-  translations.ts      -- alle vertalingen { nl: {...}, en: {...} }
+[Tik microfoon] --> [Browser vraagt toestemming]
+    --> [Luisteren... 8 sec met countdown]
+    --> [Audio naar recognize-music edge function]
+    --> [AudD API antwoord]
+    --> [Resultaat als chatbericht van Magic Mike]
 ```
 
-Structuur per sectie, bijv.:
-```text
-{
-  nl: {
-    nav: { shop: "Shop", stories: "Verhalen", quiz: "Quiz", ... },
-    hero: { title: "Scan Je Collectie", subtitle: "...", cta: "Start Scannen", ... },
-    common: { free: "Gratis", readMore: "Lees meer", ... },
-    ...
-  },
-  en: {
-    nav: { shop: "Shop", stories: "Stories", quiz: "Quiz", ... },
-    hero: { title: "Scan Your Collection", subtitle: "...", cta: "Start Scanning", ... },
-    common: { free: "Free", readMore: "Read more", ... },
-    ...
-  }
-}
-```
+## Bestanden
 
-### 1.3 Taalschakelaar Component
-- Klein component `LanguageSwitcher.tsx` met NL/EN vlaggetjes in de navigatiebalk
-- Wordt opgenomen in `Navigation.tsx`
+| Bestand | Actie |
+|---------|-------|
+| `supabase/functions/recognize-music/index.ts` | Nieuw |
+| `src/components/scanner/ScanChatTab.tsx` | Microfoon-knop + opname-logica toevoegen |
+| `src/i18n/translations.ts` | Shazam vertalingen NL/EN |
 
-## Fase 2: Gedeelde Componenten (stap 2)
-
-Vertalingen toepassen op:
-1. **Navigation.tsx** - Menu items, dropdowns
-2. **ScannerHero.tsx** - Hero teksten, CTA buttons
-3. **QuickLinks.tsx** - Labels
-4. **ConditionalFooter / Footer** - Footer teksten
-5. **Common UI** - Buttons, labels, foutmeldingen
-
-## Fase 3: Pagina's (stap voor stap)
-
-Elke iteratie pakt een groep pagina's aan:
-
-| Volgorde | Pagina's | Reden |
-|----------|----------|-------|
-| 1 | Home, NotFound | Landingspagina's, eerste indruk |
-| 2 | Shop, ProductDetail | Commercieel belangrijk |
-| 3 | Verhalen, Singles, Artists | Content pagina's |
-| 4 | QuizHub, Quiz | Interactieve features |
-| 5 | Auth, Profile, Pricing | Account & conversie |
-| 6 | Overige publieke pagina's | Nieuws, Releases, Podcasts, etc. |
-
-## Technische Details
-
-### LanguageContext opzet
-- `createContext` met `language`, `setLanguage`, `t(key)` functie
-- `t('hero.title')` geeft automatisch de juiste vertaling terug
-- Provider wraps de hele app in `App.tsx` (rond alle andere providers)
-- `localStorage` key: `musicscan-language`
-
-### Vertaalfunctie `t()`
-- Ondersteunt geneste keys: `t('nav.shop')` 
-- Fallback naar Nederlands als een Engelse vertaling ontbreekt
-- TypeScript typing voor autocomplete op vertaalkeys
-
-### Wat NIET vertaald wordt
-- Admin pagina's (alle `/admin/*` routes)
-- Database content (verhalen, nieuws, etc. blijven in oorspronkelijke taal)
-- Technische labels in admin tools
-
-### Wat WEL vertaald wordt
-- Alle UI labels, buttons, titels, subtitels
-- Navigatie en menu's
-- SEO meta tags (title, description) per taal
-- Placeholder teksten
-- Foutmeldingen en toasts
-- Footer content
-
-## Aanpak
-We starten met **Fase 1** (infrastructuur) zodat het vertaalsysteem klaarstaat. Daarna werken we pagina voor pagina door de lijst.
+## Stappen
+1. AUDD_API_TOKEN secret toevoegen (vraag aan gebruiker)
+2. Edge function `recognize-music` bouwen en deployen
+3. Microfoon-knop + opname-logica in ScanChatTab
+4. Vertalingen toevoegen

@@ -106,21 +106,76 @@ const cleanDisplayText = (text: string): string => {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 };
-// ─── Suggestion pools ──────────────────────────────────────
+// ─── Suggestion pools per fase ──────────────────────────────
+// Fase: Na succesvolle scan, nog niet opgeslagen
 const DISCOVERY_SUGGESTIONS = [
+  { emoji: '💾', text: 'Opslaan in mijn collectie' },
   { emoji: '🎉', text: 'Leuke feitjes over dit album' },
   { emoji: '🎤', text: 'Vertel me meer over de artiest' },
+  { emoji: '💰', text: 'Wat is dit album waard?' },
+  { emoji: '🎵', text: 'Welke nummers zijn het bekendst?' },
   { emoji: '📸', text: 'Scan nog een CD of LP' },
 ];
 
+// Fase: Al opgeslagen in collectie
 const SAVED_SUGGESTIONS = [
   { emoji: '🎉', text: 'Leuke feitjes over dit album' },
   { emoji: '🎤', text: 'Vertel me meer over de artiest' },
+  { emoji: '💿', text: 'Welke andere albums moet ik kennen?' },
+  { emoji: '🎵', text: 'Welke nummers zijn het bekendst?' },
+  { emoji: '📅', text: 'Hoe was de muziekscene in die tijd?' },
   { emoji: '📸', text: 'Scan nog een CD of LP' },
 ];
 
-// Contextual follow-ups based on last assistant message content
-const FOLLOWUP_SUGGESTIONS = [
+// Fase: Na mediatype selectie (foto upload prompt)
+const UPLOAD_PHASE_SUGGESTIONS = [
+  { emoji: '✏️', text: 'Ik typ de artiest en titel zelf in' },
+  { emoji: '💡', text: 'Tips voor de beste scanresultaten' },
+];
+
+// Fase: Geen match gevonden
+const NO_MATCH_SUGGESTIONS = [
+  { emoji: '📸', text: 'Ik upload extra foto\'s' },
+  { emoji: '🔍', text: 'Kun je nog eens goed naar de matrix kijken?' },
+  { emoji: '✏️', text: 'Ik typ de artiest en titel zelf in' },
+  { emoji: '💡', text: 'Waar vind ik het matrixnummer?' },
+];
+
+// Fase: Welkomstbericht (nog geen mediatype gekozen)
+const WELCOME_SUGGESTIONS = [
+  { emoji: '❓', text: 'Wat kan Magic Mike allemaal?' },
+  { emoji: '💡', text: 'Hoe werkt de scanner?' },
+];
+
+// Fase: Artiest-gerelateerde follow-ups (na antwoord over artiest)
+const ARTIST_FOLLOWUP_SUGGESTIONS = [
+  { emoji: '📚', text: 'Nog meer weetjes over deze artiest?' },
+  { emoji: '💿', text: 'Welke albums zijn het meest gewild?' },
+  { emoji: '🎸', text: 'Wie hebben er aan meegewerkt?' },
+  { emoji: '🏆', text: 'Welke prijzen heeft deze artiest gewonnen?' },
+  { emoji: '📸', text: 'Scan nog een CD of LP' },
+];
+
+// Fase: Album-gerelateerde follow-ups (na antwoord over album/feitjes)
+const ALBUM_FOLLOWUP_SUGGESTIONS = [
+  { emoji: '🤔', text: 'Vertel daar meer over' },
+  { emoji: '🎤', text: 'Hoe zit het met de artiest zelf?' },
+  { emoji: '🔍', text: 'Zijn er bijzondere feiten over de opnames?' },
+  { emoji: '📅', text: 'Hoe was de muziekscene in die tijd?' },
+  { emoji: '💰', text: 'Wat is dit album waard?' },
+  { emoji: '📸', text: 'Scan nog een CD of LP' },
+];
+
+// Fase: Waarde/prijs-gerelateerde follow-ups
+const VALUE_FOLLOWUP_SUGGESTIONS = [
+  { emoji: '📈', text: 'Stijgt of daalt de waarde?' },
+  { emoji: '💎', text: 'Welke versies zijn het meest gewild?' },
+  { emoji: '🎉', text: 'Leuke feitjes over dit album' },
+  { emoji: '📸', text: 'Scan nog een CD of LP' },
+];
+
+// Fase: Algemene follow-ups (fallback)
+const GENERAL_FOLLOWUP_SUGGESTIONS = [
   { emoji: '🤔', text: 'Vertel daar meer over' },
   { emoji: '🎵', text: 'Welke nummers raad je aan?' },
   { emoji: '📚', text: 'Nog meer weetjes hierover?' },
@@ -130,18 +185,30 @@ const FOLLOWUP_SUGGESTIONS = [
   { emoji: '🎸', text: 'Wie hebben er aan meegewerkt?' },
   { emoji: '📅', text: 'Hoe was de muziekscene in die tijd?' },
   { emoji: '🔍', text: 'Zijn er bijzondere feiten over de opnames?' },
-  { emoji: '💰', text: 'Hoe staat het met de waarde van dit album?' },
-];
-
-const NO_MATCH_SUGGESTIONS = [
-  { emoji: '📸', text: 'Ik upload extra foto\'s' },
-  { emoji: '🔍', text: 'Kun je nog eens goed naar de matrix kijken?' },
-  { emoji: '💬', text: 'Ik typ de artiest en titel zelf in' },
+  { emoji: '💰', text: 'Wat is dit album waard?' },
 ];
 
 function pickRandom<T>(arr: T[], count: number): T[] {
   const shuffled = [...arr].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
+}
+
+// Detect conversation context from last assistant message
+function detectFollowupPool(content: string): Array<{ emoji: string; text: string }> {
+  const lower = content.toLowerCase();
+  // Artist-focused response
+  if (lower.includes('artiest') || lower.includes('biografie') || lower.includes('carrière') || lower.includes('band')) {
+    return ARTIST_FOLLOWUP_SUGGESTIONS;
+  }
+  // Value/pricing response
+  if (lower.includes('waarde') || lower.includes('prijs') || lower.includes('€') || lower.includes('marktplaats') || lower.includes('median')) {
+    return VALUE_FOLLOWUP_SUGGESTIONS;
+  }
+  // Album/recording facts
+  if (lower.includes('opname') || lower.includes('studio') || lower.includes('producer') || lower.includes('feitje') || lower.includes('weetje')) {
+    return ALBUM_FOLLOWUP_SUGGESTIONS;
+  }
+  return GENERAL_FOLLOWUP_SUGGESTIONS;
 }
 
 interface SuggestionChipsProps {
@@ -159,21 +226,45 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
   verifiedResult, savedToCollection, isStreaming, isRunningV2, lastAssistantContent, hasNoMatch, onSave, onSend,
 }) => {
   const suggestions = useMemo(() => {
+    // Fase: Geen match
     if (hasNoMatch) return pickRandom(NO_MATCH_SUGGESTIONS, 3);
+    
+    // Fase: Succesvolle scan
     if (verifiedResult?.discogs_id) {
-      return savedToCollection ? SAVED_SUGGESTIONS : DISCOVERY_SUGGESTIONS;
+      const pool = savedToCollection ? SAVED_SUGGESTIONS : DISCOVERY_SUGGESTIONS;
+      // Filter "opslaan" als al opgeslagen
+      const filtered = savedToCollection ? pool : pool.filter(s => s.text !== 'Opslaan in mijn collectie');
+      return pickRandom(filtered, 3);
     }
-    // After media type selection (photo upload prompt), show manual search option
+    
+    // Fase: Na mediatype selectie (foto upload prompt)
     const isPhotoPrompt = lastAssistantContent?.includes('Upload je foto') || lastAssistantContent?.includes('Eerste knop');
     if (isPhotoPrompt) {
-      return [{ emoji: '✏️', text: 'Ik typ de artiest en titel zelf in' }];
+      return UPLOAD_PHASE_SUGGESTIONS;
     }
-    // After any AI response, show general follow-ups — but NOT during scan setup (welcome, ask prompt)
-    const skipPhrases = ['Hey, ik ben Magic Mike', 'Kies hieronder', 'Typ je vraag hieronder'];
+    
+    // Fase: Welkomstbericht
+    const isWelcome = lastAssistantContent?.includes('Magic Mike') && lastAssistantContent?.includes('Kies hieronder');
+    if (isWelcome) {
+      return WELCOME_SUGGESTIONS;
+    }
+    
+    // Skip setup messages without suggestions
+    const skipPhrases = ['Typ je vraag hieronder'];
     const isSetupMessage = skipPhrases.some(p => lastAssistantContent?.includes(p));
-    if (lastAssistantContent && !isSetupMessage) {
-      return pickRandom(FOLLOWUP_SUGGESTIONS, 3);
+    if (isSetupMessage) return [];
+    
+    // Fase: Context-afhankelijke follow-ups na inhoudelijk antwoord
+    if (lastAssistantContent && lastAssistantContent.length > 50) {
+      const pool = detectFollowupPool(lastAssistantContent);
+      return pickRandom(pool, 3);
     }
+    
+    // Fase: Kort antwoord → algemene suggesties
+    if (lastAssistantContent) {
+      return pickRandom(GENERAL_FOLLOWUP_SUGGESTIONS, 3);
+    }
+    
     return [];
   }, [verifiedResult?.discogs_id, savedToCollection, lastAssistantContent, hasNoMatch]);
 

@@ -263,12 +263,6 @@ export function Navigation() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
 
-                {/* Dashboard Link */}
-                <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <NavLink item={{ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard }} />
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
 
                 {/* Subscription Status */}
                 <NavigationMenuItem>
@@ -399,9 +393,6 @@ export function Navigation() {
                        )}
                      </div>
 
-
-                     {/* Dashboard */}
-                     <NavLink item={{ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard }} mobile />
                      
                      {/* Mobile User Section */}
                      <div className="border-t mt-auto pt-4">

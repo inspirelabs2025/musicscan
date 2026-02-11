@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check, Sparkles, MessageCircle, ScanLine, Search, HelpCircle } from 'lucide-react';
+import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check, Sparkles, MessageCircle, ScanLine, Search, HelpCircle, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -353,9 +353,12 @@ export function ScanChatTab() {
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [verifiedResult, setVerifiedResult] = useState<V2PipelineResult | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [showManualSearch, setShowManualSearch] = useState(false);
-  const [isManualSearching, setIsManualSearching] = useState(false);
+   const [isUploading, setIsUploading] = useState(false);
+   const [showManualSearch, setShowManualSearch] = useState(false);
+   const [isManualSearching, setIsManualSearching] = useState(false);
+   const [isListening, setIsListening] = useState(false);
+   const [listeningProgress, setListeningProgress] = useState(0);
+   const [isRecognizing, setIsRecognizing] = useState(false);
 
   // Artist content for platform enrichment
   const currentArtistName = verifiedResult?.artist || null;
@@ -411,6 +414,97 @@ export function ScanChatTab() {
       },
     ]);
   };
+
+  const startListening = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setIsListening(true);
+      setListeningProgress(0);
+      setShowWelcomeActions(false);
+
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg' });
+      const chunks: Blob[] = [];
+      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+
+      // Countdown timer
+      const totalSeconds = 8;
+      let elapsed = 0;
+      const interval = setInterval(() => {
+        elapsed++;
+        setListeningProgress(Math.round((elapsed / totalSeconds) * 100));
+        if (elapsed >= totalSeconds) clearInterval(interval);
+      }, 1000);
+
+      mediaRecorder.onstop = async () => {
+        clearInterval(interval);
+        setIsListening(false);
+        setListeningProgress(0);
+        stream.getTracks().forEach(t => t.stop());
+
+        const blob = new Blob(chunks, { type: mediaRecorder.mimeType });
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const base64 = (reader.result as string).split(',')[1];
+          if (!base64) return;
+
+          setIsRecognizing(true);
+          setMessages(prev => [...prev, 
+            { role: 'user', content: '🎤 Muziek herkennen...' },
+            { role: 'assistant', content: '🎵 **Even luisteren...** Ik probeer het nummer te herkennen!' }
+          ]);
+
+          try {
+            const { data, error } = await supabase.functions.invoke('recognize-music', {
+              body: { audio: base64 }
+            });
+
+            if (error) throw error;
+
+            // Remove loading message
+            setMessages(prev => prev.filter(m => !m.content.includes('Even luisteren...')));
+
+            if (data?.recognized) {
+              let msg = `🎶 **Nummer herkend!**\n\n`;
+              msg += `🎤 **${data.artist}** — *${data.title}*\n`;
+              if (data.album) msg += `💿 Album: ${data.album}\n`;
+              if (data.release_date) msg += `📅 ${data.release_date}\n`;
+              if (data.spotify_url) msg += `\n🎧 [Beluister op Spotify](${data.spotify_url})\n`;
+              msg += `\nWil je meer weten over deze artiest, of zal ik nog een nummer herkennen?`;
+
+              setMessages(prev => [...prev, { role: 'assistant', content: msg }]);
+            } else {
+              setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: `😔 **Niet herkend.** Ik kon het nummer helaas niet identificeren.\n\nProbeer het opnieuw met het nummer wat luider, of probeer een ander fragment. Tik op het microfoon-icoontje om het opnieuw te proberen!`,
+              }]);
+            }
+          } catch (err) {
+            console.error('Music recognition error:', err);
+            setMessages(prev => prev.filter(m => !m.content.includes('Even luisteren...')));
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: `⚠️ **Herkenning mislukt.** ${err instanceof Error ? err.message : 'Probeer het later opnieuw.'}`,
+            }]);
+          } finally {
+            setIsRecognizing(false);
+          }
+        };
+        reader.readAsDataURL(blob);
+      };
+
+      mediaRecorder.start();
+      setTimeout(() => {
+        if (mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+        }
+      }, totalSeconds * 1000);
+
+    } catch (err) {
+      console.error('Microphone error:', err);
+      setIsListening(false);
+      toast({ title: "Microfoon niet beschikbaar", description: "Geef toestemming voor de microfoon of controleer je instellingen.", variant: "destructive" });
+    }
+  }, [messages, supabase]);
 
   const handleScanGuide = () => {
     sendMessage('Geef me een uitgebreide uitleg hoe ik de beste scanfoto\'s maak van mijn vinyl platen en CD\'s. Leg per mediatype uit welke foto\'s ik moet maken (voorkant, achterkant, matrix, barcode etc.), met tips voor belichting, hoek en scherpte. Geef ook aan welke details het belangrijkst zijn voor een goede match.');
@@ -1430,7 +1524,7 @@ export function ScanChatTab() {
             variant="ghost"
             size="icon"
             onClick={() => cameraInputRef.current?.click()}
-            disabled={isStreaming || isUploading || isRunningV2}
+            disabled={isStreaming || isUploading || isRunningV2 || isListening || isRecognizing}
             className="shrink-0 h-10 w-10 rounded-full hover:bg-primary/10"
             title="Maak een foto"
           >
@@ -1440,22 +1534,53 @@ export function ScanChatTab() {
             variant="ghost"
             size="icon"
             onClick={() => fileInputRef.current?.click()}
-            disabled={isStreaming || isUploading || isRunningV2}
+            disabled={isStreaming || isUploading || isRunningV2 || isListening || isRecognizing}
             className="shrink-0 h-10 w-10 rounded-full hover:bg-primary/10"
             title="Kies uit galerij"
           >
             <ImagePlus className="h-4 w-4 text-muted-foreground" />
           </Button>
+          <Button
+            variant={isListening ? "default" : "ghost"}
+            size="icon"
+            onClick={startListening}
+            disabled={isStreaming || isUploading || isRunningV2 || isListening || isRecognizing}
+            className={`shrink-0 h-10 w-10 rounded-full transition-all ${
+              isListening 
+                ? 'bg-primary text-primary-foreground animate-pulse shadow-lg shadow-primary/30' 
+                : 'hover:bg-primary/10'
+            }`}
+            title={isListening ? "Luisteren..." : "Herken muziek"}
+          >
+            {isRecognizing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Mic className={`h-4 w-4 ${isListening ? '' : 'text-muted-foreground'}`} />
+            )}
+          </Button>
+          {isListening && (
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="relative h-2 w-16 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-1000"
+                  style={{ width: `${listeningProgress}%` }}
+                />
+              </div>
+              <span className="text-xs text-muted-foreground font-medium">
+                {Math.ceil(8 - (listeningProgress / 100) * 8)}s
+              </span>
+            </div>
+          )}
           <Textarea
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Stel Magic Mike een vraag..."
+            placeholder={isListening ? "🎵 Luisteren..." : "Stel Magic Mike een vraag..."}
             className="min-h-[40px] max-h-[120px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60"
             rows={1}
-            disabled={isStreaming || isRunningV2}
+            disabled={isStreaming || isRunningV2 || isListening || isRecognizing}
           />
-          <Button onClick={handleSend} disabled={!input.trim() || isStreaming || isRunningV2} size="icon" className="shrink-0 h-10 w-10 rounded-full shadow-sm">
+          <Button onClick={handleSend} disabled={!input.trim() || isStreaming || isRunningV2 || isListening || isRecognizing} size="icon" className="shrink-0 h-10 w-10 rounded-full shadow-sm">
             {(isStreaming || isRunningV2) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>

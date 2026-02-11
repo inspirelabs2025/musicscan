@@ -1,5 +1,8 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.recognize-music]
+verify_jwt = false
+
 [functions.auto-seo-quality-scanner]
 verify_jwt = false
 

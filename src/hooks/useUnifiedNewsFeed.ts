@@ -484,7 +484,7 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
           subtitle: f.album || undefined,
           image_url: f.display_url || undefined,
           category_label: CATEGORY_LABELS.fanwall,
-          link: f.seo_slug ? `/fanwall/photo/${f.seo_slug}` : '/fanwall',
+          link: f.seo_slug ? `/photo/${f.seo_slug}` : '/fanwall',
           date: f.created_at,
         }));
       }

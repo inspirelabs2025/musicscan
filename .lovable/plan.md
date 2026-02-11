@@ -1,55 +1,65 @@
 
 
-## Probleem
+## Probleem: Microfoon/Shazam werkt niet op mobiel
 
-De mobiele live versie toont de oude homepage omdat de browser een gecachte versie van `index.html` serveert. Er is geen service worker actief (geen vite-plugin-pwa geinstalleerd), dus het is puur een HTTP-cache probleem.
+### Oorzaak
 
-## Oplossing
+Het probleem zit in de **audio opname-instellingen** in `ScanChatTab.tsx`. Er zijn drie fouten:
 
-### Stap 1: Cache-Control headers voor index.html
+1. **iOS Safari ondersteunt geen `audio/webm` of `audio/ogg`** -- De huidige mime type fallback is `webm;codecs=opus` -> `webm` -> `ogg`. Geen van deze werkt op iOS. iOS Safari ondersteunt alleen `audio/mp4` via MediaRecorder.
 
-Voeg no-cache headers toe aan zowel `vercel.json` als `public/_redirects`/`public/_headers` zodat `index.html` nooit gecached wordt door de browser, ongeacht het hosting platform.
+2. **Geen check of MediaRecorder beschikbaar is** -- Op sommige mobiele browsers bestaat `MediaRecorder` niet. Er is geen foutmelding als het ontbreekt.
 
-**Nieuw bestand: `public/_headers`**
+3. **Onnodige `useCallback` dependency op `messages`** -- Dit herschept de functie bij elk nieuw bericht, wat op mobiel kan leiden tot stale references.
+
+### Oplossing
+
+**Bestand: `src/components/scanner/ScanChatTab.tsx`**
+
+Stap 1 -- Voeg `audio/mp4` toe aan de mime type fallback chain (voor iOS):
+
+```text
+Huidige volgorde:  webm;codecs=opus -> webm -> ogg
+Nieuwe volgorde:   webm;codecs=opus -> webm -> mp4 -> ogg
 ```
-/index.html
-  Cache-Control: no-cache, no-store, must-revalidate
-  Pragma: no-cache
-  Expires: 0
 
-/
-  Cache-Control: no-cache, no-store, must-revalidate
-  Pragma: no-cache
-  Expires: 0
-```
+Stap 2 -- Voeg een check toe of MediaRecorder uberhaupt beschikbaar is:
 
-**Update: `vercel.json`** - Headers toevoegen voor index.html/root:
-```json
-{
-  "source": "/((?!assets|lovable-uploads).*)",
-  "headers": [
-    { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
-  ]
+```typescript
+if (typeof MediaRecorder === 'undefined') {
+  toast({ 
+    title: "Niet ondersteund", 
+    description: "Audio opname wordt niet ondersteund op dit apparaat.", 
+    variant: "destructive" 
+  });
+  return;
 }
 ```
-Dit zorgt ervoor dat alleen statische assets (JS/CSS in `/assets/` en uploads) lang gecached worden, terwijl HTML-pagina's altijd vers opgehaald worden.
 
-### Stap 2: Build-version meta tag updaten
+Stap 3 -- Verwijder `messages` uit de `useCallback` dependencies (niet nodig, voorkomt onnodige recreaties):
 
-De `build-version` meta tag in `index.html` staat op `2025-11-06` (maanden oud). Deze updaten naar de huidige datum zodat duidelijk is welke versie live staat.
+```typescript
+// Van:
+}, [messages, supabase]);
+// Naar:
+}, []);
+```
 
-### Stap 3: Herpubliceren
+Stap 4 -- Voeg betere logging toe voor debugging op mobiel:
 
-Na deze wijzigingen moet het project opnieuw gepubliceerd worden via de "Update" knop in de Publish-dialog. Frontend changes gaan pas live na publicatie.
+```typescript
+console.log('[music-rec] Selected mimeType:', mimeType);
+console.log('[music-rec] MediaRecorder supported:', typeof MediaRecorder !== 'undefined');
+```
 
-## Technische details
+### Technische details
 
-- `public/_headers` wordt door Netlify/Lovable hosting automatisch opgepikt
-- `vercel.json` headers gelden voor Vercel hosting
-- Assets in `/assets/` en `/lovable-uploads/` behouden hun lange cache (immutable) omdat ze content-hashed zijn
-- Alle andere routes (HTML/SPA) krijgen no-cache zodat de browser altijd de nieuwste versie laadt
+- `MediaRecorder` op iOS Safari (16.4+) ondersteunt alleen `audio/mp4`
+- Oudere iOS versies (< 16.4) ondersteunen MediaRecorder helemaal niet -- daar tonen we een duidelijke melding
+- De `audio/mp4` data kan gewoon als base64 naar de AudD API gestuurd worden, die ondersteunt mp4 audio
+- De `recognize-music` edge function hoeft niet aangepast te worden
 
-## Verwacht resultaat
+### Verwacht resultaat
 
-Na publicatie zal de mobiele browser altijd de nieuwste `index.html` ophalen, waardoor de nieuwe homepage direct zichtbaar is zonder dat gebruikers handmatig hun cache hoeven te legen.
+Na deze fix zal de microfoon-knop op zowel iOS als Android correct werken: audio opnemen, naar de herkenningsservice sturen, en het resultaat tonen.
 

@@ -62,7 +62,10 @@ export const ScannerHero = () => {
             </Link>
           </Button>
           
-          <p className="text-white/50 text-sm mt-4">
+          <p className="text-vinyl-gold/80 text-sm md:text-base font-semibold mt-4 animate-pulse">
+            🎁 Ontvang 10 gratis credits bij registratie
+          </p>
+          <p className="text-white/50 text-xs mt-1">
             Gratis • Geen account nodig • Direct resultaat
           </p>
         </div>

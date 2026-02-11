@@ -1351,8 +1351,8 @@ export function ScanChatTab() {
         )}
       </div>
 
-      {/* Input bar */}
-      {mediaType && (
+      {/* Input bar - always visible */}
+      {true && (
         <div className="flex gap-2 p-3 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm">
           <Button
             variant="ghost"

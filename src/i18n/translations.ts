@@ -105,6 +105,12 @@ const translations = {
       madeWith: "Gemaakt met",
       forMusicLovers: "voor muziekliefhebbers",
     },
+    pwa: {
+      bannerTitle: "Installeer MusicScan",
+      bannerDescription: "Voeg toe aan je startscherm voor de beste ervaring",
+      installButton: "Installeren",
+      iosInstruct: "Deel → Zet op beginscherm",
+    },
     common: {
       free: "Gratis",
       readMore: "Lees meer",
@@ -221,6 +227,12 @@ const translations = {
       copyright: "© 2024 MusicScan",
       madeWith: "Made with",
       forMusicLovers: "for music lovers",
+    },
+    pwa: {
+      bannerTitle: "Install MusicScan",
+      bannerDescription: "Add to your home screen for the best experience",
+      installButton: "Install",
+      iosInstruct: "Share → Add to Home Screen",
     },
     common: {
       free: "Free",

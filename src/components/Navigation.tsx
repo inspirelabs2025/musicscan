@@ -68,8 +68,7 @@ const landenGenresMenuItems = [
 const scanCollectionMenuItems = [
   { title: "Smart Scan", url: "/ai-scan-v2", icon: Brain },
   { title: "Mijn Collectie", url: "/my-collection", icon: Music },
-  { title: "Collectie Inzicht", url: "/collection-overview", icon: BarChart3 },
-  { title: "Alle Scans", url: "/unified-scan-overview", icon: Archive }
+  { title: "Collectie Inzicht", url: "/collection-overview", icon: BarChart3 }
 ];
 
 // SLIMME TOOLS MENU ITEMS (Logged in only)

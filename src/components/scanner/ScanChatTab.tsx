@@ -163,8 +163,13 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
     if (verifiedResult?.discogs_id) {
       return savedToCollection ? SAVED_SUGGESTIONS : DISCOVERY_SUGGESTIONS;
     }
-    // After any AI response, show general follow-ups — but NOT during scan setup (welcome, photo upload prompt, ask prompt)
-    const skipPhrases = ['Hey, ik ben Magic Mike', 'Upload je foto', 'Kies hieronder', 'Typ je vraag hieronder'];
+    // After media type selection (photo upload prompt), show manual search option
+    const isPhotoPrompt = lastAssistantContent?.includes('Upload je foto') || lastAssistantContent?.includes('Eerste knop');
+    if (isPhotoPrompt) {
+      return [{ emoji: '✏️', text: 'Ik typ de artiest en titel zelf in' }];
+    }
+    // After any AI response, show general follow-ups — but NOT during scan setup (welcome, ask prompt)
+    const skipPhrases = ['Hey, ik ben Magic Mike', 'Kies hieronder', 'Typ je vraag hieronder'];
     const isSetupMessage = skipPhrases.some(p => lastAssistantContent?.includes(p));
     if (lastAssistantContent && !isSetupMessage) {
       return pickRandom(FOLLOWUP_SUGGESTIONS, 3);

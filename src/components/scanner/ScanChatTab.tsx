@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check, Sparkles, MessageCircle, ScanLine, Search } from 'lucide-react';
+import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check, Sparkles, MessageCircle, ScanLine, Search, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -391,6 +391,10 @@ export function ScanChatTab() {
         content: `Leuk! Vraag me alles over artiesten, albums, genres, muziekgeschiedenis... Ik weet er alles van! 🎶\n\nTyp je vraag hieronder.`,
       },
     ]);
+  };
+
+  const handleScanGuide = () => {
+    sendMessage('Geef me een uitgebreide uitleg hoe ik de beste scanfoto\'s maak van mijn vinyl platen en CD\'s. Leg per mediatype uit welke foto\'s ik moet maken (voorkant, achterkant, matrix, barcode etc.), met tips voor belichting, hoek en scherpte. Geef ook aan welke details het belangrijkst zijn voor een goede match.');
   };
 
   const handleFilesSelected = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1052,9 +1056,14 @@ export function ScanChatTab() {
             <p className="text-xs text-muted-foreground">Muziek-detective 🕵️‍♂️</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={resetChat} className="rounded-full h-8 px-3 text-xs border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30">
-          <RotateCcw className="h-3.5 w-3.5 mr-1" /> Opnieuw
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleScanGuide} disabled={isStreaming || isRunningV2} className="rounded-full h-8 px-3 text-xs border-border/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30">
+            <HelpCircle className="h-3.5 w-3.5 mr-1" /> Uitleg scannen
+          </Button>
+          <Button variant="outline" size="sm" onClick={resetChat} className="rounded-full h-8 px-3 text-xs border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30">
+            <RotateCcw className="h-3.5 w-3.5 mr-1" /> Opnieuw
+          </Button>
+        </div>
       </div>
 
       {/* Hidden file input */}

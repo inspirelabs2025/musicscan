@@ -1,27 +1,23 @@
 import { Link } from 'react-router-dom';
 import { 
-  Music, 
-  Disc, 
-  Users, 
-  History, 
-  Youtube, 
-  ShoppingBag,
-  Gamepad2,
-  Mic
+  Music, Disc, Users, History, Youtube, ShoppingBag, Gamepad2, Mic
 } from 'lucide-react';
-
-const links = [
-  { icon: Music, label: 'Albums', href: '/verhalen', color: 'text-purple-400' },
-  { icon: Disc, label: 'Singles', href: '/singles', color: 'text-pink-400' },
-  { icon: Users, label: 'Artiesten', href: '/artists', color: 'text-blue-400' },
-  { icon: History, label: 'Geschiedenis', href: '/vandaag-in-de-muziekgeschiedenis', color: 'text-amber-400' },
-  { icon: Youtube, label: 'Video\'s', href: '/youtube', color: 'text-red-400' },
-  { icon: Mic, label: 'Podcasts', href: '/podcasts', color: 'text-green-400' },
-  { icon: Gamepad2, label: 'Quiz', href: '/quizzen', color: 'text-cyan-400' },
-  { icon: ShoppingBag, label: 'Shop', href: '/shop', color: 'text-orange-400' },
-];
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const QuickLinks = () => {
+  const { t } = useLanguage();
+
+  const links = [
+    { icon: Music, label: t('quickLinks.albums'), href: '/verhalen', color: 'text-purple-400' },
+    { icon: Disc, label: t('quickLinks.singles'), href: '/singles', color: 'text-pink-400' },
+    { icon: Users, label: t('quickLinks.artists'), href: '/artists', color: 'text-blue-400' },
+    { icon: History, label: t('quickLinks.history'), href: '/vandaag-in-de-muziekgeschiedenis', color: 'text-amber-400' },
+    { icon: Youtube, label: t('quickLinks.videos'), href: '/youtube', color: 'text-red-400' },
+    { icon: Mic, label: t('quickLinks.podcasts'), href: '/podcasts', color: 'text-green-400' },
+    { icon: Gamepad2, label: t('quickLinks.quiz'), href: '/quizzen', color: 'text-cyan-400' },
+    { icon: ShoppingBag, label: t('quickLinks.shop'), href: '/shop', color: 'text-orange-400' },
+  ];
+
   return (
     <section className="bg-white dark:bg-zinc-900 py-4 border-b border-zinc-200 dark:border-zinc-800">
       <div className="container mx-auto px-4">

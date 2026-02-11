@@ -1,16 +1,19 @@
 import { Link } from 'react-router-dom';
 import { Camera, Disc3, Sparkles, Newspaper, BookOpen, Gamepad2, Podcast, ShoppingBag, ArrowRight, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-const navButtons = [
-  { icon: Newspaper, label: 'Nieuws', href: '/nieuws' },
-  { icon: BookOpen, label: 'Verhalen', href: '/verhalen' },
-  { icon: Gamepad2, label: 'Quiz', href: '/quizzen' },
-  { icon: Podcast, label: 'Podcast', href: '/podcasts' },
-  { icon: ShoppingBag, label: 'Producten', href: '/shop' },
-];
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const ScannerHero = () => {
+  const { t } = useLanguage();
+
+  const navButtons = [
+    { icon: Newspaper, label: t('quickLinks.albums'), href: '/nieuws' },
+    { icon: BookOpen, label: t('nav.stories'), href: '/verhalen' },
+    { icon: Gamepad2, label: t('quickLinks.quiz'), href: '/quizzen' },
+    { icon: Podcast, label: t('quickLinks.podcasts'), href: '/podcasts' },
+    { icon: ShoppingBag, label: t('quickLinks.shop'), href: '/shop' },
+  ];
+
   return (
     <section className="relative min-h-[600px] md:min-h-[700px] lg:min-h-[800px] bg-black overflow-hidden flex items-center">
       {/* Background gradient */}
@@ -38,15 +41,15 @@ export const ScannerHero = () => {
         <div className="mb-12 md:mb-16">
           <div className="inline-flex items-center gap-2 bg-vinyl-gold/20 text-vinyl-gold px-4 py-2 rounded-full text-sm font-semibold mb-6 backdrop-blur-sm border border-vinyl-gold/30">
             <Zap className="w-4 h-4" />
-            Ontdek de waarde van je vinyl & CD's
+            {t('hero.badge')}
           </div>
           
           <h1 className="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white mb-6 tracking-tight">
-            Scan Je Collectie
+            {t('hero.title')}
           </h1>
           
           <p className="text-lg md:text-xl lg:text-2xl text-white/80 max-w-2xl mx-auto mb-10">
-            Chat met Magic Mike 🎩 — maak een foto en ontdek direct artiest, album én marktwaarde
+            {t('hero.subtitle')}
           </p>
           
           {/* Big Scanner Button */}
@@ -57,23 +60,23 @@ export const ScannerHero = () => {
           >
             <Link to="/ai-scan-v2">
               <Camera className="w-7 h-7 md:w-8 md:h-8 mr-3" />
-              Start Scannen
+              {t('hero.cta')}
               <ArrowRight className="w-6 h-6 md:w-7 md:h-7 ml-3 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
           
           <p className="text-vinyl-gold/80 text-sm md:text-base font-semibold mt-4 animate-pulse">
-            🎁 Ontvang 10 gratis credits bij registratie
+            {t('hero.promoCredits')}
           </p>
           <p className="text-white/50 text-xs mt-1">
-            Gratis • Geen account nodig • Direct resultaat
+            {t('hero.promoSub')}
           </p>
         </div>
 
         {/* Divider */}
         <div className="flex items-center justify-center gap-4 mb-10">
           <div className="h-px w-16 md:w-24 bg-gradient-to-r from-transparent to-white/30" />
-          <span className="text-white/50 text-sm font-medium">OF ONTDEK</span>
+          <span className="text-white/50 text-sm font-medium">{t('hero.divider')}</span>
           <div className="h-px w-16 md:w-24 bg-gradient-to-l from-transparent to-white/30" />
         </div>
 

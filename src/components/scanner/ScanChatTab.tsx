@@ -1188,7 +1188,7 @@ export function ScanChatTab() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-220px)]">
+    <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-280px)]">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 px-3 py-3 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm">
         <div className="flex items-center gap-3">
@@ -1550,9 +1550,10 @@ export function ScanChatTab() {
         )}
       </div>
 
-      {/* Input bar - always visible */}
+      {/* Input bar - floating fixed at bottom */}
       {true && (
-        <div className="flex gap-2 p-3 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm">
+        <div className="fixed bottom-14 left-0 right-0 z-40 px-3 pb-2">
+        <div className="max-w-2xl mx-auto flex gap-2 p-3 rounded-2xl bg-card/95 backdrop-blur-md border border-border/50 shadow-[0_-2px_15px_rgba(0,0,0,0.1)]">
           <Button
             variant="ghost"
             size="icon"
@@ -1616,6 +1617,7 @@ export function ScanChatTab() {
           <Button onClick={handleSend} disabled={!input.trim() || isStreaming || isRunningV2 || isListening || isRecognizing} size="icon" className="shrink-0 h-10 w-10 rounded-full shadow-sm">
             {(isStreaming || isRunningV2) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
+        </div>
         </div>
       )}
     </div>

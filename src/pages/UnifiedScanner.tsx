@@ -241,6 +241,16 @@ const UnifiedScanner = () => {
           </div>
         )}
 
+        {/* Manual search - always available when media type selected and not processing */}
+        {state.mediaType && !isComplete && !isProcessing && (
+          <div className="mb-4">
+            <ScannerManualSearch
+              onSearch={searchManual}
+              isSearching={state.status === 'searching'}
+            />
+          </div>
+        )}
+
         {/* Step 2: Upload zone (always visible when media type selected) */}
         {state.mediaType && !isComplete && (
           <Card className="mb-4">

@@ -436,12 +436,17 @@ export function ScanChatTab() {
         : MediaRecorder.isTypeSupported('audio/webm') 
           ? 'audio/webm' 
           : 'audio/ogg';
-      const mediaRecorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 128000 });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 256000 });
       const chunks: Blob[] = [];
-      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      mediaRecorder.ondataavailable = (e) => { 
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+          console.log(`[music-rec] chunk received: ${e.data.size} bytes`);
+        }
+      };
 
-      // Countdown timer - 12 seconds for better recognition
-      const totalSeconds = 12;
+      // Countdown timer - 10 seconds for recognition
+      const totalSeconds = 10;
       let elapsed = 0;
       const interval = setInterval(() => {
         elapsed++;
@@ -456,12 +461,13 @@ export function ScanChatTab() {
         stream.getTracks().forEach(t => t.stop());
 
         const blob = new Blob(chunks, { type: mediaRecorder.mimeType });
+        console.log(`[music-rec] Total blob size: ${blob.size} bytes, chunks: ${chunks.length}`);
         
         // Check minimum size - too small means no real audio captured
-        if (blob.size < 5000) {
+        if (blob.size < 10000) {
           setMessages(prev => [...prev, {
             role: 'assistant',
-            content: `⚠️ **Te weinig audio opgenomen.** Zorg dat muziek duidelijk hoorbaar is en probeer het opnieuw.`,
+            content: `⚠️ **Te weinig audio opgenomen** (${Math.round(blob.size/1024)}KB). Zorg dat muziek duidelijk hoorbaar is en probeer het opnieuw.`,
           }]);
           return;
         }
@@ -470,6 +476,8 @@ export function ScanChatTab() {
         reader.onloadend = async () => {
           const base64 = (reader.result as string).split(',')[1];
           if (!base64) return;
+
+          console.log(`[music-rec] Sending ${base64.length} chars base64 (${Math.round(base64.length * 0.75 / 1024)}KB)`);
 
           setIsRecognizing(true);
           setMessages(prev => [...prev, 
@@ -516,8 +524,8 @@ export function ScanChatTab() {
         reader.readAsDataURL(blob);
       };
 
-      // Use timeslice for continuous data collection
-      mediaRecorder.start(1000);
+      // Start without timeslice for a single complete recording
+      mediaRecorder.start();
       setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();

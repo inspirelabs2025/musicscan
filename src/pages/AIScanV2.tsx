@@ -328,9 +328,6 @@ export default function AIScanV2() {
               Ontdek supersnel de juiste album release
             </p>
             <div className="flex items-center justify-center gap-3">
-              {user && <p className="text-sm text-muted-foreground">
-                  Ingelogd als: {user.email}
-                </p>}
               <Button
                 variant="ghost"
                 size="sm"

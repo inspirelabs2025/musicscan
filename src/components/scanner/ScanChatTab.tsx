@@ -470,7 +470,8 @@ export function ScanChatTab() {
         stream.getTracks().forEach(t => t.stop());
 
         const blob = new Blob(chunks, { type: mediaRecorder.mimeType });
-        console.log(`[music-rec] Total blob size: ${blob.size} bytes, chunks: ${chunks.length}`);
+        const blobType = blob.type || mediaRecorder.mimeType || mimeType;
+        console.log(`[music-rec] Total blob size: ${blob.size} bytes, chunks: ${chunks.length}, type: ${blobType}`);
         
         // Check minimum size - too small means no real audio captured
         if (blob.size < 10000) {
@@ -486,7 +487,7 @@ export function ScanChatTab() {
           const base64 = (reader.result as string).split(',')[1];
           if (!base64) return;
 
-          console.log(`[music-rec] Sending ${base64.length} chars base64 (${Math.round(base64.length * 0.75 / 1024)}KB)`);
+          console.log(`[music-rec] Sending ${base64.length} chars base64 (${Math.round(base64.length * 0.75 / 1024)}KB), mimeType=${blobType}`);
 
           setIsRecognizing(true);
           setMessages(prev => [...prev, 
@@ -496,7 +497,7 @@ export function ScanChatTab() {
 
           try {
             const { data, error } = await supabase.functions.invoke('recognize-music', {
-              body: { audio: base64 }
+              body: { audio: base64, mimeType: blobType }
             });
 
             if (error) throw error;

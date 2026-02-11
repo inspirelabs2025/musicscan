@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { audio } = await req.json();
+    const { audio, mimeType } = await req.json();
 
     if (!audio) {
       return new Response(
@@ -30,12 +30,34 @@ serve(async (req) => {
       );
     }
 
-    console.log(`[recognize-music] Sending audio (${audio.length} chars base64) to AudD`);
+    const normalizedBase64 = typeof audio === "string" && audio.includes(",") ? audio.split(",")[1] : audio;
+
+    console.log(`[recognize-music] Incoming audio base64 chars=${normalizedBase64?.length ?? 0}, mimeType=${mimeType ?? 'n/a'}`);
 
     // Send to AudD API
     const formData = new FormData();
     formData.append("api_token", AUDD_API_TOKEN);
-    formData.append("audio", audio);
+
+    // AudD docs: recommended is multipart/form-data file upload via `file` parameter.
+    // `audio` base64 has limited support, especially for some codecs.
+    if (typeof normalizedBase64 === "string" && normalizedBase64.length > 0) {
+      try {
+        const bin = atob(normalizedBase64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+        const safeMime = typeof mimeType === "string" && mimeType.length > 0 ? mimeType : "audio/webm";
+        const ext = safeMime.includes("mp4") ? "mp4" : safeMime.includes("webm") ? "webm" : safeMime.includes("ogg") ? "ogg" : "bin";
+        const blob = new Blob([bytes], { type: safeMime });
+
+        formData.append("file", blob, `audio.${ext}`);
+        console.log(`[recognize-music] Uploading as file: bytes=${bytes.length}, type=${safeMime}`);
+      } catch (e) {
+        console.warn("[recognize-music] base64->file failed, falling back to audio param", e);
+        formData.append("audio", normalizedBase64);
+      }
+    }
+
     formData.append("return", "spotify,apple_music,deezer");
 
     const response = await fetch("https://api.audd.io/", {

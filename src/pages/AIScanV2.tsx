@@ -314,7 +314,7 @@ export default function AIScanV2() {
   return <>
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pb-20">
 
-      <div className="p-4">
+      <div className="p-4 pt-20">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">

@@ -1,51 +1,61 @@
 
+# Fix: MCPS Rights Society Gating te breed — Duitse releases worden niet uitgesloten
 
-# Chat Visueel Verbeteren
+## Probleem gevonden
 
-Hier zijn concrete verbeteringen om de Collection Chat er moderner en aantrekkelijker uit te laten zien:
+Uit de edge function logs blijkt het concrete probleem:
 
-## 1. Avatar-iconen bij berichten
-- Gebruiker-berichten krijgen een klein profielfoto/avatar icoontje
-- AI-berichten krijgen een herkenbaar bot-icoon (Brain/Bot icon met een gouden ring)
-- Geeft het gevoel van een echt gesprek
+```
+MCPS confirms Germany → +15 points   (3x)
+MCPS confirms UK → +15 points        (3x)
+MCPS confirms Europe → +15 points    (2x)
+```
 
-## 2. Typing indicator met animatie
-- Drie pulserende bolletjes in plaats van alleen tekst "AI denkt na..."
-- Smooth bounce-animatie zoals bij WhatsApp/iMessage
+**MCPS geeft +15 bonuspunten aan Duitse releases**, terwijl MCPS specifiek een Britse organisatie is (Mechanical Copyright Protection Society). Het resultaat: Duitse en Britse releases krijgen dezelfde score, en de Duitse verschijnen bovenaan.
 
-## 3. Betere message bubbles
-- Subtiele schaduw en afrondingen verbeteren
-- Tijdstempel onder elk bericht (nu alleen tokens/ms info)
-- Lichte glasmorphism-stijl voor AI-berichten
+## Oorzaak
 
-## 4. Welkomstscherm vernieuwen
-- Groot welkom-icoon met animatie
-- Suggestie-knoppen als "chips" in een grid (2 kolommen) in plaats van een lange lijst
-- Categorie-labels bij suggesties (bijv. "Waarde", "Smaak", "Spotify")
+In de `RIGHTS_SOCIETY_REGIONS` mapping staat MCPS als compatible met heel Europa, inclusief Germany:
 
-## 5. Input-balk verbeteren
-- Grotere, mooiere input met afgeronde hoeken
-- Gradient send-knop (vinyl-gold)
-- Sticky input aan de onderkant
+```
+'MCPS': { regions: ['uk', 'united kingdom', 'europe', 'eu', 'ireland',
+  'netherlands', 'holland', 'germany', 'france', ...], label: 'UK/EU' }
+```
 
-## 6. ReactMarkdown voor AI-responses
-- Huidige handmatige regex-parsing vervangen door `react-markdown` (al geinstalleerd)
-- Betere ondersteuning voor lijsten, headers, bold/italic
+Dit is te ruim. MCPS op een fysieke CD is een **sterke UK-markt indicator**. Een Duitse release zou GEMA/BIEM hebben, geen MCPS.
 
----
+## Oplossing: Twee-niveau rights society matching
 
-## Technische Details
+In plaats van alleen "compatible / niet-compatible", introduceren we een derde categorie: **primary region** (de thuismarkt van de organisatie).
 
-### Bestanden die aangepast worden:
-- `src/pages/CollectionChat.tsx` - Hoofdbestand met alle visuele verbeteringen
+### Nieuwe logica:
 
-### Aanpak:
-1. Import `react-markdown` en `Avatar` componenten
-2. `renderMessage` functie herschrijven met avatars, timestamps en markdown
-3. Typing indicator component met CSS animatie
-4. Welkomstscherm met 2-koloms grid suggesties
-5. Input-balk stylen met gradient button
+```text
+Candidate country = primary region   -->  +15 punten (bevestiging)
+Candidate country = compatible region -->  +0 punten (neutraal, geen uitsluiting)
+Candidate country = niet in lijst    -->  score = 0 (harde uitsluiting)
+```
 
-### Geen nieuwe dependencies nodig
-Alles is al beschikbaar: `react-markdown`, `Avatar`, `framer-motion`, Tailwind animaties.
+### Voorbeeld met MCPS:
+- UK release: +15 (primary)
+- Germany release: 0 (compatible maar geen bonus)
+- Japan release: score=0 (uitgesloten)
 
+### Aanpassingen in `ai-photo-analysis-v2/index.ts`:
+
+1. **Data model uitbreiden** - `RIGHTS_SOCIETY_REGIONS` krijgt een extra `primary` array naast `regions`:
+   - MCPS/PRS: primary = `['uk', 'united kingdom', 'ireland']`
+   - STEMRA/BUMA: primary = `['netherlands', 'holland']`
+   - GEMA: primary = `['germany', 'austria']`
+   - SACEM: primary = `['france']`
+   - etc.
+
+2. **Scoring logica aanpassen** (regels 2775-2797):
+   - Check eerst of candidate country in `primary` zit --> +15
+   - Anders check of het in `regions` zit --> 0 (neutraal)
+   - Anders --> score = 0 (exclude)
+
+3. **Disambiguation verbeteren** (regels 2237-2250):
+   - Bij gelijke scores: kandidaten uit de primary region van de gedetecteerde rights society krijgen voorrang
+
+Dit zorgt ervoor dat bij MCPS-detectie de UK-release altijd boven de Duitse uitkomt, zonder dat de Duitse onterecht wordt uitgesloten (want het kan theoretisch een in Duitsland geperste maar voor UK bedoelde release zijn).

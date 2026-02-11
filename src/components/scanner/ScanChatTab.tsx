@@ -538,13 +538,13 @@ export function ScanChatTab() {
 
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: `🔍 **Scanner-pipeline gestart...** De deterministische matcher zoekt nu de juiste release met barcode, matrix en rechtenorganisatie-gating...`,
+          content: `🎯 **Even geduld...** Ik doorzoek nu duizenden releases om jouw exacte pressing te vinden. Barcode, matrix-codes, labels — alles wordt gecheckt! 🔎`,
         }]);
 
         const v2Result = await runV2Pipeline(activeUrls, mediaType, chatRightsSocieties);
 
         // Remove loading message
-        setMessages(prev => prev.filter(m => !m.content.includes('Scanner-pipeline gestart')));
+        setMessages(prev => prev.filter(m => !m.content.includes('Even geduld...')));
 
         if (v2Result && v2Result.discogs_id) {
           // ── MATCH FOUND ──

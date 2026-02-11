@@ -1183,11 +1183,22 @@ export function ScanChatTab() {
 
         {/* Manual search form - inline in chat */}
         {showManualSearch && (
-          <div className="mx-2 my-2">
+          <div className="mx-2 my-2 space-y-2">
             <ScannerManualSearch
               onSearch={handleManualSearch}
               isSearching={isManualSearching}
             />
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5 rounded-full border-muted-foreground/20 hover:bg-muted"
+                onClick={() => { setShowManualSearch(false); fileInputRef.current?.click(); }}
+              >
+                <span>📸</span>
+                Foto kiezen
+              </Button>
+            </div>
           </div>
         )}
 

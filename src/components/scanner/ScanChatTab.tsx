@@ -416,6 +416,17 @@ export function ScanChatTab() {
   };
 
   const startListening = useCallback(async () => {
+    // Check if MediaRecorder is available (not supported on older iOS)
+    if (typeof MediaRecorder === 'undefined') {
+      toast({ 
+        title: "Niet ondersteund", 
+        description: "Audio opname wordt niet ondersteund op dit apparaat. Gebruik iOS 16.4+ of een moderne browser.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    console.log('[music-rec] MediaRecorder supported:', true);
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: { 
@@ -430,12 +441,10 @@ export function ScanChatTab() {
       setListeningProgress(0);
       setShowWelcomeActions(false);
 
-      // Prefer audio/webm;codecs=opus for best quality
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
-        ? 'audio/webm;codecs=opus' 
-        : MediaRecorder.isTypeSupported('audio/webm') 
-          ? 'audio/webm' 
-          : 'audio/ogg';
+      // Mime type fallback chain: webm (Chrome/Android) → mp4 (iOS Safari) → ogg (Firefox)
+      const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg']
+        .find(type => MediaRecorder.isTypeSupported(type)) || 'audio/webm';
+      console.log('[music-rec] Selected mimeType:', mimeType);
       const mediaRecorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 256000 });
       const chunks: Blob[] = [];
       mediaRecorder.ondataavailable = (e) => { 
@@ -537,7 +546,7 @@ export function ScanChatTab() {
       setIsListening(false);
       toast({ title: "Microfoon niet beschikbaar", description: "Geef toestemming voor de microfoon of controleer je instellingen.", variant: "destructive" });
     }
-  }, [messages, supabase]);
+  }, []);
 
   const handleScanGuide = () => {
     sendMessage('Geef me een uitgebreide uitleg hoe ik de beste scanfoto\'s maak van mijn vinyl platen en CD\'s. Leg per mediatype uit welke foto\'s ik moet maken (voorkant, achterkant, matrix, barcode etc.), met tips voor belichting, hoek en scherpte. Geef ook aan welke details het belangrijkst zijn voor een goede match.');

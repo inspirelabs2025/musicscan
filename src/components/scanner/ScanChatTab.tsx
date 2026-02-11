@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check, Sparkles, MessageCircle, ScanLine } from 'lucide-react';
+import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check, Sparkles, MessageCircle, ScanLine, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import magicMikeAvatar from '@/assets/magic-mike-avatar.png';
 import { ConditionGradingPanel, calculateAdvicePrice } from '@/components/scanner/ConditionGradingPanel';
+import { ScannerManualSearch } from '@/components/scanner/ScannerManualSearch';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -223,6 +224,8 @@ export function ScanChatTab() {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [verifiedResult, setVerifiedResult] = useState<V2PipelineResult | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showManualSearch, setShowManualSearch] = useState(false);
+  const [isManualSearching, setIsManualSearching] = useState(false);
   const [conditionMedia, setConditionMedia] = useState<string>('');
   const [conditionSleeve, setConditionSleeve] = useState<string>('');
 
@@ -717,6 +720,127 @@ export function ScanChatTab() {
     setSavedToCollection(false);
     setConditionMedia('');
     setConditionSleeve('');
+    setShowManualSearch(false);
+    setIsManualSearching(false);
+  };
+
+  // Handle manual search form submission
+  const handleManualSearch = async (artist: string, title: string, barcode?: string, year?: string, country?: string, matrix?: string) => {
+    setIsManualSearching(true);
+    setShowManualSearch(false);
+
+    const searchDesc = [artist, title].filter(Boolean).join(' - ');
+    setMessages(prev => [...prev, {
+      role: 'user',
+      content: `🔍 Handmatig zoeken: ${searchDesc}`,
+    }, {
+      role: 'assistant',
+      content: `🔎 **Zoeken...** Even geduld, ik doorzoek de database voor "${searchDesc}"...`,
+    }]);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
+        body: {
+          catalog_number: barcode || '',
+          artist: artist || '',
+          title: title || '',
+          year: year || undefined,
+          country: country || undefined,
+          matrix_number: matrix || undefined,
+          include_pricing: true,
+        },
+      });
+
+      // Remove loading message
+      setMessages(prev => prev.filter(m => !m.content.includes('Even geduld, ik doorzoek')));
+
+      if (error) throw error;
+
+      if (data?.results?.length > 0) {
+        const topResult = data.results[0];
+        const releaseId = topResult.discogs_id || topResult.id;
+
+        // Build verified result
+        const v2Result: V2PipelineResult = {
+          discogs_id: releaseId,
+          discogs_url: `https://www.discogs.com/release/${releaseId}`,
+          status: 'manual_match',
+          confidence_score: topResult.similarity_score || null,
+          artist: topResult.artist || artist,
+          title: topResult.title || title,
+          artwork_url: topResult.cover_image || null,
+          country: topResult.country || null,
+          year: topResult.year || null,
+          label: topResult.label || null,
+          catalog_number: topResult.catalog_number || null,
+          barcode: barcode || null,
+          matrix_number: matrix || null,
+          format: topResult.format || null,
+          genre: topResult.genre || null,
+          suggestions: data.results.length > 1 ? data.results.slice(0, 5).map((r: any) => ({
+            release_id: r.discogs_id || r.id,
+            title: `${r.artist} - ${r.title}`,
+            country: r.country,
+            year: r.year,
+            catno: r.catalog_number,
+            label: r.label,
+          })) : [],
+          pricing_stats: topResult.pricing_stats || null,
+          match_status: 'manual_match',
+        };
+
+        setVerifiedResult(v2Result);
+
+        let msg = `✅ **${v2Result.artist} - ${v2Result.title}**\n`;
+        if (v2Result.label) msg += `🏷️ ${v2Result.label}`;
+        if (v2Result.catalog_number) msg += ` (${v2Result.catalog_number})`;
+        if (v2Result.label || v2Result.catalog_number) msg += `\n`;
+        if (v2Result.country || v2Result.year) {
+          msg += `📀 ${v2Result.country || ''}${v2Result.year ? ` (${v2Result.year})` : ''}\n`;
+        }
+        msg += `🔗 [Bekijk op Discogs](https://www.discogs.com/release/${releaseId})\n`;
+
+        const pricing: PricingData = {
+          lowest_price: topResult.pricing_stats?.lowest_price ?? null,
+          median_price: topResult.pricing_stats?.median_price ?? null,
+          highest_price: topResult.pricing_stats?.highest_price ?? null,
+          num_for_sale: topResult.pricing_stats?.num_for_sale ?? null,
+        };
+
+        if (pricing.lowest_price || pricing.median_price || pricing.highest_price) {
+          msg += `\n💰 **Prijsinformatie:**\n`;
+          if (pricing.lowest_price) msg += `📉 **Laagste:** €${Number(pricing.lowest_price).toFixed(2)}\n`;
+          if (pricing.median_price) msg += `📊 **Mediaan:** €${Number(pricing.median_price).toFixed(2)}\n`;
+          if (pricing.highest_price) msg += `📈 **Hoogste:** €${Number(pricing.highest_price).toFixed(2)}\n`;
+          if (pricing.num_for_sale) msg += `\n🏪 **${pricing.num_for_sale}** exemplaren te koop op Discogs`;
+        }
+
+        if (data.results.length > 1) {
+          msg += `\n\n📋 **Andere mogelijke releases:**`;
+        }
+
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: msg,
+          pricingData: pricing,
+          v2Result,
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `⚠️ **Geen resultaten gevonden** voor "${searchDesc}".\n\nProbeer andere zoektermen of upload foto's voor een betere match.`,
+        }]);
+      }
+    } catch (err) {
+      console.error('Manual search error:', err);
+      setMessages(prev => prev.filter(m => !m.content.includes('Even geduld, ik doorzoek')));
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `⚠️ **Zoeken mislukt.** Probeer het later opnieuw.`,
+      }]);
+    } finally {
+      setIsManualSearching(false);
+    }
   };
 
   const saveToCollection = async () => {
@@ -1042,8 +1166,25 @@ export function ScanChatTab() {
             return !!(lastAssistant?.content?.includes('Geen match gevonden') || lastAssistant?.content?.includes('Geen eenduidige match'));
           })()}
           onSave={saveToCollection}
-          onSend={(text) => sendMessage(text)}
+          onSend={(text) => {
+            if (text === 'Ik typ de artiest en titel zelf in') {
+              setShowManualSearch(true);
+              setMessages(prev => [...prev, { role: 'user', content: '✏️ Ik typ de artiest en titel zelf in' }, { role: 'assistant', content: '📝 **Vul de gegevens in** die je weet. Hoe meer je invult, hoe preciezer het resultaat!' }]);
+            } else {
+              sendMessage(text);
+            }
+          }}
         />
+
+        {/* Manual search form - inline in chat */}
+        {showManualSearch && (
+          <div className="mx-2 my-2">
+            <ScannerManualSearch
+              onSearch={handleManualSearch}
+              isSearching={isManualSearching}
+            />
+          </div>
+        )}
 
         {/* Pending files preview */}
         {pendingFiles.length > 0 && (

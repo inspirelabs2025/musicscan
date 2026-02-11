@@ -176,6 +176,13 @@ const VALUE_FOLLOWUP_SUGGESTIONS = [
   { emoji: '📸', text: 'Scan nog een CD of LP' },
 ];
 
+// Fase: Na scan-uitleg (scan guide follow-ups)
+const SCAN_GUIDE_FOLLOWUP_SUGGESTIONS = [
+  { emoji: '📸', text: 'Scan een CD of LP' },
+  { emoji: '✏️', text: 'Ik typ de artiest en titel zelf in' },
+  { emoji: '💡', text: 'Uitleg scannen' },
+];
+
 // Fase: Algemene follow-ups (fallback)
 const GENERAL_FOLLOWUP_SUGGESTIONS = [
   { emoji: '🤔', text: 'Vertel daar meer over' },
@@ -198,6 +205,12 @@ function pickRandom<T>(arr: T[], count: number): T[] {
 // Detect conversation context from last assistant message
 function detectFollowupPool(content: string): Array<{ emoji: string; text: string }> {
   const lower = content.toLowerCase();
+  // Scan guide response (uitleg over foto's maken)
+  const scanGuideKeywords = ['belichting', 'matrixnummer', 'barcode', 'hoek', 'scherpte', 'scanfoto', 'scantips', 'flash', 'daglicht'];
+  const scanGuideHits = scanGuideKeywords.filter(kw => lower.includes(kw)).length;
+  if (scanGuideHits >= 2) {
+    return SCAN_GUIDE_FOLLOWUP_SUGGESTIONS;
+  }
   // Artist-focused response
   if (lower.includes('artiest') || lower.includes('biografie') || lower.includes('carrière') || lower.includes('band')) {
     return ARTIST_FOLLOWUP_SUGGESTIONS;
@@ -298,7 +311,12 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
           Opslaan in catalogus
         </Button>
       )}
-      {suggestions.map((sug, i) => (
+      {suggestions.map((sug, i) => {
+        // Dynamic label: "Scan een CD of LP" vs "Scan nog een CD of LP"
+        const displayText = sug.text === 'Scan nog een CD of LP' && !verifiedResult?.discogs_id
+          ? 'Scan een CD of LP'
+          : sug.text;
+        return (
         <Button
           key={i}
           variant="outline"
@@ -307,9 +325,10 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
           onClick={() => onSend(sug.text)}
         >
           <span className="text-base leading-none">{sug.emoji}</span>
-          {sug.text}
+          {displayText}
         </Button>
-      ))}
+        );
+      })}
     </div>
   );
 });

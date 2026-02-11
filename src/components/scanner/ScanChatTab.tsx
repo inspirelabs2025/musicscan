@@ -10,6 +10,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import magicMikeAvatar from '@/assets/magic-mike-avatar.png';
 import { ConditionGradingPanel, calculateAdvicePrice } from '@/components/scanner/ConditionGradingPanel';
+import { ArtistContentCards } from '@/components/scanner/ArtistContentCards';
+import { useArtistContent } from '@/hooks/useArtistContent';
 import { ScannerManualSearch } from '@/components/scanner/ScannerManualSearch';
 
 interface ChatMessage {
@@ -218,12 +220,13 @@ interface SuggestionChipsProps {
   isRunningV2: boolean;
   lastAssistantContent: string;
   hasNoMatch: boolean;
+  artistContent?: { artistStory: any; albumStories: any[]; singles: any[]; anecdotes: any[]; products: any[]; totalCount: number } | null;
   onSave: () => void;
   onSend: (text: string) => void;
 }
 
 const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
-  verifiedResult, savedToCollection, isStreaming, isRunningV2, lastAssistantContent, hasNoMatch, onSave, onSend,
+  verifiedResult, savedToCollection, isStreaming, isRunningV2, lastAssistantContent, hasNoMatch, artistContent, onSave, onSend,
 }) => {
   const suggestions = useMemo(() => {
     // Fase: Geen match
@@ -232,9 +235,24 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
     // Fase: Succesvolle scan
     if (verifiedResult?.discogs_id) {
       const pool = savedToCollection ? SAVED_SUGGESTIONS : DISCOVERY_SUGGESTIONS;
-      // Filter "opslaan" als al opgeslagen
       const filtered = savedToCollection ? pool : pool.filter(s => s.text !== 'Opslaan in mijn collectie');
-      return pickRandom(filtered, 3);
+      const base = pickRandom(filtered, 3);
+      
+      // Add platform content chips
+      const platformChips: Array<{ emoji: string; text: string }> = [];
+      if (artistContent?.artistStory) {
+        platformChips.push({ emoji: '📖', text: `Lees het verhaal van ${verifiedResult.artist}` });
+      }
+      if (artistContent?.products && artistContent.products.length > 0) {
+        platformChips.push({ emoji: '🛍️', text: `Bekijk ${verifiedResult.artist} producten` });
+      }
+      if (artistContent?.anecdotes && artistContent.anecdotes.length > 0) {
+        platformChips.push({ emoji: '💡', text: 'Ken je deze anekdote?' });
+      }
+      
+      // Mix: up to 2 platform chips + fill with base chips
+      const selected = [...platformChips.slice(0, 2), ...base.slice(0, 3 - Math.min(platformChips.length, 2))];
+      return selected;
     }
     
     // Fase: Na mediatype selectie (foto upload prompt)
@@ -263,7 +281,7 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
     }
     
     return [];
-  }, [verifiedResult?.discogs_id, savedToCollection, lastAssistantContent, hasNoMatch]);
+  }, [verifiedResult?.discogs_id, verifiedResult?.artist, savedToCollection, lastAssistantContent, hasNoMatch, artistContent?.totalCount]);
 
   if (isStreaming || isRunningV2 || suggestions.length === 0) return null;
 
@@ -319,6 +337,10 @@ export function ScanChatTab() {
   const [isUploading, setIsUploading] = useState(false);
   const [showManualSearch, setShowManualSearch] = useState(false);
   const [isManualSearching, setIsManualSearching] = useState(false);
+
+  // Artist content for platform enrichment
+  const currentArtistName = verifiedResult?.artist || null;
+  const artistContent = useArtistContent(currentArtistName);
   const [conditionMedia, setConditionMedia] = useState<string>('');
   const [conditionSleeve, setConditionSleeve] = useState<string>('');
 
@@ -559,9 +581,20 @@ export function ScanChatTab() {
     };
 
     try {
-      // If we already have a verified result, prepend context so Mike knows the release
+      // Build platform content context tag
+      let platformContentTag = '';
+      if (verifiedResult && currentArtistName && artistContent.totalCount > 0) {
+        const parts: string[] = [];
+        if (artistContent.artistStory) parts.push(`een artiestenverhaal over ${currentArtistName}`);
+        if (artistContent.albumStories.length > 0) parts.push(`${artistContent.albumStories.length} albumverhalen`);
+        if (artistContent.singles.length > 0) parts.push(`${artistContent.singles.length} singles`);
+        if (artistContent.products.length > 0) parts.push(`${artistContent.products.length} producten in de shop`);
+        if (artistContent.anecdotes.length > 0) parts.push(`${artistContent.anecdotes.length} anekdotes`);
+        platformContentTag = `\n[PLATFORM_CONTENT: We hebben ${parts.join(', ')} over ${currentArtistName} op het MusicScan platform.]`;
+      }
+
       const effectiveContent = verifiedResult
-        ? `[CONTEXT: Release al geïdentificeerd - ${verifiedResult.artist} - ${verifiedResult.title}, Discogs ID: ${verifiedResult.discogs_id}. Beantwoord de vraag van de gebruiker over deze release zonder opnieuw te scannen.]\n\n${userMsg.content}`
+        ? `[CONTEXT: Release al geïdentificeerd - ${verifiedResult.artist} - ${verifiedResult.title}, Discogs ID: ${verifiedResult.discogs_id}. Beantwoord de vraag van de gebruiker over deze release zonder opnieuw te scannen.]${platformContentTag}\n\n${userMsg.content}`
         : userMsg.content;
 
       const allMessages = [...messages, { role: userMsg.role, content: effectiveContent }];
@@ -1250,6 +1283,11 @@ export function ScanChatTab() {
         )}
 
         {/* Suggestion chips - context aware */}
+        {/* Artist content cards - shown after verified result */}
+        {verifiedResult?.artist && !isStreaming && !isRunningV2 && (
+          <ArtistContentCards artistName={verifiedResult.artist} />
+        )}
+
         <SuggestionChips
           verifiedResult={verifiedResult}
           savedToCollection={savedToCollection}
@@ -1263,6 +1301,7 @@ export function ScanChatTab() {
             const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
             return !!(lastAssistant?.content?.includes('Geen match gevonden') || lastAssistant?.content?.includes('Geen eenduidige match'));
           })()}
+          artistContent={verifiedResult?.artist ? artistContent : null}
           onSave={saveToCollection}
           onSend={(text) => {
             if (text === 'Ik typ de artiest en titel zelf in') {

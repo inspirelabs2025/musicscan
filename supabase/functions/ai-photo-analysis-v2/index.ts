@@ -2185,14 +2185,44 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
             };
           }).filter(Boolean);
           
-          // Country penalty/sort if EU hint detected
-          if (isEUHint && rawSuggestions.length > 1) {
-            const euCountries = /europe|eu|netherlands|holland|germany|france|uk|united kingdom|italy|spain|belgium|austria|sweden|denmark|portugal|greece|ireland|finland|norway|switzerland/i;
+          // Detect rights societies for suggestion sorting
+          const sugRightsSocieties = [
+            ...(analysisData.rightsSocieties || []),
+            ...(analysisData.externalRightsSocieties || []),
+          ];
+          const sugAllTexts = [
+            ...(analysisData.discLabelText || []),
+            ...(analysisData.backCoverText || []),
+          ].filter(Boolean);
+          const sugDetectedSocieties = detectRightsSocieties(sugRightsSocieties, sugAllTexts);
+          
+          console.log(`   🏛️ Suggestion sorting: detected societies = [${sugDetectedSocieties.join(', ')}]`);
+          
+          // Sort: primary region first, then EU, then rest
+          if (rawSuggestions.length > 1) {
             rawSuggestions.sort((a: any, b: any) => {
-              const aIsEU = euCountries.test(a.country || '');
-              const bIsEU = euCountries.test(b.country || '');
-              if (aIsEU && !bIsEU) return -1;
-              if (!aIsEU && bIsEU) return 1;
+              const aCountry = (a.country || '').toLowerCase();
+              const bCountry = (b.country || '').toLowerCase();
+              
+              // Check primary region match from detected rights societies
+              let aIsPrimary = false, bIsPrimary = false;
+              for (const society of sugDetectedSocieties) {
+                const mapping = RIGHTS_SOCIETY_REGIONS[society];
+                if (!mapping || !mapping.primary) continue;
+                if (mapping.primary.some((p: string) => aCountry.includes(p))) aIsPrimary = true;
+                if (mapping.primary.some((p: string) => bCountry.includes(p))) bIsPrimary = true;
+              }
+              if (aIsPrimary && !bIsPrimary) return -1;
+              if (!aIsPrimary && bIsPrimary) return 1;
+              
+              // Fallback: EU vs non-EU
+              if (isEUHint) {
+                const euCountries = /europe|eu|netherlands|holland|germany|france|uk|united kingdom|italy|spain|belgium|austria|sweden|denmark|portugal|greece|ireland|finland|norway|switzerland/i;
+                const aIsEU = euCountries.test(aCountry);
+                const bIsEU = euCountries.test(bCountry);
+                if (aIsEU && !bIsEU) return -1;
+                if (!aIsEU && bIsEU) return 1;
+              }
               return 0;
             });
           }

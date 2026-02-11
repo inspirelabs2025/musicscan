@@ -268,15 +268,15 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
   if (isStreaming || isRunningV2 || suggestions.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-2 my-2 px-1">
+    <div className="flex flex-wrap gap-2 my-3 px-1 animate-fadeIn">
       {verifiedResult?.discogs_id && !savedToCollection && (
         <Button
-          variant="outline"
+          variant="default"
           size="sm"
-          className="h-8 text-xs gap-1.5 rounded-full border-primary/30 hover:bg-primary/10"
+          className="h-9 text-xs gap-2 rounded-full shadow-sm hover:shadow-md transition-all"
           onClick={onSave}
         >
-          <Save className="h-3 w-3" />
+          <Save className="h-3.5 w-3.5" />
           Opslaan in catalogus
         </Button>
       )}
@@ -285,10 +285,10 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
           key={i}
           variant="outline"
           size="sm"
-          className="h-8 text-xs gap-1.5 rounded-full border-muted-foreground/20 hover:bg-muted"
+          className="h-9 text-xs gap-2 rounded-full border-border/50 bg-card/80 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/30 hover:shadow-sm transition-all"
           onClick={() => onSend(sug.text)}
         >
-          <span>{sug.emoji}</span>
+          <span className="text-base leading-none">{sug.emoji}</span>
           {sug.text}
         </Button>
       ))}
@@ -1007,17 +1007,20 @@ export function ScanChatTab() {
   return (
     <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-220px)]">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-4 px-3 py-3 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm">
         <div className="flex items-center gap-3">
-          <img src={magicMikeAvatar} alt="Magic Mike" className="h-10 w-10 rounded-full object-cover ring-2 ring-primary/30 shadow-md" />
+          <div className="relative">
+            <img src={magicMikeAvatar} alt="Magic Mike" className="h-11 w-11 rounded-full object-cover ring-2 ring-primary/40 shadow-lg" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-card" />
+          </div>
           <div>
-            <span className="text-sm font-semibold">Magic Mike</span>
-            {mediaType && <span className="text-xs text-muted-foreground ml-1">· {mediaType === 'vinyl' ? 'Vinyl' : 'CD'}</span>}
+            <span className="text-sm font-bold tracking-tight">Magic Mike</span>
+            {mediaType && <span className="text-xs text-muted-foreground ml-1.5 bg-muted px-1.5 py-0.5 rounded-full">{mediaType === 'vinyl' ? '🎵 Vinyl' : '💿 CD'}</span>}
             <p className="text-xs text-muted-foreground">Muziek-detective 🕵️‍♂️</p>
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={resetChat}>
-          <RotateCcw className="h-4 w-4 mr-1" /> Opnieuw
+        <Button variant="outline" size="sm" onClick={resetChat} className="rounded-full h-8 px-3 text-xs border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30">
+          <RotateCcw className="h-3.5 w-3.5 mr-1" /> Opnieuw
         </Button>
       </div>
 
@@ -1040,22 +1043,24 @@ export function ScanChatTab() {
       />
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 mb-4 pr-1">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 scroll-smooth">
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}>
+          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2.5 animate-fadeIn`}>
             {msg.role === 'assistant' && (
-              <img src={magicMikeAvatar} alt="Magic Mike" className="h-7 w-7 rounded-full object-cover shrink-0 mt-1 ring-1 ring-primary/20" />
+              <img src={magicMikeAvatar} alt="Magic Mike" className="h-8 w-8 rounded-full object-cover shrink-0 mt-1 ring-2 ring-primary/20 shadow-sm" />
             )}
-            <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
-              msg.role === 'user' ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-muted rounded-bl-sm'
+            <div className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm shadow-sm transition-colors ${
+              msg.role === 'user' 
+                ? 'bg-primary text-primary-foreground rounded-br-md' 
+                : 'bg-card/90 backdrop-blur-sm border border-border/40 rounded-bl-md'
             }`}>
               {msg.role === 'assistant' ? (
-                <div className="prose prose-sm dark:prose-invert max-w-none">
+                <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:leading-relaxed [&_li]:leading-relaxed">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
                       a: ({ href, children }) => (
-                        <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:text-primary/80 break-all">
+                        <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline decoration-primary/30 hover:decoration-primary hover:text-primary/80 break-all transition-colors">
                           {children}
                         </a>
                       ),
@@ -1064,11 +1069,11 @@ export function ScanChatTab() {
                 </div>
               ) : (
                 <>
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                  <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                   {msg.images && msg.images.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
+                    <div className="flex flex-wrap gap-1.5 mt-2">
                       {msg.images.map((src, j) => (
-                        <img key={j} src={src} alt={`Foto ${j + 1}`} className="h-16 w-16 object-cover rounded" />
+                        <img key={j} src={src} alt={`Foto ${j + 1}`} className="h-16 w-16 object-cover rounded-lg border border-primary-foreground/20" />
                       ))}
                     </div>
                   )}
@@ -1114,30 +1119,30 @@ export function ScanChatTab() {
 
               {/* Pricing card inline */}
               {msg.pricingData && (msg.pricingData.lowest_price || msg.pricingData.median_price || msg.pricingData.highest_price) && (
-                <div className="mt-3 p-3 bg-background/60 rounded-lg border border-border/50">
+                <div className="mt-3 p-3 bg-gradient-to-br from-primary/5 to-transparent rounded-xl border border-primary/10">
                   <div className="grid grid-cols-3 gap-2 text-center">
                     {msg.pricingData.lowest_price && (
                       <div>
-                        <div className="text-xs text-muted-foreground">Laagste</div>
-                        <div className="text-base font-bold text-primary">€{Number(msg.pricingData.lowest_price).toFixed(2)}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Laagste</div>
+                        <div className="text-lg font-bold text-primary">€{Number(msg.pricingData.lowest_price).toFixed(2)}</div>
                       </div>
                     )}
                     {msg.pricingData.median_price && (
                       <div>
-                        <div className="text-xs text-muted-foreground">Mediaan</div>
-                        <div className="text-base font-bold text-foreground">€{Number(msg.pricingData.median_price).toFixed(2)}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Mediaan</div>
+                        <div className="text-lg font-bold text-foreground">€{Number(msg.pricingData.median_price).toFixed(2)}</div>
                       </div>
                     )}
                     {msg.pricingData.highest_price && (
                       <div>
-                        <div className="text-xs text-muted-foreground">Hoogste</div>
-                        <div className="text-base font-bold text-foreground">€{Number(msg.pricingData.highest_price).toFixed(2)}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Hoogste</div>
+                        <div className="text-lg font-bold text-foreground">€{Number(msg.pricingData.highest_price).toFixed(2)}</div>
                       </div>
                     )}
                   </div>
               {msg.pricingData.num_for_sale != null && msg.pricingData.num_for_sale > 0 && (
-                    <div className="text-xs text-muted-foreground text-center mt-2">
-                      {msg.pricingData.num_for_sale} exemplaren te koop op Discogs
+                    <div className="text-xs text-muted-foreground text-center mt-2 pt-2 border-t border-border/30">
+                      🏪 {msg.pricingData.num_for_sale} exemplaren te koop op Discogs
                     </div>
                   )}
                 </div>
@@ -1218,28 +1223,28 @@ export function ScanChatTab() {
 
         {/* Welcome action buttons */}
         {showWelcomeActions && !mediaType && messages.length === 1 && (
-          <div className="flex gap-3 justify-center my-3">
-            <Button variant="outline" size="lg" onClick={pickScanAction} className="h-16 px-8 flex flex-col gap-1.5 border-primary/30 hover:border-primary hover:bg-primary/5">
-              <ScanLine className="h-6 w-6 text-primary" />
-              <span className="text-sm font-medium">Scannen</span>
+          <div className="flex gap-3 justify-center my-4 animate-fadeIn">
+            <Button variant="outline" size="lg" onClick={pickScanAction} className="h-20 px-10 flex flex-col gap-2 rounded-2xl border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all">
+              <ScanLine className="h-7 w-7 text-primary" />
+              <span className="text-sm font-semibold">Scannen</span>
             </Button>
-            <Button variant="outline" size="lg" onClick={pickAskAction} className="h-16 px-8 flex flex-col gap-1.5 border-primary/30 hover:border-primary hover:bg-primary/5">
-              <MessageCircle className="h-6 w-6 text-primary" />
-              <span className="text-sm font-medium">Stel een vraag</span>
+            <Button variant="outline" size="lg" onClick={pickAskAction} className="h-20 px-10 flex flex-col gap-2 rounded-2xl border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all">
+              <MessageCircle className="h-7 w-7 text-primary" />
+              <span className="text-sm font-semibold">Stel een vraag</span>
             </Button>
           </div>
         )}
 
         {/* Media type picker - shown after choosing "Scannen" */}
         {!showWelcomeActions && !mediaType && (
-          <div className="flex gap-3 justify-center my-2">
-            <Button variant="outline" size="lg" onClick={() => pickMediaType('vinyl')} className="h-14 px-6 flex flex-col gap-1">
-              <Disc3 className="h-5 w-5" />
-              <span className="text-xs">Vinyl</span>
+          <div className="flex gap-3 justify-center my-3 animate-fadeIn">
+            <Button variant="outline" size="lg" onClick={() => pickMediaType('vinyl')} className="h-16 px-8 flex flex-col gap-1.5 rounded-2xl border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary hover:shadow-md transition-all">
+              <Disc3 className="h-6 w-6 text-primary" />
+              <span className="text-xs font-medium">Vinyl</span>
             </Button>
-            <Button variant="outline" size="lg" onClick={() => pickMediaType('cd')} className="h-14 px-6 flex flex-col gap-1">
-              <Disc className="h-5 w-5" />
-              <span className="text-xs">CD</span>
+            <Button variant="outline" size="lg" onClick={() => pickMediaType('cd')} className="h-16 px-8 flex flex-col gap-1.5 rounded-2xl border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary hover:shadow-md transition-all">
+              <Disc className="h-6 w-6 text-primary" />
+              <span className="text-xs font-medium">CD</span>
             </Button>
           </div>
         )}
@@ -1333,9 +1338,14 @@ export function ScanChatTab() {
         )}
 
         {(isStreaming || isRunningV2) && messages[messages.length - 1]?.role !== 'assistant' && (
-          <div className="flex justify-start">
-            <div className="bg-muted rounded-lg px-4 py-3">
-              <Loader2 className="h-4 w-4 animate-spin" />
+          <div className="flex justify-start gap-2.5">
+            <img src={magicMikeAvatar} alt="Magic Mike" className="h-8 w-8 rounded-full object-cover shrink-0 ring-2 ring-primary/20 shadow-sm" />
+            <div className="bg-card/90 backdrop-blur-sm border border-border/40 rounded-2xl rounded-bl-md px-5 py-3.5 shadow-sm">
+              <div className="flex gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
             </div>
           </div>
         )}
@@ -1343,37 +1353,37 @@ export function ScanChatTab() {
 
       {/* Input bar */}
       {mediaType && (
-        <div className="flex gap-2">
+        <div className="flex gap-2 p-3 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm">
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
             onClick={() => cameraInputRef.current?.click()}
             disabled={isStreaming || isUploading || isRunningV2}
-            className="shrink-0 h-[44px] w-[44px]"
+            className="shrink-0 h-10 w-10 rounded-full hover:bg-primary/10"
             title="Maak een foto"
           >
-            <Camera className="h-4 w-4" />
+            <Camera className="h-4 w-4 text-muted-foreground" />
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
             onClick={() => fileInputRef.current?.click()}
             disabled={isStreaming || isUploading || isRunningV2}
-            className="shrink-0 h-[44px] w-[44px]"
+            className="shrink-0 h-10 w-10 rounded-full hover:bg-primary/10"
             title="Kies uit galerij"
           >
-            <ImagePlus className="h-4 w-4" />
+            <ImagePlus className="h-4 w-4 text-muted-foreground" />
           </Button>
           <Textarea
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Stel Magic Mike een vraag..."
-            className="min-h-[44px] max-h-[120px] resize-none"
+            className="min-h-[40px] max-h-[120px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60"
             rows={1}
             disabled={isStreaming || isRunningV2}
           />
-          <Button onClick={handleSend} disabled={!input.trim() || isStreaming || isRunningV2} size="icon" className="shrink-0 h-[44px] w-[44px]">
+          <Button onClick={handleSend} disabled={!input.trim() || isStreaming || isRunningV2} size="icon" className="shrink-0 h-10 w-10 rounded-full shadow-sm">
             {(isStreaming || isRunningV2) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>

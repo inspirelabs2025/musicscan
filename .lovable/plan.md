@@ -1,89 +1,42 @@
 
-# Fix: Suggesties sorteren op Rights Society Primary Region
 
-## Probleem
+# Handmatig Invoerformulier Uitbreiden
 
-De rights society scoring fix werkt correct in de **verifyCandidate** functie (logs bevestigen: MCPS -> UK +15, Germany +0). Maar de **suggesties-lijst** (die je ziet als er geen definitieve match is) gebruikt een ANDERE sorteerlogica die niets doet met rights societies.
+## Wat verandert er
 
-De huidige sorteercode (regel 2188-2198) sorteert alleen op "is het een EU-land of niet":
+Het huidige "Handmatig zoeken" formulier in de scanner heeft alleen velden voor **Artiest**, **Album titel** en **Catalogusnummer**. Dit wordt uitgebreid met drie extra velden: **Jaartal**, **Land** en **Matrixnummer**, plus het bestaande catalogusnummer wordt hernoemd naar **Barcode**.
 
-```text
-Germany = EU --> bovenaan
-UK = EU --> bovenaan
-Japan = niet-EU --> onderaan
-```
+## Nieuwe velden
 
-Germany en UK worden als gelijk behandeld, waardoor Germany toevallig bovenaan verschijnt.
+| Veld | Type | Placeholder | Verplicht |
+|------|------|-------------|-----------|
+| Artiest | Text | "Artiest" | Nee (maar minimaal 1 veld) |
+| Album | Text | "Album titel" | Nee |
+| Jaartal | Text/Number | "Bijv. 1996" | Nee |
+| Land | Text | "Bijv. UK, Germany" | Nee |
+| Matrixnummer | Text | "Matrix / runout inscriptie" | Nee |
+| Barcode | Text | "Barcode (EAN/UPC)" | Nee |
 
-## Oplossing
+Layout: Artiest + Album op 1 rij, Jaartal + Land op 1 rij, Matrix + Barcode op 1 rij. Alles in een 2-koloms grid op desktop, 1 kolom op mobiel.
 
-De suggesties-sortering uitbreiden met rights society primary region voorkeur. Als MCPS is gedetecteerd, moeten UK-releases boven Germany komen.
+## Technische Details
 
-### Aanpassing in `supabase/functions/ai-photo-analysis-v2/index.ts`
+### Bestanden die aangepast worden:
 
-**Locatie:** Regels 2165-2200 (suggesties-sorteerblok)
+1. **`src/components/scanner/ScannerManualSearch.tsx`**
+   - Drie extra state-velden: `year`, `country`, `matrix`
+   - Bestaand `catalogNumber` veld hernoemen naar `barcode`
+   - Interface `onSearch` uitbreiden met extra parameters
+   - 2-koloms grid layout voor alle velden
+   - Labels toevoegen boven elk veld voor duidelijkheid
 
-1. **Detect rights societies** in de suggesties-scope (hergebruik de bestaande `detectRightsSocieties` functie met `analysisData`)
-2. **Sorteer suggesties** met drie niveaus:
-   - Niveau 1: Primary region van gedetecteerde rights society (bijv. UK bij MCPS) --> bovenaan
-   - Niveau 2: Compatible EU-land --> midden  
-   - Niveau 3: Niet-EU --> onderaan
+2. **`src/hooks/useUnifiedScan.ts`**
+   - `searchManual` functie signatuur uitbreiden met `year`, `country`, `matrix`, `barcode`
+   - Extra parameters doorgeven aan de `optimized-catalog-search` edge function
 
-### Concrete codewijziging:
+3. **`src/pages/UnifiedScanner.tsx`**
+   - Geen wijzigingen nodig (de `onSearch` callback wordt automatisch bijgewerkt via de hook)
 
-Na regel 2186 (waar `rawSuggestions` is gebouwd), vervang het sorteerblok (2188-2198) door:
+### Geen backend wijzigingen nodig
+De `optimized-catalog-search` edge function accepteert al extra parameters. De extra velden helpen bij het filteren van Discogs-resultaten op de bestaande manier.
 
-```typescript
-// Detect rights societies for suggestion sorting
-const sugRightsSocieties = [
-  ...(analysisData.rightsSocieties || []),
-  ...(analysisData.externalRightsSocieties || []),
-];
-const sugAllTexts = [
-  ...(analysisData.discLabelText || []),
-  ...(analysisData.backCoverText || []),
-].filter(Boolean);
-const sugDetectedSocieties = detectRightsSocieties(sugRightsSocieties, sugAllTexts);
-
-// Sort: primary region first, then EU, then rest
-rawSuggestions.sort((a, b) => {
-  const aCountry = (a.country || '').toLowerCase();
-  const bCountry = (b.country || '').toLowerCase();
-  
-  // Check primary region match
-  let aIsPrimary = false, bIsPrimary = false;
-  for (const society of sugDetectedSocieties) {
-    const mapping = RIGHTS_SOCIETY_REGIONS[society];
-    if (!mapping) continue;
-    if (mapping.primary.some(p => aCountry.includes(p))) aIsPrimary = true;
-    if (mapping.primary.some(p => bCountry.includes(p))) bIsPrimary = true;
-  }
-  if (aIsPrimary && !bIsPrimary) return -1;
-  if (!aIsPrimary && bIsPrimary) return 1;
-  
-  // Fallback: EU vs non-EU
-  if (isEUHint) {
-    const euRegex = /europe|eu|netherlands|...etc/i;
-    const aIsEU = euRegex.test(aCountry);
-    const bIsEU = euRegex.test(bCountry);
-    if (aIsEU && !bIsEU) return -1;
-    if (!aIsEU && bIsEU) return 1;
-  }
-  return 0;
-});
-```
-
-### Resultaat na fix:
-
-Bij MCPS-detectie:
-```text
-1. Ella Fitzgerald - Portrait Of Ella Fitzgerald | UK (1996) · PYCD 130    (primary)
-2. Ella Fitzgerald - Portrait | Germany · 7186                              (EU, niet primary)
-3. Ella Fitzgerald - Portrait | Germany (2002) · 7186                       (EU, niet primary)
-4. Ella Fitzgerald - Portrait | Germany (2003) · 204292                     (EU, niet primary)
-```
-
-### Geen impact op bestaande logica
-- De `verifyCandidate` scoring blijft ongewijzigd
-- Alleen de volgorde van suggesties verandert
-- Eén bestand, één sorteerblok

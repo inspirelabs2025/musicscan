@@ -9,6 +9,7 @@ import { ProductBanner } from '@/components/home/ProductBanner';
 
 import { EchoSpotlight } from '@/components/home/EchoSpotlight';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MobileInstallBanner } from '@/components/MobileInstallBanner';
 
 // Shuffle array helper
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -114,6 +115,8 @@ const Home = () => {
       {/* 5. Product Banner */}
       <ProductBanner />
 
+      {/* PWA Install Banner (mobile only) */}
+      <MobileInstallBanner />
     </div>
   );
 };

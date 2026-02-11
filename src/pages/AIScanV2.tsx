@@ -312,7 +312,7 @@ export default function AIScanV2() {
       </div>;
   }
   return <>
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pb-20">
 
       <div className="p-4">
         <div className="max-w-4xl mx-auto space-y-6">
@@ -346,10 +346,15 @@ export default function AIScanV2() {
 
           {/* Tabs: Foto Scanner | Chat */}
           <Tabs defaultValue="chat" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="chat" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">🎩 Scan met Mike</TabsTrigger>
-              <TabsTrigger value="scanner">📷 Foto Scanner</TabsTrigger>
-            </TabsList>
+            {/* Bottom fixed tab bar */}
+            <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/50 shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
+              <div className="max-w-4xl mx-auto px-4 py-2">
+                <TabsList className="grid w-full grid-cols-2 h-12">
+                  <TabsTrigger value="chat" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold h-10">🎩 Scan met Mike</TabsTrigger>
+                  <TabsTrigger value="scanner" className="text-sm font-semibold h-10">📷 Foto Scanner</TabsTrigger>
+                </TabsList>
+              </div>
+            </div>
 
             <TabsContent value="scanner" className="space-y-6 mt-4">
               {/* === EXISTING SCANNER FLOW === */}

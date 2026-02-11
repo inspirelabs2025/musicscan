@@ -18,82 +18,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { SubscriptionStatus } from "@/components/SubscriptionStatus";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ShoppingCartWidget } from "@/components/ShoppingCartWidget";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-// SHOP MENU ITEMS
-const shopMenuItems = [
-  { title: "Shop Overzicht", url: "/shop", icon: ShoppingCart, highlight: true },
-  { title: "Art Prints", url: "/art-shop", icon: Images },
-  { title: "Metal Prints", url: "/metaalprints", icon: Images },
-  { title: "Posters", url: "/posters", icon: Images },
-  { title: "Canvas Doeken", url: "/canvas", icon: Images },
-  { title: "T-shirts", url: "/tshirts", icon: Package },
-  { title: "Sokken", url: "/socks", icon: Package },
-  { title: "Buttons & Badges", url: "/buttons", icon: CircleDot },
-  { title: "Alle Winkels", url: "/shops", icon: Store },
-  { title: "Marktplaats", url: "/marketplace", icon: ShoppingCart },
-  { title: "Catalogus", url: "/catalog", icon: Library },
-  { title: "Mijn Winkel", url: "/my-shop", icon: Store, requiresAuth: true }
-];
-
-// VERHALEN MENU ITEMS
-const verhalenMenuItems = [
-  { title: "Plaat Verhalen", url: "/verhalen", icon: Music },
-  { title: "Album Reviews", url: "/reviews", icon: BookOpen },
-  { title: "Artiest Spotlights", url: "/artist-spotlights", icon: Sparkles },
-  { title: "Singles", url: "/singles", icon: Music },
-  { title: "Artiesten", url: "/artists", icon: Users },
-  { title: "Opnamestudio's", url: "/studio-stories", icon: Building2 },
-  { title: "Anekdotes", url: "/anekdotes", icon: BookOpen },
-  { title: "FanWall", url: "/fanwall", icon: Images },
-  { title: "YouTube Ontdekkingen", url: "/youtube-discoveries", icon: Youtube },
-  { title: "Nieuws", url: "/nieuws", icon: Newspaper },
-  { title: "Nieuwe Releases", url: "/releases", icon: Music },
-  { title: "Podcasts", url: "/podcasts", icon: Headphones },
-  { title: "Time Machine", url: "/time-machine", icon: Clock },
-  { title: "Vandaag in de Muziekgeschiedenis", url: "/vandaag-in-de-muziekgeschiedenis", icon: Calendar }
-];
-
-// LANDEN & GENRES MENU ITEMS
-const landenGenresMenuItems = [
-  { title: "🇳🇱 Nederland", url: "/nederland", icon: Flag, highlight: true },
-  { title: "🇫🇷 Frankrijk", url: "/frankrijk", icon: Flag, highlight: true },
-  { title: "🎧 Dance/House", url: "/dance-house", icon: Music, highlight: true },
-  { title: "🎬 Filmmuziek", url: "/filmmuziek", icon: Music, highlight: true },
-  { title: "🎄 Kerst", url: "/kerst", icon: Music, highlight: true },
-  { title: "Alle Artiesten", url: "/artists", icon: Users },
-  { title: "Alle Releases", url: "/releases", icon: Music },
-  { title: "Muziekgeschiedenis", url: "/vandaag-in-de-muziekgeschiedenis", icon: Calendar },
-];
-
-// SCAN & COLLECTIE MENU ITEMS (Logged in only)
-const scanCollectionMenuItems = [
-  { title: "Smart Scan", url: "/ai-scan-v2", icon: Brain },
-  { title: "Mijn Collectie", url: "/my-collection", icon: Music },
-  { title: "Collectie Inzicht", url: "/collection-overview", icon: BarChart3 }
-];
-
-// SLIMME TOOLS MENU ITEMS (Logged in only)
-const aiToolsMenuItems = [
-  { title: "Echo 🎵", url: "/echo", icon: Music },
-  { title: "Chat met Collectie", url: "/collection-chat", icon: MessageCircle },
-  { title: "Prijscheck", url: "/ai-scan-v2", icon: DollarSign },
-  { title: "Muziek Analyse", url: "/ai-analysis", icon: Brain },
-  { title: "Spotify Profiel", url: "/spotify-profile", icon: Music }
-];
-
-// COMMUNITY MENU ITEMS
-const communityMenuItems = [
-  { title: "FanWall", url: "/fanwall", icon: Images },
-  { title: "Mijn Likes", url: "/my/liked", icon: Heart },
-  { title: "Mijn Quizzen", url: "/mijn-quizzen", icon: Trophy },
-  { title: "Forum", url: "/forum", icon: MessageCircle },
-  { title: "Social", url: "/social", icon: Users },
-  { title: "Prestaties", url: "/prestaties", icon: Trophy }
-];
-
-const getProfileMenuItem = (userId?: string) => {
+const getProfileMenuItem = (userId?: string, label?: string) => {
   if (!userId) return null;
-  return { title: "Mijn Profiel", url: `/profile/${userId}`, icon: User };
+  return { title: label || "Mijn Profiel", url: `/profile/${userId}`, icon: User };
 };
 
 export function Navigation() {
@@ -107,8 +36,76 @@ export function Navigation() {
   const [isAiToolsMenuOpen, setIsAiToolsMenuOpen] = useState(false);
   const [isCommunityMenuOpen, setIsCommunityMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
 
-  const profileMenuItem = getProfileMenuItem(user?.id);
+  // Menu items using translations
+  const shopMenuItems = [
+    { title: t('nav.shopOverview'), url: "/shop", icon: ShoppingCart, highlight: true },
+    { title: t('nav.artPrints'), url: "/art-shop", icon: Images },
+    { title: t('nav.metalPrints'), url: "/metaalprints", icon: Images },
+    { title: t('nav.posters'), url: "/posters", icon: Images },
+    { title: t('nav.canvasArt'), url: "/canvas", icon: Images },
+    { title: t('nav.tshirts'), url: "/tshirts", icon: Package },
+    { title: t('nav.socks'), url: "/socks", icon: Package },
+    { title: t('nav.buttonsBadges'), url: "/buttons", icon: CircleDot },
+    { title: t('nav.allShops'), url: "/shops", icon: Store },
+    { title: t('nav.marketplace'), url: "/marketplace", icon: ShoppingCart },
+    { title: t('nav.catalog'), url: "/catalog", icon: Library },
+    { title: t('nav.myShop'), url: "/my-shop", icon: Store, requiresAuth: true }
+  ];
+
+  const verhalenMenuItems = [
+    { title: t('nav.albumStories'), url: "/verhalen", icon: Music },
+    { title: t('nav.albumReviews'), url: "/reviews", icon: BookOpen },
+    { title: t('nav.artistSpotlights'), url: "/artist-spotlights", icon: Sparkles },
+    { title: t('nav.singles'), url: "/singles", icon: Music },
+    { title: t('nav.artists'), url: "/artists", icon: Users },
+    { title: t('nav.studios'), url: "/studio-stories", icon: Building2 },
+    { title: t('nav.anecdotes'), url: "/anekdotes", icon: BookOpen },
+    { title: t('nav.fanwall'), url: "/fanwall", icon: Images },
+    { title: t('nav.youtubeDiscoveries'), url: "/youtube-discoveries", icon: Youtube },
+    { title: t('nav.news'), url: "/nieuws", icon: Newspaper },
+    { title: t('nav.newReleases'), url: "/releases", icon: Music },
+    { title: t('nav.podcasts'), url: "/podcasts", icon: Headphones },
+    { title: t('nav.timeMachine'), url: "/time-machine", icon: Clock },
+    { title: t('nav.musicHistory'), url: "/vandaag-in-de-muziekgeschiedenis", icon: Calendar }
+  ];
+
+  const landenGenresMenuItems = [
+    { title: "🇳🇱 " + t('nav.netherlands'), url: "/nederland", icon: Flag, highlight: true },
+    { title: "🇫🇷 " + t('nav.france'), url: "/frankrijk", icon: Flag, highlight: true },
+    { title: "🎧 " + t('nav.danceHouse'), url: "/dance-house", icon: Music, highlight: true },
+    { title: "🎬 " + t('nav.filmMusic'), url: "/filmmuziek", icon: Music, highlight: true },
+    { title: "🎄 " + t('nav.christmas'), url: "/kerst", icon: Music, highlight: true },
+    { title: t('nav.allArtists'), url: "/artists", icon: Users },
+    { title: t('nav.allReleases'), url: "/releases", icon: Music },
+    { title: t('nav.musicHistory'), url: "/vandaag-in-de-muziekgeschiedenis", icon: Calendar },
+  ];
+
+  const scanCollectionMenuItems = [
+    { title: t('nav.smartScan'), url: "/ai-scan-v2", icon: Brain },
+    { title: t('nav.myCollection'), url: "/my-collection", icon: Music },
+    { title: t('nav.collectionInsight'), url: "/collection-overview", icon: BarChart3 }
+  ];
+
+  const aiToolsMenuItems = [
+    { title: t('nav.echo'), url: "/echo", icon: Music },
+    { title: t('nav.chatCollection'), url: "/collection-chat", icon: MessageCircle },
+    { title: t('nav.priceCheck'), url: "/ai-scan-v2", icon: DollarSign },
+    { title: t('nav.musicAnalysis'), url: "/ai-analysis", icon: Brain },
+    { title: t('nav.spotifyProfile'), url: "/spotify-profile", icon: Music }
+  ];
+
+  const communityMenuItems = [
+    { title: t('nav.fanwall'), url: "/fanwall", icon: Images },
+    { title: t('nav.myLikes'), url: "/my/liked", icon: Heart },
+    { title: t('nav.myQuizzes'), url: "/mijn-quizzen", icon: Trophy },
+    { title: t('nav.forum'), url: "/forum", icon: MessageCircle },
+    { title: t('nav.social'), url: "/social", icon: Users },
+    { title: t('nav.achievements'), url: "/prestaties", icon: Trophy }
+  ];
+
+  const profileMenuItem = getProfileMenuItem(user?.id, t('nav.myProfile'));
   const isShopPageActive = shopMenuItems.some(item => currentPath === item.url);
   const isVerhalenPageActive = verhalenMenuItems.some(item => currentPath === item.url);
   const isLandenGenresPageActive = landenGenresMenuItems.some(item => currentPath === item.url) || currentPath === '/nederland' || currentPath === '/frankrijk';
@@ -157,11 +154,9 @@ export function Navigation() {
             {/* Home */}
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
-                <NavLink item={{ title: "Home", url: "/", icon: Home }} />
+                <NavLink item={{ title: t('nav.home'), url: "/", icon: Home }} />
               </NavigationMenuLink>
             </NavigationMenuItem>
-
-
 
             {user && (
               <>
@@ -172,7 +167,7 @@ export function Navigation() {
                     isScanCollectionPageActive && "bg-accent text-accent-foreground"
                   )}>
                     <ScanLine className="h-4 w-4 mr-2" />
-                    Scan & Collectie
+                    {t('nav.scanCollection')}
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="grid w-[300px] gap-1 p-4 bg-popover">
@@ -201,7 +196,7 @@ export function Navigation() {
                     isAiToolsPageActive && "bg-accent text-accent-foreground"
                   )}>
                     <Brain className="h-4 w-4 mr-2" />
-                    Slimme Tools
+                    {t('nav.smartTools')}
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="grid w-[300px] gap-1 p-4 bg-popover">
@@ -227,7 +222,7 @@ export function Navigation() {
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50">
                     <User className="h-4 w-4 mr-2" />
-                    Account
+                    {t('nav.account')}
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="grid w-[250px] gap-1 p-4 bg-popover">
@@ -257,7 +252,7 @@ export function Navigation() {
                           className="w-full justify-start text-muted-foreground hover:text-primary"
                         >
                           <LogOut className="h-4 w-4 mr-2" />
-                          Uitloggen
+                          {t('nav.logout')}
                         </Button>
                       </div>
                     </div>
@@ -278,12 +273,12 @@ export function Navigation() {
               <>
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
-                    <NavLink item={{ title: "Prijscheck", url: "/quick-price-check", icon: DollarSign }} />
+                    <NavLink item={{ title: t('nav.priceCheck'), url: "/quick-price-check", icon: DollarSign }} />
                   </NavigationMenuLink>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
-                    <NavLink item={{ title: "Forum", url: "/forum", icon: MessageCircle }} />
+                    <NavLink item={{ title: t('nav.forum'), url: "/forum", icon: MessageCircle }} />
                   </NavigationMenuLink>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
@@ -293,7 +288,7 @@ export function Navigation() {
                       className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:bg-primary focus:text-primary-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50"
                     >
                       <LogIn className="h-4 w-4 mr-2" />
-                      Inloggen
+                      {t('nav.login')}
                     </Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
@@ -302,12 +297,10 @@ export function Navigation() {
           </NavigationMenuList>
         </NavigationMenu>
         
-        {/* Notifications Bell - Only show when logged in */}
+        {/* Desktop right side */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <LanguageSwitcher />
           {user && <NotificationsDropdown />}
-          
-          {/* Shopping Cart Widget */}
           <ShoppingCartWidget />
         </div>
       </div>
@@ -324,7 +317,7 @@ export function Navigation() {
           <SheetContent side="left" className="w-64 p-0">
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-lg font-semibold">Menu</h2>
+                <h2 className="text-lg font-semibold">{t('common.menu')}</h2>
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -335,11 +328,9 @@ export function Navigation() {
                 </Button>
               </div>
               
-              {/* Mobile Search - REMOVED */}
-              
                <nav className="flex flex-col flex-1 p-4 space-y-1 overflow-y-auto">
                  {/* Home */}
-                 <NavLink item={{ title: "Home", url: "/", icon: Home }} mobile />
+                 <NavLink item={{ title: t('nav.home'), url: "/", icon: Home }} mobile />
 
                   {user ? (
                    <>
@@ -354,7 +345,7 @@ export function Navigation() {
                          )}
                        >
                          <ScanLine className="h-4 w-4 mr-3" />
-                         <span className="text-base">Scan & Collectie</span>
+                         <span className="text-base">{t('nav.scanCollection')}</span>
                          <ChevronDown className={cn(
                            "h-4 w-4 ml-auto transition-transform",
                            isScanCollectionMenuOpen && "rotate-180"
@@ -380,7 +371,7 @@ export function Navigation() {
                          )}
                        >
                          <Brain className="h-4 w-4 mr-3" />
-                         <span className="text-base">AI Tools</span>
+                         <span className="text-base">{t('nav.smartTools')}</span>
                          <ChevronDown className={cn(
                            "h-4 w-4 ml-auto transition-transform",
                            isAiToolsMenuOpen && "rotate-180"
@@ -408,21 +399,21 @@ export function Navigation() {
                          className="w-full justify-start text-muted-foreground hover:text-primary"
                        >
                          <LogOut className="h-4 w-4 mr-2 flex-shrink-0" />
-                         <span>Uitloggen</span>
+                         <span>{t('nav.logout')}</span>
                        </Button>
                      </div>
                    </>
                  ) : (
                    <>
                      {/* Public users - direct links */}
-                     <NavLink item={{ title: "Prijscheck", url: "/quick-price-check", icon: DollarSign }} mobile />
-                     <NavLink item={{ title: "Forum", url: "/forum", icon: MessageCircle }} mobile />
+                     <NavLink item={{ title: t('nav.priceCheck'), url: "/quick-price-check", icon: DollarSign }} mobile />
+                     <NavLink item={{ title: t('nav.forum'), url: "/forum", icon: MessageCircle }} mobile />
                      
                      <div className="mt-auto pt-4">
                        <Button asChild className="w-full">
                          <Link to="/auth" onClick={() => setIsOpen(false)}>
                            <LogIn className="h-4 w-4 mr-2" />
-                           Inloggen
+                           {t('nav.login')}
                          </Link>
                        </Button>
                      </div>

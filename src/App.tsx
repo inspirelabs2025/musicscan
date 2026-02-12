@@ -8,11 +8,13 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { SitePopupProvider } from "@/components/popups/SitePopupProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Navigation } from "@/components/Navigation";
 import { FloatingMikeChat } from "@/components/FloatingMikeChat";
+import { VersionBanner } from "@/components/VersionBanner";
 import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { AudioPlayer } from "@/components/audio/AudioPlayer";
 import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
@@ -290,6 +292,7 @@ const AppContent = () => {
   
   return (
     <>
+      <VersionBanner />
       <Navigation />
       <Routes>
         {/* Core routes */}
@@ -558,21 +561,23 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <AuthProvider>
-          <CartProvider>
-            <AudioProvider>
-              <TooltipProvider>
-                <ErrorBoundary showDetails={true}>
-                  <Toaster />
-                  <Sonner />
-                  <BrowserRouter>
-                    <SitePopupProvider>
-                      <AppContent />
-                    </SitePopupProvider>
-                  </BrowserRouter>
-                </ErrorBoundary>
-              </TooltipProvider>
-            </AudioProvider>
-          </CartProvider>
+          <SubscriptionProvider>
+            <CartProvider>
+              <AudioProvider>
+                <TooltipProvider>
+                  <ErrorBoundary showDetails={true}>
+                    <Toaster />
+                    <Sonner />
+                    <BrowserRouter>
+                      <SitePopupProvider>
+                        <AppContent />
+                      </SitePopupProvider>
+                    </BrowserRouter>
+                  </ErrorBoundary>
+                </TooltipProvider>
+              </AudioProvider>
+            </CartProvider>
+          </SubscriptionProvider>
         </AuthProvider>
       </LanguageProvider>
     </QueryClientProvider>

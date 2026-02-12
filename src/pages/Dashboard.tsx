@@ -34,7 +34,7 @@ import { useDirectScans } from '@/hooks/useDirectScans';
 import { useUnifiedAlbums } from '@/hooks/useUnifiedAlbums';
 import { useUnifiedScansStats } from '@/hooks/useUnifiedScansStats';
 import { useUserStats } from '@/hooks/useUserStats';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionContext } from '@/contexts/SubscriptionContext';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
 import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
@@ -62,7 +62,7 @@ const Dashboard = () => {
   const { data: unifiedAlbums, isLoading: albumsLoading } = useUnifiedAlbums();
   const { data: scanStats, isLoading: statsLoading } = useUnifiedScansStats();
   const { data: userStats, isLoading: userStatsLoading } = useUserStats();
-  const subscription = useSubscription();
+  const subscription = useSubscriptionContext();
   const { 
     isOnboardingOpen,
     setIsOnboardingOpen,

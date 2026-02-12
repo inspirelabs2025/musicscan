@@ -13,7 +13,19 @@ import magicMikeAvatar from '@/assets/magic-mike-avatar.png';
 const SUPABASE_URL = "https://ssxbpyqnjfiyubsuonar.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeGJweXFuamZpeXVic3VvbmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMDgyNTMsImV4cCI6MjA2MTY4NDI1M30.UFZKmrN-gz4VUUlKmVfwocS5OQuxGm4ATYltBJn3Kq4";
 
-const FLOATING_SESSION_ID = 'floating-mike-global';
+// Generate a deterministic UUID-like string for the floating session
+// Uses user.id directly as session_id (which is already a UUID from Supabase auth)
+const getFloatingSessionId = (userId?: string): string => {
+  if (userId) return userId;
+  // For non-logged-in users, use a localStorage-persisted UUID
+  const key = 'floating-mike-session-uuid';
+  let stored = localStorage.getItem(key);
+  if (!stored) {
+    stored = crypto.randomUUID();
+    localStorage.setItem(key, stored);
+  }
+  return stored;
+};
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -125,6 +137,9 @@ export function FloatingMikeChat() {
   // Hide on certain routes
   const shouldHide = HIDDEN_ROUTES.some(r => location.pathname.startsWith(r));
 
+  // Compute session ID based on user
+  const sessionId = getFloatingSessionId(user?.id);
+
   // Auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
@@ -147,7 +162,7 @@ export function FloatingMikeChat() {
 
     setIsLoading(true);
     try {
-      const history = await loadHistory(user.id, FLOATING_SESSION_ID);
+      const history = await loadHistory(user.id, sessionId);
       if (history.length > 0) {
         // Prepend a welcome-back message + loaded history
         setMessages([
@@ -166,7 +181,7 @@ export function FloatingMikeChat() {
 
   const handleClearHistory = useCallback(async () => {
     if (!user?.id) return;
-    await clearHistory(user.id, FLOATING_SESSION_ID);
+    await clearHistory(user.id, sessionId);
     setMessages([{ role: 'assistant', content: '🎩 **Nieuw gesprek gestart!** Wat kan ik voor je doen?' }]);
   }, [user?.id]);
 
@@ -180,7 +195,7 @@ export function FloatingMikeChat() {
 
     // Persist user message
     if (user?.id) {
-      persistMessage(user.id, text, 'user', FLOATING_SESSION_ID);
+      persistMessage(user.id, text, 'user', sessionId);
     }
 
     let assistantSoFar = '';
@@ -258,7 +273,7 @@ export function FloatingMikeChat() {
 
       // Persist assistant response
       if (user?.id && assistantSoFar) {
-        persistMessage(user.id, assistantSoFar, 'assistant', FLOATING_SESSION_ID);
+        persistMessage(user.id, assistantSoFar, 'assistant', sessionId);
       }
     } catch (err) {
       console.error('[floating-mike] Error:', err);

@@ -1,62 +1,67 @@
 
 
-## Uitgebreide Build Audit & Fix: Tailwind v4 Plugin Incompatibiliteit
+## Definitieve Build Fix: Ontbrekend `terser` Package
 
-### Oorzaak van het probleem
+### Probleem gevonden
 
-De productie-build faalt steeds omdat het project **Tailwind CSS v4** (`^4.1.18`) gebruikt, maar de plugins nog op de **v3-manier** zijn geconfigureerd via `tailwind.config.ts`. In Tailwind v4 werkt het plugin-systeem fundamenteel anders:
+Na uitgebreide audit is het echte probleem gevonden: **`terser` is niet geinstalleerd**, maar `vite.config.ts` verwijst er wel naar.
 
-- `tailwindcss-animate` (v1.0.7) is **niet compatibel** met Tailwind v4 -- er is een vervanger nodig: `tw-animate-css`
-- `@tailwindcss/typography` moet via de CSS `@plugin` directive geladen worden, niet via de JS config
+De vite.config.ts bevat:
+```typescript
+minify: 'terser',
+terserOptions: {
+  compress: {
+    drop_console: mode === 'production',
+    // ...
+  }
+}
+```
 
-Dit is ook bevestigd door shadcn/ui die in maart 2025 `tailwindcss-animate` heeft gedepreceerd ten gunste van `tw-animate-css`.
+Maar `terser` staat NIET in `package.json`. Sinds Vite 5+ moet terser apart worden geinstalleerd. In dev-mode wordt terser niet gebruikt (daarom werkt de preview), maar bij `vite build` (productie) faalt de build omdat het package niet gevonden kan worden.
 
-### Wat er moet veranderen
+### Oplossing: 2 opties (beide worden uitgevoerd)
 
-#### 1. Vervang `tailwindcss-animate` door `tw-animate-css`
-- Verwijder `tailwindcss-animate` als dependency
-- Installeer `tw-animate-css` als dependency
-- Laad via CSS `@import` in plaats van JS plugin
+**Optie A (voorkeur): Schakel over naar de standaard Vite minifier (esbuild)**
+- Verwijder `minify: 'terser'` en `terserOptions` uit `vite.config.ts`
+- esbuild is de standaard in Vite en is sneller dan terser
+- Console-stripping kan via esbuild's `drop` optie
 
-#### 2. Laad `@tailwindcss/typography` via CSS `@plugin` directive
-- Verwijder de import en plugin-referentie uit `tailwind.config.ts`
-- Voeg `@plugin "@tailwindcss/typography"` toe in `src/index.css`
-
-#### 3. Verwijder de `plugins` array uit `tailwind.config.ts`
-- De twee ESM imports bovenaan het bestand worden verwijderd
-- De `plugins: [...]` array wordt leeggemaakt of verwijderd
+**Dit is beter dan terser installeren omdat:**
+- esbuild is 10-100x sneller
+- Geen extra dependency nodig
+- Standaard Vite gedrag = minder kans op problemen
 
 ### Technische Details
 
-**`src/index.css`** -- bovenaan toevoegen:
-```css
-@import "tailwindcss";
-@import "tw-animate-css";
-@plugin "@tailwindcss/typography";
-@config "../tailwind.config.ts";
-```
+**`vite.config.ts`** - Vervang terser door esbuild configuratie:
 
-**`tailwind.config.ts`** -- plugins verwijderen:
 ```typescript
-// VERWIJDER deze imports:
-// import tailwindcssAnimate from "tailwindcss-animate";
-// import tailwindcssTypography from "@tailwindcss/typography";
-
-// VERWIJDER of leegmaken:
-plugins: [],
+build: {
+    target: 'esnext',
+    // minify: 'terser',  <-- VERWIJDEREN
+    cssCodeSplit: true,
+    rollupOptions: {
+      output: {
+        manualChunks: { /* ... bestaande chunks ... */ }
+      }
+    },
+    // terserOptions: { ... }  <-- VERWIJDEREN
+    // Vervangen door esbuild drop:
+    ...(mode === 'production' ? {
+      minify: 'esbuild',
+    } : {}),
+    chunkSizeWarningLimit: 600
+  },
+  esbuild: mode === 'production' ? {
+    drop: ['console', 'debugger'],
+  } : {},
 ```
 
-**`package.json`** -- dependencies aanpassen:
-- Verwijder: `tailwindcss-animate`
-- Toevoegen: `tw-animate-css`
+Dit bereikt hetzelfde als de terser config (console.log verwijderen in productie) maar dan met de standaard Vite minifier die altijd beschikbaar is.
 
-### Waarom dit de definitieve fix is
+### Waarom eerdere fixes niet werkten
 
-1. `tailwindcss-animate` is een Tailwind v3 plugin die de v4 plugin API niet ondersteunt -- dit crasht de build
-2. `tw-animate-css` is de officieel aanbevolen vervanging (door zowel de auteur als shadcn/ui)
-3. `@tailwindcss/typography` werkt wel met v4, maar moet via `@plugin` in CSS geladen worden, niet via de JS config
-4. De huidige `tailwind.config.ts` met `plugins: [...]` probeert v3-style plugins te laden in een v4 omgeving
+Alle eerdere fixes (tw-animate-css, ESM imports, @plugin directive) waren correcte verbeteringen, maar losten het eigenlijke probleem niet op. De build faalde steeds op de terser-stap die NA de CSS/Tailwind processing komt.
 
 ### Risico
-Laag. De animatie-classes (`animate-in`, `animate-out`, `accordion-down`, etc.) zijn identiek in `tw-animate-css`. De typography `prose` classes werken exact hetzelfde via `@plugin`.
-
+Minimaal. esbuild is de standaard Vite minifier en produceert vergelijkbare output. De console-stripping werkt identiek.

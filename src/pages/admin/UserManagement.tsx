@@ -12,10 +12,99 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, RefreshCw, Users as UsersIcon } from 'lucide-react';
+import { Search, RefreshCw, Users as UsersIcon, Camera, CheckCircle, XCircle, AlertTriangle, Calendar, TrendingUp, Disc } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function UserManagement() {
+
+// Scan stats hook
+function useScanStats() {
+  return useQuery({
+    queryKey: ['admin-scan-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_admin_scan_stats');
+      if (error) throw error;
+      return data as {
+        total_scans: number;
+        ai_scans_total: number;
+        ai_scans_completed: number;
+        ai_scans_failed: number;
+        ai_scans_no_match: number;
+        ai_scans_pending: number;
+        cd_scans_total: number;
+        vinyl_scans_total: number;
+        unique_scanners: number;
+        scans_today: number;
+        scans_this_week: number;
+        scans_this_month: number;
+      };
+    },
+    staleTime: 30_000,
+  });
+}
+
+function ScanStatsCards() {
+  const { data: stats, isLoading } = useScanStats();
+  if (isLoading) return <div className="grid gap-4 md:grid-cols-4"><Skeleton className="h-24" /><Skeleton className="h-24" /><Skeleton className="h-24" /><Skeleton className="h-24" /></div>;
+  if (!stats) return null;
+
+  const successRate = stats.ai_scans_total > 0 
+    ? Math.round((stats.ai_scans_completed / stats.ai_scans_total) * 100) 
+    : 0;
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold flex items-center gap-2"><Camera className="h-5 w-5" /> Scan Statistieken</h2>
+      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-1"><Camera className="h-3.5 w-3.5" /> Totaal Scans</CardDescription>
+            <CardTitle className="text-2xl">{stats.total_scans.toLocaleString()}</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-xs text-muted-foreground">AI: {stats.ai_scans_total} · CD: {stats.cd_scans_total} · Vinyl: {stats.vinyl_scans_total}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-1"><CheckCircle className="h-3.5 w-3.5 text-green-500" /> Succesvol</CardDescription>
+            <CardTitle className="text-2xl text-green-600">{stats.ai_scans_completed.toLocaleString()}</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-xs text-muted-foreground">{successRate}% success rate</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-1"><XCircle className="h-3.5 w-3.5 text-red-500" /> Mislukt</CardDescription>
+            <CardTitle className="text-2xl text-red-600">{stats.ai_scans_failed.toLocaleString()}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-1"><AlertTriangle className="h-3.5 w-3.5 text-yellow-500" /> Geen Match</CardDescription>
+            <CardTitle className="text-2xl text-yellow-600">{stats.ai_scans_no_match.toLocaleString()}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-1"><Disc className="h-3.5 w-3.5" /> Unieke Scanners</CardDescription>
+            <CardTitle className="text-2xl">{stats.unique_scanners}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-1"><TrendingUp className="h-3.5 w-3.5" /> Vandaag / Week / Maand</CardDescription>
+            <CardTitle className="text-lg">{stats.scans_today} / {stats.scans_this_week} / {stats.scans_this_month}</CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
   const {
     users,
     loading,
@@ -54,7 +143,10 @@ export default function UserManagement() {
         </Button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Scan Statistics */}
+      <ScanStatsCards />
+
+      {/* User Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">

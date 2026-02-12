@@ -99,7 +99,7 @@ serve(async (req) => {
       // Fetch all profiles
       const { data: profiles, error: profilesError } = await supabaseAdmin
         .from('profiles')
-        .select('user_id, first_name, avatar_url');
+        .select('user_id, first_name, avatar_url, last_active_at');
 
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
@@ -123,7 +123,7 @@ serve(async (req) => {
           id: authUser.id,
           email: authUser.email || '',
           created_at: authUser.created_at,
-          last_sign_in_at: authUser.last_sign_in_at,
+          last_sign_in_at: profile?.last_active_at || authUser.last_sign_in_at,
           first_name: profile?.first_name || null,
           avatar_url: profile?.avatar_url || null,
           roles: roles,

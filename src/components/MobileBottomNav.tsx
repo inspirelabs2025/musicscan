@@ -91,7 +91,7 @@ export function MobileBottomNav() {
                 key={item.url}
                 to={item.url}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-muted-foreground transition-colors",
+                  "flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-foreground transition-colors",
                   isActive && "text-primary"
                 )}
               >
@@ -106,7 +106,7 @@ export function MobileBottomNav() {
             <SheetTrigger asChild>
               <button
                 className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-muted-foreground transition-colors",
+                  "flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-foreground transition-colors",
                   menuOpen && "text-primary"
                 )}
               >

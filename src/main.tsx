@@ -1,3 +1,10 @@
+// Unregister any stale service workers from previous PWA builds
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(registration => registration.unregister());
+  });
+}
+
 import React, { Suspense, lazy, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'

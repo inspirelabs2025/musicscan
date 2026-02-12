@@ -13,7 +13,7 @@ import { Navigation } from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionContext } from '@/contexts/SubscriptionContext';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
 import testCdMatrix from '@/assets/test-cd-matrix.jpg';
 import { EnhancedScanPreview } from '@/components/scanner/EnhancedScanPreview';
@@ -89,7 +89,7 @@ export default function AIScanV2() {
   } = useUsageTracking();
   const {
     subscription
-  } = useSubscription();
+  } = useSubscriptionContext();
 
   // Discogs search for automatic pricing
   const {

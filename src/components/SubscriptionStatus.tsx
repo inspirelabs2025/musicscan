@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Crown, Settings, TrendingUp, AlertCircle, MessageSquare, Upload, Zap } from 'lucide-react';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionContext } from '@/contexts/SubscriptionContext';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { Link } from 'react-router-dom';
 
@@ -13,7 +13,7 @@ interface SubscriptionStatusProps {
 }
 
 export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact = false }) => {
-  const { subscription, openCustomerPortal, loading } = useSubscription();
+  const { subscription, openCustomerPortal, loading } = useSubscriptionContext();
   const { usage, aiScansUsed, aiChatUsed, bulkUploadsUsed, getUsagePercentage } = useUsageTracking();
 
   const planConfig = {

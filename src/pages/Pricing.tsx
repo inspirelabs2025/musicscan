@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Star, Crown, Building2, Music } from 'lucide-react';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionContext } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const Pricing = () => {
   const { user } = useAuth();
-  const { subscription, createCheckout, loading } = useSubscription();
+  const { subscription, createCheckout, loading } = useSubscriptionContext();
   const { toast } = useToast();
 
   const plans = [

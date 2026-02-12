@@ -10156,6 +10156,13 @@ export type Database = {
           view_count: number
         }[]
       }
+      get_user_scan_counts: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          total_scans: number
+          user_id: string
+        }[]
+      }
       get_year_overview_stats: { Args: { p_year?: number }; Returns: Json }
       has_role: {
         Args: {

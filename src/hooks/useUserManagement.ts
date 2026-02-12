@@ -36,17 +36,15 @@ export const useUserManagement = () => {
 
       const usersList = data.users || [];
 
-      // Fetch scan counts for all users
+      // Fetch scan counts from all scan tables via RPC
       const userIds = usersList.map((u: any) => u.id);
       if (userIds.length > 0) {
         const { data: scanData } = await supabase
-          .from('ai_scan_results')
-          .select('user_id')
-          .in('user_id', userIds);
+          .rpc('get_user_scan_counts', { p_user_ids: userIds });
 
         const scanCounts: Record<string, number> = {};
         scanData?.forEach((row: any) => {
-          scanCounts[row.user_id] = (scanCounts[row.user_id] || 0) + 1;
+          scanCounts[row.user_id] = row.total_scans;
         });
 
         usersList.forEach((u: any) => {

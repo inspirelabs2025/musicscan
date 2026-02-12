@@ -12,6 +12,7 @@ import { SitePopupProvider } from "@/components/popups/SitePopupProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Navigation } from "@/components/Navigation";
+import { FloatingMikeChat } from "@/components/FloatingMikeChat";
 import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { AudioPlayer } from "@/components/audio/AudioPlayer";
 import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
@@ -547,6 +548,7 @@ const AppContent = () => {
       </Routes>
       <ConditionalFooter />
       <AudioPlayer />
+      <FloatingMikeChat />
     </>
   );
 };

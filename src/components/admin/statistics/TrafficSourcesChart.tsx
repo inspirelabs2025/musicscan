@@ -49,7 +49,7 @@ export function TrafficSourcesChart({ days }: TrafficSourcesChartProps) {
                 outerRadius={100}
                 paddingAngle={2}
                 dataKey="value"
-                label={({ name, percentage }) => `${name} ${percentage}%`}
+                label={({ name, percentage }: any) => `${name} ${percentage}%`}
                 labelLine={false}
               >
                 {chartData.map((entry, index) => (

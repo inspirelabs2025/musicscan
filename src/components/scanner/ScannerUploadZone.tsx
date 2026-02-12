@@ -91,7 +91,7 @@ export const ScannerUploadZone = React.memo(({
           return (
             <div key={label} className="relative">
               <input
-                ref={el => inputRefs.current[index] = el}
+                ref={(el: HTMLInputElement | null) => { if (el) inputRefs.current[index] = el; }}
                 type="file"
                 accept="image/*"
                 capture="environment"

@@ -10,7 +10,7 @@ interface MusicalGalaxyProps {
 
 export function MusicalGalaxy({ chartData, analysis }: MusicalGalaxyProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(0);
   const { isMobile, isTablet } = useMobileDetection();
   
   useEffect(() => {

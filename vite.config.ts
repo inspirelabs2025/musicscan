@@ -19,16 +19,16 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  esbuild: mode === 'production' ? {
+    drop: ['console', 'debugger'],
+  } : {},
   build: {
     target: 'esnext',
-    minify: 'terser',
     cssCodeSplit: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          // Core vendor chunks
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          // UI library chunks
           'vendor-radix': [
             '@radix-ui/react-dialog',
             '@radix-ui/react-select',
@@ -37,24 +37,12 @@ export default defineConfig(({ mode }) => ({
             '@radix-ui/react-popover',
             '@radix-ui/react-tooltip'
           ],
-          // Utility chunks
           'vendor-utils': ['clsx', 'tailwind-merge', 'class-variance-authority', 'date-fns'],
-          // Animation chunks (loaded on demand)
           'vendor-motion': ['framer-motion'],
-          // Data fetching
           'vendor-query': ['@tanstack/react-query'],
-          // Supabase
           'vendor-supabase': ['@supabase/supabase-js'],
-          // Charts (heavy, loaded on demand)
           'vendor-charts': ['recharts'],
         }
-      }
-    },
-    terserOptions: {
-      compress: {
-        drop_console: mode === 'production',
-        drop_debugger: mode === 'production',
-        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : []
       }
     },
     chunkSizeWarningLimit: 600

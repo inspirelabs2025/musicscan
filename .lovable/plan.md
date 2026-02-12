@@ -1,67 +1,45 @@
 
 
-## Definitieve Build Fix: Ontbrekend `terser` Package
+# Floating Magic Mike Chat op Alle Pagina's
 
-### Probleem gevonden
+## Wat wordt er gebouwd
+Een zwevende Magic Mike 🎩 chat-bubble die op **elke pagina** van de app beschikbaar is -- zowel publieke als ingelogde pagina's. Mike kan zo overal vragen beantwoorden, collectiewaardes bespreken, en muziekinfo geven.
 
-Na uitgebreide audit is het echte probleem gevonden: **`terser` is niet geinstalleerd**, maar `vite.config.ts` verwijst er wel naar.
+## Hoe het werkt
+- Rechtsonder verschijnt een rondje met het Magic Mike avatar
+- Klikken opent een compacte chat-overlay (geen volledige pagina)
+- De chat gebruikt dezelfde `scan-chat` edge function als de bestaande ScanChatTab
+- Op ingelogde pagina's krijgt Mike context mee over de huidige pagina (bijv. "collection-overview") zodat hij relevante dingen kan zeggen over je collectie
+- De chat-staat blijft behouden tijdens navigatie (je verliest je gesprek niet)
+- Op de /ai-scan-v2 pagina wordt de floating bubble verborgen (daar zit Mike al inline)
 
-De vite.config.ts bevat:
-```typescript
-minify: 'terser',
-terserOptions: {
-  compress: {
-    drop_console: mode === 'production',
-    // ...
-  }
-}
-```
+## Gebruikerservaring
+1. Gebruiker ziet rechtsonder een Magic Mike avatar-button met een subtiel "pulsje"
+2. Klik opent een chat-venster (~400px breed, ~500px hoog)
+3. Mike begroet je met een welkomstbericht, contextueel per pagina
+4. Je kunt typen, foto's sturen, en gewoon chatten
+5. Klik op X of buiten het venster sluit de chat (gesprek blijft bewaard)
 
-Maar `terser` staat NIET in `package.json`. Sinds Vite 5+ moet terser apart worden geinstalleerd. In dev-mode wordt terser niet gebruikt (daarom werkt de preview), maar bij `vite build` (productie) faalt de build omdat het package niet gevonden kan worden.
+## Technische aanpak
 
-### Oplossing: 2 opties (beide worden uitgevoerd)
+### 1. Nieuw component: `FloatingMikeChat.tsx`
+- Zwevende button + expandable chat panel
+- Hergebruikt de chat-logica uit ScanChatTab (berichten sturen naar `scan-chat` edge function)
+- Vereenvoudigde versie: alleen tekst-chat (geen scan/upload functionaliteit -- daarvoor verwijs je naar de scanner pagina)
+- Gebruikt `framer-motion` voor open/dicht animatie
+- Z-index hoog genoeg om boven alle content te zweven
 
-**Optie A (voorkeur): Schakel over naar de standaard Vite minifier (esbuild)**
-- Verwijder `minify: 'terser'` en `terserOptions` uit `vite.config.ts`
-- esbuild is de standaard in Vite en is sneller dan terser
-- Console-stripping kan via esbuild's `drop` optie
+### 2. Integratie in `App.tsx`
+- Component wordt toegevoegd in de AppContent wrapper, naast Navigation
+- Conditioneel: alleen tonen als de gebruiker is ingelogd (Magic Mike is een premium feature)
+- Verbergen op `/ai-scan-v2` waar Mike al inline beschikbaar is
+- Verbergen op `/auth` pagina
 
-**Dit is beter dan terser installeren omdat:**
-- esbuild is 10-100x sneller
-- Geen extra dependency nodig
-- Standaard Vite gedrag = minder kans op problemen
+### 3. Pagina-context meegeven
+- De floating chat detecteert de huidige route via `useLocation()`
+- Stuurt een `pageContext` parameter mee naar de `scan-chat` edge function
+- Voorbeeld: op `/collection-overview` krijgt Mike mee dat de gebruiker zijn collectie bekijkt, zodat hij relevante tips kan geven
 
-### Technische Details
-
-**`vite.config.ts`** - Vervang terser door esbuild configuratie:
-
-```typescript
-build: {
-    target: 'esnext',
-    // minify: 'terser',  <-- VERWIJDEREN
-    cssCodeSplit: true,
-    rollupOptions: {
-      output: {
-        manualChunks: { /* ... bestaande chunks ... */ }
-      }
-    },
-    // terserOptions: { ... }  <-- VERWIJDEREN
-    // Vervangen door esbuild drop:
-    ...(mode === 'production' ? {
-      minify: 'esbuild',
-    } : {}),
-    chunkSizeWarningLimit: 600
-  },
-  esbuild: mode === 'production' ? {
-    drop: ['console', 'debugger'],
-  } : {},
-```
-
-Dit bereikt hetzelfde als de terser config (console.log verwijderen in productie) maar dan met de standaard Vite minifier die altijd beschikbaar is.
-
-### Waarom eerdere fixes niet werkten
-
-Alle eerdere fixes (tw-animate-css, ESM imports, @plugin directive) waren correcte verbeteringen, maar losten het eigenlijke probleem niet op. De build faalde steeds op de terser-stap die NA de CSS/Tailwind processing komt.
-
-### Risico
-Minimaal. esbuild is de standaard Vite minifier en produceert vergelijkbare output. De console-stripping werkt identiek.
+### 4. State management
+- Chat-berichten worden in een React state bewaard binnen het component
+- Omdat het component in App.tsx leeft (buiten Routes), blijft het gesprek behouden bij navigatie

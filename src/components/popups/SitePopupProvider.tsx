@@ -33,6 +33,9 @@ export function SitePopupProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [currentPopup, setCurrentPopup] = useState<SitePopup | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [sessionPopupShown, setSessionPopupShown] = useState(() => 
+    sessionStorage.getItem('popup_session_shown') === 'true'
+  );
   const incrementStat = useIncrementPopupStat();
   const timeoutRefs = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const triggeredRef = useRef<Set<string>>(new Set());
@@ -73,11 +76,14 @@ export function SitePopupProvider({ children }: { children: ReactNode }) {
   }, [popups]);
 
   const showPopup = useCallback((popup: SitePopup) => {
+    if (sessionPopupShown) return;
     setCurrentPopup(popup);
     setIsOpen(true);
+    setSessionPopupShown(true);
+    sessionStorage.setItem('popup_session_shown', 'true');
     markPopupShown(popup.id);
     incrementStat.mutate({ id: popup.id, stat: 'views_count' });
-  }, [markPopupShown, incrementStat]);
+  }, [markPopupShown, incrementStat, sessionPopupShown]);
 
   const hidePopup = useCallback(() => {
     setIsOpen(false);
@@ -127,6 +133,7 @@ export function SitePopupProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const shouldTriggerPopup = useCallback((popup: SitePopup): boolean => {
+    if (sessionPopupShown) return false;
     if (triggeredRef.current.has(popup.id)) return false;
     if (hasBeenShown(popup.id)) return false;
 
@@ -137,7 +144,7 @@ export function SitePopupProvider({ children }: { children: ReactNode }) {
     if (!shouldShowOnPage(popup, location.pathname)) return false;
 
     return true;
-  }, [hasBeenShown, shouldShowOnPage, location.pathname]);
+  }, [hasBeenShown, shouldShowOnPage, location.pathname, sessionPopupShown]);
 
   const triggerPopup = useCallback((popup: SitePopup) => {
     if (!shouldTriggerPopup(popup)) return;

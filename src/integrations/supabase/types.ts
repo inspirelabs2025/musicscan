@@ -9884,6 +9884,7 @@ export type Database = {
         Args: { album_name: string; artist_name: string }
         Returns: string
       }
+      get_admin_scan_stats: { Args: never; Returns: Json }
       get_all_queue_stats: {
         Args: never
         Returns: {

@@ -1,0 +1,4 @@
+<key>NSCameraUsageDescription</key>
+<string>Deze app heeft toegang tot de camera nodig om muziek te scannen</string>
+<key>NSMicrophoneUsageDescription</key>
+<string>Deze app heeft toegang tot de microfoon nodig voor muziekherkenning</string>

@@ -69,8 +69,8 @@ export function TimeMachineEventForm({ event, onSuccess, onCancel }: TimeMachine
   });
   const [autoUpscale, setAutoUpscale] = useState(true);
 
-  const form = useForm<EventFormValues>({
-    resolver: zodResolver(eventFormSchema),
+  const form = useForm({
+    resolver: zodResolver(eventFormSchema) as any,
     defaultValues: {
       event_title: event?.event_title || '',
       event_subtitle: event?.event_subtitle || '',

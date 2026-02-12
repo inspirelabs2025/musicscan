@@ -318,7 +318,7 @@ function OverviewTab({ stats, formatCurrency }: { stats: any; formatCurrency: (v
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ genre, percent }) => percent > 0.05 ? `${genre}` : ''}
+                  label={({ genre, percent }: any) => percent > 0.05 ? `${genre}` : ''}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="count"

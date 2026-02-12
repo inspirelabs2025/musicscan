@@ -66,7 +66,7 @@ export const GenreDistributionChart: React.FC<GenreDistributionChartProps> = ({ 
                 paddingAngle={2}
                 dataKey="count"
                 nameKey="genre"
-                label={({ genre, percentage }) => `${genre} (${percentage}%)`}
+                label={({ genre, percentage }: any) => `${genre} (${percentage}%)`}
                 labelLine={false}
               >
                 {chartData.map((_, index) => (

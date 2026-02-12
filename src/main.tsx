@@ -1,7 +1,12 @@
-// Unregister any stale service workers from previous PWA builds
+// Unregister any stale service workers and clear all caches from previous PWA builds
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(registrations => {
     registrations.forEach(registration => registration.unregister());
+  });
+}
+if ('caches' in window) {
+  caches.keys().then(names => {
+    names.forEach(name => caches.delete(name));
   });
 }
 

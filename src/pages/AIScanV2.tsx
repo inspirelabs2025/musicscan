@@ -314,31 +314,15 @@ export default function AIScanV2() {
   return <>
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pb-20">
 
-      <div className="p-4 pt-20">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
-              <Brain className="h-8 w-8" />
-              <Sparkles className="h-6 w-6 text-yellow-500" />
+      <div className="p-4 pt-4 md:pt-20">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {/* Header - compact on mobile */}
+          <div className="text-center space-y-1 md:space-y-2">
+            <h1 className="text-xl md:text-3xl font-bold text-primary flex items-center justify-center gap-1.5">
+              <Brain className="h-5 w-5 md:h-8 md:w-8" />
               Smart Scan
-              <Badge variant="secondary" className="ml-2">BETA</Badge>
+              <Badge variant="secondary" className="ml-1 text-[10px] md:text-xs">BETA</Badge>
             </h1>
-            <p className="text-muted-foreground">
-              Ontdek supersnel de juiste album release
-            </p>
-            <div className="flex items-center justify-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.location.reload()}
-                title="Hard refresh — herlaad pagina en edge functions"
-                className="text-muted-foreground hover:text-primary"
-              >
-                <RefreshCw className="h-4 w-4 mr-1" />
-                Refresh
-              </Button>
-            </div>
           </div>
 
           {/* Tabs: Foto Scanner | Chat */}

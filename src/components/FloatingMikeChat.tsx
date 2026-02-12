@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Loader2 } from 'lucide-react';
+import { X, Send, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import magicMikeAvatar from '@/assets/magic-mike-avatar.png';
@@ -13,9 +13,12 @@ import magicMikeAvatar from '@/assets/magic-mike-avatar.png';
 const SUPABASE_URL = "https://ssxbpyqnjfiyubsuonar.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeGJweXFuamZpeXVic3VvbmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMDgyNTMsImV4cCI6MjA2MTY4NDI1M30.UFZKmrN-gz4VUUlKmVfwocS5OQuxGm4ATYltBJn3Kq4";
 
+const FLOATING_SESSION_ID = 'floating-mike-global';
+
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  id?: string; // DB id for persisted messages
 }
 
 // Map routes to context descriptions for Magic Mike
@@ -37,7 +40,10 @@ const getPageContext = (pathname: string): string => {
   return '';
 };
 
-const getWelcomeMessage = (pathname: string): string => {
+const getWelcomeMessage = (pathname: string, hasHistory: boolean): string => {
+  if (hasHistory) {
+    return '🎩 **Welkom terug!** Ik heb ons vorige gesprek nog paraat. Waar waren we gebleven, of heb je een nieuwe vraag?';
+  }
   if (pathname.startsWith('/collection-overview')) 
     return '🎩 **Hey!** Ik ben Magic Mike. Ik zie dat je je collectie bekijkt — wil je weten wat je verzameling waard is, of heb je een vraag over een specifiek album?';
   if (pathname.startsWith('/dashboard'))
@@ -52,6 +58,58 @@ const getWelcomeMessage = (pathname: string): string => {
 // Hidden routes where the floating chat should not appear
 const HIDDEN_ROUTES = ['/ai-scan-v2', '/auth', '/auth/set-password', '/set-password'];
 
+// Save a message to the database
+async function persistMessage(userId: string, content: string, senderType: 'user' | 'assistant', sessionId: string) {
+  try {
+    await supabase.from('chat_messages').insert({
+      user_id: userId,
+      message: content,
+      sender_type: senderType,
+      session_id: sessionId,
+    });
+  } catch (err) {
+    console.error('[floating-mike] Failed to persist message:', err);
+  }
+}
+
+// Load recent conversation history from DB
+async function loadHistory(userId: string, sessionId: string, limit = 50): Promise<ChatMessage[]> {
+  try {
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .select('id, message, sender_type, created_at')
+      .eq('user_id', userId)
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true })
+      .limit(limit);
+    
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
+
+    return data.map(row => ({
+      id: row.id,
+      role: row.sender_type === 'user' ? 'user' as const : 'assistant' as const,
+      content: row.message,
+    }));
+  } catch (err) {
+    console.error('[floating-mike] Failed to load history:', err);
+    return [];
+  }
+}
+
+// Clear conversation history
+async function clearHistory(userId: string, sessionId: string) {
+  try {
+    await supabase
+      .from('chat_messages')
+      .delete()
+      .eq('user_id', userId)
+      .eq('session_id', sessionId);
+  } catch (err) {
+    console.error('[floating-mike] Failed to clear history:', err);
+  }
+}
+
 export function FloatingMikeChat() {
   const { user } = useAuth();
   const location = useLocation();
@@ -59,6 +117,7 @@ export function FloatingMikeChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -73,22 +132,43 @@ export function FloatingMikeChat() {
     }
   }, [messages]);
 
-  // Initialize welcome message on first open
-  const handleOpen = () => {
-    if (!hasInitialized) {
-      setMessages([{ role: 'assistant', content: getWelcomeMessage(location.pathname) }]);
-      setHasInitialized(true);
-    }
+  // Initialize: load history on first open
+  const handleOpen = useCallback(async () => {
     setIsOpen(true);
     setTimeout(() => textareaRef.current?.focus(), 300);
-  };
 
-  // Auto-scroll
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (hasInitialized) return;
+    setHasInitialized(true);
+
+    if (!user?.id) {
+      setMessages([{ role: 'assistant', content: getWelcomeMessage(location.pathname, false) }]);
+      return;
     }
-  }, [messages]);
+
+    setIsLoading(true);
+    try {
+      const history = await loadHistory(user.id, FLOATING_SESSION_ID);
+      if (history.length > 0) {
+        // Prepend a welcome-back message + loaded history
+        setMessages([
+          { role: 'assistant', content: getWelcomeMessage(location.pathname, true) },
+          ...history,
+        ]);
+      } else {
+        setMessages([{ role: 'assistant', content: getWelcomeMessage(location.pathname, false) }]);
+      }
+    } catch {
+      setMessages([{ role: 'assistant', content: getWelcomeMessage(location.pathname, false) }]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasInitialized, user?.id, location.pathname]);
+
+  const handleClearHistory = useCallback(async () => {
+    if (!user?.id) return;
+    await clearHistory(user.id, FLOATING_SESSION_ID);
+    setMessages([{ role: 'assistant', content: '🎩 **Nieuw gesprek gestart!** Wat kan ik voor je doen?' }]);
+  }, [user?.id]);
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isStreaming) return;
@@ -98,13 +178,18 @@ export function FloatingMikeChat() {
     setInput('');
     setIsStreaming(true);
 
+    // Persist user message
+    if (user?.id) {
+      persistMessage(user.id, text, 'user', FLOATING_SESSION_ID);
+    }
+
     let assistantSoFar = '';
     const upsertAssistant = (chunk: string) => {
       assistantSoFar += chunk;
       setMessages(prev => {
         const last = prev[prev.length - 1];
         const msgData: ChatMessage = { role: 'assistant', content: assistantSoFar };
-        if (last?.role === 'assistant') {
+        if (last?.role === 'assistant' && !last.id) {
           return prev.map((m, i) => (i === prev.length - 1 ? msgData : m));
         }
         return [...prev, msgData];
@@ -116,7 +201,9 @@ export function FloatingMikeChat() {
       const contextPrefix = pageContext ? `[PAGE_CONTEXT: ${pageContext}]\n\n` : '';
       const effectiveContent = contextPrefix + text;
 
-      const allMessages = [...messages, { role: 'user' as const, content: effectiveContent }];
+      // Build message history for AI — include recent conversation
+      const recentMessages = messages.slice(-20); // Last 20 messages for context
+      const allMessages = [...recentMessages, { role: 'user' as const, content: effectiveContent }];
 
       const resp = await fetch(`${SUPABASE_URL}/functions/v1/scan-chat`, {
         method: 'POST',
@@ -168,16 +255,19 @@ export function FloatingMikeChat() {
         if (j === '[DONE]') continue;
         try { const p = JSON.parse(j); const c = p.choices?.[0]?.delta?.content; if (c) upsertAssistant(c); } catch {}
       }
+
+      // Persist assistant response
+      if (user?.id && assistantSoFar) {
+        persistMessage(user.id, assistantSoFar, 'assistant', FLOATING_SESSION_ID);
+      }
     } catch (err) {
       console.error('[floating-mike] Error:', err);
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `⚠️ Er ging iets mis. ${err instanceof Error ? err.message : 'Probeer het later opnieuw.'}`,
-      }]);
+      const errorMsg = `⚠️ Er ging iets mis. ${err instanceof Error ? err.message : 'Probeer het later opnieuw.'}`;
+      setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }]);
     } finally {
       setIsStreaming(false);
     }
-  }, [messages, isStreaming, location.pathname]);
+  }, [messages, isStreaming, location.pathname, user?.id]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -238,6 +328,15 @@ export function FloatingMikeChat() {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-white/80 hover:text-white hover:bg-white/10"
+                onClick={handleClearHistory}
+                title="Nieuw gesprek starten"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white/80 hover:text-white hover:bg-white/10"
                 onClick={() => setIsOpen(false)}
               >
                 <X className="h-4 w-4" />
@@ -246,33 +345,42 @@ export function FloatingMikeChat() {
 
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-              {messages.map((msg, i) => (
-                <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  {msg.role === 'assistant' && (
-                    <img src={magicMikeAvatar} alt="" className="w-7 h-7 rounded-full object-cover object-top flex-shrink-0 mt-1" />
-                  )}
-                  <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground rounded-br-sm'
-                      : 'bg-muted/60 backdrop-blur-sm rounded-bl-sm'
-                  }`}>
-                    {msg.role === 'assistant' ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-1.5 [&>p:last-child]:mb-0">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">Gesprek laden...</span>
+                </div>
+              ) : (
+                <>
+                  {messages.map((msg, i) => (
+                    <div key={msg.id || i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      {msg.role === 'assistant' && (
+                        <img src={magicMikeAvatar} alt="" className="w-7 h-7 rounded-full object-cover object-top flex-shrink-0 mt-1" />
+                      )}
+                      <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
+                        msg.role === 'user'
+                          ? 'bg-primary text-primary-foreground rounded-br-sm'
+                          : 'bg-muted/60 backdrop-blur-sm rounded-bl-sm'
+                      }`}>
+                        {msg.role === 'assistant' ? (
+                          <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-1.5 [&>p:last-child]:mb-0">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                          </div>
+                        ) : (
+                          <p className="whitespace-pre-wrap">{msg.content}</p>
+                        )}
                       </div>
-                    ) : (
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {isStreaming && messages[messages.length - 1]?.role !== 'assistant' && (
-                <div className="flex gap-2 justify-start">
-                  <img src={magicMikeAvatar} alt="" className="w-7 h-7 rounded-full object-cover object-top flex-shrink-0 mt-1" />
-                  <div className="bg-muted/60 rounded-xl px-3 py-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  </div>
-                </div>
+                    </div>
+                  ))}
+                  {isStreaming && messages[messages.length - 1]?.role !== 'assistant' && (
+                    <div className="flex gap-2 justify-start">
+                      <img src={magicMikeAvatar} alt="" className="w-7 h-7 rounded-full object-cover object-top flex-shrink-0 mt-1" />
+                      <div className="bg-muted/60 rounded-xl px-3 py-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 

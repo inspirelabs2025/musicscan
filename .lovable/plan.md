@@ -1,45 +1,67 @@
 
 
-# Floating Magic Mike Chat op Alle Pagina's
+# Fix: Oude Versie / Caching Probleem Oplossen
 
-## Wat wordt er gebouwd
-Een zwevende Magic Mike 🎩 chat-bubble die op **elke pagina** van de app beschikbaar is -- zowel publieke als ingelogde pagina's. Mike kan zo overal vragen beantwoorden, collectiewaardes bespreken, en muziekinfo geven.
+## Diagnose
 
-## Hoe het werkt
-- Rechtsonder verschijnt een rondje met het Magic Mike avatar
-- Klikken opent een compacte chat-overlay (geen volledige pagina)
-- De chat gebruikt dezelfde `scan-chat` edge function als de bestaande ScanChatTab
-- Op ingelogde pagina's krijgt Mike context mee over de huidige pagina (bijv. "collection-overview") zodat hij relevante dingen kan zeggen over je collectie
-- De chat-staat blijft behouden tijdens navigatie (je verliest je gesprek niet)
-- Op de /ai-scan-v2 pagina wordt de floating bubble verborgen (daar zit Mike al inline)
+Na grondig onderzoek heb ik drie concrete problemen gevonden:
 
-## Gebruikerservaring
-1. Gebruiker ziet rechtsonder een Magic Mike avatar-button met een subtiel "pulsje"
-2. Klik opent een chat-venster (~400px breed, ~500px hoog)
-3. Mike begroet je met een welkomstbericht, contextueel per pagina
-4. Je kunt typen, foto's sturen, en gewoon chatten
-5. Klik op X of buiten het venster sluit de chat (gesprek blijft bewaard)
+### Probleem 1: Browser cache serveert oude code
+De preview toont tekst ("Smart Foto Analyse V2", "GPT-4.1 en multi-pass technologie", "Ingelogd als:") die **niet meer in de broncode staat**. De huidige code zegt "Smart Scan" en "Ontdek supersnel de juiste album release". Dit bewijst dat de browser een oude gecachte versie laadt.
 
-## Technische aanpak
+**Oorzaak**: Hoewel `vercel.json` en `public/_headers` no-cache headers hebben, ontbreekt er een mechanisme om de browser te **dwingen** een nieuwe versie te laden. De `build-version` meta tag in `index.html` is statisch (`2026-02-11T12:00:00Z`) en wordt nergens gecontroleerd.
 
-### 1. Nieuw component: `FloatingMikeChat.tsx`
-- Zwevende button + expandable chat panel
-- Hergebruikt de chat-logica uit ScanChatTab (berichten sturen naar `scan-chat` edge function)
-- Vereenvoudigde versie: alleen tekst-chat (geen scan/upload functionaliteit -- daarvoor verwijs je naar de scanner pagina)
-- Gebruikt `framer-motion` voor open/dicht animatie
-- Z-index hoog genoeg om boven alle content te zweven
+### Probleem 2: FloatingMikeChat database-fout
+Console error: `invalid input syntax for type uuid: "floating-mike-global"`. De `session_id` kolom in `chat_messages` verwacht een UUID, maar de code stuurt een gewone string.
 
-### 2. Integratie in `App.tsx`
-- Component wordt toegevoegd in de AppContent wrapper, naast Navigation
-- Conditioneel: alleen tonen als de gebruiker is ingelogd (Magic Mike is een premium feature)
-- Verbergen op `/ai-scan-v2` waar Mike al inline beschikbaar is
-- Verbergen op `/auth` pagina
+### Probleem 3: check-subscription wordt 8x per minuut aangeroepen
+`useSubscription()` pollt elke 30 seconden en wordt in 4+ componenten tegelijk gebruikt. Elke instantie maakt een eigen interval aan = 8+ onnodige API-calls per minuut.
 
-### 3. Pagina-context meegeven
-- De floating chat detecteert de huidige route via `useLocation()`
-- Stuurt een `pageContext` parameter mee naar de `scan-chat` edge function
-- Voorbeeld: op `/collection-overview` krijgt Mike mee dat de gebruiker zijn collectie bekijkt, zodat hij relevante tips kan geven
+## Oplossingen
 
-### 4. State management
-- Chat-berichten worden in een React state bewaard binnen het component
-- Omdat het component in App.tsx leeft (buiten Routes), blijft het gesprek behouden bij navigatie
+### 1. Versie-detectie met automatische refresh
+- Voeg een dynamische `BUILD_VERSION` constant toe (timestamp van build)
+- Maak een `useVersionCheck` hook die periodiek de huidige HTML ophaalt en de build-version vergelijkt
+- Bij een mismatch: toon een subtiele banner "Er is een nieuwe versie beschikbaar" met een refresh-knop
+- Na 3 mismatches: automatisch herladen
+
+### 2. Fix FloatingMikeChat session_id
+- Genereer een echte UUID voor de floating Mike sessie per gebruiker (bijv. `crypto.randomUUID()` of een deterministische UUID op basis van `user.id`)
+- Gebruik een vaste prefix-gebaseerde UUID: neem de `user.id` als session-id, of genereer eenmalig een UUID en sla die op in localStorage
+
+### 3. Optimaliseer check-subscription
+- Verplaats `useSubscription` naar een React Context (SubscriptionContext), zodat er maar 1 instantie draait
+- Alle 4 componenten consumeren dezelfde context in plaats van elk hun eigen polling te starten
+- Verlaag polling frequentie naar 60 seconden (was 30s)
+
+## Technische Details
+
+### Bestanden die aangepast worden
+
+1. **`src/hooks/useVersionCheck.ts`** (nieuw)
+   - Periodiek (elke 5 min) een fetch naar `/index.html` met cache-busting query param
+   - Parse de `build-version` meta tag uit de response
+   - Vergelijk met de ingebakken versie
+   - Return `{ updateAvailable, refresh }` state
+
+2. **`src/components/VersionBanner.tsx`** (nieuw)
+   - Dunne banner bovenaan wanneer een update beschikbaar is
+   - "Klik om te vernieuwen" knop
+
+3. **`index.html`**
+   - Update `build-version` meta tag bij elke build
+
+4. **`src/components/FloatingMikeChat.tsx`**
+   - Vervang `'floating-mike-global'` door een geldige UUID-strategie (bijv. `user.id` als session key, of een deterministische UUID)
+
+5. **`src/contexts/SubscriptionContext.tsx`** (nieuw)
+   - Wrap de `useSubscription` logica in een Context Provider
+   - Eenmalige polling (60s interval)
+   - Alle componenten gebruiken `useSubscriptionContext()` in plaats van `useSubscription()`
+
+6. **`src/App.tsx`**
+   - Integreer `SubscriptionProvider` en `VersionBanner`
+
+7. **`src/pages/AIScanV2.tsx`**, **Dashboard.tsx**, **Pricing.tsx**, **SubscriptionStatus.tsx**
+   - Vervang `useSubscription()` door `useSubscriptionContext()`
+

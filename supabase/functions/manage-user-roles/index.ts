@@ -123,7 +123,9 @@ serve(async (req) => {
           id: authUser.id,
           email: authUser.email || '',
           created_at: authUser.created_at,
-          last_sign_in_at: profile?.last_active_at || authUser.last_sign_in_at,
+          last_sign_in_at: [profile?.last_active_at, authUser.last_sign_in_at]
+            .filter(Boolean)
+            .sort((a, b) => new Date(b!).getTime() - new Date(a!).getTime())[0] || null,
           first_name: profile?.first_name || null,
           avatar_url: profile?.avatar_url || null,
           roles: roles,

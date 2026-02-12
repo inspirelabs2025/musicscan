@@ -1,27 +1,41 @@
 
 
-## Build Fix: Tailwind CSS PostCSS Plugin
+## Build Fix: `require()` is not defined
 
-De build faalt omdat Tailwind CSS v4 de PostCSS plugin naar een apart package heeft verplaatst. Er zijn twee wijzigingen nodig:
+### Probleem
+De productie-build faalt omdat `tailwind.config.ts` twee keer `require()` gebruikt:
 
-### 1. PostCSS configuratie updaten
-**Bestand: `postcss.config.js`**
-- Vervang `tailwindcss` door `@tailwindcss/postcss` als plugin
-
-### 2. Dependency installeren
-- Package `@tailwindcss/postcss` toevoegen aan het project
-
-### Technische Details
-
-**postcss.config.js** wordt:
-```js
-export default {
-  plugins: {
-    '@tailwindcss/postcss': {},
-    autoprefixer: {},
-  },
-}
+```
+plugins: [
+    require("tailwindcss-animate"),   // CRASHT
+    require("@tailwindcss/typography"), // CRASHT
+]
 ```
 
-Dit lost ook de `"type": "module"` warning op door dat veld toe te voegen aan `package.json`.
+In een ESM-omgeving (Vite + `@tailwindcss/postcss`) werkt `require()` niet. De build crasht, en de oude gecachte versie wordt geserveerd.
+
+### Oplossing
+
+**Bestand: `tailwind.config.ts`** - Vervang `require()` door `import`:
+
+```typescript
+import tailwindcssAnimate from "tailwindcss-animate";
+import tailwindcssTypography from "@tailwindcss/typography";
+
+// ... rest van config blijft hetzelfde ...
+
+plugins: [
+    tailwindcssAnimate,
+    tailwindcssTypography,
+],
+```
+
+### Waarom dit werkt
+- Vite draait in ESM mode waar `require()` niet bestaat
+- `import` is de standaard manier om modules te laden in ESM
+- Beide packages ondersteunen ESM imports
+- Geen andere wijzigingen nodig - de rest van de config is correct
+
+### Risico
+Laag. Dit is een directe 1-op-1 vervanging van `require()` naar `import`.
 

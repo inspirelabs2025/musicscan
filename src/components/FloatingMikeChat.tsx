@@ -304,7 +304,7 @@ export function FloatingMikeChat() {
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
             onClick={handleOpen}
-            className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-shadow cursor-pointer bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center ring-2 ring-purple-400/30"
+            className="fixed bottom-20 md:bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-shadow cursor-pointer bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center ring-2 ring-purple-400/30"
             aria-label="Open Magic Mike Chat"
           >
             <img
@@ -326,7 +326,7 @@ export function FloatingMikeChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-6rem)] rounded-2xl overflow-hidden flex flex-col shadow-2xl border border-border/50 bg-background/95 backdrop-blur-xl"
+            className="fixed bottom-20 md:bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-6rem)] rounded-2xl overflow-hidden flex flex-col shadow-2xl border border-border/50 bg-background/95 backdrop-blur-xl"
           >
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-purple-600/90 to-purple-800/90 text-white">

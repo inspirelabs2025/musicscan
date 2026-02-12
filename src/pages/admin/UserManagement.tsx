@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, RefreshCw, Users as UsersIcon, Camera, CheckCircle, XCircle, AlertTriangle, Calendar, TrendingUp, Disc } from 'lucide-react';
+import { Search, RefreshCw, Users as UsersIcon, Camera, CheckCircle, XCircle, AlertTriangle, Calendar, TrendingUp, Disc, Wifi } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,8 +45,25 @@ function useScanStats() {
   });
 }
 
+function useOnlineUsers() {
+  return useQuery({
+    queryKey: ['admin-online-users'],
+    queryFn: async () => {
+      const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .gte('last_active_at', fifteenMinAgo);
+      if (error) throw error;
+      return count || 0;
+    },
+    refetchInterval: 30_000,
+  });
+}
+
 function ScanStatsCards() {
   const { data: stats, isLoading } = useScanStats();
+  const { data: onlineCount, isLoading: onlineLoading } = useOnlineUsers();
   if (isLoading) return <div className="grid gap-4 md:grid-cols-4"><Skeleton className="h-24" /><Skeleton className="h-24" /><Skeleton className="h-24" /><Skeleton className="h-24" /></div>;
   if (!stats) return null;
 
@@ -57,7 +74,16 @@ function ScanStatsCards() {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold flex items-center gap-2"><Camera className="h-5 w-5" /> Scan Statistieken</h2>
-      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-7">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-1"><Wifi className="h-3.5 w-3.5 text-green-500" /> Online Nu</CardDescription>
+            <CardTitle className="text-2xl text-green-600">{onlineLoading ? '…' : onlineCount}</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-xs text-muted-foreground">Laatste 15 min</p>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-1"><Camera className="h-3.5 w-3.5" /> Totaal Scans</CardDescription>

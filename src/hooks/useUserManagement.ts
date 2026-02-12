@@ -10,6 +10,7 @@ export interface UserWithRoles {
   first_name: string | null;
   avatar_url: string | null;
   roles: string[];
+  scan_count?: number;
 }
 
 export const useUserManagement = () => {
@@ -33,7 +34,27 @@ export const useUserManagement = () => {
 
       if (error) throw error;
 
-      setUsers(data.users || []);
+      const usersList = data.users || [];
+
+      // Fetch scan counts for all users
+      const userIds = usersList.map((u: any) => u.id);
+      if (userIds.length > 0) {
+        const { data: scanData } = await supabase
+          .from('ai_scan_results')
+          .select('user_id')
+          .in('user_id', userIds);
+
+        const scanCounts: Record<string, number> = {};
+        scanData?.forEach((row: any) => {
+          scanCounts[row.user_id] = (scanCounts[row.user_id] || 0) + 1;
+        });
+
+        usersList.forEach((u: any) => {
+          u.scan_count = scanCounts[u.id] || 0;
+        });
+      }
+
+      setUsers(usersList);
     } catch (error: any) {
       console.error('Error fetching users:', error);
       

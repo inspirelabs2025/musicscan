@@ -29,7 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { MoreVertical, Shield, UserMinus, UserPlus } from 'lucide-react';
+import { MoreVertical, Shield, UserMinus, UserPlus, Camera } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface UserManagementTableProps {
@@ -102,6 +102,7 @@ export function UserManagementTable({
               <TableHead>User</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Roles</TableHead>
+              <TableHead>Scans</TableHead>
               <TableHead>Created</TableHead>
               <TableHead>Last Active</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -110,7 +111,7 @@ export function UserManagementTable({
           <TableBody>
             {users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                   No users found
                 </TableCell>
               </TableRow>
@@ -151,6 +152,12 @@ export function UserManagementTable({
                           </Badge>
                         ))
                       )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <Camera className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="font-medium">{user.scan_count ?? 0}</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">

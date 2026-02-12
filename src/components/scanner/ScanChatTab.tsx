@@ -1215,7 +1215,7 @@ export function ScanChatTab() {
           <div>
             <span className="text-sm font-bold tracking-tight">Magic Mike</span>
             {mediaType && <span className="text-xs text-muted-foreground ml-1.5 bg-muted px-1.5 py-0.5 rounded-full">{mediaType === 'vinyl' ? '🎵 Vinyl' : '💿 CD'}</span>}
-            <p className="text-xs text-muted-foreground">Muziek-detective 🕵️‍♂️</p>
+            <p className="text-xs text-muted-foreground">Muziek-detective</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

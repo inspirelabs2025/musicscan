@@ -683,7 +683,13 @@ export function ScanChatTab() {
   };
 
   const uploadAndSend = async () => {
-    if (pendingFiles.length === 0 || !mediaType) return;
+    if (pendingFiles.length === 0) return;
+    if (!mediaType) {
+      // Auto-detect: default to vinyl if no media type selected
+      setMediaType('vinyl');
+      // Use vinyl as fallback
+    }
+    const effectiveMediaType = mediaType || 'vinyl';
     setIsUploading(true);
 
     try {
@@ -702,7 +708,7 @@ export function ScanChatTab() {
       const allUrls = [...photoUrls, ...urls];
       setPhotoUrls(allUrls);
 
-      const userContent = `Ik heb ${pendingFiles.length} foto's geüpload van mijn ${mediaType === 'vinyl' ? 'vinyl plaat' : 'CD'}. Analyseer deze foto's. Bevestig eerst de artiest en titel. Zoek dan naar barcode, catalogusnummer en matrix-nummer op de foto's. Let ook op rechtenorganisaties (BIEM, STEMRA, JASRAC, etc.). Geef je bevindingen.`;
+      const userContent = `Ik heb ${pendingFiles.length} foto's geüpload van mijn ${effectiveMediaType === 'vinyl' ? 'vinyl plaat' : 'CD'}. Analyseer deze foto's. Bevestig eerst de artiest en titel. Zoek dan naar barcode, catalogusnummer en matrix-nummer op de foto's. Let ook op rechtenorganisaties (BIEM, STEMRA, JASRAC, etc.). Geef je bevindingen.`;
       const userMsg: ChatMessage = { role: 'user', content: userContent, images: previews };
 
       setPendingFiles([]);

@@ -372,7 +372,7 @@ const Shop = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="flex flex-wrap justify-center gap-3 mt-8"
+              className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-3 mt-8 max-w-lg sm:max-w-none mx-auto"
             >
               {CATEGORIES.map((cat) => {
                 const count = (counts as Record<string, number>)[cat.key] || 0;

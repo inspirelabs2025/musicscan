@@ -127,18 +127,6 @@ const Artists = () => {
                 </Button>
               )}
 
-              {stats && (
-                <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground">
-                  <div>
-                    <span className="text-2xl font-bold text-foreground">{stories?.length || stats.totalStories}</span>
-                    <span className="ml-2">Artiesten</span>
-                  </div>
-                  <div>
-                    <span className="text-2xl font-bold text-foreground">{stats.genres.length}</span>
-                    <span className="ml-2">Genres</span>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </section>

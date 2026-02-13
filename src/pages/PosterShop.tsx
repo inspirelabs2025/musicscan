@@ -93,7 +93,7 @@ export default function PosterShop() {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20">
-        <div className="container py-8 space-y-8">
+        <div className="container py-4 md:py-8 space-y-4">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },
             { name: "Poster Shop", url: "/posters" }
@@ -110,14 +110,14 @@ export default function PosterShop() {
             canvasMinPrice={productCounts?.canvasMinPrice || 0}
           />
 
-          {/* Hero Header */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-vinyl-purple to-accent p-8 md:p-12 text-white">
+          {/* Hero Header - hidden on mobile for compact layout */}
+          <div className="hidden md:block relative overflow-hidden rounded-2xl p-12 text-white" style={{ background: 'linear-gradient(to bottom right, hsl(271, 81%, 56%), hsl(271, 81%, 45%))' }}>
             <div className="relative z-10 space-y-4">
               <div className="flex items-center gap-2">
                 <Palette className="h-6 w-6" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Digitale Kunst</span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold">
+              <h1 className="text-5xl font-bold">
                 Premium Art Posters
               </h1>
               <p className="text-xl text-white/90 max-w-2xl">

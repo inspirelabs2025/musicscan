@@ -66,17 +66,16 @@ export const ScannerHero = () => {
           </Button>
           
           {/* Secondary CTA - Direct toevoegen */}
-          <div className="mt-6">
+          <div className="mt-4 flex justify-center">
             <Button 
               asChild 
               variant="outline"
-              size="lg"
-              className="bg-white/10 border-vinyl-purple/50 text-white hover:bg-vinyl-purple/30 hover:border-vinyl-purple hover:text-white font-bold text-lg md:text-xl px-8 md:px-12 py-6 md:py-8 rounded-2xl backdrop-blur-sm transition-all duration-300 hover:scale-105 group"
+              className="bg-white/10 border-vinyl-purple/50 text-white hover:bg-vinyl-purple/30 hover:border-vinyl-purple hover:text-white font-semibold text-sm md:text-base px-5 md:px-6 py-3 md:py-4 rounded-xl backdrop-blur-sm transition-all duration-300 hover:scale-105 group"
             >
               <Link to="/my-collection">
-                <Disc3 className="w-6 h-6 md:w-7 md:h-7 mr-3" />
+                <Disc3 className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                 Voeg toe aan Collectie & Discogs
-                <ArrowRight className="w-5 h-5 md:w-6 md:h-6 ml-3 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
           </div>

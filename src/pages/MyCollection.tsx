@@ -198,18 +198,18 @@ export default function MyCollection() {
                 {items.length} items{totalValue > 0 ? ` · Totale waarde €${totalValue.toFixed(2)}` : ''}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <DiscogsConnectButton />
               {isConnected && discogsEligibleIds.length > 0 && (
                 <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)}>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Exporteer ({discogsEligibleIds.length})
+                  <Upload className="w-4 h-4 mr-1" />
+                  <span className="hidden sm:inline">Exporteer</span> ({discogsEligibleIds.length})
                 </Button>
               )}
-              <Button asChild>
-                <Link to="/collection-chat" className="flex items-center gap-2">
+              <Button asChild size="sm">
+                <Link to="/collection-chat" className="flex items-center gap-1">
                   <BarChart3 className="w-4 h-4" />
-                  Collectie Inzicht
+                  <span className="hidden sm:inline">Collectie</span> Inzicht
                 </Link>
               </Button>
             </div>

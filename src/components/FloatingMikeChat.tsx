@@ -73,12 +73,15 @@ const HIDDEN_ROUTES = ['/ai-scan-v2', '/auth', '/auth/set-password', '/set-passw
 // Save a message to the database
 async function persistMessage(userId: string, content: string, senderType: 'user' | 'assistant', sessionId: string) {
   try {
-    await supabase.from('chat_messages').insert({
+    const { error } = await supabase.from('chat_messages').insert({
       user_id: userId,
       message: content,
       sender_type: senderType,
       session_id: sessionId,
     });
+    if (error) {
+      console.error('[floating-mike] DB error persisting message:', error.message, { senderType, sessionId });
+    }
   } catch (err) {
     console.error('[floating-mike] Failed to persist message:', err);
   }
@@ -100,7 +103,7 @@ async function loadHistory(userId: string, sessionId: string, limit = 50): Promi
 
     return data.map(row => ({
       id: row.id,
-      role: row.sender_type === 'user' ? 'user' as const : 'assistant' as const,
+      role: (row.sender_type === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
       content: row.message,
     }));
   } catch (err) {
@@ -248,6 +251,7 @@ ${recentItems}
     }
 
     let assistantSoFar = '';
+    let responsePersisted = false;
     const upsertAssistant = (chunk: string) => {
       assistantSoFar += chunk;
       setMessages(prev => {
@@ -327,13 +331,18 @@ ${recentItems}
 
       // Persist assistant response
       if (user?.id && assistantSoFar) {
-        persistMessage(user.id, assistantSoFar, 'assistant', sessionId);
+        await persistMessage(user.id, assistantSoFar, 'assistant', sessionId);
+        responsePersisted = true;
       }
     } catch (err) {
       console.error('[floating-mike] Error:', err);
       const errorMsg = `⚠️ Er ging iets mis. ${err instanceof Error ? err.message : 'Probeer het later opnieuw.'}`;
       setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }]);
     } finally {
+      // Safety net: persist partial response if not already done
+      if (!responsePersisted && user?.id && assistantSoFar) {
+        persistMessage(user.id, assistantSoFar, 'assistant', sessionId);
+      }
       setIsStreaming(false);
     }
   }, [messages, isStreaming, location.pathname, user?.id, fetchCollectionSummary]);

@@ -66,20 +66,16 @@ export default function Singles() {
 
       <div className="relative container mx-auto px-4 py-12">
         {/* Hero Section */}
-        <div className="relative mb-12">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-3xl blur-xl"></div>
-          <div className="relative bg-card/80 backdrop-blur-sm rounded-3xl border border-border/50 p-8 md:p-12 text-center">
-            <Badge className="mb-4 bg-blue-500/20 text-blue-400 border-blue-500/30">
-              <Music className="w-3 h-3 mr-1" />
-              SINGLES COLLECTIE
-            </Badge>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+        <div className="max-w-3xl mx-auto text-center space-y-3 mb-6">
+          <div className="flex items-center justify-center gap-2">
+            <Music className="w-7 h-7 text-primary" />
+            <h1 className="text-3xl md:text-4xl font-bold">
               Singles Collectie
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Ontdek de verhalen achter iconische singles uit de muziekgeschiedenis
-            </p>
           </div>
+          <p className="text-lg text-muted-foreground">
+            Ontdek de verhalen achter iconische singles uit de muziekgeschiedenis
+          </p>
         </div>
 
         {/* Search Bar */}

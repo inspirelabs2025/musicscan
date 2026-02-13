@@ -340,7 +340,7 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
       </div>
 
       {/* Bottom accent line */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold opacity-50 group-hover:opacity-100 transition-opacity duration-500"></div>
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold"></div>
     </Card>
   );
 };

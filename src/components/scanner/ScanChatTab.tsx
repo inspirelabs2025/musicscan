@@ -1218,12 +1218,9 @@ export function ScanChatTab() {
             <p className="text-xs text-muted-foreground">Muziek-detective</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleScanGuide} disabled={isStreaming || isRunningV2} className="rounded-full h-8 px-3 text-xs border-border/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30">
-            <HelpCircle className="h-3.5 w-3.5 mr-1" /> Uitleg scannen
-          </Button>
-          <Button variant="outline" size="sm" onClick={resetChat} className="rounded-full h-8 px-3 text-xs border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30">
-            <RotateCcw className="h-3.5 w-3.5 mr-1" /> Opnieuw
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="icon" onClick={resetChat} className="rounded-full h-8 w-8 border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30" title="Opnieuw">
+            <RotateCcw className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -1452,9 +1449,6 @@ export function ScanChatTab() {
                 <span className="text-xs font-medium">CD</span>
               </Button>
             </div>
-            <Button variant="ghost" size="sm" onClick={handleScanGuide} disabled={isStreaming || isRunningV2} className="text-xs text-muted-foreground hover:text-primary">
-              <HelpCircle className="h-3.5 w-3.5 mr-1" /> Uitleg scannen
-            </Button>
           </div>
         )}
 

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
@@ -325,175 +325,10 @@ export default function AIScanV2() {
             </h1>
           </div>
 
-          {/* Tabs: Foto Scanner | Chat */}
-          <Tabs defaultValue="chat" className="w-full">
-            {/* Bottom fixed tab bar */}
-            <div className="fixed bottom-14 md:bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-t border-border/50 shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
-              <div className="max-w-4xl mx-auto px-4 py-2">
-                <TabsList className="grid w-full grid-cols-2 h-12">
-                  <TabsTrigger value="chat" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm font-semibold h-10">🎩 Scan met Mike</TabsTrigger>
-                  <TabsTrigger value="scanner" className="text-sm font-semibold h-10">📷 Foto Scanner</TabsTrigger>
-                </TabsList>
-              </div>
-            </div>
-
-            <TabsContent value="scanner" className="space-y-6 mt-4">
-              {/* === EXISTING SCANNER FLOW === */}
-              {!analysisResult && <>
-                {/* Media Type Selection */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Media Type <span className="text-red-500">*</span></CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Selecteer media type (verplicht)</label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <Button variant={mediaType === 'vinyl' ? 'default' : 'outline'} onClick={() => setMediaType('vinyl')} className={`h-16 flex flex-col gap-1 ${!mediaType ? 'border-red-300' : ''}`}>
-                          <span className="font-medium">Vinyl</span>
-                          <span className="text-xs">LP / Single / EP</span>
-                        </Button>
-                        <Button variant={mediaType === 'cd' ? 'default' : 'outline'} onClick={() => setMediaType('cd')} className={`h-16 flex flex-col gap-1 ${!mediaType ? 'border-red-300' : ''}`}>
-                          <span className="font-medium">CD</span>
-                          <span className="text-xs">Album / Single</span>
-                        </Button>
-                      </div>
-                      {!mediaType && <p className="text-sm text-red-600">Een media type selectie is verplicht</p>}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Condition Grade Selection */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Conditie Beoordeling <span className="text-red-500">*</span></CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Selecteer staat (verplicht)</label>
-                      <select value={conditionGrade} onChange={e => setConditionGrade(e.target.value)} className={`w-full p-2 border rounded-md ${!conditionGrade ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}>
-                        <option value="" disabled>Selecteer een conditie</option>
-                        <option value="Mint (M)">Mint (M) - Perfect, nieuwstaat</option>
-                        <option value="Near Mint (NM)">Near Mint (NM) - Bijna perfect</option>
-                        <option value="Very Good Plus (VG+)">Very Good Plus (VG+) - Goede staat</option>
-                        <option value="Very Good (VG)">Very Good (VG) - Duidelijke gebruikssporen</option>
-                        <option value="Good Plus (G+)">Good Plus (G+) - Zichtbare slijtage</option>
-                        <option value="Good (G)">Good (G) - Duidelijke slijtage</option>
-                        <option value="Fair (F)">Fair (F) - Slechte staat</option>
-                      </select>
-                      {!conditionGrade && <p className="text-sm text-red-600">Een conditie selectie is verplicht</p>}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* File Upload */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Foto's</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                      <Camera className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Klik om foto's toe te voegen
-                      </p>
-                      <input type="file" accept="image/*" capture="environment" multiple onChange={handleFileUpload} className="hidden" id="file-upload-v2" />
-                      <Button asChild variant="outline">
-                        <label htmlFor="file-upload-v2" className="cursor-pointer flex items-center gap-2">
-                          <Camera className="h-4 w-4" />
-                          Foto's
-                        </label>
-                      </Button>
-                    </div>
-
-                    {/* Uploaded Files Preview */}
-                    {uploadedFiles.length > 0 && <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {uploadedFiles.map(file => <div key={file.id} className="relative group">
-                            <img src={file.preview} alt={file.file.name} className="w-full h-32 object-cover rounded-lg border" />
-                            <button onClick={() => removeFile(file.id)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <X className="h-4 w-4" />
-                            </button>
-                            <p className="text-xs text-muted-foreground mt-1 truncate">
-                              {file.file.name}
-                            </p>
-                          </div>)}
-                      </div>}
-                  </CardContent>
-                </Card>
-
-                {/* Analysis Button */}
-                <Card>
-                  <CardContent className="pt-6">
-                    <Button onClick={startAnalysis} disabled={uploadedFiles.length === 0 || isAnalyzing || !conditionGrade || !mediaType || !user} className="w-full" size="lg">
-                      {isAnalyzing ? <>
-                          <Clock className="mr-2 h-4 w-4 animate-spin" />
-                          V2 Analyse bezig...
-                        </> : <>
-                          <Brain className="mr-2 h-4 w-4" />
-                          <Sparkles className="mr-1 h-4 w-4" />
-                          Start V2 Analyse
-                        </>}
-                    </Button>
-
-                    {!user && <p className="text-sm text-red-600 text-center mt-2">
-                        Je moet ingelogd zijn om de analyse te gebruiken
-                      </p>}
-
-                    {(!conditionGrade || !mediaType) && uploadedFiles.length > 0 && user && <p className="text-sm text-red-600 text-center mt-2">
-                        {!mediaType && "Selecteer eerst een media type en "}
-                        {!conditionGrade && "selecteer een conditie "}
-                        om de analyse te starten
-                      </p>}
-
-                    {isAnalyzing && <div className="mt-4 space-y-2">
-                        <Progress value={analysisProgress} className="w-full" />
-                        <p className="text-sm text-center text-muted-foreground">
-                          {analysisProgress < 30 && "Foto's uploaden..."}
-                          {analysisProgress >= 30 && analysisProgress < 50 && "Matrix foto optimalisatie..."}
-                          {analysisProgress >= 50 && analysisProgress < 75 && "Multi-pass AI analyse..."}
-                          {analysisProgress >= 75 && analysisProgress < 90 && "Discogs zoekstrategie..."}
-                          {analysisProgress >= 90 && "Resultaten verwerken..."}
-                        </p>
-                      </div>}
-                  </CardContent>
-                </Card>
-
-                {/* Error Display */}
-                {error && <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      <div className="space-y-2">
-                        <p className="font-semibold">Fout bij V2 analyse:</p>
-                        <p>{error}</p>
-                        <p className="text-sm">
-                          Probeer het opnieuw of controleer je internetverbinding. 
-                          Als het probleem aanhoudt, controleer de logs in de browser console.
-                        </p>
-                      </div>
-                    </AlertDescription>
-                  </Alert>}
-              </>}
-
-              {/* Analysis Results */}
-              {analysisResult && (
-                <AIScanV2Results
-                  analysisResult={analysisResult}
-                  uploadedFiles={uploadedFiles}
-                  mediaType={mediaType}
-                  conditionGrade={conditionGrade}
-                  isPricingLoading={isPricingLoading}
-                  searchResults={searchResults}
-                  onReset={resetForm}
-                  onRetryPricing={(id) => retryPricing(id)}
-                  onSearchByDiscogsId={searchByDiscogsId}
-                />
-              )}
-            </TabsContent>
-
-            <TabsContent value="chat" className="mt-4">
-              <ScanChatTab />
-            </TabsContent>
-          </Tabs>
+          {/* Chat Scanner - directly rendered without tabs */}
+          <div className="w-full mt-4">
+            <ScanChatTab />
+          </div>
         </div>
       </div>
       </div>

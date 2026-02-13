@@ -62,7 +62,7 @@ export const CategoryNavigation = ({
         <h2 className="text-lg font-semibold">Kies je kunststijl</h2>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         {categories.map((category) => {
           const Icon = category.icon;
           
@@ -70,32 +70,28 @@ export const CategoryNavigation = ({
             return (
               <Card
                 key={category.id}
-                className="p-6 border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10 shadow-xl cursor-default"
+                className="p-4 md:p-6 border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10 shadow-xl cursor-default"
               >
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-primary/20">
-                        <Icon className="h-6 w-6 text-primary" />
+                        <Icon className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg">{category.name}</h3>
-                        <p className="text-sm text-muted-foreground">{category.description}</p>
+                        <h3 className="font-bold text-base md:text-lg">{category.name}</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground">{category.description}</p>
                       </div>
                     </div>
-                    <Badge className="bg-primary text-primary-foreground">
+                    <Badge className="bg-primary text-primary-foreground text-xs">
                       Actief
                     </Badge>
                   </div>
                   
-                  <div className="flex items-center justify-between pt-2 border-t border-border">
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Producten</p>
-                      <p className="text-2xl font-bold">{category.count}</p>
-                    </div>
-                    <div className="space-y-1 text-right">
-                      <p className="text-sm text-muted-foreground">Vanaf</p>
-                      <p className="text-2xl font-bold text-vinyl-gold">€{category.minPrice.toFixed(2)}</p>
+                  <div className="flex items-center justify-end pt-2 border-t border-border">
+                    <div className="space-y-0.5 text-right">
+                      <p className="text-xs text-muted-foreground">Vanaf</p>
+                      <p className="text-lg md:text-xl font-bold text-vinyl-gold">€{category.minPrice.toFixed(2)}</p>
                     </div>
                   </div>
                 </div>
@@ -105,28 +101,24 @@ export const CategoryNavigation = ({
           
           return (
             <Link key={category.id} to={category.url}>
-              <Card className="p-6 border-2 border-border hover:border-primary hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer group">
-                <div className="space-y-4">
+              <Card className="p-4 md:p-6 border-2 border-border hover:border-primary hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer group">
+                <div className="space-y-3">
                   <div className="flex items-start gap-3">
                     <div className="p-2 rounded-lg bg-muted group-hover:bg-primary/20 transition-colors">
-                      <Icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <Icon className="h-5 w-5 md:h-6 md:w-6 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg group-hover:text-primary transition-colors">
+                      <h3 className="font-bold text-base md:text-lg group-hover:text-primary transition-colors">
                         {category.name}
                       </h3>
-                      <p className="text-sm text-muted-foreground">{category.description}</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">{category.description}</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between pt-2 border-t border-border">
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Producten</p>
-                      <p className="text-2xl font-bold">{category.count}</p>
-                    </div>
-                    <div className="space-y-1 text-right">
-                      <p className="text-sm text-muted-foreground">Vanaf</p>
-                      <p className="text-2xl font-bold text-vinyl-gold">€{category.minPrice.toFixed(2)}</p>
+                  <div className="flex items-center justify-end pt-2 border-t border-border">
+                    <div className="space-y-0.5 text-right">
+                      <p className="text-xs text-muted-foreground">Vanaf</p>
+                      <p className="text-lg md:text-xl font-bold text-vinyl-gold">€{category.minPrice.toFixed(2)}</p>
                     </div>
                   </div>
                 </div>

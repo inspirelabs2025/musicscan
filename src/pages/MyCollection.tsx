@@ -158,7 +158,7 @@ export default function MyCollection() {
                 {items.length} items{totalValue > 0 ? ` · Totale waarde €${totalValue.toFixed(2)}` : ''}
               </p>
             </div>
-            <Button asChild variant="outline">
+            <Button asChild>
               <Link to="/collection-chat" className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
                 Collectie Inzicht

@@ -382,7 +382,7 @@ const Shop = () => {
         </section>
 
         {/* Category Sections */}
-        <div className="container mx-auto px-4 py-10">
+        <div className="container mx-auto px-4 py-4">
           {isLoading ? (
             <div className="space-y-12">
               {[1, 2, 3].map((i) => (

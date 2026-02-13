@@ -298,6 +298,7 @@ export default function CollectionItemPage() {
           onOpenChange={setShowExportDialog}
           discogsIds={[item.discogs_id]}
           itemCount={1}
+          defaultPrice={item.calculated_advice_price || item.marketplace_price || undefined}
         />
       )}
     </div>

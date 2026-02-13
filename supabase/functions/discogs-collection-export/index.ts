@@ -94,9 +94,7 @@ Deno.serve(async (req) => {
     }
     const userId = user.id
 
-    const { discogs_ids, target } = await req.json()
-    // discogs_ids: number[] - list of Discogs release IDs
-    // target: 'collection' | 'wantlist'
+    const { discogs_ids, target, listing_data } = await req.json()
 
     if (!discogs_ids?.length || !['collection', 'wantlist', 'forsale'].includes(target)) {
       return new Response(JSON.stringify({ error: 'Invalid parameters. Need discogs_ids[] and target (collection/wantlist/forsale)' }), {
@@ -104,10 +102,15 @@ Deno.serve(async (req) => {
       })
     }
 
+    if (target === 'forsale' && (!listing_data?.price || !listing_data?.condition)) {
+      return new Response(JSON.stringify({ error: 'For sale listings require price and condition' }), {
+        status: 400, headers: corsHeaders
+      })
+    }
+
     const consumerKey = Deno.env.get('DISCOGS_CONSUMER_KEY')!
     const consumerSecret = Deno.env.get('DISCOGS_CONSUMER_SECRET')!
 
-    // Get user's Discogs tokens
     const serviceClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -142,21 +145,30 @@ Deno.serve(async (req) => {
           url = `https://api.discogs.com/users/${username}/wants/${discogsId}`
           method = 'PUT'
         } else {
-          // forsale: POST /marketplace/listings
+          // forsale: POST /marketplace/listings - direct active For Sale
           url = `https://api.discogs.com/marketplace/listings`
           method = 'POST'
-          body = JSON.stringify({
+          const listingBody: Record<string, unknown> = {
             release_id: discogsId,
-            condition: 'Very Good Plus (VG+)',
-            status: 'Draft',
-          })
+            condition: listing_data.condition,
+            price: listing_data.price,
+            status: 'For Sale',
+          }
+          if (listing_data.sleeve_condition) {
+            listingBody.sleeve_condition = listing_data.sleeve_condition
+          }
+          if (listing_data.comments) {
+            listingBody.comments = listing_data.comments
+          }
+          body = JSON.stringify(listingBody)
         }
+
         const res = await makeAuthenticatedRequest(
           method, url, consumerKey, consumerSecret, accessToken, accessTokenSecret, body
         )
 
         if (res.ok || res.status === 201) {
-          await res.text() // consume body
+          await res.text()
           results.push({ discogs_id: discogsId, success: true })
         } else {
           const errBody = await res.text()
@@ -166,7 +178,6 @@ Deno.serve(async (req) => {
         results.push({ discogs_id: discogsId, success: false, error: err.message })
       }
 
-      // Rate limit: 1 request per second
       if (discogs_ids.indexOf(discogsId) < discogs_ids.length - 1) {
         await delay(1100)
       }

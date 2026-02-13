@@ -9,6 +9,13 @@ export interface ExportResult {
   results: Array<{ discogs_id: number; success: boolean; error?: string }>;
 }
 
+export interface ListingData {
+  price: number;
+  condition: string;
+  sleeve_condition?: string;
+  comments?: string;
+}
+
 export const useDiscogsExport = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [exportResult, setExportResult] = useState<ExportResult | null>(null);
@@ -16,7 +23,8 @@ export const useDiscogsExport = () => {
 
   const exportToDiscogs = async (
     discogsIds: number[],
-    target: "collection" | "wantlist" | "forsale"
+    target: "collection" | "wantlist" | "forsale",
+    listingData?: ListingData
   ): Promise<ExportResult | null> => {
     setIsExporting(true);
     setExportResult(null);
@@ -33,7 +41,11 @@ export const useDiscogsExport = () => {
             Authorization: `Bearer ${session.access_token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ discogs_ids: discogsIds, target }),
+          body: JSON.stringify({
+            discogs_ids: discogsIds,
+            target,
+            ...(listingData && { listing_data: listingData }),
+          }),
         }
       );
 

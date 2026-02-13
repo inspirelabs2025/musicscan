@@ -278,11 +278,15 @@ ${recentItems}
       const recentMessages = messages.slice(-20); // Last 20 messages for context
       const allMessages = [...recentMessages, { role: 'user' as const, content: effectiveContent }];
 
+      // Use user's JWT if available, otherwise fall back to anon key
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token || SUPABASE_ANON_KEY;
+
       const resp = await fetch(`${SUPABASE_URL}/functions/v1/scan-chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({
           messages: allMessages.map(m => ({ role: m.role, content: m.content })),

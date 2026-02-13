@@ -336,33 +336,32 @@ const Shop = () => {
         {/* Hero Section */}
         <section className="relative overflow-hidden border-b border-border/50 bg-gradient-to-br from-primary/5 via-background to-accent/5">
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
-          <div className="container mx-auto px-4 py-12 md:py-20 relative">
+          <div className="container mx-auto px-4 py-6 md:py-14 relative">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="max-w-3xl mx-auto text-center"
             >
-              <Badge variant="outline" className="mb-4 border-primary/30">
+              <Badge variant="outline" className="mb-2 border-primary/30 text-xs">
                 <Sparkles className="w-3 h-3 mr-1" />
-                {totalProducts} producten beschikbaar
+                {totalProducts} producten
               </Badge>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-5xl font-bold tracking-tight mb-2 md:mb-4 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
                 MusicScan Shop
               </h1>
-              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Posters, canvas, metal prints, kleding en meer. 
-                Alles voor de echte muziekliefhebber.
+              <p className="text-sm md:text-lg text-muted-foreground mb-4 md:mb-8 max-w-2xl mx-auto">
+                Posters, canvas, metal prints, kleding en meer.
               </p>
 
               {/* Search Bar */}
               <div className="relative max-w-xl mx-auto">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Zoek op artiest, album of product..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-4 py-6 text-lg rounded-full border-2 border-border/50 focus:border-primary/50 bg-background/80 backdrop-blur-sm"
+                  className="pl-10 pr-4 py-4 md:py-6 text-sm md:text-lg rounded-full border-2 border-border/50 focus:border-primary/50 bg-background/80 backdrop-blur-sm"
                 />
               </div>
             </motion.div>
@@ -372,7 +371,7 @@ const Shop = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-3 mt-8 max-w-lg sm:max-w-none mx-auto"
+              className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-2 mt-4 md:mt-8 max-w-md sm:max-w-none mx-auto"
             >
               {CATEGORIES.map((cat) => {
                 const count = (counts as Record<string, number>)[cat.key] || 0;
@@ -381,11 +380,11 @@ const Shop = () => {
                   <Link
                     key={cat.key}
                     to={cat.link}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all text-sm"
                   >
-                    <cat.icon className="w-4 h-4" />
-                    <span className="font-medium">{cat.label}</span>
-                    <span className="text-xs opacity-70">({count})</span>
+                    <cat.icon className="w-3.5 h-3.5" />
+                    <span className="font-medium text-xs">{cat.label}</span>
+                    <span className="text-[10px] opacity-70">({count})</span>
                   </Link>
                 );
               })}

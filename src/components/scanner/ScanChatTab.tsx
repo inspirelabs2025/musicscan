@@ -1604,7 +1604,7 @@ export function ScanChatTab() {
               {isRecognizing ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <Mic className={`h-3.5 w-3.5 ${isListening ? '' : 'text-muted-foreground'}`} />
+                <Mic className={`h-3.5 w-3.5 ${isListening ? '' : 'text-amber-500'}`} />
               )}
             </Button>
           </div>

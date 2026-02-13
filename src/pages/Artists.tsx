@@ -86,34 +86,22 @@ const Artists = () => {
 
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
-        <section className={`relative overflow-hidden py-20 ${
-          selectedCountry === 'nederland' 
-            ? 'bg-gradient-to-br from-[hsl(24,100%,50%)]/10 via-[hsl(211,100%,35%)]/10 to-[hsl(0,0%,100%)]/10' 
-            : selectedCountry === 'frankrijk'
-            ? 'bg-gradient-to-br from-[#0055A4]/10 via-white/10 to-[#EF4135]/10'
-            : 'bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-orange-500/10'
-        }`}>
+        <section className="bg-gradient-to-b from-primary/10 to-background py-6">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center">
-              <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-6">
-                <Music className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium text-primary">
-                  {selectedCountry === 'nederland' ? '🇳🇱 Nederlandse Artiesten' : 
-                   selectedCountry === 'frankrijk' ? '🇫🇷 Franse Artiesten' : 'Artiest Collectie'}
-                </span>
+            <div className="max-w-3xl mx-auto text-center space-y-3">
+              <div className="flex items-center justify-center gap-2">
+                <Music className="w-7 h-7 text-primary" />
+                <h1 className="text-3xl md:text-4xl font-bold">
+                  {selectedCountry === 'nederland' ? '🇳🇱 Nederlandse Muziek Iconen' : 
+                   selectedCountry === 'frankrijk' ? '🇫🇷 Franse Muziek Iconen' : 'Verhalen over Muziek Iconen'}
+                </h1>
               </div>
-              
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
-                {selectedCountry === 'nederland' ? 'Nederlandse Muziek Iconen' : 
-                 selectedCountry === 'frankrijk' ? 'Franse Muziek Iconen' : 'Verhalen over Muziek Iconen'}
-              </h1>
-              
-              <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              <p className="text-lg text-muted-foreground">
                 {selectedCountry === 'nederland' 
-                  ? 'Ontdek de verhalen achter de grootste Nederlandse artiesten. Van Golden Earring tot Martin Garrix.'
+                  ? 'Ontdek de verhalen achter de grootste Nederlandse artiesten.'
                   : selectedCountry === 'frankrijk'
-                  ? 'Ontdek de verhalen achter de grootste Franse artiesten. Van Édith Piaf tot Daft Punk.'
-                  : 'Ontdek de verhalen achter de grootste artiesten uit de muziekgeschiedenis. Van hun beginjaren tot hun blijvende erfenis.'}
+                  ? 'Ontdek de verhalen achter de grootste Franse artiesten.'
+                  : 'Ontdek de verhalen achter de grootste artiesten uit de muziekgeschiedenis.'}
               </p>
 
               {(selectedCountry === 'nederland' || selectedCountry === 'frankrijk') && (
@@ -121,12 +109,10 @@ const Artists = () => {
                   variant="outline" 
                   size="sm"
                   onClick={() => setSelectedCountry('')}
-                  className="mb-6"
                 >
                   ✕ {selectedCountry === 'nederland' ? 'Nederland' : 'Frankrijk'} filter verwijderen
                 </Button>
               )}
-
             </div>
           </div>
         </section>

@@ -1621,7 +1621,7 @@ export function ScanChatTab() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isListening ? "🎵 Luisteren..." : "Stel Magic Mike een vraag..."}
+            placeholder={isListening ? "🎵 Luisteren..." : "Stel je vraag..."}
             className="min-h-[44px] max-h-[120px] flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60 text-sm py-3"
             rows={1}
             disabled={isStreaming || isRunningV2 || isListening || isRecognizing}

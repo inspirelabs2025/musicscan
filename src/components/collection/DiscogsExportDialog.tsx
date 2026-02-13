@@ -14,7 +14,7 @@ interface DiscogsExportDialogProps {
 }
 
 export const DiscogsExportDialog = ({ open, onOpenChange, discogsIds, itemCount }: DiscogsExportDialogProps) => {
-  const [target, setTarget] = useState<"collection" | "wantlist">("collection");
+  const [target, setTarget] = useState<"collection" | "wantlist" | "forsale">("collection");
   const { exportToDiscogs, isExporting, exportResult, clearResult } = useDiscogsExport();
   const { isConnected } = useDiscogsConnection();
 
@@ -59,11 +59,12 @@ export const DiscogsExportDialog = ({ open, onOpenChange, discogsIds, itemCount 
           <>
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">Kies waar je de items wilt toevoegen:</p>
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <Button
                   variant={target === "collection" ? "default" : "outline"}
                   onClick={() => setTarget("collection")}
                   className="flex-1"
+                  size="sm"
                 >
                   Collection
                 </Button>
@@ -71,8 +72,17 @@ export const DiscogsExportDialog = ({ open, onOpenChange, discogsIds, itemCount 
                   variant={target === "wantlist" ? "default" : "outline"}
                   onClick={() => setTarget("wantlist")}
                   className="flex-1"
+                  size="sm"
                 >
                   Wantlist
+                </Button>
+                <Button
+                  variant={target === "forsale" ? "default" : "outline"}
+                  onClick={() => setTarget("forsale")}
+                  className="flex-1"
+                  size="sm"
+                >
+                  For Sale
                 </Button>
               </div>
             </div>

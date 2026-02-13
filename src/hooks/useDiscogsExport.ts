@@ -16,7 +16,7 @@ export const useDiscogsExport = () => {
 
   const exportToDiscogs = async (
     discogsIds: number[],
-    target: "collection" | "wantlist"
+    target: "collection" | "wantlist" | "forsale"
   ): Promise<ExportResult | null> => {
     setIsExporting(true);
     setExportResult(null);
@@ -47,7 +47,7 @@ export const useDiscogsExport = () => {
 
       toast({
         title: "Export voltooid",
-        description: `${result.successful} van ${result.total} items succesvol geëxporteerd naar Discogs ${target === "collection" ? "Collection" : "Wantlist"}.`,
+        description: `${result.successful} van ${result.total} items succesvol geëxporteerd naar Discogs ${target === "collection" ? "Collection" : target === "wantlist" ? "Wantlist" : "Marketplace"}.`,
         variant: result.failed > 0 ? "destructive" : "default",
       });
 

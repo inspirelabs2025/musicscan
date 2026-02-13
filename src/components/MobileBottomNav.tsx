@@ -17,7 +17,7 @@ export function MobileBottomNav() {
   const navItems = [
     { icon: Home, label: t('nav.home'), url: "/" },
     { icon: ScanLine, label: "Scan", url: "/ai-scan-v2", requiresAuth: true },
-    { icon: ShoppingCart, label: "Shop", url: "/shop" },
+    { icon: Library, label: "Collectie", url: "/my-collection", requiresAuth: true },
     { icon: Trophy, label: "Quiz", url: "/quizzen" },
   ];
 

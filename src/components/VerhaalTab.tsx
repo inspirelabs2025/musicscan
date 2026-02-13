@@ -42,6 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export const VerhaalTab: React.FC = () => {
   const navigate = useNavigate();
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showSearchSection, setShowSearchSection] = useState(false);
   const [activeTab, setActiveTab] = useState<'albums' | 'singles'>('albums');
   
   const {
@@ -225,164 +226,148 @@ export const VerhaalTab: React.FC = () => {
         </TabsList>
 
       {/* Search and Filter Controls */}
-      <div className="bg-card p-6 rounded-lg border">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          {/* Search */}
-          <div className="relative">
-            {isFetchingBlogs && debouncedSearch ? (
-              <Loader2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 animate-spin text-primary" />
-            ) : (
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            )}
-            <Input 
-              placeholder="Zoek in verhalen..." 
-              value={searchInput} 
-              onChange={e => setSearchInput(e.target.value)} 
-              onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
-              className="pl-10" 
-            />
-            {searchInput && searchInput !== debouncedSearch && (
-              <Badge variant="outline" className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs">
-                Zoeken...
-              </Badge>
-            )}
-          </div>
+      <Collapsible open={showSearchSection} onOpenChange={setShowSearchSection}>
+        <CollapsibleTrigger asChild>
+          <Button variant="outline" className="w-full justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Zoeken & Filters
+            </div>
+            <ChevronDown className={`w-4 h-4 transition-transform ${showSearchSection ? 'rotate-180' : ''}`} />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="bg-card p-4 rounded-lg border space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Search */}
+              <div className="relative">
+                {isFetchingBlogs && debouncedSearch ? (
+                  <Loader2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 animate-spin text-primary" />
+                ) : (
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                )}
+                <Input 
+                  placeholder="Zoek in verhalen..." 
+                  value={searchInput} 
+                  onChange={e => setSearchInput(e.target.value)} 
+                  onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+                  className="pl-10" 
+                />
+                {searchInput && searchInput !== debouncedSearch && (
+                  <Badge variant="outline" className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs">
+                    Zoeken...
+                  </Badge>
+                )}
+              </div>
 
-          {/* Sort */}
-          <Select value={filters.sortBy || 'created_at'} onValueChange={value => updateFilter('sortBy', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sorteren" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="created_at">Nieuwste eerst</SelectItem>
-              <SelectItem value="views_count">Meest bekeken</SelectItem>
-              <SelectItem value="updated_at">Laatst bewerkt</SelectItem>
-            </SelectContent>
-          </Select>
+              {/* Sort */}
+              <Select value={filters.sortBy || 'created_at'} onValueChange={value => updateFilter('sortBy', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sorteren" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="created_at">Nieuwste eerst</SelectItem>
+                  <SelectItem value="views_count">Meest bekeken</SelectItem>
+                  <SelectItem value="updated_at">Laatst bewerkt</SelectItem>
+                </SelectContent>
+              </Select>
 
-          {/* Advanced Filters Toggle */}
-          <Collapsible open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" className="w-full justify-between">
-                <div className="flex items-center gap-2">
-                  <Filter className="w-4 h-4" />
-                  Filters
+              {/* Advanced Filters Toggle */}
+              <Collapsible open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4" />
+                      Filters
+                    </div>
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </CollapsibleTrigger>
+              </Collapsible>
+
+              {/* View Mode */}
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant={filters.viewMode === 'grid' ? 'default' : 'ghost'} 
+                  size="sm" 
+                  onClick={() => updateFilter('viewMode', 'grid')}
+                >
+                  <Grid className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant={filters.viewMode === 'list' ? 'default' : 'ghost'} 
+                  size="sm" 
+                  onClick={() => updateFilter('viewMode', 'list')}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Advanced Filters */}
+            <Collapsible open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
+              <CollapsibleContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
+                  <Select value={filters.status || 'all'} onValueChange={value => updateFilter('status', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Alle statussen</SelectItem>
+                      <SelectItem value="published">Gepubliceerd</SelectItem>
+                      <SelectItem value="draft">Concepten</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={filters.albumType || 'all'} onValueChange={value => updateFilter('albumType', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Album Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Alle types</SelectItem>
+                      <SelectItem value="cd">CD</SelectItem>
+                      <SelectItem value="vinyl">Vinyl</SelectItem>
+                      <SelectItem value="ai">Smart Scan</SelectItem>
+                      <SelectItem value="release">Release</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={filters.dateRange || 'all'} onValueChange={value => updateFilter('dateRange', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Periode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Alle periodes</SelectItem>
+                      <SelectItem value="week">Afgelopen week</SelectItem>
+                      <SelectItem value="month">Afgelopen maand</SelectItem>
+                      <SelectItem value="year">Afgelopen jaar</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <ChevronDown className="w-4 h-4" />
-              </Button>
-            </CollapsibleTrigger>
-          </Collapsible>
 
-          {/* View Mode */}
-          <div className="flex items-center gap-2">
-            <Button 
-              variant={filters.viewMode === 'grid' ? 'default' : 'ghost'} 
-              size="sm" 
-              onClick={() => updateFilter('viewMode', 'grid')}
-            >
-              <Grid className="w-4 h-4" />
-            </Button>
-            <Button 
-              variant={filters.viewMode === 'list' ? 'default' : 'ghost'} 
-              size="sm" 
-              onClick={() => updateFilter('viewMode', 'list')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Button variant="outline" size="sm" onClick={() => { updateFilter('status', 'published'); updateFilter('sortBy', 'views_count'); }}>
+                    <TrendingUp className="w-3 h-3 mr-1" />
+                    Populair
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => { updateFilter('dateRange', 'week'); updateFilter('sortBy', 'created_at'); }}>
+                    <Calendar className="w-3 h-3 mr-1" />
+                    Recent
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => { updateFilter('status', 'draft'); updateFilter('sortBy', 'created_at'); }}>
+                    <Clock className="w-3 h-3 mr-1" />
+                    Drafts
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleReset}>
+                    <RotateCcw className="w-3 h-3 mr-1" />
+                    Reset
+                  </Button>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
-        </div>
-
-        {/* Advanced Filters */}
-        <Collapsible open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
-          <CollapsibleContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
-              {/* Status Filter */}
-              <Select value={filters.status || 'all'} onValueChange={value => updateFilter('status', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle statussen</SelectItem>
-                  <SelectItem value="published">Gepubliceerd</SelectItem>
-                  <SelectItem value="draft">Concepten</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Album Type Filter */}
-              <Select value={filters.albumType || 'all'} onValueChange={value => updateFilter('albumType', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Album Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle types</SelectItem>
-                  <SelectItem value="cd">CD</SelectItem>
-                  <SelectItem value="vinyl">Vinyl</SelectItem>
-                  <SelectItem value="ai">Smart Scan</SelectItem>
-                  <SelectItem value="release">Release</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Date Range Filter */}
-              <Select value={filters.dateRange || 'all'} onValueChange={value => updateFilter('dateRange', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Periode" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle periodes</SelectItem>
-                  <SelectItem value="week">Afgelopen week</SelectItem>
-                  <SelectItem value="month">Afgelopen maand</SelectItem>
-                  <SelectItem value="year">Afgelopen jaar</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Filter Presets */}
-            <div className="flex flex-wrap gap-2 pt-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => {
-                  updateFilter('status', 'published');
-                  updateFilter('sortBy', 'views_count');
-                }}
-              >
-                <TrendingUp className="w-3 h-3 mr-1" />
-                Populair
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => {
-                  updateFilter('dateRange', 'week');
-                  updateFilter('sortBy', 'created_at');
-                }}
-              >
-                <Calendar className="w-3 h-3 mr-1" />
-                Recent
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => {
-                  updateFilter('status', 'draft');
-                  updateFilter('sortBy', 'created_at');
-                }}
-              >
-                <Clock className="w-3 h-3 mr-1" />
-                Drafts
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleReset}
-              >
-                <RotateCcw className="w-3 h-3 mr-1" />
-                Reset
-              </Button>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <TabsContent value="albums" className="space-y-6">
         <div className="flex items-center justify-between mb-6">

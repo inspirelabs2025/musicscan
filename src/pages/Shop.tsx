@@ -135,18 +135,16 @@ const Shop = () => {
   const canvasQuery = useCategoryProducts('canvas', CATEGORIES.find(c => c.key === 'canvas')!.dbFilter);
   const metalQuery = useCategoryProducts('metal', CATEGORIES.find(c => c.key === 'metal')!.dbFilter);
   const clothingQuery = useCategoryProducts('clothing', CATEGORIES.find(c => c.key === 'clothing')!.dbFilter);
-  const accessoriesQuery = useCategoryProducts('accessories', CATEGORIES.find(c => c.key === 'accessories')!.dbFilter);
   const countsQuery = useCategoryCounts();
 
   const isLoading = postersQuery.isLoading || canvasQuery.isLoading || metalQuery.isLoading || 
-                    clothingQuery.isLoading || accessoriesQuery.isLoading;
+                    clothingQuery.isLoading;
 
   const productsByCategory: Record<string, ShopProduct[]> = {
     posters: postersQuery.data || [],
     canvas: canvasQuery.data || [],
     metal: metalQuery.data || [],
     clothing: clothingQuery.data || [],
-    accessories: accessoriesQuery.data || [],
   };
 
   // Filter by search and sort Vector Cartoon products first
@@ -172,12 +170,12 @@ const Shop = () => {
     });
   };
 
-  const counts: Record<string, number> = (countsQuery.data as Record<string, number>) || { posters: 0, canvas: 0, metal: 0, clothing: 0, accessories: 0 };
+  const counts: Record<string, number> = (countsQuery.data as Record<string, number>) || { posters: 0, canvas: 0, metal: 0, clothing: 0 };
   const totalProducts = Object.values(counts).reduce((a, b) => a + b, 0);
 
   // Structured data for SEO
   const allDisplayProducts = [...(productsByCategory.posters || []), ...(productsByCategory.canvas || []), 
-    ...(productsByCategory.metal || []).slice(0, 10), ...(productsByCategory.clothing || []), ...(productsByCategory.accessories || [])];
+    ...(productsByCategory.metal || []).slice(0, 10), ...(productsByCategory.clothing || [])];
   
   const structuredData = {
     "@context": "https://schema.org",

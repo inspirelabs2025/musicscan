@@ -1014,6 +1014,10 @@ export function ScanChatTab() {
     setConditionSleeve('');
     setShowManualSearch(false);
     setIsManualSearching(false);
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+    toast({ title: "Chat gereset", description: "Klaar voor een nieuwe scan!" });
   };
 
   // Handle manual search form submission
@@ -1219,7 +1223,7 @@ export function ScanChatTab() {
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" onClick={() => { console.log('Reset clicked'); resetChat(); }} className="rounded-full h-8 w-8 border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 cursor-pointer relative z-10" title="Opnieuw">
+          <Button variant="outline" size="icon" onClick={resetChat} className="rounded-full h-8 w-8 border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 cursor-pointer relative z-10" title="Opnieuw">
             <RotateCcw className="h-3.5 w-3.5" />
           </Button>
         </div>

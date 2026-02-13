@@ -49,8 +49,8 @@ export default function Reviews() {
         </div>
 
         {/* Filters */}
-        <div className="container mx-auto max-w-6xl px-4 py-8">
-          <div className="flex flex-wrap gap-3 items-center">
+        <div className="container mx-auto max-w-6xl px-4 py-4">
+          <div className="flex gap-2 items-center flex-nowrap overflow-x-auto">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Filter className="h-4 w-4" />
               <span>Filter op:</span>

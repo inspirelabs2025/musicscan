@@ -91,7 +91,7 @@ export default function CanvasShop() {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-amber-50/20 dark:to-amber-950/10">
-        <div className="container py-8 space-y-8">
+        <div className="container py-4 md:py-8 space-y-4">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },
             { name: "Canvas Doeken", url: "/canvas" }
@@ -108,14 +108,14 @@ export default function CanvasShop() {
             canvasMinPrice={productCounts?.canvasMinPrice || 0}
           />
 
-          {/* Hero Header */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-800 via-neutral-700 to-amber-900 p-8 md:p-12 text-white">
+          {/* Hero Header - hidden on mobile for compact layout */}
+          <div className="hidden md:block relative overflow-hidden rounded-2xl p-12 text-white" style={{ background: 'linear-gradient(to bottom right, hsl(30, 20%, 25%), hsl(30, 40%, 20%))' }}>
             <div className="relative z-10 space-y-4">
               <div className="flex items-center gap-2">
                 <Frame className="h-6 w-6" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Premium Canvas</span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold">
+              <h1 className="text-5xl font-bold">
                 Canvas Doeken - Warm Grayscale
               </h1>
               <p className="text-xl text-white/90 max-w-2xl">

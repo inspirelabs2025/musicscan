@@ -72,28 +72,21 @@ export const CategoryNavigation = ({
                 key={category.id}
                 className="p-4 md:p-6 border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10 shadow-xl cursor-default"
               >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/20">
-                        <Icon className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-base md:text-lg">{category.name}</h3>
-                        <p className="text-xs md:text-sm text-muted-foreground">{category.description}</p>
-                      </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/20">
+                      <Icon className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                     </div>
-                    <Badge className="bg-primary text-primary-foreground text-xs">
-                      Actief
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex items-center justify-end pt-2 border-t border-border">
-                    <div className="space-y-0.5 text-right">
-                      <p className="text-xs text-muted-foreground">Vanaf</p>
-                      <p className="text-lg md:text-xl font-bold text-vinyl-gold">€{category.minPrice.toFixed(2)}</p>
+                    <div>
+                      <h3 className="font-bold text-base md:text-lg">{category.name}</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground">
+                        {category.description} · <span className="text-vinyl-gold font-semibold">vanaf €{category.minPrice.toFixed(2)}</span>
+                      </p>
                     </div>
                   </div>
+                  <Badge className="bg-primary text-primary-foreground text-xs">
+                    Actief
+                  </Badge>
                 </div>
               </Card>
             );
@@ -102,24 +95,17 @@ export const CategoryNavigation = ({
           return (
             <Link key={category.id} to={category.url}>
               <Card className="p-4 md:p-6 border-2 border-border hover:border-primary hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer group">
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-muted group-hover:bg-primary/20 transition-colors">
-                      <Icon className="h-5 w-5 md:h-6 md:w-6 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-base md:text-lg group-hover:text-primary transition-colors">
-                        {category.name}
-                      </h3>
-                      <p className="text-xs md:text-sm text-muted-foreground">{category.description}</p>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-muted group-hover:bg-primary/20 transition-colors">
+                    <Icon className="h-5 w-5 md:h-6 md:w-6 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-                  
-                  <div className="flex items-center justify-end pt-2 border-t border-border">
-                    <div className="space-y-0.5 text-right">
-                      <p className="text-xs text-muted-foreground">Vanaf</p>
-                      <p className="text-lg md:text-xl font-bold text-vinyl-gold">€{category.minPrice.toFixed(2)}</p>
-                    </div>
+                  <div>
+                    <h3 className="font-bold text-base md:text-lg group-hover:text-primary transition-colors">
+                      {category.name}
+                    </h3>
+                    <p className="text-xs md:text-sm text-muted-foreground">
+                      {category.description} · <span className="text-vinyl-gold font-semibold">vanaf €{category.minPrice.toFixed(2)}</span>
+                    </p>
                   </div>
                 </div>
               </Card>

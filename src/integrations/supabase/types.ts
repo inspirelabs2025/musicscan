@@ -291,6 +291,57 @@ export type Database = {
           },
         ]
       }
+      ai_usage_log: {
+        Row: {
+          context_info: Json | null
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          estimated_cost_usd: number | null
+          function_name: string
+          has_images: boolean | null
+          id: string
+          image_count: number | null
+          input_tokens: number | null
+          model: string
+          output_tokens: number | null
+          status: string | null
+          total_tokens: number | null
+        }
+        Insert: {
+          context_info?: Json | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          estimated_cost_usd?: number | null
+          function_name: string
+          has_images?: boolean | null
+          id?: string
+          image_count?: number | null
+          input_tokens?: number | null
+          model?: string
+          output_tokens?: number | null
+          status?: string | null
+          total_tokens?: number | null
+        }
+        Update: {
+          context_info?: Json | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          estimated_cost_usd?: number | null
+          function_name?: string
+          has_images?: boolean | null
+          id?: string
+          image_count?: number | null
+          input_tokens?: number | null
+          model?: string
+          output_tokens?: number | null
+          status?: string | null
+          total_tokens?: number | null
+        }
+        Relationships: []
+      }
       album_facebook_queue: {
         Row: {
           album_title: string
@@ -9885,6 +9936,10 @@ export type Database = {
         Returns: string
       }
       get_admin_scan_stats: { Args: never; Returns: Json }
+      get_ai_usage_stats: {
+        Args: { end_date?: string; start_date?: string }
+        Returns: Json
+      }
       get_all_queue_stats: {
         Args: never
         Returns: {

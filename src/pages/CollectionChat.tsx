@@ -317,9 +317,9 @@ const CollectionChat = () => {
               <ScrollArea className="flex-1 p-4">
                 {messages.length === 0 ? (
                   /* Welcome Screen */
-                  <div className="flex flex-col items-center justify-center py-10 space-y-8 animate-fade-in">
+                  <div className="flex flex-col items-center justify-center py-4 space-y-4 animate-fade-in">
 
-                    <div className="text-center space-y-2 max-w-md">
+                    <div className="text-center space-y-1 max-w-md">
                       <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                         Hey! 👋
                       </h2>

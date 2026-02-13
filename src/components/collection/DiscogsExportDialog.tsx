@@ -79,14 +79,15 @@ export const DiscogsExportDialog = ({ open, onOpenChange, discogsIds, itemCount,
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Exporteer naar Discogs</DialogTitle>
           <DialogDescription>
             {itemCount} item{itemCount !== 1 ? 's' : ''} met Discogs ID geselecteerd.
           </DialogDescription>
         </DialogHeader>
 
+        <div className="flex-1 overflow-y-auto min-h-0">
         {!exportResult ? (
           <>
             <div className="space-y-4">
@@ -235,6 +236,7 @@ export const DiscogsExportDialog = ({ open, onOpenChange, discogsIds, itemCount,
             </DialogFooter>
           </>
         )}
+        </div>
       </DialogContent>
     </Dialog>
   );

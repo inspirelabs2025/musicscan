@@ -3,7 +3,7 @@ import { useSEO } from '@/hooks/useSEO';
 import { useUnifiedNewsFeed } from '@/hooks/useUnifiedNewsFeed';
 import { ScannerHero } from '@/components/home/ScannerHero';
 import { HeroFeature } from '@/components/home/HeroFeature';
-import { QuickLinks } from '@/components/home/QuickLinks';
+
 import { MasonryContentGrid } from '@/components/home/MasonryContentGrid';
 import { ProductBanner } from '@/components/home/ProductBanner';
 
@@ -94,8 +94,6 @@ const Home = () => {
     <div className="min-h-screen bg-background">
       {/* 1. Scanner Hero - Grote CTA bovenaan */}
       <ScannerHero />
-      {/* 2. Quick Navigation */}
-      <QuickLinks />
 
       {/* 3. Hero - Featured Item */}
       {heroItem && (

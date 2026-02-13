@@ -32,16 +32,16 @@ const ArtistSpotlights = () => {
 
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
-        <div className="bg-gradient-to-b from-primary/10 to-background py-12">
+        <div className="bg-gradient-to-b from-primary/10 to-background py-6">
           <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center mb-8">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <Sparkles className="w-8 h-8 text-primary" />
-                <h1 className="text-4xl md:text-5xl font-bold">
+            <div className="max-w-3xl mx-auto text-center space-y-3">
+              <div className="flex items-center justify-center gap-2">
+                <Sparkles className="w-7 h-7 text-primary" />
+                <h1 className="text-3xl md:text-4xl font-bold">
                   Artiest Spotlights
                 </h1>
               </div>
-              <p className="text-xl text-muted-foreground mb-6">
+              <p className="text-lg text-muted-foreground">
                 Duik in het leven, de muziek en de impact van legendes
               </p>
               <Input
@@ -55,7 +55,7 @@ const ArtistSpotlights = () => {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-12">
+        <div className="container mx-auto px-4 py-6">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin" />

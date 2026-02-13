@@ -158,20 +158,12 @@ export default function MyCollection() {
                 {items.length} items{totalValue > 0 ? ` · Totale waarde €${totalValue.toFixed(2)}` : ''}
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button asChild variant="outline">
-                <Link to="/collection-chat" className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4" />
-                  Collectie Inzicht
-                </Link>
-              </Button>
-              <Button asChild>
-                <Link to="/ai-scan-v2" className="flex items-center gap-2">
-                  <ScanLine className="w-4 h-4" />
-                  Scan toevoegen
-                </Link>
-              </Button>
-            </div>
+            <Button asChild variant="outline">
+              <Link to="/collection-chat" className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Collectie Inzicht
+              </Link>
+            </Button>
           </div>
 
           {/* Quick Stats */}

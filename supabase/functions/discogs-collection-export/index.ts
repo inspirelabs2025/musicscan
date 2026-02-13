@@ -98,8 +98,8 @@ Deno.serve(async (req) => {
     // discogs_ids: number[] - list of Discogs release IDs
     // target: 'collection' | 'wantlist'
 
-    if (!discogs_ids?.length || !['collection', 'wantlist'].includes(target)) {
-      return new Response(JSON.stringify({ error: 'Invalid parameters. Need discogs_ids[] and target (collection/wantlist)' }), {
+    if (!discogs_ids?.length || !['collection', 'wantlist', 'forsale'].includes(target)) {
+      return new Response(JSON.stringify({ error: 'Invalid parameters. Need discogs_ids[] and target (collection/wantlist/forsale)' }), {
         status: 400, headers: corsHeaders
       })
     }
@@ -132,18 +132,27 @@ Deno.serve(async (req) => {
     for (const discogsId of discogs_ids) {
       try {
         let url: string
-        if (target === 'collection') {
-          // POST /users/{username}/collection/folders/1/releases/{release_id}
-          // folder 1 = "Uncategorized"
-          url = `https://api.discogs.com/users/${username}/collection/folders/1/releases/${discogsId}`
-        } else {
-          // PUT /users/{username}/wants/{release_id}
-          url = `https://api.discogs.com/users/${username}/wants/${discogsId}`
-        }
+        let method: string
+        let body: string | undefined
 
-        const method = target === 'collection' ? 'POST' : 'PUT'
+        if (target === 'collection') {
+          url = `https://api.discogs.com/users/${username}/collection/folders/1/releases/${discogsId}`
+          method = 'POST'
+        } else if (target === 'wantlist') {
+          url = `https://api.discogs.com/users/${username}/wants/${discogsId}`
+          method = 'PUT'
+        } else {
+          // forsale: POST /marketplace/listings
+          url = `https://api.discogs.com/marketplace/listings`
+          method = 'POST'
+          body = JSON.stringify({
+            release_id: discogsId,
+            condition: 'Very Good Plus (VG+)',
+            status: 'Draft',
+          })
+        }
         const res = await makeAuthenticatedRequest(
-          method, url, consumerKey, consumerSecret, accessToken, accessTokenSecret
+          method, url, consumerKey, consumerSecret, accessToken, accessTokenSecret, body
         )
 
         if (res.ok || res.status === 201) {

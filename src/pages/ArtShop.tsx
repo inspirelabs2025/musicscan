@@ -89,7 +89,7 @@ export default function ArtShop() {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20">
-        <div className="container py-8 space-y-0">
+        <div className="container py-4 md:py-8 space-y-4">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },
             { name: "Art Shop", url: "/art-shop" }
@@ -107,16 +107,16 @@ export default function ArtShop() {
           />
 
           {/* Hero Header */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-vinyl-purple to-accent p-8 md:p-12 text-white">
-            <div className="relative z-10 space-y-4">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-vinyl-purple to-accent p-5 md:p-12 text-white">
+            <div className="relative z-10 space-y-3 md:space-y-4">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-6 w-6" />
-                <span className="text-sm font-semibold uppercase tracking-wide">Premium Art Collection</span>
+                <Sparkles className="h-5 w-5 md:h-6 md:w-6" />
+                <span className="text-xs md:text-sm font-semibold uppercase tracking-wide">Premium Art Collection</span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold">
+              <h1 className="text-2xl md:text-5xl font-bold">
                 Metaalprints van Albumcovers
               </h1>
-              <p className="text-xl text-white/90 max-w-2xl">
+              <p className="text-base md:text-xl text-white/90 max-w-2xl">
                 Museum-kwaliteit prints van iconische albumcovers op premium aluminium. 
                 Elke print is een kunstwerk voor aan de muur.
               </p>

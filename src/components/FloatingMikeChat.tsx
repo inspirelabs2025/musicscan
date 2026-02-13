@@ -185,6 +185,55 @@ export function FloatingMikeChat() {
     setMessages([{ role: 'assistant', content: '🎩 **Nieuw gesprek gestart!** Wat kan ik voor je doen?' }]);
   }, [user?.id]);
 
+  // Fetch collection summary for context
+  const fetchCollectionSummary = useCallback(async (): Promise<string | null> => {
+    if (!user?.id) return null;
+    try {
+      // Get stats
+      const [totalRes, cdRes, vinylRes, aiRes, valueRes, topArtistsRes] = await Promise.all([
+        supabase.from('unified_scans').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('unified_scans').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('source_table', 'cd_scan'),
+        supabase.from('unified_scans').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('source_table', 'vinyl2_scan'),
+        supabase.from('unified_scans').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('source_table', 'ai_scan_results'),
+        supabase.from('unified_scans').select('calculated_advice_price').eq('user_id', user.id).not('calculated_advice_price', 'is', null).gt('calculated_advice_price', 0),
+        supabase.from('unified_scans').select('artist, title, genre, year, calculated_advice_price, media_type, source_table').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50),
+      ]);
+
+      const total = totalRes.count || 0;
+      if (total === 0) return null;
+
+      const totalValue = valueRes.data?.reduce((sum, item) => sum + (item.calculated_advice_price || 0), 0) || 0;
+
+      // Build top artists from recent items
+      const artistCounts: Record<string, number> = {};
+      const genres: Record<string, number> = {};
+      topArtistsRes.data?.forEach(item => {
+        if (item.artist) artistCounts[item.artist] = (artistCounts[item.artist] || 0) + 1;
+        if (item.genre) genres[item.genre] = (genres[item.genre] || 0) + 1;
+      });
+      const topArtists = Object.entries(artistCounts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, count]) => `${name} (${count}x)`).join(', ');
+      const topGenres = Object.entries(genres).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name]) => name).join(', ');
+
+      // Recent 10 items
+      const recentItems = topArtistsRes.data?.slice(0, 10).map(i => 
+        `- ${i.artist || '?'} — ${i.title || '?'} (${i.media_type || '?'}, ${i.year || '?'})${i.calculated_advice_price ? ` €${i.calculated_advice_price.toFixed(2)}` : ''}`
+      ).join('\n') || '';
+
+      return `[COLLECTIE_CONTEXT]
+Totaal: ${total} items (${cdRes.count || 0} CD's, ${vinylRes.count || 0} vinyl, ${aiRes.count || 0} AI-scans)
+Geschatte totaalwaarde: €${totalValue.toFixed(2)}
+Top artiesten: ${topArtists || 'Geen data'}
+Top genres: ${topGenres || 'Geen data'}
+
+Laatste 10 items:
+${recentItems}
+[/COLLECTIE_CONTEXT]`;
+    } catch (err) {
+      console.error('[floating-mike] Failed to fetch collection summary:', err);
+      return null;
+    }
+  }, [user?.id]);
+
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isStreaming) return;
 
@@ -214,7 +263,12 @@ export function FloatingMikeChat() {
     try {
       const pageContext = getPageContext(location.pathname);
       const contextPrefix = pageContext ? `[PAGE_CONTEXT: ${pageContext}]\n\n` : '';
-      const effectiveContent = contextPrefix + text;
+      
+      // Fetch collection context for logged-in users
+      const collectionContext = await fetchCollectionSummary();
+      const collectionPrefix = collectionContext ? `${collectionContext}\n\n` : '';
+      
+      const effectiveContent = collectionPrefix + contextPrefix + text;
 
       // Build message history for AI — include recent conversation
       const recentMessages = messages.slice(-20); // Last 20 messages for context
@@ -282,7 +336,7 @@ export function FloatingMikeChat() {
     } finally {
       setIsStreaming(false);
     }
-  }, [messages, isStreaming, location.pathname, user?.id]);
+  }, [messages, isStreaming, location.pathname, user?.id, fetchCollectionSummary]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

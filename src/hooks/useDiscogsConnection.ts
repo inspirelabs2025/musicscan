@@ -54,8 +54,8 @@ export const useDiscogsConnection = () => {
       }
 
       const { authorize_url } = await res.json();
-      // Redirect user to Discogs
-      window.location.href = authorize_url;
+      // Open Discogs in a new tab (preview iframe blocks same-window redirects)
+      window.open(authorize_url, '_blank');
     },
     onError: (error: Error) => {
       toast({

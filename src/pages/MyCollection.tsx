@@ -12,12 +12,13 @@ import { ErrorBoundary, CollectionErrorFallback } from "@/components/ErrorBounda
 import { DiscogsConnectButton } from "@/components/collection/DiscogsConnectButton";
 import { DiscogsExportDialog } from "@/components/collection/DiscogsExportDialog";
 import { useDiscogsConnection } from "@/hooks/useDiscogsConnection";
+import { CollectionItemDetail } from "@/components/collection/CollectionItemDetail";
 
-const CollectionCard = ({ item, onExportSingle }: { item: CollectionItem; onExportSingle?: (discogsId: number) => void }) => {
+const CollectionCard = ({ item, onExportSingle, onClick }: { item: CollectionItem; onExportSingle?: (discogsId: number) => void; onClick: () => void }) => {
   const imageUrl = item.front_image || item.catalog_image || item.back_image || item.matrix_image;
   
   return (
-    <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 border-border/50 hover:border-primary/30">
+    <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 border-border/50 hover:border-primary/30 cursor-pointer" onClick={onClick}>
       {/* Cover Image */}
       <div className="aspect-square bg-muted relative overflow-hidden">
         {imageUrl ? (
@@ -113,6 +114,7 @@ export default function MyCollection() {
   const [statusFilter, setStatusFilter] = useState<"all" | "public" | "for_sale" | "private" | "ready_for_shop">("all");
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [singleExportId, setSingleExportId] = useState<number | null>(null);
+  const [selectedItem, setSelectedItem] = useState<CollectionItem | null>(null);
 
   const { items, isLoading } = useMyCollection(statusFilter === "all" ? "all" : statusFilter);
   const { isConnected, handleCallback, isHandlingCallback } = useDiscogsConnection();
@@ -325,6 +327,7 @@ export default function MyCollection() {
                 <CollectionCard
                   key={item.id}
                   item={item}
+                  onClick={() => setSelectedItem(item)}
                   onExportSingle={isConnected ? (discogsId) => {
                     setSingleExportId(discogsId);
                     setShowExportDialog(true);
@@ -343,6 +346,15 @@ export default function MyCollection() {
           }}
           discogsIds={singleExportId ? [singleExportId] : discogsEligibleIds}
           itemCount={singleExportId ? 1 : discogsEligibleIds.length}
+        />
+        <CollectionItemDetail
+          item={selectedItem}
+          open={!!selectedItem}
+          onOpenChange={(open) => { if (!open) setSelectedItem(null); }}
+          onExport={isConnected ? (discogsId) => {
+            setSingleExportId(discogsId);
+            setShowExportDialog(true);
+          } : undefined}
         />
       </div>
     </ErrorBoundary>

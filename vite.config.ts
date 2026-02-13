@@ -1,16 +1,37 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
+// Plugin to inject dynamic build version into index.html at build time
+function buildVersionPlugin(): Plugin {
+  const buildTimestamp = new Date().toISOString();
+  return {
+    name: 'build-version',
+    transformIndexHtml(html) {
+      return html.replace(
+        /content="[^"]*"(\s*\/?>)\s*(?=\s*<!--\s*Favicon)/,
+        `content="${buildTimestamp}"$1\n    <!-- Favicon`
+      ).replace(
+        /name="build-version"\s+content="[^"]*"/,
+        `name="build-version" content="${buildTimestamp}"`
+      );
+    }
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  define: {
+    __BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString()),
+  },
   server: {
     host: "::",
     port: 8080,
   },
   plugins: [
     react(),
+    buildVersionPlugin(),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),

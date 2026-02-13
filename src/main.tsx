@@ -1,12 +1,25 @@
-// Unregister any stale service workers and clear all caches from previous PWA builds
+// Aggressively unregister ALL service workers and nuke ALL caches
+// This runs synchronously before React to prevent stale content
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(registration => registration.unregister());
+    registrations.forEach(registration => {
+      registration.unregister().then(() => {
+        console.log('[MusicScan] Service worker unregistered:', registration.scope);
+      });
+    });
   });
+  // Also clear the SW controller immediately
+  if (navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+  }
 }
 if ('caches' in window) {
   caches.keys().then(names => {
-    names.forEach(name => caches.delete(name));
+    Promise.all(names.map(name => caches.delete(name))).then(() => {
+      if (names.length > 0) {
+        console.log('[MusicScan] Cleared caches:', names);
+      }
+    });
   });
 }
 

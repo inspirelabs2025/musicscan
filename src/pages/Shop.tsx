@@ -282,14 +282,6 @@ const Shop = () => {
                 <p className="text-muted-foreground">{category.description}</p>
               </div>
             </div>
-            {hasMore && (
-              <Link to={category.link}>
-                <Button variant="outline" className="gap-2">
-                  Bekijk alle
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            )}
           </div>
         </div>
 
@@ -298,6 +290,17 @@ const Shop = () => {
             <ProductCard key={product.id} product={product} index={index} categoryKey={category.key} />
           ))}
         </div>
+
+        {hasMore && (
+          <div className="flex justify-center mt-6">
+            <Link to={category.link}>
+              <Button variant="outline" className="gap-2">
+                Bekijk alle
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        )}
       </section>
     );
   };

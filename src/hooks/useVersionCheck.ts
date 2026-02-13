@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-// This gets baked in at build time
-const BUILD_VERSION = document.querySelector('meta[name="build-version"]')?.getAttribute('content') || '';
+// Injected at build time by Vite — unique per build
+declare const __BUILD_TIMESTAMP__: string;
+const BUILD_VERSION = typeof __BUILD_TIMESTAMP__ !== 'undefined' ? __BUILD_TIMESTAMP__ : '';
 
 export const useVersionCheck = (intervalMs = 5 * 60 * 1000) => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -15,14 +16,14 @@ export const useVersionCheck = (intervalMs = 5 * 60 * 1000) => {
       });
       if (!resp.ok) return;
       const html = await resp.text();
-      const match = html.match(/name="build-version"\s+content="([^"]+)"/);
-      if (!match?.[1] || !BUILD_VERSION) return;
 
-      if (match[1] !== BUILD_VERSION) {
+      // Check for JS bundle hash change — if our current script src doesn't exist in new HTML
+      const scriptMatch = html.match(/src="(\/src\/main\.tsx|\/assets\/index-[^"]+\.js)"/);
+      const metaMatch = html.match(/name="build-version"\s+content="([^"]+)"/);
+      
+      if (metaMatch?.[1] && BUILD_VERSION && metaMatch[1] !== BUILD_VERSION) {
         mismatchCount.current += 1;
         setUpdateAvailable(true);
-
-        // Auto-reload after 3 consecutive mismatches
         if (mismatchCount.current >= 3) {
           window.location.reload();
         }
@@ -36,7 +37,6 @@ export const useVersionCheck = (intervalMs = 5 * 60 * 1000) => {
   }, []);
 
   useEffect(() => {
-    // First check after 30s (give page time to settle)
     const initial = setTimeout(checkVersion, 30_000);
     const interval = setInterval(checkVersion, intervalMs);
     return () => {

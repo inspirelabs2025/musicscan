@@ -53,7 +53,7 @@ const CATEGORIES = [
     key: "clothing", 
     label: "Kleding", 
     icon: Shirt, 
-    description: "T-shirts & sokken met album art",
+    description: "T-shirts met album art",
     link: "/merchandise",
     gradient: "from-green-500/20 to-emerald-500/20",
     dbFilter: "merchandise"
@@ -85,7 +85,7 @@ const useCategoryProducts = (categoryKey: string, dbFilter: string) => {
       
       // Apply category-specific filter
       if (categoryKey === 'clothing') {
-        query = query.eq('media_type', 'merchandise');
+        query = query.contains('categories', ['tshirts']);
       } else {
         query = query.contains('categories', [dbFilter]);
       }

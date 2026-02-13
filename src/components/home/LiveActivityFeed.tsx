@@ -16,9 +16,13 @@ export const LiveActivityFeed = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const [scansResult, topicsResult, storiesResult] = await Promise.all([
+      const [cdScansResult, vinylScansResult, topicsResult, storiesResult] = await Promise.all([
         supabase
-          .from('unified_scans')
+          .from('cd_scan')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', today.toISOString()),
+        supabase
+          .from('vinyl2_scan')
           .select('id', { count: 'exact', head: true })
           .gte('created_at', today.toISOString()),
         supabase
@@ -32,7 +36,7 @@ export const LiveActivityFeed = () => {
       ]);
 
       return {
-        scansToday: scansResult.count || 0,
+        scansToday: (cdScansResult.count || 0) + (vinylScansResult.count || 0),
         activeTopics: topicsResult.count || 0,
         totalStories: storiesResult.count || 0
       };

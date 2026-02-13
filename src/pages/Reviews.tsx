@@ -39,15 +39,12 @@ export default function Reviews() {
 
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
-        <div className="hidden md:block bg-gradient-to-b from-primary/10 to-background py-8 px-4">
+        <div className="bg-gradient-to-b from-primary/10 to-background py-6 px-4">
           <div className="container mx-auto max-w-6xl text-center space-y-2">
             <div className="inline-flex items-center justify-center p-2 bg-primary/10 rounded-full">
               <Music2 className="h-6 w-6 text-primary" />
             </div>
             <h1 className="text-2xl md:text-3xl font-bold">Album Reviews</h1>
-            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-              Eerlijke recensies van nieuwe releases en klassiekers. Van eerste luisterbeurt tot diepgaande analyse.
-            </p>
           </div>
         </div>
 

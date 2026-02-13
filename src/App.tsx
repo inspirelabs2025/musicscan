@@ -15,7 +15,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Navigation } from "@/components/Navigation";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { FloatingMikeChat } from "@/components/FloatingMikeChat";
-import { VersionBanner } from "@/components/VersionBanner";
+
 import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { AudioPlayer } from "@/components/audio/AudioPlayer";
 import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
@@ -293,7 +293,7 @@ const AppContent = () => {
   
   return (
     <div className="pb-14 md:pb-0">
-      <VersionBanner />
+      
       <Navigation />
       <MobileBottomNav />
       <Routes>

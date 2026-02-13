@@ -65,16 +65,19 @@ export const CategoryNavigation = ({
             return (
               <Card
                 key={category.id}
-                className="p-3 md:p-6 border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10 shadow-xl cursor-default"
+                className="p-2.5 md:p-6 border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10 shadow-xl cursor-default h-full"
               >
                 <div className="flex items-center gap-2 md:gap-3">
                   <div className="hidden md:block p-2 rounded-lg bg-primary/20">
                     <Icon className="h-6 w-6 text-primary" />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-sm md:text-lg">{category.name}</h3>
-                    <p className="text-[10px] md:text-sm text-muted-foreground">
-                      {category.description} · <span className="text-vinyl-gold font-semibold">vanaf €{category.minPrice.toFixed(2)}</span>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-xs md:text-lg leading-tight">{category.name}</h3>
+                    <p className="hidden md:block text-sm text-muted-foreground">
+                      {category.description}
+                    </p>
+                    <p className="text-[10px] md:text-sm text-vinyl-gold font-semibold mt-0.5">
+                      vanaf €{category.minPrice.toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -83,18 +86,21 @@ export const CategoryNavigation = ({
           }
           
           return (
-            <Link key={category.id} to={category.url}>
-              <Card className="p-3 md:p-6 border-2 border-border hover:border-primary hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer group h-full">
+            <Link key={category.id} to={category.url} className="h-full">
+              <Card className="p-2.5 md:p-6 border-2 border-border hover:border-primary hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer group h-full">
                 <div className="flex items-center gap-2 md:gap-3">
                   <div className="hidden md:block p-2 rounded-lg bg-muted group-hover:bg-primary/20 transition-colors">
                     <Icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-sm md:text-lg group-hover:text-primary transition-colors">
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-xs md:text-lg leading-tight group-hover:text-primary transition-colors">
                       {category.name}
                     </h3>
-                    <p className="text-[10px] md:text-sm text-muted-foreground">
-                      {category.description} · <span className="text-vinyl-gold font-semibold">vanaf €{category.minPrice.toFixed(2)}</span>
+                    <p className="hidden md:block text-sm text-muted-foreground">
+                      {category.description}
+                    </p>
+                    <p className="text-[10px] md:text-sm text-vinyl-gold font-semibold mt-0.5">
+                      vanaf €{category.minPrice.toFixed(2)}
                     </p>
                   </div>
                 </div>

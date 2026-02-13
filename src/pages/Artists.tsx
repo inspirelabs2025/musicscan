@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Music, Search, Filter } from 'lucide-react';
+import { Music, Search, Filter, ChevronDown } from 'lucide-react';
 import { useArtistStories, useArtistStoriesStats } from '@/hooks/useArtistStories';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Select,
   SelectContent,
@@ -118,50 +119,59 @@ const Artists = () => {
         </section>
 
         {/* Search & Filters */}
-        <section className="sticky top-16 z-10 bg-background/95 backdrop-blur-sm border-b py-6">
+        <section className="sticky top-16 z-10 bg-background/95 backdrop-blur-sm border-b py-4">
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
-              <div className="flex flex-col md:flex-row gap-4">
-                {/* Search */}
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Zoek artiest..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+              <Collapsible defaultOpen={false}>
+                <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full justify-center mb-2">
+                  <Filter className="w-4 h-4" />
+                  <span>Zoeken & Filteren</span>
+                  <ChevronDown className="w-4 h-4" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="flex flex-col md:flex-row gap-4 pt-2">
+                    {/* Search */}
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Zoek artiest..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
 
-                {/* Genre Filter */}
-                <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-                  <SelectTrigger className="w-full md:w-[200px]">
-                    <Filter className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="Alle Genres" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alle Genres</SelectItem>
-                    {stats?.genres.map(genre => (
-                      <SelectItem key={genre} value={genre}>
-                        {genre.charAt(0).toUpperCase() + genre.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    {/* Genre Filter */}
+                    <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+                      <SelectTrigger className="w-full md:w-[200px]">
+                        <Filter className="w-4 h-4 mr-2" />
+                        <SelectValue placeholder="Alle Genres" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Alle Genres</SelectItem>
+                        {stats?.genres.map(genre => (
+                          <SelectItem key={genre} value={genre}>
+                            {genre.charAt(0).toUpperCase() + genre.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-                {/* Sort */}
-                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                  <SelectTrigger className="w-full md:w-[200px]">
-                    <SelectValue placeholder="Sorteer op" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Nieuwste</SelectItem>
-                    <SelectItem value="popular">Populairste</SelectItem>
-                    <SelectItem value="alphabetical">A-Z</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                    {/* Sort */}
+                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                      <SelectTrigger className="w-full md:w-[200px]">
+                        <SelectValue placeholder="Sorteer op" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="newest">Nieuwste</SelectItem>
+                        <SelectItem value="popular">Populairste</SelectItem>
+                        <SelectItem value="alphabetical">A-Z</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
           </div>
         </section>

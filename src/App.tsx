@@ -223,6 +223,7 @@ const NewsRssManager = lazy(() => import("./pages/admin/NewsRssManager"));
 const OwnPodcasts = lazy(() => import("./pages/admin/OwnPodcasts"));
 const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
 const Statistics = lazy(() => import("./pages/admin/Statistics"));
+const AiCostMonitor = lazy(() => import("./pages/admin/AiCostMonitor"));
 const ArtistSpotlightsAdmin = lazy(() => import("./pages/admin/ArtistSpotlights"));
 const ArtistSpotlightEditor = lazy(() => import("./components/admin/ArtistSpotlightEditor").then(m => ({ default: m.ArtistSpotlightEditor })));
 const AdminAlbumReviews = lazy(() => import("./pages/admin/AdminAlbumReviews"));
@@ -501,6 +502,7 @@ const AppContent = () => {
         <Route path="/admin/auto-comments" element={<ProtectedRoute><LazyRoute><AutoComments /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/magic-mike" element={<ProtectedRoute><LazyRoute><MagicMikeProfile /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/statistics" element={<ProtectedRoute><LazyRoute><Statistics /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/ai-costs" element={<ProtectedRoute><LazyRoute><AiCostMonitor /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/seo-monitoring" element={<ProtectedRoute><LazyRoute><SEOMonitoring /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/sitemap-management" element={<ProtectedRoute><LazyRoute><SitemapManagement /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/price-history" element={<ProtectedRoute><LazyRoute><PriceHistoryAdmin /></LazyRoute></ProtectedRoute>} />

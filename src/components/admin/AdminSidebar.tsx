@@ -41,7 +41,8 @@ import {
   Cog,
   ListMusic,
   Crown,
-  Bot
+  Bot,
+  Cpu
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -123,6 +124,7 @@ const menuItems = [
     title: "SEO & Analytics",
     items: [
       { title: "Statistieken", url: "/admin/statistics", icon: BarChart3 },
+      { title: "AI Kostenmonitor", url: "/admin/ai-costs", icon: Cpu },
       { title: "SEO Monitoring", url: "/admin/seo-monitoring", icon: Globe },
       { title: "Sitemap Management", url: "/admin/sitemap-management", icon: FileText },
       { title: "Price History", url: "/admin/price-history", icon: BarChart3 },

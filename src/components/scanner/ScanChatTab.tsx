@@ -747,6 +747,39 @@ export function ScanChatTab() {
     };
 
     try {
+      // Fetch collection context for logged-in users
+      let collectionPrefix = '';
+      if (user?.id) {
+        try {
+          const [totalRes, cdRes, vinylRes, aiRes, valueRes, topArtistsRes] = await Promise.all([
+            supabase.from('unified_scans').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+            supabase.from('unified_scans').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('source_table', 'cd_scan'),
+            supabase.from('unified_scans').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('source_table', 'vinyl2_scan'),
+            supabase.from('unified_scans').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('source_table', 'ai_scan_results'),
+            supabase.from('unified_scans').select('calculated_advice_price').eq('user_id', user.id).not('calculated_advice_price', 'is', null).gt('calculated_advice_price', 0),
+            supabase.from('unified_scans').select('artist, title, genre, year, calculated_advice_price, media_type, source_table').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50),
+          ]);
+          const total = totalRes.count || 0;
+          if (total > 0) {
+            const totalValue = valueRes.data?.reduce((sum, item) => sum + (item.calculated_advice_price || 0), 0) || 0;
+            const artistCounts: Record<string, number> = {};
+            const genres: Record<string, number> = {};
+            topArtistsRes.data?.forEach(item => {
+              if (item.artist) artistCounts[item.artist] = (artistCounts[item.artist] || 0) + 1;
+              if (item.genre) genres[item.genre] = (genres[item.genre] || 0) + 1;
+            });
+            const topArtists = Object.entries(artistCounts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, count]) => `${name} (${count}x)`).join(', ');
+            const topGenres = Object.entries(genres).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name]) => name).join(', ');
+            const recentItems = topArtistsRes.data?.slice(0, 10).map(i =>
+              `- ${i.artist || '?'} — ${i.title || '?'} (${i.media_type || '?'}, ${i.year || '?'})${i.calculated_advice_price ? ` €${i.calculated_advice_price.toFixed(2)}` : ''}`
+            ).join('\n') || '';
+            collectionPrefix = `[COLLECTIE_CONTEXT]\nTotaal: ${total} items (${cdRes.count || 0} CD's, ${vinylRes.count || 0} vinyl, ${aiRes.count || 0} AI-scans)\nGeschatte totaalwaarde: €${totalValue.toFixed(2)}\nTop artiesten: ${topArtists || 'Geen data'}\nTop genres: ${topGenres || 'Geen data'}\n\nLaatste 10 items:\n${recentItems}\n[/COLLECTIE_CONTEXT]\n\n`;
+          }
+        } catch (err) {
+          console.error('[scan-chat] Failed to fetch collection context:', err);
+        }
+      }
+
       // Build platform content context tag
       let platformContentTag = '';
       if (verifiedResult && currentArtistName && artistContent.totalCount > 0) {
@@ -759,16 +792,20 @@ export function ScanChatTab() {
         platformContentTag = `\n[PLATFORM_CONTENT: We hebben ${parts.join(', ')} over ${currentArtistName} op het MusicScan platform.]`;
       }
 
-      const effectiveContent = verifiedResult
+      const effectiveContent = collectionPrefix + (verifiedResult
         ? `[CONTEXT: Release al geïdentificeerd - ${verifiedResult.artist} - ${verifiedResult.title}, Discogs ID: ${verifiedResult.discogs_id}. Beantwoord de vraag van de gebruiker over deze release zonder opnieuw te scannen.]${platformContentTag}\n\n${userMsg.content}`
-        : userMsg.content;
+        : userMsg.content);
+
+      // Use user's JWT if available, otherwise fall back to anon key
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeGJweXFuamZpeXVic3VvbmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMDgyNTMsImV4cCI6MjA2MTY4NDI1M30.UFZKmrN-gz4VUUlKmVfwocS5OQuxGm4ATYltBJn3Kq4';
 
       const allMessages = [...messages, { role: userMsg.role, content: effectiveContent }];
       const resp = await fetch(`${SUPABASE_URL}/functions/v1/scan-chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeGJweXFuamZpeXVic3VvbmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMDgyNTMsImV4cCI6MjA2MTY4NDI1M30.UFZKmrN-gz4VUUlKmVfwocS5OQuxGm4ATYltBJn3Kq4`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({
           messages: allMessages.map(m => ({ role: m.role, content: m.content })),

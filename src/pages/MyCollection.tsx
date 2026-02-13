@@ -7,12 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Music, Search, X, Disc3, Disc, Euro, ShoppingCart, ScanLine, TrendingUp, Eye, EyeOff, Package, BarChart3, Upload } from "lucide-react";
 import { useMyCollection, CollectionItem } from "@/hooks/useMyCollection";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { ErrorBoundary, CollectionErrorFallback } from "@/components/ErrorBoundary";
 import { DiscogsConnectButton } from "@/components/collection/DiscogsConnectButton";
 import { DiscogsExportDialog } from "@/components/collection/DiscogsExportDialog";
 import { useDiscogsConnection } from "@/hooks/useDiscogsConnection";
-import { CollectionItemDetail } from "@/components/collection/CollectionItemDetail";
 
 const CollectionCard = ({ item, onExportSingle, onClick }: { item: CollectionItem; onExportSingle?: (discogsId: number) => void; onClick: () => void }) => {
   const imageUrl = item.front_image || item.catalog_image || item.back_image || item.matrix_image;
@@ -107,6 +106,7 @@ const CollectionCard = ({ item, onExportSingle, onClick }: { item: CollectionIte
 
 export default function MyCollection() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
@@ -114,7 +114,6 @@ export default function MyCollection() {
   const [statusFilter, setStatusFilter] = useState<"all" | "public" | "for_sale" | "private" | "ready_for_shop">("all");
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [singleExportId, setSingleExportId] = useState<number | null>(null);
-  const [selectedItem, setSelectedItem] = useState<CollectionItem | null>(null);
 
   const { items, isLoading } = useMyCollection(statusFilter === "all" ? "all" : statusFilter);
   const { isConnected, handleCallback, isHandlingCallback } = useDiscogsConnection();
@@ -327,7 +326,7 @@ export default function MyCollection() {
                 <CollectionCard
                   key={item.id}
                   item={item}
-                  onClick={() => setSelectedItem(item)}
+                  onClick={() => navigate(`/my-collection/${item.id}`)}
                   onExportSingle={isConnected ? (discogsId) => {
                     setSingleExportId(discogsId);
                     setShowExportDialog(true);
@@ -346,15 +345,6 @@ export default function MyCollection() {
           }}
           discogsIds={singleExportId ? [singleExportId] : discogsEligibleIds}
           itemCount={singleExportId ? 1 : discogsEligibleIds.length}
-        />
-        <CollectionItemDetail
-          item={selectedItem}
-          open={!!selectedItem}
-          onOpenChange={(open) => { if (!open) setSelectedItem(null); }}
-          onExport={isConnected ? (discogsId) => {
-            setSingleExportId(discogsId);
-            setShowExportDialog(true);
-          } : undefined}
         />
       </div>
     </ErrorBoundary>

@@ -120,6 +120,7 @@ const ChristmasImportLogs = lazy(() => import("./pages/admin/ChristmasImportLogs
 // Collection pages
 const MyCollection = lazy(() => import("./pages/MyCollection"));
 const MyCollectionOld = lazy(() => import("./pages/MyCollectionOld"));
+const CollectionItemPage = lazy(() => import("./pages/CollectionItemPage"));
 const CollectionOverview = lazy(() => import("./pages/CollectionOverview"));
 const CollectionChat = lazy(() => import("./pages/CollectionChat"));
 const PublicCollection = lazy(() => import("./pages/PublicCollection"));
@@ -332,6 +333,7 @@ const AppContent = () => {
         <Route path="/collection-overview" element={<ProtectedRoute><LazyRoute><CollectionOverview /></LazyRoute></ProtectedRoute>} />
         <Route path="/collection-chat" element={<ProtectedRoute><LazyRoute><CollectionChat /></LazyRoute></ProtectedRoute>} />
         <Route path="/my-collection" element={<ProtectedRoute><LazyRoute><MyCollection /></LazyRoute></ProtectedRoute>} />
+        <Route path="/my-collection/:id" element={<ProtectedRoute><LazyRoute><CollectionItemPage /></LazyRoute></ProtectedRoute>} />
         <Route path="/my-collection-old" element={<ProtectedRoute><LazyRoute><MyCollectionOld /></LazyRoute></ProtectedRoute>} />
         <Route path="/my-shop" element={<ProtectedRoute><LazyRoute><MyShop /></LazyRoute></ProtectedRoute>} />
         <Route path="/user-scans" element={<ProtectedRoute><LazyRoute><UserScans /></LazyRoute></ProtectedRoute>} />

@@ -86,20 +86,20 @@ export default function TshirtsShop() {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-50/30 dark:to-blue-950/20">
-        <div className="container py-8 space-y-8">
+        <div className="container py-4 md:py-8 space-y-4">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },
             { name: "T-Shirts Shop", url: "/shirts" }
           ]} />
 
-          {/* Hero Header */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 p-8 md:p-12 text-white">
+          {/* Hero Header - hidden on mobile for compact layout */}
+          <div className="hidden md:block relative overflow-hidden rounded-2xl p-12 text-white" style={{ background: 'linear-gradient(to bottom right, hsl(220, 80%, 55%), hsl(270, 70%, 50%))' }}>
             <div className="relative z-10 space-y-4">
               <div className="flex items-center gap-2">
                 <Shirt className="h-6 w-6" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Music Fashion</span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold">
+              <h1 className="text-5xl font-bold">
                 👕 T-Shirts of Sound
               </h1>
               <p className="text-xl text-white/90 max-w-2xl">

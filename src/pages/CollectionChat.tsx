@@ -288,7 +288,7 @@ const CollectionChat = () => {
                   </Avatar>
                   <div>
                     <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent text-lg">Magic Mike</span>
-                    <p className="text-xs text-muted-foreground font-normal">Jouw collectie-expert 🎩</p>
+                    <p className="text-xs text-muted-foreground font-normal">Jouw collectie-expert</p>
                   </div>
                 </CardTitle>
                 <div className="flex items-center gap-2">

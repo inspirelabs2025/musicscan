@@ -57,28 +57,26 @@ const Forum: React.FC = () => {
   ] as const;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-4 max-w-4xl">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Muziek Forum</h1>
-          <p className="text-muted-foreground">
-            Deel je gedachten over artiesten, albums en muziek met de community
-          </p>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h1 className="text-2xl font-bold text-foreground">Muziek Forum</h1>
         
         {user && (
-          <div className="flex gap-2">
-            <Button onClick={() => setIsCreateModalOpen(true)} className="flex items-center space-x-2">
+          <div className="flex gap-2 flex-shrink-0">
+            <Button size="sm" onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-1.5">
               <Plus className="h-4 w-4" />
-              <span>Nieuwe Discussie</span>
+              <span className="hidden sm:inline">Nieuwe Discussie</span>
+              <span className="sm:hidden">Nieuw</span>
             </Button>
             <Button
+              size="sm"
               onClick={handleCreateWeeklyDiscussion}
               variant="outline"
-              className="border-yellow-500/30 text-yellow-500 hover:bg-yellow-500/10"
+              className="border-primary/30 text-primary hover:bg-primary/10"
             >
-              🎵 Start Wekelijkse Discussie
+              🎵 <span className="hidden sm:inline">Wekelijkse Discussie</span>
+              <span className="sm:hidden">Wekelijks</span>
             </Button>
           </div>
         )}

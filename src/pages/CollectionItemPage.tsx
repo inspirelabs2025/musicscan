@@ -14,6 +14,7 @@ import {
   Barcode, Layers, Image as ImageIcon, Info
 } from "lucide-react";
 import { useState } from "react";
+import { ArtistContentCards } from "@/components/scanner/ArtistContentCards";
 
 export default function CollectionItemPage() {
   const { id } = useParams<{ id: string }>();
@@ -280,6 +281,14 @@ export default function CollectionItemPage() {
                 </div>
               )}
             </Card>
+          </>
+        )}
+
+        {/* Artist content: verhalen, singles, producten, etc. */}
+        {item.artist && (
+          <>
+            <Separator className="my-8" />
+            <ArtistContentCards artistName={item.artist} />
           </>
         )}
 

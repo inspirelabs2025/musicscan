@@ -58,15 +58,6 @@ const CATEGORIES = [
     gradient: "from-green-500/20 to-emerald-500/20",
     dbFilter: "merchandise"
   },
-  { 
-    key: "accessories", 
-    label: "Buttons & Badges", 
-    icon: CircleDot, 
-    description: "Muziek buttons en pins",
-    link: "/buttons",
-    gradient: "from-yellow-500/20 to-amber-500/20",
-    dbFilter: "buttons"
-  },
 ];
 
 type ShopProduct = {

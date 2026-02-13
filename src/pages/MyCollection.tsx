@@ -13,7 +13,7 @@ import { DiscogsConnectButton } from "@/components/collection/DiscogsConnectButt
 import { DiscogsExportDialog } from "@/components/collection/DiscogsExportDialog";
 import { useDiscogsConnection } from "@/hooks/useDiscogsConnection";
 
-const CollectionCard = ({ item }: { item: CollectionItem }) => {
+const CollectionCard = ({ item, onExportSingle }: { item: CollectionItem; onExportSingle?: (discogsId: number) => void }) => {
   const imageUrl = item.front_image || item.catalog_image || item.back_image || item.matrix_image;
   
   return (
@@ -41,6 +41,19 @@ const CollectionCard = ({ item }: { item: CollectionItem }) => {
             <><Disc3 className="w-3 h-3 mr-1" />Vinyl</>
           )}
         </Badge>
+        
+        {/* Export button overlay */}
+        {item.discogs_id && item.discogs_id > 0 && onExportSingle && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="absolute top-2 left-2 h-7 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm bg-background/70"
+            onClick={(e) => { e.stopPropagation(); onExportSingle(item.discogs_id!); }}
+          >
+            <Upload className="w-3 h-3 mr-1" />
+            Discogs
+          </Button>
+        )}
         
         {/* Price overlay */}
         {item.calculated_advice_price != null && item.calculated_advice_price > 0 && (
@@ -99,6 +112,7 @@ export default function MyCollection() {
   const [mediaFilter, setMediaFilter] = useState<"all" | "cd" | "vinyl">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "public" | "for_sale" | "private" | "ready_for_shop">("all");
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [singleExportId, setSingleExportId] = useState<number | null>(null);
 
   const { items, isLoading } = useMyCollection(statusFilter === "all" ? "all" : statusFilter);
   const { isConnected, handleCallback, isHandlingCallback } = useDiscogsConnection();
@@ -308,7 +322,14 @@ export default function MyCollection() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {filteredItems.map((item) => (
-                <CollectionCard key={item.id} item={item} />
+                <CollectionCard
+                  key={item.id}
+                  item={item}
+                  onExportSingle={isConnected ? (discogsId) => {
+                    setSingleExportId(discogsId);
+                    setShowExportDialog(true);
+                  } : undefined}
+                />
               ))}
             </div>
           )}
@@ -316,9 +337,12 @@ export default function MyCollection() {
 
         <DiscogsExportDialog
           open={showExportDialog}
-          onOpenChange={setShowExportDialog}
-          discogsIds={discogsEligibleIds}
-          itemCount={discogsEligibleIds.length}
+          onOpenChange={(open) => {
+            setShowExportDialog(open);
+            if (!open) setSingleExportId(null);
+          }}
+          discogsIds={singleExportId ? [singleExportId] : discogsEligibleIds}
+          itemCount={singleExportId ? 1 : discogsEligibleIds.length}
         />
       </div>
     </ErrorBoundary>

@@ -441,7 +441,7 @@ const AppContent = () => {
         {/* Community routes */}
         <Route path="/community" element={<ProtectedRoute><LazyRoute><Community /></LazyRoute></ProtectedRoute>} />
         <Route path="/social" element={<ProtectedRoute><LazyRoute><Social /></LazyRoute></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><LazyRoute><Profile /></LazyRoute></ProtectedRoute>} />
+        <Route path="/profile/:userId" element={<ProtectedRoute><LazyRoute><Profile /></LazyRoute></ProtectedRoute>} />
         <Route path="/forum" element={<ProtectedRoute><LazyRoute><Forum /></LazyRoute></ProtectedRoute>} />
         <Route path="/forum/:topicId" element={<ProtectedRoute><LazyRoute><ForumTopic /></LazyRoute></ProtectedRoute>} />
         <Route path="/fanwall" element={<LazyRoute><ArtistFanWallOverview /></LazyRoute>} />

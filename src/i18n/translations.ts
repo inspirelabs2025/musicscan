@@ -6,7 +6,7 @@ const translations = {
     nav: {
       home: "Home",
       shop: "Shop",
-      shopOverview: "Shop Overzicht",
+      shopOverview: "Shop",
       artPrints: "Art Prints",
       metalPrints: "Metal Prints",
       posters: "Posters",

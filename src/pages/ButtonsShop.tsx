@@ -89,14 +89,14 @@ export default function ButtonsShop() {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-50/30 dark:to-blue-950/20">
-        <div className="container py-8 space-y-8">
+        <div className="container py-4 md:py-8 space-y-4">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },
             { name: "Buttons Shop", url: "/buttons" }
           ]} />
 
-          {/* Hero Section with Visual Examples */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-12 text-white">
+          {/* Hero Section - hidden on mobile for compact layout */}
+          <div className="hidden md:block relative overflow-hidden rounded-2xl p-12 text-white" style={{ background: 'linear-gradient(to right, hsl(220, 80%, 50%), hsl(270, 70%, 50%), hsl(330, 80%, 50%))' }}>
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-4">

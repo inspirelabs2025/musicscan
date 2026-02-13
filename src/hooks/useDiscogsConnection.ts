@@ -34,7 +34,11 @@ export const useDiscogsConnection = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Niet ingelogd");
 
-      const callbackUrl = `${window.location.origin}/mijn-collectie?discogs=callback`;
+      // Always use published domain for OAuth callback
+      const origin = window.location.hostname.includes('lovableproject.com') 
+        ? 'https://musicscan.lovable.app' 
+        : window.location.origin;
+      const callbackUrl = `${origin}/my-collection?discogs=callback`;
 
       const res = await fetch(
         `https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/discogs-oauth-start`,

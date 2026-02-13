@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ScanLine, ShoppingCart, Trophy, Menu, X, User, LogIn, LogOut, Music, Images, Brain, MessageCircle, DollarSign, BarChart3, Newspaper, Headphones, Clock, Calendar, BookOpen, Sparkles, CircleDot, Youtube, Globe, Flag, Building2, Store, Library, Package, Heart, Users, Archive } from "lucide-react";
+import { Home, ScanLine, ShoppingCart, Trophy, Menu, X, User, LogIn, LogOut, Music, Images, Brain, MessageCircle, DollarSign, BarChart3, Newspaper, Headphones, Clock, Calendar, BookOpen, Sparkles, CircleDot, Youtube, Globe, Flag, Building2, Store, Library, Package, Heart, Users, Archive, Disc3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -29,6 +29,7 @@ export function MobileBottomNav() {
       items: [
         { icon: Brain, label: t('nav.smartScan'), url: "/ai-scan-v2" },
         { icon: Music, label: t('nav.myCollection'), url: "/my-collection" },
+        { icon: Disc3, label: "Mijn Discogs", url: "/mijn-discogs" },
         { icon: BarChart3, label: t('nav.collectionInsight'), url: "/collection-overview" },
       ],
       requiresAuth: true,

@@ -56,7 +56,7 @@ export const CategoryNavigation = ({
   ].filter(cat => cat.id === currentCategory || cat.count > 0);
 
   return (
-    <div className="mb-4">
+    <div className="mb-0">
       <div className="flex items-center gap-2 mb-4">
         <Palette className="h-5 w-5 text-primary" />
         <h2 className="text-lg font-semibold">Kies je kunststijl</h2>

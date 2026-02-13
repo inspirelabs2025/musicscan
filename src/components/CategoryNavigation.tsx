@@ -84,9 +84,6 @@ export const CategoryNavigation = ({
                       </p>
                     </div>
                   </div>
-                  <Badge className="bg-primary text-primary-foreground text-xs">
-                    Actief
-                  </Badge>
                 </div>
               </Card>
             );

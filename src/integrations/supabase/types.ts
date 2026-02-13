@@ -2374,6 +2374,30 @@ export type Database = {
           },
         ]
       }
+      discogs_oauth_temp: {
+        Row: {
+          created_at: string | null
+          id: string
+          oauth_token: string
+          oauth_token_secret: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          oauth_token: string
+          oauth_token_secret: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          oauth_token?: string
+          oauth_token_secret?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       discogs_price_listings: {
         Row: {
           condition: string
@@ -2607,6 +2631,39 @@ export type Database = {
           times_shown?: number | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      discogs_user_tokens: {
+        Row: {
+          connected_at: string | null
+          discogs_user_id: number | null
+          discogs_username: string | null
+          id: string
+          oauth_token: string
+          oauth_token_secret: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          connected_at?: string | null
+          discogs_user_id?: number | null
+          discogs_username?: string | null
+          id?: string
+          oauth_token: string
+          oauth_token_secret: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          connected_at?: string | null
+          discogs_user_id?: number | null
+          discogs_username?: string | null
+          id?: string
+          oauth_token?: string
+          oauth_token_secret?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }

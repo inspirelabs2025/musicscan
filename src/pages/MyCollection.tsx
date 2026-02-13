@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music, Search, X, Disc3, Disc, Euro, ShoppingCart, ScanLine, TrendingUp, Eye, EyeOff, Package } from "lucide-react";
+import { Music, Search, X, Disc3, Disc, Euro, ShoppingCart, ScanLine, TrendingUp, Eye, EyeOff, Package, BarChart3 } from "lucide-react";
 import { useMyCollection, CollectionItem } from "@/hooks/useMyCollection";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
@@ -158,12 +158,20 @@ export default function MyCollection() {
                 {items.length} items{totalValue > 0 ? ` · Totale waarde €${totalValue.toFixed(2)}` : ''}
               </p>
             </div>
-            <Button asChild>
-              <Link to="/ai-scan-v2" className="flex items-center gap-2">
-                <ScanLine className="w-4 h-4" />
-                Scan toevoegen
-              </Link>
-            </Button>
+            <div className="flex gap-2">
+              <Button asChild variant="outline">
+                <Link to="/collection-chat" className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Collectie Inzicht
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link to="/ai-scan-v2" className="flex items-center gap-2">
+                  <ScanLine className="w-4 h-4" />
+                  Scan toevoegen
+                </Link>
+              </Button>
+            </div>
           </div>
 
           {/* Quick Stats */}

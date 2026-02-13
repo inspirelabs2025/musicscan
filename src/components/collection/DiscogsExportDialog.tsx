@@ -79,7 +79,7 @@ export const DiscogsExportDialog = ({ open, onOpenChange, discogsIds, itemCount,
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Exporteer naar Discogs</DialogTitle>
           <DialogDescription>

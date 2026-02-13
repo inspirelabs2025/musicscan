@@ -225,18 +225,18 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
         ) : null}
       </div>
 
-      <div className="p-5 space-y-4 relative">
+      <div className="p-3 space-y-2 relative">
         {/* Shop information for marketplace items */}
         {isMarketplaceItem(item) && item.shop_name && (
-          <div className="mb-3 p-3 bg-gradient-to-r from-vinyl-purple/10 to-primary/10 rounded-lg border border-white/10">
+          <div className="p-2 bg-gradient-to-r from-vinyl-purple/10 to-primary/10 rounded-lg border border-white/10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Store className="w-4 h-4 text-vinyl-purple" />
+                <Store className="w-3.5 h-3.5 text-vinyl-purple" />
                 <div>
-                  <p className="text-sm font-semibold text-foreground">{item.shop_name}</p>
+                  <p className="text-xs font-semibold text-foreground">{item.shop_name}</p>
                   {item.shop_owner_name && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <User className="w-3 h-3" />
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <User className="w-2.5 h-2.5" />
                       {item.shop_owner_name}
                     </p>
                   )}
@@ -246,7 +246,7 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
                 size="sm"
                 variant="outline"
                 onClick={handleVisitShop}
-                className="text-xs bg-white/10 backdrop-blur-sm border-white/20 hover:bg-vinyl-purple/20 hover:border-vinyl-purple/50 transition-all duration-300"
+                className="text-[10px] h-7 px-2 bg-white/10 backdrop-blur-sm border-white/20 hover:bg-vinyl-purple/20 hover:border-vinyl-purple/50 transition-all duration-300"
               >
                 <Eye className="w-3 h-3 mr-1" />
                 Bezoek Shop
@@ -256,7 +256,7 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
         )}
 
         {/* Artist and title with enhanced typography */}
-        <div className="space-y-2">
+        <div className="space-y-1">
           {item.media_type === 'product' ? (
             <>
               <h3 className="font-bold text-base leading-tight line-clamp-2 text-foreground group-hover:text-vinyl-purple transition-colors duration-300">
@@ -289,13 +289,13 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
 
         {/* Enhanced shop description */}
         {item.shop_description && (
-          <div className="text-xs text-muted-foreground line-clamp-3 bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm p-3 rounded-lg border border-white/10 italic">
+          <div className="text-[10px] text-muted-foreground line-clamp-2 bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm p-2 rounded-lg border border-white/10 italic">
             💬 "{item.shop_description}"
           </div>
         )}
 
         {/* Enhanced action buttons */}
-        <div className="space-y-2 pt-2">
+        <div className="space-y-1.5 pt-1">
           <div className="flex gap-2">
             <Button
               size="sm"

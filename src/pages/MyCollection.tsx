@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music, Search, X, Disc3, Disc, Euro, ShoppingCart, ScanLine, TrendingUp, Eye, EyeOff, Package, BarChart3 } from "lucide-react";
+import { Music, Search, X, Disc3, Disc, Euro, ShoppingCart, ScanLine, TrendingUp, Eye, EyeOff, Package, BarChart3, Upload } from "lucide-react";
 import { useMyCollection, CollectionItem } from "@/hooks/useMyCollection";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ErrorBoundary, CollectionErrorFallback } from "@/components/ErrorBoundary";
+import { DiscogsConnectButton } from "@/components/collection/DiscogsConnectButton";
+import { DiscogsExportDialog } from "@/components/collection/DiscogsExportDialog";
+import { useDiscogsConnection } from "@/hooks/useDiscogsConnection";
 
 const CollectionCard = ({ item }: { item: CollectionItem }) => {
   const imageUrl = item.front_image || item.catalog_image || item.back_image || item.matrix_image;
@@ -90,12 +93,31 @@ const CollectionCard = ({ item }: { item: CollectionItem }) => {
 
 export default function MyCollection() {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
   const [mediaFilter, setMediaFilter] = useState<"all" | "cd" | "vinyl">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "public" | "for_sale" | "private" | "ready_for_shop">("all");
+  const [showExportDialog, setShowExportDialog] = useState(false);
 
   const { items, isLoading } = useMyCollection(statusFilter === "all" ? "all" : statusFilter);
+  const { isConnected, handleCallback, isHandlingCallback } = useDiscogsConnection();
+
+  // Handle Discogs OAuth callback
+  useEffect(() => {
+    const discogsParam = searchParams.get("discogs");
+    const oauthToken = searchParams.get("oauth_token");
+    const oauthVerifier = searchParams.get("oauth_verifier");
+
+    if (discogsParam === "callback" && oauthToken && oauthVerifier) {
+      handleCallback({ oauth_token: oauthToken, oauth_verifier: oauthVerifier });
+      // Clean URL
+      searchParams.delete("discogs");
+      searchParams.delete("oauth_token");
+      searchParams.delete("oauth_verifier");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
 
   // Client-side filtering for search and media type, sorted newest first
   const filteredItems = items
@@ -118,6 +140,9 @@ export default function MyCollection() {
   const cdCount = items.filter(i => i.media_type === 'cd').length;
   const vinylCount = items.filter(i => i.media_type === 'vinyl').length;
   const forSaleCount = items.filter(i => i.is_for_sale).length;
+  const discogsEligibleIds = items
+    .filter(i => i.discogs_id && i.discogs_id > 0)
+    .map(i => i.discogs_id as number);
 
   const handleSearch = () => setActiveSearch(searchTerm);
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -158,12 +183,21 @@ export default function MyCollection() {
                 {items.length} items{totalValue > 0 ? ` · Totale waarde €${totalValue.toFixed(2)}` : ''}
               </p>
             </div>
-            <Button asChild>
-              <Link to="/collection-chat" className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                Collectie Inzicht
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <DiscogsConnectButton />
+              {isConnected && discogsEligibleIds.length > 0 && (
+                <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)}>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Exporteer ({discogsEligibleIds.length})
+                </Button>
+              )}
+              <Button asChild>
+                <Link to="/collection-chat" className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Collectie Inzicht
+                </Link>
+              </Button>
+            </div>
           </div>
 
           {/* Quick Stats */}
@@ -279,6 +313,13 @@ export default function MyCollection() {
             </div>
           )}
         </div>
+
+        <DiscogsExportDialog
+          open={showExportDialog}
+          onOpenChange={setShowExportDialog}
+          discogsIds={discogsEligibleIds}
+          itemCount={discogsEligibleIds.length}
+        />
       </div>
     </ErrorBoundary>
   );

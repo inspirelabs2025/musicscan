@@ -720,3 +720,13 @@ verify_jwt = false
 # Scan Chat - release identification via AI chat
 [functions.scan-chat]
 verify_jwt = false
+
+# Discogs OAuth & Export
+[functions.discogs-oauth-start]
+verify_jwt = false
+
+[functions.discogs-oauth-callback]
+verify_jwt = false
+
+[functions.discogs-collection-export]
+verify_jwt = false

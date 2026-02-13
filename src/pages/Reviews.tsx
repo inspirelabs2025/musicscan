@@ -50,14 +50,14 @@ export default function Reviews() {
 
         {/* Filters */}
         <div className="container mx-auto max-w-6xl px-4 py-8">
-          <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex flex-wrap gap-3 items-center">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Filter className="h-4 w-4" />
               <span>Filter op:</span>
             </div>
             
             <Select value={genreFilter} onValueChange={setGenreFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[160px]">
                 <SelectValue placeholder="Genre" />
               </SelectTrigger>
               <SelectContent>
@@ -69,7 +69,7 @@ export default function Reviews() {
             </Select>
 
             <Select value={formatFilter} onValueChange={setFormatFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[160px]">
                 <SelectValue placeholder="Format" />
               </SelectTrigger>
               <SelectContent>

@@ -340,7 +340,7 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
       </div>
 
       {/* Bottom accent line */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold"></div>
+      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold z-20"></div>
     </Card>
   );
 };

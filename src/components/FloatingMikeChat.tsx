@@ -405,7 +405,7 @@ ${recentItems}
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-white/80 hover:text-white hover:bg-white/10"
+                className="h-8 w-8 text-black hover:text-black hover:bg-black/10"
                 onClick={() => setIsOpen(false)}
               >
                 <X className="h-4 w-4" />

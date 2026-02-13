@@ -158,7 +158,7 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
         <Sparkles className="w-4 h-4 text-vinyl-gold animate-pulse" />
       </div>
 
-      <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/10">
+      <div className={`${imageUrl && !imageError ? 'aspect-square' : 'aspect-[3/1]'} relative overflow-hidden bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/10`}>
         {imageUrl && !imageError ? (
           <img
             src={imageUrl}
@@ -169,12 +169,7 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-vinyl-purple/30 to-vinyl-gold/20 relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent"></div>
-            <MediaIcon className="w-16 h-16 text-white/60 relative z-10 group-hover:animate-pulse" />
-            {/* Vinyl record effect */}
-            {item.media_type === 'vinyl' && (
-              <div className="absolute inset-0 rounded-full border-4 border-white/20 m-8 group-hover:animate-spin-slow"></div>
-            )}
+            <MediaIcon className="w-10 h-10 text-white/60 relative z-10" />
           </div>
         )}
         

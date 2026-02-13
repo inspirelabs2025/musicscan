@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ShoppingCart, Menu, X, Images, Brain, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy, Users, DollarSign, Archive, Clock, Heart, Package, Headphones, Calendar, BookOpen, Sparkles, CircleDot, Youtube, Globe, Flag, Building2 } from "lucide-react";
+import { Home, ShoppingCart, Menu, X, Images, Brain, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy, Users, DollarSign, Archive, Clock, Heart, Package, Headphones, Calendar, BookOpen, Sparkles, CircleDot, Youtube, Globe, Flag, Building2, Disc3 } from "lucide-react";
 import { NotificationsDropdown } from "@/components/NotificationsDropdown";
 import {
   NavigationMenu,
@@ -85,6 +85,7 @@ export function Navigation() {
   const scanCollectionMenuItems = [
     { title: t('nav.smartScan'), url: "/ai-scan-v2", icon: Brain },
     { title: t('nav.myCollection'), url: "/my-collection", icon: Music },
+    { title: "Mijn Discogs", url: "/mijn-discogs", icon: Disc3 },
     { title: t('nav.collectionInsight'), url: "/collection-overview", icon: BarChart3 }
   ];
 

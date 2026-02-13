@@ -89,7 +89,7 @@ export default function ArtShop() {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20">
-        <div className="container py-8 space-y-8">
+        <div className="container py-8 space-y-4">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },
             { name: "Art Shop", url: "/art-shop" }

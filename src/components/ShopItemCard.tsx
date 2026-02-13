@@ -147,11 +147,11 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
 
   return (
     <Card 
-      className="group relative overflow-hidden bg-gradient-to-br from-white/10 to-card/80 backdrop-blur-sm border border-white/20 hover:border-vinyl-purple/50 transition-all duration-500 hover:shadow-2xl hover:shadow-vinyl-purple/25 hover-scale animate-fade-in cursor-pointer"
+      className="group relative overflow-hidden bg-gradient-to-br from-white/10 to-card/80 backdrop-blur-sm border border-vinyl-purple/50 shadow-2xl shadow-vinyl-purple/25 transition-all duration-500 hover-scale animate-fade-in cursor-pointer"
       onClick={handleCardClick}
     >
-      {/* Animated background glow */}
-      <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/10 via-transparent to-vinyl-gold/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      {/* Background glow - always visible */}
+      <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/10 via-transparent to-vinyl-gold/10 transition-opacity duration-500"></div>
       
       {/* Sparkle effects */}
       <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500">

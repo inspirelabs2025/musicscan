@@ -318,13 +318,6 @@ const CollectionChat = () => {
                 {messages.length === 0 ? (
                   /* Welcome Screen */
                   <div className="flex flex-col items-center justify-center py-10 space-y-8 animate-fade-in">
-                    {/* Welcome Icon */}
-                    <div className="relative">
-                      <div className="p-5 bg-gradient-to-br from-amber-500/20 to-orange-600/20 rounded-3xl border border-amber-400/30 shadow-xl">
-                        <Brain className="w-14 h-14 text-amber-500" />
-                      </div>
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-card animate-pulse" />
-                    </div>
 
                     <div className="text-center space-y-2 max-w-md">
                       <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">

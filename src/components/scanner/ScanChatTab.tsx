@@ -751,29 +751,39 @@ export function ScanChatTab() {
       let collectionPrefix = '';
       if (user?.id) {
         try {
-          const [totalRes, cdRes, vinylRes, aiRes, valueRes, topArtistsRes] = await Promise.all([
-            supabase.from('unified_scans').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-            supabase.from('unified_scans').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('source_table', 'cd_scan'),
-            supabase.from('unified_scans').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('source_table', 'vinyl2_scan'),
-            supabase.from('unified_scans').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('source_table', 'ai_scan_results'),
-            supabase.from('unified_scans').select('calculated_advice_price').eq('user_id', user.id).not('calculated_advice_price', 'is', null).gt('calculated_advice_price', 0),
-            supabase.from('unified_scans').select('artist, title, genre, year, calculated_advice_price, media_type, source_table').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50),
+          // Query actual tables instead of non-existent unified_scans view
+          const [cdCountRes, vinylCountRes, aiCountRes, cdItemsRes, vinylItemsRes, aiItemsRes] = await Promise.all([
+            supabase.from('cd_scan').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+            supabase.from('vinyl2_scan').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+            supabase.from('ai_scan_results').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+            supabase.from('cd_scan').select('artist, title, genre, year, calculated_advice_price').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50),
+            supabase.from('vinyl2_scan').select('artist, title, genre, year, calculated_advice_price').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50),
+            supabase.from('ai_scan_results').select('artist, title, genre, year').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50),
           ]);
-          const total = totalRes.count || 0;
+          const cdCount = cdCountRes.count || 0;
+          const vinylCount = vinylCountRes.count || 0;
+          const aiCount = aiCountRes.count || 0;
+          const total = cdCount + vinylCount + aiCount;
           if (total > 0) {
-            const totalValue = valueRes.data?.reduce((sum, item) => sum + (item.calculated_advice_price || 0), 0) || 0;
+            // Merge all items for analysis
+            const allItems = [
+              ...(cdItemsRes.data || []).map(i => ({ ...i, media_type: 'CD' })),
+              ...(vinylItemsRes.data || []).map(i => ({ ...i, media_type: 'Vinyl' })),
+              ...(aiItemsRes.data || []).map(i => ({ ...i, media_type: 'AI-scan', calculated_advice_price: null })),
+            ];
+            const totalValue = allItems.reduce((sum, item) => sum + (item.calculated_advice_price || 0), 0);
             const artistCounts: Record<string, number> = {};
             const genres: Record<string, number> = {};
-            topArtistsRes.data?.forEach(item => {
+            allItems.forEach(item => {
               if (item.artist) artistCounts[item.artist] = (artistCounts[item.artist] || 0) + 1;
               if (item.genre) genres[item.genre] = (genres[item.genre] || 0) + 1;
             });
             const topArtists = Object.entries(artistCounts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, count]) => `${name} (${count}x)`).join(', ');
             const topGenres = Object.entries(genres).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name]) => name).join(', ');
-            const recentItems = topArtistsRes.data?.slice(0, 10).map(i =>
-              `- ${i.artist || '?'} — ${i.title || '?'} (${i.media_type || '?'}, ${i.year || '?'})${i.calculated_advice_price ? ` €${i.calculated_advice_price.toFixed(2)}` : ''}`
+            const recentItems = allItems.slice(0, 10).map(i =>
+              `- ${i.artist || '?'} — ${i.title || '?'} (${i.media_type}, ${i.year || '?'})${i.calculated_advice_price ? ` €${Number(i.calculated_advice_price).toFixed(2)}` : ''}`
             ).join('\n') || '';
-            collectionPrefix = `[COLLECTIE_CONTEXT]\nTotaal: ${total} items (${cdRes.count || 0} CD's, ${vinylRes.count || 0} vinyl, ${aiRes.count || 0} AI-scans)\nGeschatte totaalwaarde: €${totalValue.toFixed(2)}\nTop artiesten: ${topArtists || 'Geen data'}\nTop genres: ${topGenres || 'Geen data'}\n\nLaatste 10 items:\n${recentItems}\n[/COLLECTIE_CONTEXT]\n\n`;
+            collectionPrefix = `[COLLECTIE_CONTEXT]\nTotaal: ${total} items (${cdCount} CD's, ${vinylCount} vinyl, ${aiCount} AI-scans)\nGeschatte totaalwaarde: €${totalValue.toFixed(2)}\nTop artiesten: ${topArtists || 'Geen data'}\nTop genres: ${topGenres || 'Geen data'}\n\nLaatste 10 items:\n${recentItems}\n[/COLLECTIE_CONTEXT]\n\n`;
           }
         } catch (err) {
           console.error('[scan-chat] Failed to fetch collection context:', err);

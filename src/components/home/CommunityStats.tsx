@@ -5,14 +5,15 @@ export const CommunityStats = () => {
   const { data: stats } = useQuery({
     queryKey: ['community-stats'],
     queryFn: async () => {
-      const [scansResult, storiesResult, shopsResult] = await Promise.all([
-        supabase.from('unified_scans').select('id', { count: 'exact', head: true }),
+      const [cdResult, vinylResult, storiesResult, shopsResult] = await Promise.all([
+        supabase.from('cd_scan').select('id', { count: 'exact', head: true }),
+        supabase.from('vinyl2_scan').select('id', { count: 'exact', head: true }),
         supabase.from('music_stories').select('id', { count: 'exact', head: true }).eq('published', true),
         supabase.from('user_shops').select('id', { count: 'exact', head: true }).eq('is_active', true)
       ]);
 
       return {
-        scans: scansResult.count || 0,
+        scans: (cdResult.count || 0) + (vinylResult.count || 0),
         stories: storiesResult.count || 0,
         shops: shopsResult.count || 0
       };

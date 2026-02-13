@@ -162,50 +162,27 @@ export default function ButtonsShop() {
             <div className="absolute -left-20 -top-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
           </div>
 
-          {/* Size Info Banner with Visual Reference */}
-          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-2">
-            <CardContent className="pt-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <div 
-                      className="w-[56px] h-[56px] rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg"
-                      style={{ boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)' }}
-                    >
-                      3.5
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                      <Pin className="h-2 w-2 text-gray-600 dark:text-gray-300" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-lg">3.5cm - Compact</p>
-                    <p className="text-sm text-muted-foreground">Perfect voor caps, tassen & hoedjes</p>
-                    <p className="text-xs text-muted-foreground mt-1">📍 Subtiel maar opvallend</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <div 
-                      className="w-[64px] h-[64px] rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold shadow-lg"
-                      style={{ boxShadow: '0 4px 12px rgba(168, 85, 247, 0.4)' }}
-                    >
-                      4
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                      <Pin className="h-2 w-2 text-gray-600 dark:text-gray-300" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-lg">4cm - Standaard</p>
-                    <p className="text-sm text-muted-foreground">Ideaal voor jackets & rugzakken</p>
-                    <p className="text-xs text-muted-foreground mt-1">⭐ Beste zichtbaarheid</p>
-                  </div>
-                </div>
+          {/* Size Info Banner - compact */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center gap-2 p-2 rounded-lg border bg-card">
+              <div className="w-8 h-8 md:w-10 md:h-10 shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs md:text-sm font-bold">
+                3.5
               </div>
-            </CardContent>
-          </Card>
+              <div className="min-w-0">
+                <p className="font-semibold text-xs md:text-sm">3.5cm - Compact</p>
+                <p className="text-[10px] md:text-xs text-muted-foreground truncate">Caps, tassen & hoedjes</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 p-2 rounded-lg border bg-card">
+              <div className="w-9 h-9 md:w-11 md:h-11 shrink-0 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs md:text-sm font-bold">
+                4
+              </div>
+              <div className="min-w-0">
+                <p className="font-semibold text-xs md:text-sm">4cm - Standaard</p>
+                <p className="text-[10px] md:text-xs text-muted-foreground truncate">Jackets & rugzakken</p>
+              </div>
+            </div>
+          </div>
 
           {/* Filters & Search */}
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">

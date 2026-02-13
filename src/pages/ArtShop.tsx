@@ -107,38 +107,38 @@ export default function ArtShop() {
           />
 
           {/* Hero Header */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-vinyl-purple to-accent p-5 md:p-12 text-white">
-            <div className="relative z-10 space-y-3 md:space-y-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 md:h-6 md:w-6" />
-                <span className="text-xs md:text-sm font-semibold uppercase tracking-wide">Premium Art Collection</span>
+          <div className="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-vinyl-purple to-accent p-4 md:p-12 text-white">
+            <div className="relative z-10 space-y-2 md:space-y-4">
+              <div className="hidden md:flex items-center gap-2">
+                <Sparkles className="h-6 w-6" />
+                <span className="text-sm font-semibold uppercase tracking-wide">Premium Art Collection</span>
               </div>
-              <h1 className="text-2xl md:text-5xl font-bold">
+              <h1 className="text-xl md:text-5xl font-bold">
                 Metaalprints van Albumcovers
               </h1>
-              <p className="text-base md:text-xl text-white/90 max-w-2xl">
+              <p className="text-sm md:text-xl text-white/90 max-w-2xl hidden md:block">
                 Museum-kwaliteit prints van iconische albumcovers op premium aluminium. 
                 Elke print is een kunstwerk voor aan de muur.
               </p>
               
               {/* Stats Row */}
-              <div className="flex flex-wrap gap-6 pt-4">
-                <div className="space-y-1">
-                  <div className="text-3xl font-bold">{productCounts?.metalPrintsCount || 0}</div>
-                  <div className="text-sm text-white/80">Kunstwerken</div>
+              <div className="flex flex-wrap gap-4 md:gap-6 pt-1 md:pt-4">
+                <div className="space-y-0 md:space-y-1">
+                  <div className="text-xl md:text-3xl font-bold">{productCounts?.metalPrintsCount || 0}</div>
+                  <div className="text-xs md:text-sm text-white/80">Kunstwerken</div>
                 </div>
-                <div className="space-y-1">
-                  <div className="text-3xl font-bold">€{avgPrice}</div>
-                  <div className="text-sm text-white/80">Gem. Prijs</div>
+                <div className="space-y-0 md:space-y-1">
+                  <div className="text-xl md:text-3xl font-bold">€{avgPrice}</div>
+                  <div className="text-xs md:text-sm text-white/80">Gem. Prijs</div>
                 </div>
-                <div className="space-y-1">
-                  <div className="text-3xl font-bold">{featuredCount}</div>
-                  <div className="text-sm text-white/80">Featured</div>
+                <div className="space-y-0 md:space-y-1">
+                  <div className="text-xl md:text-3xl font-bold">{featuredCount}</div>
+                  <div className="text-xs md:text-sm text-white/80">Featured</div>
                 </div>
                 {onSaleCount > 0 && (
-                  <div className="space-y-1">
-                    <div className="text-3xl font-bold">{onSaleCount}</div>
-                    <div className="text-sm text-white/80">In Aanbieding</div>
+                  <div className="space-y-0 md:space-y-1">
+                    <div className="text-xl md:text-3xl font-bold">{onSaleCount}</div>
+                    <div className="text-xs md:text-sm text-white/80">In Aanbieding</div>
                   </div>
                 )}
               </div>

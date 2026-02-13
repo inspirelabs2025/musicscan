@@ -730,3 +730,6 @@ verify_jwt = false
 
 [functions.discogs-collection-export]
 verify_jwt = false
+
+[functions.fetch-discogs-user-data]
+verify_jwt = false

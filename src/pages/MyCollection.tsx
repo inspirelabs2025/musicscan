@@ -207,7 +207,8 @@ export default function MyCollection() {
           </div>
 
           {/* Search & Filters */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          {/* Search & Filters */}
+          <div className="flex flex-col gap-3 mb-6">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -223,27 +224,29 @@ export default function MyCollection() {
                 </Button>
               )}
             </div>
-            <Select value={mediaFilter} onValueChange={(v) => setMediaFilter(v as any)}>
-              <SelectTrigger className="w-[130px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Alles</SelectItem>
-                <SelectItem value="cd">CD</SelectItem>
-                <SelectItem value="vinyl">Vinyl</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Alle items</SelectItem>
-                <SelectItem value="for_sale">Te koop</SelectItem>
-                <SelectItem value="public">Publiek</SelectItem>
-                <SelectItem value="private">Privé</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-3">
+              <Select value={mediaFilter} onValueChange={(v) => setMediaFilter(v as any)}>
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alles</SelectItem>
+                  <SelectItem value="cd">CD</SelectItem>
+                  <SelectItem value="vinyl">Vinyl</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle items</SelectItem>
+                  <SelectItem value="for_sale">Te koop</SelectItem>
+                  <SelectItem value="public">Publiek</SelectItem>
+                  <SelectItem value="private">Privé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Collection Grid */}

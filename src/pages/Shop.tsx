@@ -279,7 +279,7 @@ const Shop = () => {
               </div>
               <div>
                 <h2 className="text-2xl font-bold">{category.label}</h2>
-                <p className="text-muted-foreground">{category.description} • {categoryCount} items</p>
+                <p className="text-muted-foreground">{category.description}</p>
               </div>
             </div>
             {hasMore && (

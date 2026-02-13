@@ -9,6 +9,9 @@ export const useVersionCheck = (intervalMs = 5 * 60 * 1000) => {
   const mismatchCount = useRef(0);
 
   const checkVersion = useCallback(async () => {
+    // Skip version check entirely if no build version (dev/preview)
+    if (!BUILD_VERSION) return;
+    
     try {
       const resp = await fetch(`/index.html?_cb=${Date.now()}`, {
         cache: 'no-store',
@@ -17,11 +20,9 @@ export const useVersionCheck = (intervalMs = 5 * 60 * 1000) => {
       if (!resp.ok) return;
       const html = await resp.text();
 
-      // Check for JS bundle hash change — if our current script src doesn't exist in new HTML
-      const scriptMatch = html.match(/src="(\/src\/main\.tsx|\/assets\/index-[^"]+\.js)"/);
       const metaMatch = html.match(/name="build-version"\s+content="([^"]+)"/);
       
-      if (metaMatch?.[1] && BUILD_VERSION && metaMatch[1] !== BUILD_VERSION) {
+      if (metaMatch?.[1] && metaMatch[1] !== BUILD_VERSION) {
         mismatchCount.current += 1;
         setUpdateAvailable(true);
         if (mismatchCount.current >= 3) {

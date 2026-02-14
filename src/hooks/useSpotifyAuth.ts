@@ -59,7 +59,8 @@ export const useSpotifyAuth = () => {
       console.log('✅ Got Spotify Client ID:', clientId);
 
       // Redirect URL (must match Spotify app settings exactly)
-      const redirectUri = `${window.location.origin}/auth/spotify/callback`;
+      // Use musicscan.app without www to match Spotify Dashboard config
+      const redirectUri = 'https://musicscan.app/auth/spotify/callback';
       console.log('🔗 Using redirect URI:', redirectUri);
       
       const params = new URLSearchParams({

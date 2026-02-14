@@ -95,6 +95,36 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          metadata: Json | null
+          source_function: string | null
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          metadata?: Json | null
+          source_function?: string | null
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          metadata?: Json | null
+          source_function?: string | null
+        }
+        Relationships: []
+      }
       ai_agent_knowledge: {
         Row: {
           agent_id: string
@@ -10300,6 +10330,15 @@ export type Database = {
       increment_usage: {
         Args: { p_increment?: number; p_usage_type: string; p_user_id: string }
         Returns: boolean
+      }
+      insert_admin_alert_if_new: {
+        Args: {
+          p_alert_type: string
+          p_message: string
+          p_metadata?: Json
+          p_source_function: string
+        }
+        Returns: undefined
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_conversation_participant: {

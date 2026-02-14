@@ -1,3 +1,4 @@
+import { AdminCreditAlertBanner } from './AdminCreditAlertBanner';
 import { 
   LayoutDashboard, 
   Package, 
@@ -198,6 +199,12 @@ export function AdminSidebar() {
         {!collapsed && <h2 className="text-lg font-semibold">Admin</h2>}
         <SidebarTrigger />
       </div>
+
+      {!collapsed && (
+        <div className="px-3 pt-3">
+          <AdminCreditAlertBanner />
+        </div>
+      )}
 
       <SidebarContent>
         {menuItems.map((section) => {

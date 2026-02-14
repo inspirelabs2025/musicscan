@@ -29,25 +29,6 @@ export const useSpotifyAuth = () => {
     isConnected: false,
   });
 
-  const generateCodeVerifier = () => {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return btoa(String.fromCharCode(...array))
-      .replace(/=/g, '')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_');
-  };
-
-  const generateCodeChallenge = async (verifier: string) => {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(verifier);
-    const digest = await crypto.subtle.digest('SHA-256', data);
-    return btoa(String.fromCharCode(...new Uint8Array(digest)))
-      .replace(/=/g, '')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_');
-  };
-
   const connectSpotify = async () => {
     if (!user) {
       toast.error('Je moet ingelogd zijn om Spotify te koppelen');
@@ -77,24 +58,14 @@ export const useSpotifyAuth = () => {
       const clientId = configData.client_id;
       console.log('✅ Got Spotify Client ID:', clientId);
 
-      const codeVerifier = generateCodeVerifier();
-      const codeChallenge = await generateCodeChallenge(codeVerifier);
-      
       // Redirect URL (must match Spotify app settings exactly)
       const redirectUri = `${window.location.origin}/auth/spotify/callback`;
       console.log('🔗 Using redirect URI:', redirectUri);
-      
-      // Store both code verifier and redirect URI for later use
-      localStorage.setItem('spotify_code_verifier', codeVerifier);
-      localStorage.setItem('spotify_redirect_uri', redirectUri);
-      console.log('💾 Stored auth data in localStorage');
       
       const params = new URLSearchParams({
         client_id: clientId,
         response_type: 'code',
         redirect_uri: redirectUri,
-        code_challenge_method: 'S256',
-        code_challenge: codeChallenge,
         scope: [
           'user-read-private',
           'user-read-email',
@@ -178,25 +149,13 @@ export const useSpotifyAuth = () => {
       return;
     }
 
-    const codeVerifier = localStorage.getItem('spotify_code_verifier');
-    const storedRedirectUri = localStorage.getItem('spotify_redirect_uri');
-    
-    if (!codeVerifier) {
-      console.error('❌ Code verifier not found in localStorage');
-      toast.error('Authenticatie gegevens niet gevonden');
-      return;
-    }
-
-    // Use stored redirect URI if available, fallback to current origin
-    const redirectUri = storedRedirectUri || `${window.location.origin}/auth/spotify/callback`;
-    console.log('✅ Using stored redirect URI:', redirectUri);
+    const redirectUri = `${window.location.origin}/auth/spotify/callback`;
     console.log('🔄 Starting token exchange with Edge Function...');
 
     try {
       const { data, error } = await supabase.functions.invoke('spotify-auth', {
         body: {
           code,
-          code_verifier: codeVerifier,
           redirect_uri: redirectUri,
         },
       });
@@ -240,10 +199,7 @@ export const useSpotifyAuth = () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       console.log('🔄 Invalidated profile cache');
 
-      // Clean up localStorage
-      localStorage.removeItem('spotify_code_verifier');
-      localStorage.removeItem('spotify_redirect_uri');
-      console.log('🧹 Cleaned up localStorage auth data');
+      console.log('✅ Spotify connection complete');
       
       setState(prev => ({ ...prev, isConnected: true }));
       toast.success('Spotify succesvol gekoppeld!');
@@ -370,27 +326,11 @@ export const useSpotifyAuth = () => {
     }
   };
 
-  const getManualSpotifyUrl = () => {
-    const storedRedirectUri = localStorage.getItem('spotify_redirect_uri');
-    const codeVerifier = localStorage.getItem('spotify_code_verifier');
-    
-    if (!storedRedirectUri || !codeVerifier) {
-      console.log('⚠️ No stored auth data for manual URL');
-      return null;
-    }
-    
-    // We would need to get the client ID and regenerate the URL
-    // For now, return null - the user should try connecting again
-    console.log('📋 Manual URL requested but requires fresh auth flow');
-    return null;
-  };
-
   return {
     ...state,
     connectSpotify,
     disconnectSpotify,
     handleCallback,
     syncSpotifyData,
-    getManualSpotifyUrl,
   };
 };

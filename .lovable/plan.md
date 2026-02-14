@@ -1,38 +1,53 @@
 
 
-## SoundScan knop naast Smart Scan titel
+# Spotify Profiel Pagina Reparatie en Uitbreiding
 
-De muziekherkenningsfunctie (microfoon/luisteren) bestaat al in de chat-component maar is alleen bereikbaar via een klein microfoon-icoontje onderaan de chat. De gebruiker wil deze als prominente "SoundScan" knop naast de "Smart Scan" titel, die bij aanklikken direct de luisterfunctie start.
+## Probleem
+De Spotify Profiel pagina bestaat al (`src/pages/SpotifyProfile.tsx`) maar is niet bereikbaar:
+- **Route mismatch**: App.tsx registreert de route als `/spotify/profile`, maar alle links (Navigation, SpotifyWidget, SpotifyCallback) verwijzen naar `/spotify-profile`
+- Hierdoor krijg je een 404
 
-### Wat er verandert
+## Oplossing
 
-**Pagina header wordt twee knoppen naast elkaar:**
-- "Smart Scan" (bestaand, huidige scanner)  
-- "SoundScan" (nieuw, start direct muziekherkenning)
+### Stap 1: Route fix
+Alle verwijzingen consistent maken op `/spotify-profile`:
+- **App.tsx**: Route wijzigen van `/spotify/profile` naar `/spotify-profile`
 
-Bij klikken op SoundScan wordt direct de microfoon geactiveerd en begint de muziekherkenning (10 seconden luisteren).
+### Stap 2: Uitbreiding met meer Spotify data
+De bestaande pagina verrijken met extra secties:
 
-### Technische aanpak
+**Nieuwe secties toevoegen:**
+1. **Profiel Header** - Spotify avatar, display name, land, aantal followers (data al beschikbaar via `spotify-sync`)
+2. **Recently Played** - Laatst beluisterde tracks ophalen via Spotify API (`/v1/me/player/recently-played`)
+3. **Audio Features Analyse** - Danceability, energy, valence gemiddelden visualiseren met progress bars (geeft inzicht in muziekstijl)
+4. **Decennia Verdeling** - Pie chart (Recharts) van in welke decennia de verzamelde tracks vallen
+5. **Luister-DNA Samenvatting** - Korte AI-gegenereerde samenvatting van het muziekprofiel
 
-**1. `ScanChatTab.tsx` - Exposed trigger via prop/ref**
-- Een optionele `autoStartListening` prop toevoegen
-- Bij mount: als `autoStartListening` true is, direct `startListening()` aanroepen
-- Dit voorkomt dat we de hele listening-logica moeten dupliceren
+### Stap 3: Edge function uitbreiden
+`spotify-sync` uitbreiden met:
+- **Recently played tracks** ophalen en opslaan
+- **Audio features** ophalen voor opgeslagen tracks (batch via `/v1/audio-features`)
+- Spotify profielfoto + land opslaan in `profiles` tabel
 
-**2. `AIScanV2.tsx` - Header aanpassen**
-- Naast "Smart Scan" titel een "SoundScan" knop toevoegen met een `Mic` icoon
-- State `soundScanActive` toevoegen
-- Bij klik op SoundScan: `soundScanActive` op true zetten, wat doorgestuurd wordt als prop naar `ScanChatTab`
-- Styling: vergelijkbare badge-stijl als Smart Scan, met een ander kleuraccent (amber/goud voor geluid)
+### Stap 4: Database uitbreiding
+- Kolommen toevoegen aan `profiles`: `spotify_avatar_url`, `spotify_country`, `spotify_followers`
+- Nieuwe tabel `spotify_recently_played` voor recent beluisterde tracks
 
-**3. Visuele layout header**
-```
-[Brain] Smart Scan [BETA]  |  [Mic] SoundScan
-```
-- Twee klikbare tabs/knoppen naast elkaar
-- SoundScan krijgt een amber/goud kleur om het te onderscheiden
-- Bij actieve luistersessie: pulserende animatie op de SoundScan knop
+## Technische Details
 
-**Bestanden:**
-- `src/pages/AIScanV2.tsx` - Header aanpassen met SoundScan knop + state
-- `src/components/scanner/ScanChatTab.tsx` - `autoStartListening` prop accepteren en bij mount triggeren
+### Bestanden die worden aangepast:
+| Bestand | Wijziging |
+|---------|-----------|
+| `src/App.tsx` | Route `/spotify/profile` naar `/spotify-profile` |
+| `src/pages/SpotifyProfile.tsx` | Nieuwe secties: profiel header, recently played, audio features chart, decennia chart, muziek-DNA |
+| `supabase/functions/spotify-sync/index.ts` | Recently played + audio features + profieldata ophalen |
+| `src/hooks/useSpotifyData.ts` | Nieuwe hooks: `useSpotifyRecentlyPlayed`, audio features aggregatie |
+| Database migratie | `spotify_recently_played` tabel + extra `profiles` kolommen |
+
+### Visuele opbouw (van boven naar beneden):
+1. Grote Spotify profiel header met avatar en stats
+2. 4 stat-kaarten (tracks, playlists, gem. duur, explicit %)
+3. Tabs: Overzicht | Top Muziek | Playlists | Insights
+   - Overzicht krijgt: Top Genres + Recently Played + Decennia chart
+   - Insights krijgt: Audio Features bars (energy, danceability, valence) + Muziek-DNA tekst
+

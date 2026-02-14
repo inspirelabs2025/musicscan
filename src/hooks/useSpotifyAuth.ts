@@ -100,7 +100,7 @@ export const useSpotifyAuth = () => {
       return;
     }
 
-    const redirectUri = `${window.location.origin}/auth/spotify/callback`;
+    const redirectUri = 'https://musicscan.app/auth/spotify/callback';
     console.log('🔄 Starting token exchange with Edge Function...');
 
     try {

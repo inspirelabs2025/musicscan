@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { logCreditAlert } from "../_shared/credit-alert.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { encode as encodeBase64 } from "https://deno.land/std@0.168.0/encoding/base64.ts"
 
@@ -1190,6 +1191,11 @@ async function analyzePhotosWithOpenAI(
         urlsSent: openAiImageUrls.length,
         body: errText?.slice(0, 2000) || null,
       })
+      if (response.status === 402) {
+        await logCreditAlert('ai-photo-analysis-v2', 'credit_depleted')
+      } else if (response.status === 429) {
+        await logCreditAlert('ai-photo-analysis-v2', 'rate_limit')
+      }
       throw new Error(`OpenAI API error: ${response.status}${errText ? ` - ${errText}` : ''}`)
     }
 

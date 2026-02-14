@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { logCreditAlert } from "../_shared/credit-alert.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -167,12 +168,14 @@ serve(async (req) => {
 
     if (!response.ok) {
       if (response.status === 429) {
+        await logCreditAlert('scan-chat', 'rate_limit');
         return new Response(
           JSON.stringify({ error: "Rate limit bereikt, probeer het later opnieuw." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       if (response.status === 402) {
+        await logCreditAlert('scan-chat', 'credit_depleted');
         return new Response(
           JSON.stringify({ error: "Tegoed op, voeg credits toe aan je workspace." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }

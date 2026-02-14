@@ -1,15 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 
 // Injected at build time by Vite — unique per build
 declare const __BUILD_TIMESTAMP__: string;
 const BUILD_VERSION = typeof __BUILD_TIMESTAMP__ !== 'undefined' ? __BUILD_TIMESTAMP__ : '';
 
-export const useVersionCheck = (intervalMs = 5 * 60 * 1000) => {
-  const [updateAvailable, setUpdateAvailable] = useState(false);
-  const mismatchCount = useRef(0);
-
+export const useVersionCheck = (intervalMs = 2 * 60 * 1000) => {
   const checkVersion = useCallback(async () => {
-    // Skip version check entirely if no build version (dev/preview)
     if (!BUILD_VERSION) return;
     
     try {
@@ -23,14 +19,7 @@ export const useVersionCheck = (intervalMs = 5 * 60 * 1000) => {
       const metaMatch = html.match(/name="build-version"\s+content="([^"]+)"/);
       
       if (metaMatch?.[1] && metaMatch[1] !== BUILD_VERSION) {
-        mismatchCount.current += 1;
-        setUpdateAvailable(true);
-        if (mismatchCount.current >= 3) {
-          window.location.reload();
-        }
-      } else {
-        mismatchCount.current = 0;
-        setUpdateAvailable(false);
+        window.location.reload();
       }
     } catch {
       // Network error — ignore
@@ -38,17 +27,11 @@ export const useVersionCheck = (intervalMs = 5 * 60 * 1000) => {
   }, []);
 
   useEffect(() => {
-    const initial = setTimeout(checkVersion, 30_000);
+    const initial = setTimeout(checkVersion, 5_000);
     const interval = setInterval(checkVersion, intervalMs);
     return () => {
       clearTimeout(initial);
       clearInterval(interval);
     };
   }, [checkVersion, intervalMs]);
-
-  const refresh = useCallback(() => {
-    window.location.reload();
-  }, []);
-
-  return { updateAvailable, refresh };
 };

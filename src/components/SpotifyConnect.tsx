@@ -25,7 +25,7 @@ import { toast } from 'sonner';
 export function SpotifyConnect() {
   const { user } = useAuth();
   const { data: profile } = useProfile(user?.id);
-  const { connectSpotify, disconnectSpotify, syncSpotifyData, isConnecting, isDisconnecting, getManualSpotifyUrl } = useSpotifyAuth();
+  const { connectSpotify, disconnectSpotify, syncSpotifyData, isConnecting, isDisconnecting } = useSpotifyAuth();
   const { data: spotifyStats } = useSpotifyStats();
   const [needsReauth, setNeedsReauth] = useState(false);
   

@@ -77,10 +77,10 @@ serve(async (req) => {
     }
 
     // Handle token exchange
-    const { code, code_verifier, redirect_uri } = body;
+    const { code, redirect_uri } = body;
 
-    if (!code || !code_verifier || !redirect_uri) {
-      console.error('❌ Missing required parameters:', { code: !!code, code_verifier: !!code_verifier, redirect_uri: !!redirect_uri });
+    if (!code || !redirect_uri) {
+      console.error('❌ Missing required parameters:', { code: !!code, redirect_uri: !!redirect_uri });
       return new Response(
         JSON.stringify({ error: 'Missing required parameters' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -89,7 +89,7 @@ serve(async (req) => {
 
     console.log('🔄 Starting token exchange...');
 
-    // Exchange authorization code for access token
+    // Exchange authorization code for access token (using client_secret, no PKCE needed)
     const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: {
@@ -100,7 +100,6 @@ serve(async (req) => {
         grant_type: 'authorization_code',
         code,
         redirect_uri,
-        code_verifier,
       }),
     });
 

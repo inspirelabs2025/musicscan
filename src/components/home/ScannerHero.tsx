@@ -67,17 +67,14 @@ export const ScannerHero = () => {
           
           {/* Secondary CTA - Direct toevoegen */}
           <div className="mt-4 flex justify-center">
-            <Button 
-              asChild 
-              variant="outline"
-              className="bg-white/10 border-vinyl-purple/50 text-white hover:bg-vinyl-purple/30 hover:border-vinyl-purple hover:text-white font-semibold text-sm md:text-base px-5 md:px-6 py-3 md:py-4 rounded-xl backdrop-blur-sm transition-all duration-300 hover:scale-105 group"
+            <Link 
+              to="/my-collection"
+              className="text-white/60 hover:text-white text-sm flex items-center gap-1.5 transition-colors"
             >
-              <Link to="/my-collection">
-                <Disc3 className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-                Voeg toe aan Collectie & Discogs
-                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
+              <Disc3 className="w-3.5 h-3.5" />
+              Voeg toe aan Collectie & Discogs
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
           <p className="text-vinyl-gold/80 text-sm md:text-base font-semibold mt-4 animate-pulse">

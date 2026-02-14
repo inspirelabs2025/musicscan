@@ -13,6 +13,7 @@ import { ConditionGradingPanel, calculateAdvicePrice } from '@/components/scanne
 import { ArtistContentCards } from '@/components/scanner/ArtistContentCards';
 import { useArtistContent } from '@/hooks/useArtistContent';
 import { ScannerManualSearch } from '@/components/scanner/ScannerManualSearch';
+import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -585,6 +586,7 @@ export function ScanChatTab({ autoStartListening = 0 }: ScanChatTabProps) {
       console.log(`🔍 Running V2 pipeline with ${urls.length} photos, mediaType: ${mType}, externalRightsSocieties:`, rightsSocieties);
       
       const { data, error } = await supabase.functions.invoke('ai-photo-analysis-v2', {
+        headers: { 'x-device-fingerprint': getDeviceFingerprint() },
         body: {
           photoUrls: urls,
           mediaType: mType,
@@ -830,6 +832,7 @@ export function ScanChatTab({ autoStartListening = 0 }: ScanChatTabProps) {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${authToken}`,
+          'x-device-fingerprint': getDeviceFingerprint(),
         },
         body: JSON.stringify({
           messages: allMessages.map(m => ({ role: m.role, content: m.content })),

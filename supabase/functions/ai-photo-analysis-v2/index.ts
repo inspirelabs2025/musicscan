@@ -1,11 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { logCreditAlert } from "../_shared/credit-alert.ts"
+import { checkScanRate } from "../_shared/rate-check.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { encode as encodeBase64 } from "https://deno.land/std@0.168.0/encoding/base64.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-device-fingerprint',
 }
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -162,6 +163,9 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
+    // Rate tracking for abuse detection (non-blocking, alert-only)
+    await checkScanRate(req, user.id, "photo");
 
     // Skipping direct checks against auth.users (restricted schema). JWT already validated above.
 

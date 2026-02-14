@@ -8,12 +8,21 @@ export function AdminCreditAlertBanner() {
 
   const latestAlert = alerts[0];
   const isCritical = latestAlert.alert_type === 'credit_depleted';
+  const isAbuse = latestAlert.alert_type === 'abuse_detected';
+
+  const getMessage = () => {
+    if (isCritical) return 'AI credits zijn op!';
+    if (isAbuse) return 'Misbruik gedetecteerd!';
+    return 'Rate limit bereikt';
+  };
+
+  const colorClass = isCritical || isAbuse ? 'text-destructive' : 'text-amber-500';
 
   return (
-    <p className={`text-xs flex items-center gap-1.5 ${isCritical ? 'text-destructive' : 'text-amber-500'}`}>
+    <p className={`text-xs flex items-center gap-1.5 ${colorClass}`}>
       <AlertTriangle className="h-3 w-3 shrink-0" />
       <span>
-        {isCritical ? 'AI credits zijn op!' : 'Rate limit bereikt'}
+        {getMessage()}
         {alerts.length > 1 && ` (+${alerts.length - 1})`}
       </span>
     </p>

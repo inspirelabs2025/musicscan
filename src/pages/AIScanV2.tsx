@@ -18,6 +18,7 @@ import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
 import testCdMatrix from '@/assets/test-cd-matrix.jpg';
 import { EnhancedScanPreview } from '@/components/scanner/EnhancedScanPreview';
 import { AIScanV2Results } from '@/components/scanner/AIScanV2Results';
+import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
 import { ScanChatTab } from '@/components/scanner/ScanChatTab';
 
 // Simple V2 components for media type and condition selection
@@ -242,6 +243,7 @@ export default function AIScanV2() {
         data,
         error: functionError
       } = await supabase.functions.invoke('ai-photo-analysis-v2', {
+        headers: { 'x-device-fingerprint': getDeviceFingerprint() },
         body: {
           photoUrls,
           mediaType,

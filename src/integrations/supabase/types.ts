@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      abuse_detections: {
+        Row: {
+          created_at: string
+          daily_limit: number
+          detection_type: string
+          device_fingerprint: string | null
+          id: string
+          ip_address: string
+          is_reviewed: boolean
+          scan_count: number
+          user_ids: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          daily_limit?: number
+          detection_type: string
+          device_fingerprint?: string | null
+          id?: string
+          ip_address: string
+          is_reviewed?: boolean
+          scan_count: number
+          user_ids?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          daily_limit?: number
+          detection_type?: string
+          device_fingerprint?: string | null
+          id?: string
+          ip_address?: string
+          is_reviewed?: boolean
+          scan_count?: number
+          user_ids?: string[] | null
+        }
+        Relationships: []
+      }
       admin_album_reviews: {
         Row: {
           album_title: string
@@ -6813,6 +6849,33 @@ export type Database = {
           },
         ]
       }
+      scan_rate_tracking: {
+        Row: {
+          created_at: string
+          device_fingerprint: string | null
+          id: string
+          ip_address: string
+          scan_type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_fingerprint?: string | null
+          id?: string
+          ip_address: string
+          scan_type?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_fingerprint?: string | null
+          id?: string
+          ip_address?: string
+          scan_type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       scan_results: {
         Row: {
           artist: string | null
@@ -9938,6 +10001,16 @@ export type Database = {
       }
     }
     Functions: {
+      check_scan_rate: {
+        Args: {
+          p_daily_limit?: number
+          p_fingerprint?: string
+          p_ip: string
+          p_scan_type?: string
+          p_user_id?: string
+        }
+        Returns: Json
+      }
       check_usage_limit: {
         Args: { p_usage_type: string; p_user_id: string }
         Returns: {

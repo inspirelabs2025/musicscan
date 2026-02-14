@@ -14,7 +14,14 @@ export default function SpotifyCallback() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
 
+  const handleCallbackRef = React.useRef(handleCallback);
+  handleCallbackRef.current = handleCallback;
+
+  const processedRef = React.useRef(false);
+
   useEffect(() => {
+    if (processedRef.current) return;
+
     const processCallback = async () => {
       const code = searchParams.get('code');
       const state = searchParams.get('state');
@@ -38,12 +45,13 @@ export default function SpotifyCallback() {
         return;
       }
 
+      processedRef.current = true;
+
       try {
-        await handleCallback(code, state);
+        await handleCallbackRef.current(code, state);
         setStatus('success');
         setMessage('Spotify succesvol gekoppeld!');
         
-        // Redirect to Spotify profile after success
         setTimeout(() => {
           navigate('/spotify-profile');
         }, 2000);
@@ -55,7 +63,7 @@ export default function SpotifyCallback() {
     };
 
     processCallback();
-  }, [searchParams, user, handleCallback, navigate]);
+  }, [searchParams, user, navigate]);
 
   const getIcon = () => {
     switch (status) {

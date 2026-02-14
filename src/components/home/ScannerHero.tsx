@@ -65,17 +65,11 @@ export const ScannerHero = () => {
             </Link>
           </Button>
           
-          {/* Secondary CTA - Direct toevoegen */}
-          <div className="mt-4 flex justify-center">
-            <Link 
-              to="/my-collection"
-              className="text-white/60 hover:text-white text-sm flex items-center gap-1.5 transition-colors"
-            >
-              <Disc3 className="w-3.5 h-3.5" />
-              Voeg toe aan Collectie & Discogs
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+          {/* Secondary subtitle */}
+          <p className="mt-4 text-white/50 text-sm flex items-center justify-center gap-1.5">
+            <Disc3 className="w-3.5 h-3.5" />
+            Voeg toe aan Collectie & Discogs
+          </p>
 
           <p className="text-vinyl-gold/80 text-sm md:text-base font-semibold mt-4 animate-pulse">
             {t('hero.promoCredits')}

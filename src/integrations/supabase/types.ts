@@ -6025,9 +6025,12 @@ export type Database = {
           onboarding_step: number | null
           show_activity: boolean | null
           show_collection: boolean | null
+          spotify_avatar_url: string | null
           spotify_connected: boolean | null
+          spotify_country: string | null
           spotify_display_name: string | null
           spotify_email: string | null
+          spotify_followers: number | null
           spotify_last_sync: string | null
           spotify_refresh_token: string | null
           spotify_sync_enabled: boolean | null
@@ -6058,9 +6061,12 @@ export type Database = {
           onboarding_step?: number | null
           show_activity?: boolean | null
           show_collection?: boolean | null
+          spotify_avatar_url?: string | null
           spotify_connected?: boolean | null
+          spotify_country?: string | null
           spotify_display_name?: string | null
           spotify_email?: string | null
+          spotify_followers?: number | null
           spotify_last_sync?: string | null
           spotify_refresh_token?: string | null
           spotify_sync_enabled?: boolean | null
@@ -6091,9 +6097,12 @@ export type Database = {
           onboarding_step?: number | null
           show_activity?: boolean | null
           show_collection?: boolean | null
+          spotify_avatar_url?: string | null
           spotify_connected?: boolean | null
+          spotify_country?: string | null
           spotify_display_name?: string | null
           spotify_email?: string | null
+          spotify_followers?: number | null
           spotify_last_sync?: string | null
           spotify_refresh_token?: string | null
           spotify_sync_enabled?: boolean | null
@@ -7794,6 +7803,48 @@ export type Database = {
           spotify_url?: string | null
           track_count?: number | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      spotify_recently_played: {
+        Row: {
+          album: string | null
+          artist: string
+          created_at: string
+          duration_ms: number | null
+          id: string
+          image_url: string | null
+          played_at: string
+          spotify_track_id: string
+          spotify_url: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          album?: string | null
+          artist: string
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          image_url?: string | null
+          played_at: string
+          spotify_track_id: string
+          spotify_url?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          album?: string | null
+          artist?: string
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          image_url?: string | null
+          played_at?: string
+          spotify_track_id?: string
+          spotify_url?: string | null
+          title?: string
           user_id?: string
         }
         Relationships: []

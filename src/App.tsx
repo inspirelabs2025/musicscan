@@ -470,7 +470,7 @@ const AppContent = () => {
         <Route path="/feeds" element={<LazyRoute><Feeds /></LazyRoute>} />
         <Route path="/prestaties" element={<ProtectedRoute><LazyRoute><Prestaties /></LazyRoute></ProtectedRoute>} />
         <Route path="/spotify-profile" element={<ProtectedRoute><LazyRoute><SpotifyProfile /></LazyRoute></ProtectedRoute>} />
-        <Route path="/spotify/callback" element={<LazyRoute><SpotifyCallback /></LazyRoute>} />
+        <Route path="/auth/spotify/callback" element={<LazyRoute><SpotifyCallback /></LazyRoute>} />
         
 {/* Admin routes */}
         <Route path="/admin" element={<ProtectedRoute><LazyRoute><MainAdmin /></LazyRoute></ProtectedRoute>} />

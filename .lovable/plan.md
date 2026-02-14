@@ -1,76 +1,49 @@
 
-# Discogs Account Viewer - Collection, Wantlist & Inventory
 
-## Wat wordt er gebouwd?
-Een nieuwe pagina/sectie binnen de app waar je je eigen Discogs-account kunt bekijken:
-- **Collection** - Alle releases in je Discogs collectie
-- **Wantlist** - Je wensenlijst op Discogs  
-- **Inventory** (Marketplace) - Je actieve "For Sale" listings
+## Probleem: Oude versie blijft hangen na publish
 
-## Aanpak
+De huidige aanpak werkt niet omdat:
+- `meta http-equiv="Cache-Control"` tags worden genegeerd door moderne browsers - alleen echte HTTP headers tellen
+- De `VersionBanner` is verwijderd uit `App.tsx`, dus er is geen enkele versiedetectie actief
+- Browsers cachen `index.html` en blijven oude JS/CSS chunks laden
 
-### 1. Nieuwe Edge Function: `fetch-discogs-user-data`
-Een edge function die de Discogs API bevraagt met de OAuth tokens van de gebruiker. Ondersteunt drie modi:
+## Oplossing: Stille automatische versie-refresh (geen banner)
 
-- `GET /users/{username}/collection/folders/0/releases` - Hele collectie ophalen
-- `GET /users/{username}/wants` - Wantlist ophalen
-- `GET /users/{username}/inventory` - Marketplace listings ophalen
+In plaats van een zichtbare banner die gebruikers irriteert, wordt de versiecheck **onzichtbaar** gemaakt: bij detectie van een nieuwe versie wordt direct en stil herladen.
 
-De functie hergebruikt de bestaande `makeAuthenticatedRequest` helper (OAuth 1.0a signing) en respecteert rate limits (1.1s delay). Paginering wordt ondersteund via de Discogs `page` en `per_page` parameters.
+### 1. `useVersionCheck.ts` aanpassen - Stille auto-reload
 
-### 2. React Hook: `useDiscogsAccountData`
-Een hook die de edge function aanroept met een `target` parameter (collection/wantlist/inventory). Bevat:
-- Paginering support
-- Caching via React Query
-- Loading/error states
+- Bij **eerste mismatch** direct `window.location.reload()` uitvoeren - geen banner, geen teller van 3
+- Eerste check na **5 seconden** (i.p.v. 30)
+- Interval verkorten naar **2 minuten**
+- De hook retourneert niets meer voor UI - het is puur een achtergrondproces
 
-### 3. Nieuwe pagina: `/mijn-discogs`
-Een pagina met 3 tabs (Collection, Wantlist, Marketplace) die elk een lijst/grid tonen met:
-- Album artwork (thumbnail van Discogs)
-- Artiest + titel
-- Label, catalogusnummer, jaar
-- Conditie (bij collection/marketplace)
-- Prijs (bij marketplace listings)
-- Link naar Discogs pagina
+### 2. `VersionBanner.tsx` verwijderen
 
-De pagina is alleen toegankelijk voor ingelogde gebruikers met een gekoppeld Discogs account.
+- Dit component is niet meer nodig - er komt geen zichtbare melding
+- De versiecheck draait volledig op de achtergrond
 
-### 4. Navigatie & toegang
-- Link toevoegen in het collectie-gedeelte / navigatiemenu
-- Alleen zichtbaar wanneer Discogs gekoppeld is
+### 3. Nieuw: `AutoVersionCheck` component in `App.tsx`
 
-## Technische Details
+- Een onzichtbaar component (rendert `null`) dat de hook aanroept
+- Wordt bovenaan in `App.tsx` geplaatst
+- Gebruikers merken er niets van - de pagina herlaadt gewoon als er een nieuwe versie is
 
-### Edge Function `fetch-discogs-user-data/index.ts`
-- Authenticatie: Bearer token van gebruiker, OAuth 1.0a signing voor Discogs API
-- Haalt tokens op uit `discogs_user_tokens` tabel (via service role client)
-- Parameters: `target` (collection/wantlist/inventory), `page`, `per_page` (max 50)
-- Response: array van releases met metadata + paginering info
-- Rate limit: 1.1s delay respecteren, maar per request wordt slechts 1 API call gedaan dus geen interne delay nodig
+### 4. `App.css` opschonen
 
-### Hook `useDiscogsAccountData.ts`
-```text
-useDiscogsAccountData(target, page) 
-  -> POST edge function
-  -> returns { items, pagination: { page, pages, items } }
-```
+- De verouderde Vite boilerplate `#root` styling (max-width, padding) verwijderen die mogelijk layout-problemen veroorzaakt
 
-### Pagina structuur
-```text
-/mijn-discogs
-  ├── Tabs: Collection | Wantlist | Marketplace
-  ├── Zoekbalk (client-side filter)
-  ├── Grid van items (hergebruik bestaande card-stijl)
-  └── Paginering onderaan
-```
+## Wat de gebruiker ervaart
 
-### Discogs API endpoints gebruikt
-| Target | Endpoint | Methode |
-|--------|----------|---------|
-| Collection | `/users/{username}/collection/folders/0/releases?page=X&per_page=50` | GET |
-| Wantlist | `/users/{username}/wants?page=X&per_page=50` | GET |
-| Inventory | `/users/{username}/inventory?page=X&per_page=50&status=For+Sale` | GET |
+- Na een publish: binnen 5 seconden detecteert de app automatisch de nieuwe versie
+- De pagina herlaadt zichzelf stil - geen banner, geen knop, geen actie nodig
+- De gebruiker ziet altijd de nieuwste versie
 
-### Route toevoegen
-- `/mijn-discogs` in de router configuratie
-- Menu-item in navigatie (onder "Scan & Collectie" of naast de Discogs connect button)
+## Technische details
+
+**Bestanden:**
+- `src/hooks/useVersionCheck.ts` - Vereenvoudigen tot stille auto-reload bij eerste mismatch
+- `src/components/VersionBanner.tsx` - Verwijderen (niet meer nodig)
+- `src/App.tsx` - Klein onzichtbaar `AutoVersionCheck` component toevoegen dat de hook draait
+- `src/App.css` - Verouderde `#root` styling verwijderen
+

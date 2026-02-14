@@ -21,6 +21,7 @@ import { AudioPlayer } from "@/components/audio/AudioPlayer";
 import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
 import { usePageviewTracker } from "@/hooks/usePageviewTracker";
 import { initCleanAnalytics } from "@/lib/cleanAnalyticsTracker";
+import { useVersionCheck } from "@/hooks/useVersionCheck";
 
 // Loading spinner component
 const PageLoader = () => (
@@ -288,6 +289,7 @@ const LazyRoute = ({ children }: { children: React.ReactNode }) => (
 const AppContent = () => {
   useGoogleAnalytics();
   usePageviewTracker();
+  useVersionCheck();
   
   // Initialize clean analytics for datacenter/bot traffic detection
   React.useEffect(() => {

@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/button';
 export default function SpotifyCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { handleCallback } = useSpotifyAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState('Wachten op authenticatie...');
 
   const handleCallbackRef = React.useRef(handleCallback);
   handleCallbackRef.current = handleCallback;
@@ -20,12 +20,27 @@ export default function SpotifyCallback() {
   const processedRef = React.useRef(false);
 
   useEffect(() => {
+    // Wait for auth to finish loading before processing
+    if (loading) {
+      console.log('⏳ SpotifyCallback: Waiting for auth to load...');
+      return;
+    }
+
     if (processedRef.current) return;
 
     const processCallback = async () => {
       const code = searchParams.get('code');
       const state = searchParams.get('state');
       const error = searchParams.get('error');
+
+      console.log('🎵 SpotifyCallback: Processing...', { 
+        hasCode: !!code, 
+        hasState: !!state, 
+        hasError: !!error,
+        hasUser: !!user,
+        userId: user?.id,
+        stateParam: state
+      });
 
       if (error) {
         setStatus('error');
@@ -39,13 +54,22 @@ export default function SpotifyCallback() {
         return;
       }
 
-      if (!user || state !== user.id) {
+      if (!user) {
+        console.error('❌ SpotifyCallback: No user found after auth loaded');
         setStatus('error');
-        setMessage('Authenticatie status klopt niet');
+        setMessage('Je moet ingelogd zijn om Spotify te koppelen. Log in en probeer opnieuw.');
+        return;
+      }
+
+      if (state !== user.id) {
+        console.error('❌ SpotifyCallback: State mismatch', { state, userId: user.id });
+        setStatus('error');
+        setMessage('Authenticatie status klopt niet. Probeer opnieuw.');
         return;
       }
 
       processedRef.current = true;
+      setMessage('Spotify koppelen...');
 
       try {
         await handleCallbackRef.current(code, state);
@@ -56,14 +80,14 @@ export default function SpotifyCallback() {
           navigate('/spotify-profile');
         }, 2000);
       } catch (error) {
-        console.error('Callback error:', error);
+        console.error('❌ SpotifyCallback error:', error);
         setStatus('error');
-        setMessage('Er ging iets mis bij het koppelen van Spotify');
+        setMessage('Er ging iets mis bij het koppelen van Spotify. Check de console voor details.');
       }
     };
 
     processCallback();
-  }, [searchParams, user, navigate]);
+  }, [searchParams, user, loading, navigate]);
 
   const getIcon = () => {
     switch (status) {

@@ -17,8 +17,52 @@ interface SpotifyRefreshResponse {
   expires_in: number;
 }
 
+async function refreshAccessToken(refreshToken: string): Promise<string> {
+  // Try PKCE style first
+  console.log('🔄 Attempting PKCE-style token refresh...');
+  let tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+      client_id: SPOTIFY_CLIENT_ID,
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    console.log('⚠️ PKCE-style refresh failed, trying Basic Auth fallback...');
+    tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${btoa(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`)}`,
+      },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+      }),
+    });
+  }
+
+  if (!tokenResponse.ok) {
+    const errorText = await tokenResponse.text();
+    throw new Error(`REAUTH_REQUIRED:${errorText}`);
+  }
+
+  const tokenData: SpotifyRefreshResponse = await tokenResponse.json();
+  return tokenData.access_token;
+}
+
+async function fetchSpotifyApi(url: string, accessToken: string) {
+  const response = await fetch(url, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!response.ok) return null;
+  return response.json();
+}
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -37,7 +81,6 @@ serve(async (req) => {
       );
     }
 
-    // Get user's Spotify refresh token
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('spotify_refresh_token, spotify_connected')
@@ -51,80 +94,55 @@ serve(async (req) => {
       );
     }
 
-    // Refresh access token - try PKCE style first, then Basic Auth fallback
-    console.log('🔄 Attempting PKCE-style token refresh...');
-    let tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        refresh_token: profile.spotify_refresh_token,
-        client_id: SPOTIFY_CLIENT_ID,
-      }),
-    });
-
-    // If PKCE style fails, try Basic Auth fallback
-    if (!tokenResponse.ok) {
-      console.log('⚠️ PKCE-style refresh failed, trying Basic Auth fallback...');
-      tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${btoa(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`)}`,
-        },
-        body: new URLSearchParams({
-          grant_type: 'refresh_token',
-          refresh_token: profile.spotify_refresh_token,
-        }),
-      });
+    let accessToken: string;
+    try {
+      accessToken = await refreshAccessToken(profile.spotify_refresh_token);
+    } catch (err) {
+      const msg = err.message || '';
+      if (msg.startsWith('REAUTH_REQUIRED')) {
+        return new Response(
+          JSON.stringify({ error: 'Failed to refresh token', error_code: 'REAUTH_REQUIRED', needs_reauth: true }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      throw err;
     }
 
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      console.error('❌ Failed to refresh Spotify token (both methods):', {
-        status: tokenResponse.status,
-        statusText: tokenResponse.statusText,
-        body: errorText,
-      });
-      return new Response(
-        JSON.stringify({ 
-          error: 'Failed to refresh token', 
-          error_code: 'REAUTH_REQUIRED',
-          details: 'Both PKCE and Basic Auth refresh methods failed',
-          spotify_error: errorText,
-          needs_reauth: true
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    console.log('✅ Token refresh successful, starting sync for user:', user_id);
 
-    const tokenData: SpotifyRefreshResponse = await tokenResponse.json();
-    const accessToken = tokenData.access_token;
-
-    console.log('✅ Token refresh successful, starting Spotify data sync for user:', user_id);
-
-    let syncResult = {
-      success: {
-        playlists: 0,
-        tracks: 0,
-        topTracks: 0,
-        topArtists: 0,
-      },
+    const syncResult = {
+      success: { playlists: 0, tracks: 0, topTracks: 0, topArtists: 0, recentlyPlayed: 0, profileUpdated: false },
       errors: {} as Record<string, string>,
     };
 
-    // Sync user's playlists
-    console.log('📋 Syncing playlists...');
-    const playlistsResponse = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
-      headers: { 'Authorization': `Bearer ${accessToken}` },
-    });
+    // === 1. Sync Spotify Profile Data (avatar, country, followers) ===
+    console.log('👤 Syncing Spotify profile data...');
+    const meData = await fetchSpotifyApi('https://api.spotify.com/v1/me', accessToken);
+    if (meData) {
+      const { error: profileUpdateError } = await supabase
+        .from('profiles')
+        .update({
+          spotify_avatar_url: meData.images?.[0]?.url || meData.images?.[1]?.url || null,
+          spotify_country: meData.country || null,
+          spotify_followers: meData.followers?.total || 0,
+          spotify_display_name: meData.display_name || null,
+          spotify_last_sync: new Date().toISOString(),
+        })
+        .eq('user_id', user_id);
 
-    if (playlistsResponse.ok) {
-      const playlistsData = await playlistsResponse.json();
-      console.log(`📋 Found ${playlistsData.items?.length || 0} playlists`);
-      
+      if (profileUpdateError) {
+        console.error('❌ Profile update error:', profileUpdateError);
+        syncResult.errors.profile = profileUpdateError.message;
+      } else {
+        syncResult.success.profileUpdated = true;
+        console.log('✅ Profile data updated');
+      }
+    }
+
+    // === 2. Sync Playlists ===
+    console.log('📋 Syncing playlists...');
+    const playlistsData = await fetchSpotifyApi('https://api.spotify.com/v1/me/playlists?limit=50', accessToken);
+    if (playlistsData) {
       const playlists = (playlistsData.items || []).map((playlist: any) => ({
         user_id,
         spotify_playlist_id: playlist.id,
@@ -139,53 +157,30 @@ serve(async (req) => {
         last_synced_at: new Date().toISOString(),
       }));
 
-      // Upsert playlists with error handling
       if (playlists.length > 0) {
-        console.log(`📋 Upserting ${playlists.length} playlists...`);
-        const { error: playlistError } = await supabase
-          .from('spotify_playlists')
-          .upsert(playlists, { ignoreDuplicates: false });
-        
-        if (playlistError) {
-          console.error('❌ Playlist upsert error:', playlistError);
-          syncResult.errors.playlists = playlistError.message;
-        } else {
-          syncResult.success.playlists = playlists.length;
-          console.log(`✅ Successfully upserted ${playlists.length} playlists`);
-        }
+        const { error } = await supabase.from('spotify_playlists').upsert(playlists, { ignoreDuplicates: false });
+        if (error) { syncResult.errors.playlists = error.message; } 
+        else { syncResult.success.playlists = playlists.length; }
       }
-    } else {
-      console.error('❌ Failed to fetch playlists:', playlistsResponse.status);
-      syncResult.errors.playlists = `Failed to fetch playlists: ${playlistsResponse.status}`;
     }
 
-    console.log(`✅ Playlists sync completed: ${syncResult.success.playlists} synced, ${syncResult.errors.playlists ? 'with errors' : 'no errors'}`);
-
-    // Sync user's saved tracks (Library)
+    // === 3. Sync Saved Tracks ===
     console.log('🎵 Syncing saved tracks...');
-    let savedTracksUrl = 'https://api.spotify.com/v1/me/tracks?limit=50';
-    let allSavedTracks = [];
+    let savedTracksUrl: string | null = 'https://api.spotify.com/v1/me/tracks?limit=50';
+    const allSavedTracks: any[] = [];
     
-    while (savedTracksUrl && allSavedTracks.length < 1000) { // Limit to prevent timeouts
-      const tracksResponse = await fetch(savedTracksUrl, {
-        headers: { 'Authorization': `Bearer ${accessToken}` },
-      });
-
-      if (!tracksResponse.ok) break;
-
-      const tracksData = await tracksResponse.json();
+    while (savedTracksUrl && allSavedTracks.length < 1000) {
+      const tracksData = await fetchSpotifyApi(savedTracksUrl, accessToken);
+      if (!tracksData) break;
       allSavedTracks.push(...tracksData.items);
       savedTracksUrl = tracksData.next;
     }
 
-    console.log(`🎵 Found ${allSavedTracks.length} saved tracks`);
-
-    // Process saved tracks in batches with error handling
     if (allSavedTracks.length > 0) {
       try {
         for (let i = 0; i < allSavedTracks.length; i += 20) {
           const batch = allSavedTracks.slice(i, i + 20);
-          const trackUpserts = batch.map(item => ({
+          const trackUpserts = batch.map((item: any) => ({
             user_id,
             spotify_track_id: item.track.id,
             artist: item.track.artists.map((a: any) => a.name).join(', '),
@@ -201,95 +196,56 @@ serve(async (req) => {
             added_at: item.added_at,
           }));
 
-          const { error: tracksError } = await supabase
-            .from('spotify_tracks')
-            .upsert(trackUpserts, { ignoreDuplicates: false });
-          
-          if (tracksError) {
-            console.error(`❌ Tracks batch ${i}-${i + batch.length} upsert error:`, tracksError);
-            syncResult.errors.tracks = tracksError.message;
-            break;
-          }
+          const { error } = await supabase.from('spotify_tracks').upsert(trackUpserts, { ignoreDuplicates: false });
+          if (error) { syncResult.errors.tracks = error.message; break; }
         }
-        
-        if (!syncResult.errors.tracks) {
-          syncResult.success.tracks = allSavedTracks.length;
-          console.log(`✅ Successfully synced ${allSavedTracks.length} saved tracks`);
-        }
+        if (!syncResult.errors.tracks) syncResult.success.tracks = allSavedTracks.length;
       } catch (error) {
-        console.error('❌ Tracks sync error:', error);
         syncResult.errors.tracks = error.message;
       }
     }
 
-    // Sync top tracks and artists
+    // === 4. Sync Top Tracks & Artists ===
     console.log('🔥 Syncing top tracks and artists...');
     const timeRanges = ['short_term', 'medium_term', 'long_term'];
     
     for (const timeRange of timeRanges) {
       // Top tracks
-      const topTracksResponse = await fetch(`https://api.spotify.com/v1/me/top/tracks?time_range=${timeRange}&limit=50`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` },
-      });
+      const topTracksData = await fetchSpotifyApi(
+        `https://api.spotify.com/v1/me/top/tracks?time_range=${timeRange}&limit=50`, accessToken
+      );
+      if (topTracksData) {
+        await supabase.from('spotify_user_stats').delete()
+          .eq('user_id', user_id).eq('stat_type', 'top_tracks').eq('time_range', timeRange);
 
-      if (topTracksResponse.ok) {
-        const topTracksData = await topTracksResponse.json();
-        
-        // Clear existing stats for this time range
-        await supabase
-          .from('spotify_user_stats')
-          .delete()
-          .eq('user_id', user_id)
-          .eq('stat_type', 'top_tracks')
-          .eq('time_range', timeRange);
-
-        // Insert new stats
         const topTrackStats = topTracksData.items.map((track: any, index: number) => ({
-          user_id,
-          stat_type: 'top_tracks',
-          time_range: timeRange,
-          spotify_id: track.id,
-          name: track.name,
+          user_id, stat_type: 'top_tracks', time_range: timeRange,
+          spotify_id: track.id, name: track.name,
           data: {
             artist: track.artists.map((a: any) => a.name).join(', '),
             album: track.album.name,
             image_url: track.album.images?.[0]?.url,
             spotify_url: track.external_urls?.spotify,
             popularity: track.popularity,
+            duration_ms: track.duration_ms,
           },
           rank_position: index + 1,
         }));
-
-        await supabase
-          .from('spotify_user_stats')
-          .insert(topTrackStats);
-        
+        await supabase.from('spotify_user_stats').insert(topTrackStats);
         syncResult.success.topTracks += topTrackStats.length;
       }
 
       // Top artists
-      const topArtistsResponse = await fetch(`https://api.spotify.com/v1/me/top/artists?time_range=${timeRange}&limit=50`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` },
-      });
+      const topArtistsData = await fetchSpotifyApi(
+        `https://api.spotify.com/v1/me/top/artists?time_range=${timeRange}&limit=50`, accessToken
+      );
+      if (topArtistsData) {
+        await supabase.from('spotify_user_stats').delete()
+          .eq('user_id', user_id).eq('stat_type', 'top_artists').eq('time_range', timeRange);
 
-      if (topArtistsResponse.ok) {
-        const topArtistsData = await topArtistsResponse.json();
-        
-        // Clear existing stats for this time range
-        await supabase
-          .from('spotify_user_stats')
-          .delete()
-          .eq('user_id', user_id)
-          .eq('stat_type', 'top_artists')
-          .eq('time_range', timeRange);
-
-        // Insert new stats
         const topArtistStats = topArtistsData.items.map((artist: any, index: number) => ({
-          user_id,
-          stat_type: 'top_artists',
-          time_range: timeRange,
-          spotify_id: artist.id,
-          name: artist.name,
+          user_id, stat_type: 'top_artists', time_range: timeRange,
+          spotify_id: artist.id, name: artist.name,
           data: {
             genres: artist.genres,
             image_url: artist.images?.[0]?.url,
@@ -299,42 +255,101 @@ serve(async (req) => {
           },
           rank_position: index + 1,
         }));
-
-        await supabase
-          .from('spotify_user_stats')
-          .insert(topArtistStats);
-        
+        await supabase.from('spotify_user_stats').insert(topArtistStats);
         syncResult.success.topArtists += topArtistStats.length;
       }
     }
 
-    // Update last sync time
-    await supabase
-      .from('profiles')
-      .update({ spotify_last_sync: new Date().toISOString() })
-      .eq('user_id', user_id);
+    // === 5. Sync Recently Played ===
+    console.log('🕐 Syncing recently played...');
+    const recentData = await fetchSpotifyApi(
+      'https://api.spotify.com/v1/me/player/recently-played?limit=50', accessToken
+    );
+    if (recentData?.items) {
+      const recentTracks = recentData.items.map((item: any) => ({
+        user_id,
+        spotify_track_id: item.track.id,
+        artist: item.track.artists.map((a: any) => a.name).join(', '),
+        title: item.track.name,
+        album: item.track.album?.name,
+        image_url: item.track.album?.images?.[0]?.url,
+        spotify_url: item.track.external_urls?.spotify,
+        duration_ms: item.track.duration_ms,
+        played_at: item.played_at,
+      }));
+
+      if (recentTracks.length > 0) {
+        const { error } = await supabase.from('spotify_recently_played')
+          .upsert(recentTracks, { onConflict: 'user_id,spotify_track_id,played_at', ignoreDuplicates: true });
+        if (error) { syncResult.errors.recentlyPlayed = error.message; }
+        else { syncResult.success.recentlyPlayed = recentTracks.length; }
+      }
+    }
+
+    // === 6. Fetch Audio Features for top tracks (medium_term) ===
+    console.log('🎛️ Fetching audio features...');
+    const { data: topTrackIds } = await supabase
+      .from('spotify_user_stats')
+      .select('spotify_id')
+      .eq('user_id', user_id)
+      .eq('stat_type', 'top_tracks')
+      .eq('time_range', 'medium_term')
+      .limit(50);
+
+    if (topTrackIds && topTrackIds.length > 0) {
+      const ids = topTrackIds.map((t: any) => t.spotify_id).join(',');
+      const audioData = await fetchSpotifyApi(
+        `https://api.spotify.com/v1/audio-features?ids=${ids}`, accessToken
+      );
+      if (audioData?.audio_features) {
+        // Store aggregated audio features in profile metadata
+        const features = audioData.audio_features.filter((f: any) => f);
+        if (features.length > 0) {
+          const avg = (key: string) => features.reduce((sum: number, f: any) => sum + (f[key] || 0), 0) / features.length;
+          const audioProfile = {
+            danceability: Math.round(avg('danceability') * 100),
+            energy: Math.round(avg('energy') * 100),
+            valence: Math.round(avg('valence') * 100),
+            acousticness: Math.round(avg('acousticness') * 100),
+            instrumentalness: Math.round(avg('instrumentalness') * 100),
+            liveness: Math.round(avg('liveness') * 100),
+            speechiness: Math.round(avg('speechiness') * 100),
+            tempo: Math.round(avg('tempo')),
+            sample_size: features.length,
+          };
+
+          // Store in spotify_user_stats as a special entry
+          await supabase.from('spotify_user_stats').upsert({
+            user_id,
+            stat_type: 'audio_features',
+            time_range: 'medium_term',
+            spotify_id: 'aggregated',
+            name: 'Audio Features Profile',
+            data: audioProfile,
+            rank_position: 0,
+          }, { onConflict: 'user_id,stat_type,time_range,spotify_id' });
+
+          console.log('✅ Audio features saved:', audioProfile);
+        }
+      }
+    }
 
     console.log('✅ Spotify sync completed for user:', user_id, syncResult);
 
     return new Response(
       JSON.stringify({ 
         message: 'Spotify data synced successfully',
-        success: syncResult,
+        success: syncResult.success,
         errors: syncResult.errors,
         has_errors: Object.keys(syncResult.errors).length > 0,
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error in spotify-sync function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

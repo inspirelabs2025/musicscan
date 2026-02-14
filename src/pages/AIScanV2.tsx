@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Loader2, Camera, Eye } from 'lucide-react';
+import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Loader2, Camera, Eye, Mic } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -70,6 +70,7 @@ interface AnalysisResult {
   version: string;
 }
 export default function AIScanV2() {
+  const [soundScanTrigger, setSoundScanTrigger] = useState(0);
   const {
     user,
     loading
@@ -318,16 +319,26 @@ export default function AIScanV2() {
         <div className="max-w-4xl mx-auto space-y-3">
           {/* Header - compact on mobile */}
           <div className="text-center space-y-1 md:space-y-2">
-            <h1 className="text-xl md:text-3xl font-bold text-primary flex items-center justify-center gap-1.5">
-              <Brain className="h-5 w-5 md:h-8 md:w-8" />
-              Smart Scan
-              <Badge variant="secondary" className="ml-1 text-[10px] md:text-xs">BETA</Badge>
-            </h1>
+            <div className="flex items-center justify-center gap-2 md:gap-4 flex-wrap">
+              <h1 className="text-xl md:text-3xl font-bold text-primary flex items-center gap-1.5">
+                <Brain className="h-5 w-5 md:h-8 md:w-8" />
+                Smart Scan
+                <Badge variant="secondary" className="ml-1 text-[10px] md:text-xs">BETA</Badge>
+              </h1>
+              <div className="h-6 w-px bg-border hidden md:block" />
+              <button
+                onClick={() => setSoundScanTrigger(prev => prev + 1)}
+                className="flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-full font-bold text-sm md:text-lg transition-all bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/20"
+              >
+                <Mic className="h-4 w-4 md:h-5 md:w-5" />
+                SoundScan
+              </button>
+            </div>
           </div>
 
           {/* Chat Scanner - directly rendered without tabs */}
           <div className="w-full mt-4">
-            <ScanChatTab />
+            <ScanChatTab autoStartListening={soundScanTrigger} />
           </div>
         </div>
       </div>

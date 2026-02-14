@@ -334,8 +334,13 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
 });
 SuggestionChips.displayName = 'SuggestionChips';
 
-export function ScanChatTab() {
+interface ScanChatTabProps {
+  autoStartListening?: number;
+}
+
+export function ScanChatTab({ autoStartListening = 0 }: ScanChatTabProps) {
   const { user } = useAuth();
+  const lastListenTrigger = useRef(0);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
@@ -375,6 +380,15 @@ export function ScanChatTab() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, pendingFiles]);
+
+  // Auto-start listening when triggered from SoundScan button
+  useEffect(() => {
+    if (autoStartListening > 0 && autoStartListening !== lastListenTrigger.current) {
+      lastListenTrigger.current = autoStartListening;
+      const timer = setTimeout(() => startListening(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [autoStartListening]);
 
   const pickMediaType = (type: 'vinyl' | 'cd') => {
     setMediaType(type);

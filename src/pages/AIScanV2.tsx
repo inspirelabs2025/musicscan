@@ -71,6 +71,7 @@ interface AnalysisResult {
 }
 export default function AIScanV2() {
   const [soundScanTrigger, setSoundScanTrigger] = useState(0);
+  const [showSoundScanPrompt, setShowSoundScanPrompt] = useState(false);
   const {
     user,
     loading
@@ -327,14 +328,37 @@ export default function AIScanV2() {
               </h1>
               <div className="h-6 w-px bg-border hidden md:block" />
               <button
-                onClick={() => setSoundScanTrigger(prev => prev + 1)}
-                className="flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-full font-bold text-sm md:text-lg transition-all bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/20"
+                onClick={() => setShowSoundScanPrompt(prev => !prev)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-full font-bold text-sm md:text-lg transition-all border ${
+                  showSoundScanPrompt
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/30'
+                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20 hover:shadow-lg hover:shadow-amber-500/20'
+                }`}
               >
                 <Mic className="h-4 w-4 md:h-5 md:w-5" />
                 SoundScan
               </button>
             </div>
           </div>
+
+          {/* SoundScan prompt */}
+          {showSoundScanPrompt && (
+            <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 animate-fadeIn">
+              <p className="text-sm text-center text-muted-foreground">
+                🎵 Zet de muziek aan die je wilt herkennen en druk op <strong>Start</strong>. SoundScan luistert 12 seconden mee.
+              </p>
+              <Button
+                onClick={() => {
+                  setSoundScanTrigger(prev => prev + 1);
+                  setShowSoundScanPrompt(false);
+                }}
+                className="bg-amber-500 hover:bg-amber-600 text-white rounded-full px-6 gap-2"
+              >
+                <Mic className="h-4 w-4" />
+                Start luisteren
+              </Button>
+            </div>
+          )}
 
           {/* Chat Scanner - directly rendered without tabs */}
           <div className="w-full mt-4">

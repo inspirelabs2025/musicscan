@@ -270,6 +270,12 @@ export default function AIScanV2() {
 
       // Increment usage after successful analysis
       await incrementUsage('ai_scans');
+      
+      // If over plan limit, deduct a credit
+      const postCheck = await checkUsageLimit('ai_scans');
+      if (postCheck.limit_amount !== null && (postCheck.current_usage > postCheck.limit_amount)) {
+        await supabase.rpc('deduct_scan_credit', { p_user_id: user?.id });
+      }
       console.log('✅ Analysis completed successfully');
       toast({
         title: "Analyse voltooid!",

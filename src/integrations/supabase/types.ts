@@ -10231,6 +10231,10 @@ export type Database = {
       }
     }
     Functions: {
+      add_user_credits: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: undefined
+      }
       check_scan_rate: {
         Args: {
           p_daily_limit?: number
@@ -10276,6 +10280,7 @@ export type Database = {
         Args: { p_product_id: string; p_quantity?: number }
         Returns: boolean
       }
+      deduct_scan_credit: { Args: { p_user_id: string }; Returns: boolean }
       extract_and_update_discogs_ids: { Args: never; Returns: number }
       extract_discogs_id_from_url: {
         Args: { url_text: string }

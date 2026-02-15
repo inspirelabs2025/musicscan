@@ -76,37 +76,15 @@ serve(async (req) => {
       });
     }
 
-    // Add credits
-    const { error: upsertError } = await supabaseAdmin
-      .from("user_credits")
-      .upsert({
-        user_id: userId,
-        balance: creditsAmount,
-        total_earned: creditsAmount,
-      }, { onConflict: "user_id" });
+    // Add credits using the atomic RPC function
+    const { error: creditError } = await supabaseAdmin.rpc("add_user_credits", {
+      p_user_id: userId,
+      p_amount: creditsAmount,
+    });
 
-    // If upsert created a new row, we're done. Otherwise update existing.
-    if (upsertError) {
-      // Fallback: update existing
-      await supabaseAdmin.rpc("add_user_credits", { p_user_id: userId, p_amount: creditsAmount });
-    } else {
-      // Update balance for existing users
-      const { data: current } = await supabaseAdmin
-        .from("user_credits")
-        .select("balance, total_earned")
-        .eq("user_id", userId)
-        .single();
-
-      if (current) {
-        await supabaseAdmin
-          .from("user_credits")
-          .update({
-            balance: current.balance + creditsAmount,
-            total_earned: current.total_earned + creditsAmount,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("user_id", userId);
-      }
+    if (creditError) {
+      console.error("[verify-credit-purchase] Failed to add credits:", creditError);
+      throw new Error("Credits konden niet worden toegevoegd");
     }
 
     // Log transaction

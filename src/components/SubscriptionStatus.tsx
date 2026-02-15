@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Crown, Settings, TrendingUp, AlertCircle, MessageSquare, Upload, Zap } from 'lucide-react';
+import { Crown, Settings, TrendingUp, AlertCircle, MessageSquare, Upload, Zap, Coins } from 'lucide-react';
 import { useSubscriptionContext } from '@/contexts/SubscriptionContext';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
+import { useCredits } from '@/hooks/useCredits';
 import { Link } from 'react-router-dom';
 
 interface SubscriptionStatusProps {
@@ -15,6 +16,7 @@ interface SubscriptionStatusProps {
 export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact = false }) => {
   const { subscription, openCustomerPortal, loading } = useSubscriptionContext();
   const { usage, aiScansUsed, aiChatUsed, bulkUploadsUsed, getUsagePercentage } = useUsageTracking();
+  const { data: userCredits } = useCredits();
 
   const planConfig = {
     free: { 
@@ -74,10 +76,21 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
           {currentPlan.name}
         </Badge>
         
-        {currentPlan.aiScanLimit && (
+        {currentPlan.aiScanLimit ? (
           <div className="text-sm text-muted-foreground">
             {aiScansUsed}/{currentPlan.aiScanLimit} scans
           </div>
+        ) : subscription?.subscribed ? (
+          <div className="text-sm text-muted-foreground">
+            ∞ scans
+          </div>
+        ) : null}
+
+        {(userCredits?.balance ?? 0) > 0 && (
+          <Badge variant="outline" className="text-xs">
+            <Coins className="h-3 w-3 mr-1" />
+            {userCredits?.balance} credits
+          </Badge>
         )}
         
         {subscription?.subscribed && (

@@ -183,6 +183,13 @@ export function FloatingMikeChat() {
     }
   }, [hasInitialized, user?.id, location.pathname]);
 
+  // Listen for external open requests (e.g. from Quick Actions Chat button)
+  useEffect(() => {
+    const handler = () => handleOpen();
+    window.addEventListener('open-magic-mike', handler);
+    return () => window.removeEventListener('open-magic-mike', handler);
+  }, [handleOpen]);
+
   const handleClearHistory = useCallback(async () => {
     if (!user?.id) return;
     await clearHistory(user.id, sessionId);

@@ -185,17 +185,17 @@ const Dashboard = () => {
                     <span>Mijn Collectie</span>
                   </Link>
                   
-                  {/* Chat */}
-                  <Link 
-                    to="/collection-chat"
-                    className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.03] group"
+                  {/* Chat - opens floating Mike chat */}
+                  <button 
+                    onClick={() => window.dispatchEvent(new Event('open-magic-mike'))}
+                    className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.03] group cursor-pointer"
                     style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', backdropFilter: 'blur(4px)' }}
                   >
                     <div className="p-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }}>
                       <MessageSquare className="w-6 h-6 group-hover:animate-pulse" />
                     </div>
                     <span>Chat</span>
-                  </Link>
+                  </button>
                 </div>
               </div>
             </div>

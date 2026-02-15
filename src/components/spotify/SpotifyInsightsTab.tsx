@@ -60,7 +60,7 @@ export const SpotifyInsightsTab: React.FC<SpotifyInsightsTabProps> = ({
         <div className="space-y-6">
           {/* 1. Personality Hero */}
           <Card className="overflow-hidden border-0">
-            <div className="bg-gradient-to-r from-[#1DB954] via-[#1DB954]/80 to-[#191414] p-6 text-white">
+            <div className="bg-gradient-to-r from-[#15803d] via-[#191414] to-[#191414] p-6 text-white">
               <h3 className="text-2xl font-bold mb-2">{analysis.personality?.title}</h3>
               <p className="text-white/90 leading-relaxed">{analysis.personality?.summary}</p>
               <div className="flex flex-wrap gap-2 mt-4">

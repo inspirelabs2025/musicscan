@@ -114,11 +114,38 @@ export default function SpotifyTrackDetail() {
 
           {/* Loading state */}
           {loading && (
-            <div className="space-y-4">
-              <Card><CardContent className="p-6"><Skeleton className="h-4 w-full mb-2" /><Skeleton className="h-4 w-3/4 mb-2" /><Skeleton className="h-4 w-5/6" /></CardContent></Card>
-              <Card><CardContent className="p-6"><Skeleton className="h-4 w-full mb-2" /><Skeleton className="h-4 w-2/3" /></CardContent></Card>
-              <div className="text-center text-muted-foreground py-4 flex items-center justify-center gap-2">
-                <Sparkles className="w-4 h-4 animate-pulse" /> Slimme analyse wordt gegenereerd...
+            <div className="flex flex-col items-center justify-center py-16 space-y-8 animate-fade-in">
+              {/* Animated vinyl / disc */}
+              <div className="relative w-32 h-32">
+                {/* Outer glow ring */}
+                <div className="absolute inset-0 rounded-full bg-[#1DB954]/20 animate-[pulse_2s_ease-in-out_infinite]" />
+                {/* Spinning disc */}
+                <div className="absolute inset-2 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-900 animate-[spin_3s_linear_infinite] shadow-xl">
+                  {/* Grooves */}
+                  <div className="absolute inset-3 rounded-full border border-zinc-700/40" />
+                  <div className="absolute inset-5 rounded-full border border-zinc-700/30" />
+                  <div className="absolute inset-7 rounded-full border border-zinc-700/20" />
+                  {/* Center label */}
+                  <div className="absolute inset-[35%] rounded-full bg-gradient-to-br from-[#1DB954] to-[#15803d] flex items-center justify-center">
+                    <Music className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+                {/* Sparkle accents */}
+                <Sparkles className="absolute -top-2 -right-2 w-5 h-5 text-[#1DB954] animate-[pulse_1.5s_ease-in-out_infinite]" />
+                <Sparkles className="absolute -bottom-1 -left-3 w-4 h-4 text-[#1DB954]/60 animate-[pulse_2s_ease-in-out_0.5s_infinite]" />
+              </div>
+              
+              {/* Text with typing dots */}
+              <div className="text-center space-y-2">
+                <p className="text-lg font-medium text-foreground">Slimme analyse wordt gegenereerd</p>
+                <div className="flex items-center justify-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-[#1DB954] animate-[bounce_1s_ease-in-out_infinite]" />
+                  <span className="w-2 h-2 rounded-full bg-[#1DB954] animate-[bounce_1s_ease-in-out_0.2s_infinite]" />
+                  <span className="w-2 h-2 rounded-full bg-[#1DB954] animate-[bounce_1s_ease-in-out_0.4s_infinite]" />
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  We duiken in het verhaal achter <span className="font-semibold text-[#1DB954]">{title}</span>
+                </p>
               </div>
             </div>
           )}

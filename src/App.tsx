@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
@@ -287,6 +287,14 @@ const LazyRoute = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<PageLoader />}>{children}</Suspense>
 );
 
+// Redirect logged-in users from Home to Dashboard
+const HomeOrDashboard = () => {
+  const { user, loading } = useAuth();
+  if (loading) return <PageLoader />;
+  if (user) return <Navigate to="/dashboard" replace />;
+  return <Home />;
+};
+
 // AppContent wrapper to use hooks that need Router context
 const AppContent = () => {
   useGoogleAnalytics();
@@ -305,7 +313,7 @@ const AppContent = () => {
       <MobileBottomNav />
       <Routes>
         {/* Core routes */}
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<HomeOrDashboard />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/set-password" element={<LazyRoute><SetPassword /></LazyRoute>} />
         {/* Backwards compatibility: old recovery link path */}

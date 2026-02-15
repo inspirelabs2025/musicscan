@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,8 +41,21 @@ function formatPlayedAt(dateStr: string) {
   return `${diffDay}d geleden`;
 }
 
+function buildTrackUrl(trackId: string, track: { artist: string; title: string; album?: string; year?: number; image_url?: string; spotify_url?: string }) {
+  const params = new URLSearchParams({
+    artist: track.artist,
+    title: track.title,
+    ...(track.album && { album: track.album }),
+    ...(track.year && { year: String(track.year) }),
+    ...(track.image_url && { image: track.image_url }),
+    ...(track.spotify_url && { url: track.spotify_url }),
+  });
+  return `/spotify-track/${trackId}?${params.toString()}`;
+}
+
 export default function SpotifyProfile() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState<'short_term' | 'medium_term' | 'long_term'>('medium_term');
   const { data: profile } = useProfile(user?.id);
   const { data: playlists } = useSpotifyPlaylists();
@@ -246,7 +260,7 @@ export default function SpotifyProfile() {
                     {recentlyPlayed && recentlyPlayed.length > 0 ? (
                       <div className="space-y-3">
                         {recentlyPlayed.map((track, index) => (
-                          <div key={index} className="flex items-center space-x-3">
+                          <div key={index} className="flex items-center space-x-3 cursor-pointer hover:bg-muted/50 rounded-lg p-1 -mx-1 transition-colors" onClick={() => navigate(buildTrackUrl(track.spotify_track_id, track))}>
                             {track.image_url ? (
                               <img src={track.image_url} alt={track.title} className="w-10 h-10 rounded object-cover" />
                             ) : (
@@ -284,7 +298,7 @@ export default function SpotifyProfile() {
                   <CardContent>
                     <div className="space-y-2">
                       {(showAllTracks ? allTracks : allTracks.slice(0, 20)).map((track, index) => (
-                        <div key={track.id} className="flex items-center space-x-3">
+                        <div key={track.id} className="flex items-center space-x-3 cursor-pointer hover:bg-muted/50 rounded-lg p-1 -mx-1 transition-colors" onClick={() => navigate(buildTrackUrl(track.spotify_track_id, { artist: track.artist, title: track.title, album: track.album || undefined, year: track.year || undefined, image_url: track.image_url || undefined, spotify_url: track.spotify_url || undefined }))}>
                           {track.image_url ? (
                             <img src={track.image_url} alt={track.title} className="w-10 h-10 rounded object-cover" />
                           ) : (

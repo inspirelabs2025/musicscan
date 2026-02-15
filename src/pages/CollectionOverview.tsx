@@ -54,6 +54,7 @@ export default function CollectionOverview() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: stats, isLoading, error } = useUnifiedCollectionStats();
+  const { tr } = useLanguage();
   
   const activeTab = searchParams.get('tab') || 'overview';
   
@@ -133,16 +134,16 @@ export default function CollectionOverview() {
                   onClick={() => navigate(-1)} 
                   className="w-fit bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale"
                 >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Terug
-                </Button>
-                <div className="text-center sm:text-left">
-                  <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-vinyl-purple to-vinyl-gold bg-clip-text text-transparent animate-fade-in">
-                    🎵 Collectie Overzicht 📊
-                  </h1>
-                  <p className="text-sm sm:text-base text-muted-foreground animate-fade-in animation-delay-200">
-                    ✨ Diepgaande analyse van je muziekcollectie
-                  </p>
+                   <ArrowLeft className="h-4 w-4 mr-2" />
+                   {tr.common.back}
+                 </Button>
+                 <div className="text-center sm:text-left">
+                   <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-vinyl-purple to-vinyl-gold bg-clip-text text-transparent animate-fade-in">
+                     {tr.collection.overview}
+                   </h1>
+                   <p className="text-sm sm:text-base text-muted-foreground animate-fade-in animation-delay-200">
+                     {tr.collection.deepAnalysis}
+                   </p>
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
@@ -152,15 +153,15 @@ export default function CollectionOverview() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <Brain className="h-5 w-5 mr-2 relative z-10" />
-                  <span className="relative z-10">🧠 Start je muziek analyse</span>
-                </Button>
-                <Button 
+                   <span className="relative z-10">{tr.collection.startMusicAnalysis}</span>
+                 </Button>
+                 <Button
                   onClick={() => navigate('/collection-chat')}
                   className="group relative bg-gradient-to-r from-vinyl-gold to-yellow-500 hover:from-vinyl-gold/90 hover:to-yellow-500/90 text-black font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-yellow-300/30 overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <Music2 className="h-5 w-5 mr-2 relative z-10" />
-                  <span className="relative z-10">💬 Chat met je muziek</span>
+                  <span className="relative z-10">{tr.collection.chatWithMusic}</span>
                 </Button>
                 <Button 
                   variant="outline" 
@@ -168,8 +169,8 @@ export default function CollectionOverview() {
                   className="group w-fit sm:w-auto bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale"
                 >
                   <Download className="h-4 w-4 mr-2 group-hover:animate-bounce" />
-                  <span className="hidden sm:inline">📊 Export Data</span>
-                  <span className="sm:hidden">📊 Export</span>
+                   <span className="hidden sm:inline">{tr.collection.exportData}</span>
+                   <span className="sm:hidden">📊 Export</span>
                 </Button>
               </div>
             </div>
@@ -184,42 +185,42 @@ export default function CollectionOverview() {
                   className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/80 data-[state=active]:to-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover-scale rounded-lg hover:bg-primary/10"
                 >
                   <Package className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="text-xs sm:text-sm hidden sm:inline">📦 Overzicht</span>
+                  <span className="text-xs sm:text-sm hidden sm:inline">{tr.collection.overviewTab}</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="ai-analysis" 
                   className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover-scale rounded-lg hover:bg-emerald-500/10"
                 >
                   <Brain className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="text-xs sm:text-sm hidden sm:inline">🤖 AI</span>
+                  <span className="text-xs sm:text-sm hidden sm:inline">{tr.collection.aiTab}</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="type" 
                   className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover-scale rounded-lg hover:bg-violet-500/10"
                 >
                   <Disc className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="text-xs sm:text-sm hidden sm:inline">💿 Type</span>
+                  <span className="text-xs sm:text-sm hidden sm:inline">{tr.collection.typeTab}</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="genre" 
                   className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover-scale rounded-lg hover:bg-blue-500/10"
                 >
                   <Music className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="text-xs sm:text-sm hidden sm:inline">🎵 Genre</span>
+                  <span className="text-xs sm:text-sm hidden sm:inline">{tr.collection.genreTab}</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="year" 
                   className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover-scale rounded-lg hover:bg-orange-500/10"
                 >
                   <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="text-xs sm:text-sm hidden sm:inline">📅 Jaar</span>
+                  <span className="text-xs sm:text-sm hidden sm:inline">{tr.collection.yearTab}</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="price" 
                   className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover-scale rounded-lg hover:bg-yellow-500/10"
                 >
                   <Euro className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="text-xs sm:text-sm hidden sm:inline">💰 Prijs</span>
+                  <span className="text-xs sm:text-sm hidden sm:inline">{tr.collection.priceTab}</span>
                 </TabsTrigger>
               </TabsList>
             </div>

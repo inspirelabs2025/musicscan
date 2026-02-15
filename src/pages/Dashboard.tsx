@@ -141,44 +141,54 @@ const Dashboard = () => {
 
           {/* Quick Actions Hero */}
           <section className="mb-12 animate-fade-in delay-200">
-            <Card className="border-2 hover:border-vinyl-purple/50 transition-all duration-300 hover:shadow-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-vinyl-purple" />
-                  🚀 Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-vinyl-purple/90 via-vinyl-purple/70 to-primary/80 p-1">
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-4 left-8 text-4xl animate-bounce" style={{ animationDelay: '0.1s' }}>🎵</div>
+                <div className="absolute top-6 right-12 text-3xl animate-pulse" style={{ animationDelay: '0.5s' }}>🎶</div>
+                <div className="absolute bottom-4 left-1/3 text-2xl animate-pulse" style={{ animationDelay: '0.3s' }}>🎸</div>
+                <div className="absolute bottom-6 right-1/4 text-3xl animate-bounce" style={{ animationDelay: '0.7s' }}>🥁</div>
+              </div>
+              <div className="relative bg-background/5 backdrop-blur-sm rounded-xl p-6">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-5">
+                  <Zap className="w-5 h-5 text-vinyl-gold" />
+                  <span className="bg-gradient-to-r from-vinyl-gold to-yellow-300 bg-clip-text text-transparent">Quick Actions</span>
+                </h3>
                 <div className="grid grid-cols-3 gap-4">
-                  <Button asChild size="lg" className="h-20 bg-gradient-to-r from-vinyl-gold to-yellow-500 hover:from-yellow-500 hover:to-vinyl-gold text-black hover:shadow-lg group">
+                  <Button asChild size="lg" className="h-24 bg-gradient-to-br from-vinyl-gold to-yellow-500 hover:from-yellow-400 hover:to-vinyl-gold text-black hover:shadow-xl hover:shadow-vinyl-gold/30 hover:scale-[1.03] transition-all duration-300 group rounded-xl border-0">
                     <Link to="/ai-scan-v2">
                       <div className="flex flex-col items-center gap-2">
-                        <Camera className="w-7 h-7 group-hover:animate-pulse" />
+                        <div className="p-2 rounded-full bg-black/10">
+                          <Camera className="w-7 h-7 group-hover:animate-pulse" />
+                        </div>
                         <span className="text-sm font-bold">Scan Nu</span>
                       </div>
                     </Link>
                   </Button>
                   
-                  <Button asChild size="lg" variant="outline" className="h-20 hover:bg-vinyl-purple/10 group">
+                  <Button asChild size="lg" variant="outline" className="h-24 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/40 hover:scale-[1.03] transition-all duration-300 group rounded-xl backdrop-blur-sm">
                     <Link to="/my-collection">
                       <div className="flex flex-col items-center gap-2">
-                        <Search className="w-7 h-7 group-hover:animate-pulse" />
+                        <div className="p-2 rounded-full bg-white/10">
+                          <Search className="w-7 h-7 group-hover:animate-pulse" />
+                        </div>
                         <span className="text-sm font-medium">Mijn Collectie</span>
                       </div>
                     </Link>
                   </Button>
                   
-                  <Button asChild size="lg" variant="outline" className="h-20 hover:bg-blue-500/10 group">
+                  <Button asChild size="lg" variant="outline" className="h-24 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/40 hover:scale-[1.03] transition-all duration-300 group rounded-xl backdrop-blur-sm">
                     <Link to="/collection-chat">
                       <div className="flex flex-col items-center gap-2">
-                        <MessageSquare className="w-7 h-7 group-hover:animate-pulse" />
+                        <div className="p-2 rounded-full bg-white/10">
+                          <MessageSquare className="w-7 h-7 group-hover:animate-pulse" />
+                        </div>
                         <span className="text-sm font-medium">Chat</span>
                       </div>
                     </Link>
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </section>
 
           {/* Credits & Subscription */}

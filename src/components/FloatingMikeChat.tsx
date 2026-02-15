@@ -487,14 +487,6 @@ ${recentItems}
                 <Button
                   size="sm"
                   className="text-xs rounded-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5"
-                  onClick={() => sendMessage('Scan een CD of LP')}
-                >
-                  <Disc3 className="h-3.5 w-3.5" />
-                  Scan CD of LP
-                </Button>
-                <Button
-                  size="sm"
-                  className="text-xs rounded-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5"
                   onClick={() => sendMessage('Wat kun je me vertellen over mijn collectie?')}
                 >
                   <Music className="h-3.5 w-3.5" />
@@ -515,6 +507,20 @@ ${recentItems}
                 >
                   <HelpCircle className="h-3.5 w-3.5" />
                   Wat kan je?
+                </Button>
+              </div>
+            )}
+
+            {/* Scan button - always visible */}
+            {!isStreaming && (
+              <div className="px-3 pt-1 pb-0">
+                <Button
+                  size="sm"
+                  className="text-xs rounded-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5"
+                  onClick={() => sendMessage('Scan een CD of LP')}
+                >
+                  <Disc3 className="h-3.5 w-3.5" />
+                  Scan CD of LP
                 </Button>
               </div>
             )}

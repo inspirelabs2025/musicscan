@@ -10,33 +10,36 @@ import { Badge } from '@/components/ui/badge';
 import { Search, BookOpen, TrendingUp, Calendar, Eye } from 'lucide-react';
 import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
 import { format } from 'date-fns';
-import { nl } from 'date-fns/locale';
-
-const SUBJECT_TYPES = [
-  { value: 'all', label: 'Alle Types' },
-  { value: 'artist', label: 'Artiesten' },
-  { value: 'album', label: 'Albums' },
-  { value: 'song', label: 'Songs' },
-  { value: 'studio', label: "Studio's" },
-  { value: 'musician', label: 'Musici' },
-  { value: 'producer', label: 'Producers' },
-  { value: 'label', label: 'Labels' },
-  { value: 'venue', label: 'Venues' },
-];
-
-const SORT_OPTIONS = [
-  { value: 'newest', label: 'Nieuwste eerst' },
-  { value: 'popular', label: 'Meest populair' },
-  { value: 'oldest', label: 'Oudste eerst' },
-];
+import { nl, enUS } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const CANONICAL_URL = "https://www.musicscan.app/anekdotes";
 
 export default function AnecdotesOverview() {
   const navigate = useNavigate();
+  const { tr, language } = useLanguage();
+  const a = tr.anecdotes;
   const [searchQuery, setSearchQuery] = useState('');
   const [subjectType, setSubjectType] = useState('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'popular'>('newest');
+
+  const SUBJECT_TYPES = [
+    { value: 'all', label: a.allTypes },
+    { value: 'artist', label: a.artists },
+    { value: 'album', label: a.albums },
+    { value: 'song', label: a.songs },
+    { value: 'studio', label: a.studios },
+    { value: 'musician', label: a.musicians },
+    { value: 'producer', label: a.producers },
+    { value: 'label', label: a.labels },
+    { value: 'venue', label: a.venues },
+  ];
+
+  const SORT_OPTIONS = [
+    { value: 'newest', label: a.newestFirst },
+    { value: 'popular', label: a.mostPopularSort },
+    { value: 'oldest', label: a.oldestFirst },
+  ];
 
   const { data: anecdotes, isLoading } = useAnecdotes({
     searchQuery,
@@ -49,8 +52,8 @@ export default function AnecdotesOverview() {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "Muziek Anekdotes - Dagelijkse Verhalen",
-    description: "Ontdek boeiende anekdotes uit de muziekgeschiedenis. Elke dag een nieuw verhaal over artiesten, albums, songs en meer.",
+    name: a.metaTitle,
+    description: a.metaDesc,
     url: CANONICAL_URL,
     publisher: {
       "@type": "Organization",
@@ -70,10 +73,7 @@ export default function AnecdotesOverview() {
           description: anecdote.anecdote_content.substring(0, 160),
           datePublished: anecdote.anecdote_date,
           url: `https://www.musicscan.app/anekdotes/${anecdote.slug}`,
-          author: {
-            "@type": "Organization",
-            name: "MusicScan"
-          }
+          author: { "@type": "Organization", name: "MusicScan" }
         }
       })) || []
     }
@@ -82,39 +82,27 @@ export default function AnecdotesOverview() {
   return (
     <>
       <Helmet>
-        <title>Muziek Anekdotes - Dagelijkse Verhalen | MusicScan</title>
-        <meta name="description" content="Ontdek boeiende anekdotes uit de muziekgeschiedenis. Elke dag een nieuw verhaal over artiesten, albums, songs en meer." />
-        <meta name="keywords" content="muziek anekdotes, muziekgeschiedenis, dagelijkse verhalen, artiesten, albums, muziek trivia, behind the scenes" />
+        <title>{a.metaTitle}</title>
+        <meta name="description" content={a.metaDesc} />
         <link rel="canonical" href={CANONICAL_URL} />
-        
-        {/* Open Graph */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content={CANONICAL_URL} />
-        <meta property="og:title" content="Muziek Anekdotes - Dagelijkse Verhalen | MusicScan" />
-        <meta property="og:description" content="Ontdek boeiende anekdotes uit de muziekgeschiedenis. Elke dag een nieuw verhaal." />
+        <meta property="og:title" content={a.metaTitle} />
+        <meta property="og:description" content={a.metaDesc} />
         <meta property="og:image" content="https://www.musicscan.app/og-anekdotes.jpg" />
         <meta property="og:site_name" content="MusicScan" />
-        <meta property="og:locale" content="nl_NL" />
-        
-        {/* Twitter Card */}
+        <meta property="og:locale" content={language === 'nl' ? 'nl_NL' : 'en_US'} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@musicscan_app" />
-        <meta name="twitter:creator" content="@musicscan_app" />
-        <meta name="twitter:title" content="Muziek Anekdotes - Dagelijkse Verhalen | MusicScan" />
-        <meta name="twitter:description" content="Ontdek boeiende anekdotes uit de muziekgeschiedenis." />
-        <meta name="twitter:image" content="https://www.musicscan.app/og-anekdotes.jpg" />
-        
-        {/* JSON-LD Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
+        <meta name="twitter:title" content={a.metaTitle} />
+        <meta name="twitter:description" content={a.metaDesc} />
+        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 
       <div className="min-h-screen bg-background">
         <BreadcrumbNavigation
           items={[
             { name: 'Home', url: '/' },
-            { name: 'Anekdotes', url: '/anekdotes' },
+            { name: a.title, url: '/anekdotes' },
           ]}
         />
 
@@ -125,23 +113,23 @@ export default function AnecdotesOverview() {
               <BookOpen className="w-16 h-16" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-center mb-4">
-              📖 Muziek Anekdotes
+              📖 {a.title}
             </h1>
             <p className="text-xl text-center max-w-2xl mx-auto">
-              Dagelijkse verhalen uit de muziekgeschiedenis
+              {a.dailyStories}
             </p>
 
             {anecdotes && (
               <div className="flex justify-center gap-8 mt-8 flex-wrap">
                 <div className="text-center">
                   <div className="text-3xl font-bold">{anecdotes.length}</div>
-                  <div className="text-sm opacity-90">Anekdotes</div>
+                  <div className="text-sm opacity-90">{a.title}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold">
-                    {Math.round(anecdotes.reduce((sum, a) => sum + (a.views_count || 0), 0) / anecdotes.length)}
+                    {Math.round(anecdotes.reduce((sum, ax) => sum + (ax.views_count || 0), 0) / anecdotes.length)}
                   </div>
-                  <div className="text-sm opacity-90">Gem. Views</div>
+                  <div className="text-sm opacity-90">{a.avgViews}</div>
                 </div>
               </div>
             )}
@@ -156,7 +144,7 @@ export default function AnecdotesOverview() {
                 <div className="relative">
                   <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                   <Input
-                    placeholder="Zoek anekdotes..."
+                    placeholder={a.searchPlaceholder}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -165,7 +153,7 @@ export default function AnecdotesOverview() {
 
                 <Select value={subjectType} onValueChange={setSubjectType}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Filter op type" />
+                    <SelectValue placeholder={a.filterByType} />
                   </SelectTrigger>
                   <SelectContent>
                     {SUBJECT_TYPES.map((type) => (
@@ -178,7 +166,7 @@ export default function AnecdotesOverview() {
 
                 <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sorteer op" />
+                    <SelectValue placeholder={a.sortByLabel} />
                   </SelectTrigger>
                   <SelectContent>
                     {SORT_OPTIONS.map((option) => (
@@ -196,7 +184,7 @@ export default function AnecdotesOverview() {
           {isLoading ? (
             <div className="text-center py-12">
               <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto" />
-              <p className="mt-4 text-muted-foreground">Anekdotes laden...</p>
+              <p className="mt-4 text-muted-foreground">{a.loading}</p>
             </div>
           ) : anecdotes && anecdotes.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -213,7 +201,7 @@ export default function AnecdotesOverview() {
                       </Badge>
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <Calendar className="w-3 h-3" />
-                        {format(new Date(anecdote.anecdote_date), 'd MMM yyyy', { locale: nl })}
+                        {format(new Date(anecdote.anecdote_date), 'd MMM yyyy', { locale: language === 'nl' ? nl : enUS })}
                       </div>
                     </div>
                     <CardTitle className="text-lg group-hover:text-primary transition-colors">
@@ -239,7 +227,7 @@ export default function AnecdotesOverview() {
                         </div>
                       </div>
                       <Button variant="ghost" size="sm" className="h-auto p-0 text-primary">
-                        Lees meer →
+                        {a.readMore}
                       </Button>
                     </div>
                   </CardContent>
@@ -251,7 +239,7 @@ export default function AnecdotesOverview() {
               <CardContent className="py-12 text-center">
                 <BookOpen className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
                 <p className="text-lg text-muted-foreground">
-                  Geen anekdotes gevonden met deze filters
+                  {a.noAnecdotesFound}
                 </p>
               </CardContent>
             </Card>

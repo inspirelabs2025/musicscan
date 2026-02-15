@@ -10,8 +10,11 @@ import { EpisodeCard } from '@/components/podcast/EpisodeCard';
 import { IndividualEpisodeCard } from '@/components/podcast/IndividualEpisodeCard';
 import { RSSEpisodeCard } from '@/components/podcast/RSSEpisodeCard';
 import { OwnPodcastSection } from '@/components/podcast/OwnPodcastSection';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function Podcasts() {
+  const { tr } = useLanguage();
+  const p = tr.podcasts;
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedShow, setSelectedShow] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,7 +38,7 @@ export default function Podcasts() {
             onClick={() => setSelectedShow(null)}
             className="text-sm text-muted-foreground hover:text-foreground mb-4"
           >
-            ← Terug naar overzicht
+            {p.backToOverview}
           </button>
           
           <div className="flex items-start gap-4">
@@ -59,7 +62,7 @@ export default function Podcasts() {
         </div>
 
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold">Afleveringen</h2>
+          <h2 className="text-xl font-semibold">{p.episodes}</h2>
           
           {episodesLoading ? (
             <div className="grid gap-4">
@@ -73,7 +76,7 @@ export default function Podcasts() {
             <Card>
               <CardContent className="p-6">
                 <p className="text-muted-foreground text-center">
-                  Nog geen afleveringen beschikbaar voor deze podcast.
+                  {p.noEpisodesAvailable}
                 </p>
               </CardContent>
             </Card>
@@ -89,10 +92,9 @@ export default function Podcasts() {
             </div>
           )}
 
-          {/* Individual Episodes for selected show */}
           {individualEpisodes && individualEpisodes.length > 0 && (
             <div className="space-y-4 mt-8">
-              <h2 className="text-2xl font-bold">Uitgelichte Episodes</h2>
+              <h2 className="text-2xl font-bold">{p.featuredEpisodes}</h2>
               <div className="grid gap-4">
                 {individualEpisodes.filter(ep => ep.is_featured).map((episode) => (
                   <IndividualEpisodeCard
@@ -114,19 +116,17 @@ export default function Podcasts() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
           <Headphones className="w-8 h-8" />
-          <h1 className="text-4xl font-bold mb-2">Podcast Ontdekking</h1>
+          <h1 className="text-4xl font-bold mb-2">{p.podcastDiscovery}</h1>
         </div>
         <p className="text-muted-foreground mb-8">
-          Ontdek gecureerde podcasts en episodes over muziek, vinyl en alles wat daarbij komt kijken.
+          {p.podcastDiscoveryDesc}
         </p>
 
-        {/* MusicScan Original Podcasts */}
         <OwnPodcastSection />
 
-        {/* Featured Individual Episodes - only show if there are featured episodes */}
         {individualEpisodes && individualEpisodes.filter(ep => ep.is_featured).length > 0 && (
           <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-4">Uitgelichte Episodes</h2>
+            <h2 className="text-2xl font-bold mb-4">{p.featuredEpisodes}</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {individualEpisodes.filter(ep => ep.is_featured).slice(0, 6).map((episode) => (
                 <IndividualEpisodeCard
@@ -148,7 +148,7 @@ export default function Podcasts() {
         <div className="relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Zoek podcasts op naam, beschrijving of uitgever..."
+            placeholder={p.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -170,12 +170,12 @@ export default function Podcasts() {
             <div className="text-center">
               <Headphones className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">
-                {searchQuery ? 'Geen podcasts gevonden' : 'Nog geen podcasts beschikbaar'}
+                {searchQuery ? p.noPodcastsFound : p.noPodcastsAvailable}
               </h3>
               <p className="text-muted-foreground">
                 {searchQuery 
-                  ? `Er zijn geen podcasts gevonden voor "${searchQuery}". Probeer een andere zoekterm.`
-                  : 'Er zijn nog geen gecureerde podcasts toegevoegd.'
+                  ? `${p.noPodcastsFoundFor} "${searchQuery}". ${p.tryOtherSearch}`
+                  : p.noPodcastsAddedYet
                 }
               </p>
             </div>

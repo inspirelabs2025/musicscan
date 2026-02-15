@@ -86,28 +86,37 @@ export default function SpotifyProfile() {
     long_term: 'Alle tijd'
   };
 
-  // Generate music DNA summary
-  const musicDNA = audioFeatures ? (() => {
-    const traits: string[] = [];
-    if (audioFeatures.energy > 70) traits.push('energiek');
-    else if (audioFeatures.energy < 30) traits.push('rustig');
-    if (audioFeatures.danceability > 70) traits.push('dansbaar');
-    if (audioFeatures.valence > 70) traits.push('vrolijk');
-    else if (audioFeatures.valence < 30) traits.push('melancholisch');
-    if (audioFeatures.acousticness > 60) traits.push('akoestisch');
-    if (audioFeatures.instrumentalness > 40) traits.push('instrumentaal');
-    if (audioFeatures.speechiness > 30) traits.push('vocaal');
-    
-    const tempoLabel = audioFeatures.tempo > 140 ? 'snel' : audioFeatures.tempo > 100 ? 'gemiddeld' : 'langzaam';
-    
-    return {
-      traits,
-      tempoLabel,
-      summary: traits.length > 0 
-        ? `Je muziek is overwegend ${traits.slice(0, 3).join(', ')} met een ${tempoLabel} tempo (${audioFeatures.tempo} BPM).`
-        : `Je luistert naar een gevarieerd muziekpalet met een gemiddeld tempo van ${audioFeatures.tempo} BPM.`
-    };
-  })() : null;
+  // Generate music DNA summary - use audio features if available, fallback to AI analysis
+  const musicDNA = (() => {
+    if (audioFeatures) {
+      const traits: string[] = [];
+      if (audioFeatures.energy > 70) traits.push('energiek');
+      else if (audioFeatures.energy < 30) traits.push('rustig');
+      if (audioFeatures.danceability > 70) traits.push('dansbaar');
+      if (audioFeatures.valence > 70) traits.push('vrolijk');
+      else if (audioFeatures.valence < 30) traits.push('melancholisch');
+      if (audioFeatures.acousticness > 60) traits.push('akoestisch');
+      if (audioFeatures.instrumentalness > 40) traits.push('instrumentaal');
+      if (audioFeatures.speechiness > 30) traits.push('vocaal');
+      const tempoLabel = audioFeatures.tempo > 140 ? 'snel' : audioFeatures.tempo > 100 ? 'gemiddeld' : 'langzaam';
+      return {
+        traits,
+        tempoLabel,
+        summary: traits.length > 0 
+          ? `Je muziek is overwegend ${traits.slice(0, 3).join(', ')} met een ${tempoLabel} tempo (${audioFeatures.tempo} BPM).`
+          : `Je luistert naar een gevarieerd muziekpalet met een gemiddeld tempo van ${audioFeatures.tempo} BPM.`
+      };
+    }
+    // Fallback to AI analysis personality data
+    if (aiAnalysis?.analysis?.personality) {
+      return {
+        traits: aiAnalysis.analysis.personality.traits || [],
+        tempoLabel: '',
+        summary: aiAnalysis.analysis.personality.summary || 'Start een analyse om je Muziek-DNA te ontdekken.'
+      };
+    }
+    return null;
+  })();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
@@ -604,10 +613,26 @@ export default function SpotifyProfile() {
                           <span className="text-xs">Gebaseerd op {audioFeatures.sample_size} top tracks</span>
                         </div>
                       </div>
+                    ) : aiAnalysis?.analysis?.patterns ? (
+                      <div className="space-y-4">
+                        <div className="p-4 bg-muted/50 rounded-lg">
+                          <p className="text-sm font-medium mb-1">🎧 Luisterstijl</p>
+                          <p className="text-xs text-muted-foreground">{aiAnalysis.analysis.patterns.listeningStyle}</p>
+                        </div>
+                        <div className="p-4 bg-muted/50 rounded-lg">
+                          <p className="text-sm font-medium mb-1">💜 Mood Profiel</p>
+                          <p className="text-xs text-muted-foreground">{aiAnalysis.analysis.patterns.moodProfile}</p>
+                        </div>
+                        <div className="p-4 bg-muted/50 rounded-lg">
+                          <p className="text-sm font-medium mb-1">⚡ Uniekheid</p>
+                          <p className="text-xs text-muted-foreground">{aiAnalysis.analysis.patterns.uniqueness}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground italic">Gebaseerd op slimme analyse van je luistergedrag</p>
+                      </div>
                     ) : (
-                      <p className="text-muted-foreground text-center py-8">
-                        Synchroniseer je data om audio analyses te zien
-                      </p>
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">Klik op "Analyse" in het Slimme Analyse panel hierboven voor audio inzichten</p>
+                      </div>
                     )}
                   </CardContent>
                 </Card>

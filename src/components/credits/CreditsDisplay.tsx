@@ -30,6 +30,16 @@ export const CreditsDisplay: React.FC = () => {
             </Link>
           </Button>
         </div>
+        {/* Betaalmethodes */}
+        <div className="flex flex-wrap items-center gap-2 justify-center pt-1">
+          <span className="text-[11px] text-muted-foreground">Betaal met</span>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">iDEAL</span>
+            <span className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">Creditcard</span>
+            <span className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">PayPal</span>
+            <span className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">Klarna</span>
+          </div>
+        </div>
         <div className="border-t pt-3">
           <p className="text-sm text-muted-foreground mb-2">Heb je een promocode?</p>
           <PromoCodeInput />

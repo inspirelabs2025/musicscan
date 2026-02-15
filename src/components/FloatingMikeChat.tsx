@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Loader2, Trash2, Disc3, Music, HelpCircle, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -129,6 +129,7 @@ async function clearHistory(userId: string, sessionId: string) {
 export function FloatingMikeChat() {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -517,7 +518,7 @@ ${recentItems}
                 <Button
                   size="sm"
                   className="text-xs rounded-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5"
-                  onClick={() => sendMessage('Scan een CD of LP')}
+                  onClick={() => { setIsOpen(false); navigate('/ai-scan-v2?tab=chat'); }}
                 >
                   <Disc3 className="h-3.5 w-3.5" />
                   Scan CD of LP

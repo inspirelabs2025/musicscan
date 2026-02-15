@@ -471,7 +471,7 @@ const AppContent = () => {
         <Route path="/feeds" element={<LazyRoute><Feeds /></LazyRoute>} />
         <Route path="/prestaties" element={<ProtectedRoute><LazyRoute><Prestaties /></LazyRoute></ProtectedRoute>} />
         <Route path="/spotify-profile" element={<ProtectedRoute><LazyRoute><SpotifyProfile /></LazyRoute></ProtectedRoute>} />
-        <Route path="/spotify-track/:trackId" element={<ProtectedRoute><LazyRoute><SpotifyTrackDetail /></LazyRoute></ProtectedRoute>} />
+        <Route path="/nummer/:slug" element={<LazyRoute><SpotifyTrackDetail /></LazyRoute>} />
         <Route path="/auth/spotify/callback" element={<LazyRoute><SpotifyCallback /></LazyRoute>} />
         
 {/* Admin routes */}

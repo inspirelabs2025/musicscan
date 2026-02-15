@@ -6,22 +6,61 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+function generateSlug(artist: string, title: string): string {
+  const combined = `${artist}-${title}`;
+  return combined
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // remove diacritics
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .substring(0, 100);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    const { spotify_track_id, artist, title, album, year } = await req.json();
-
-    if (!spotify_track_id || !artist || !title) {
-      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+    const body = await req.json();
+    const { spotify_track_id, artist, title, album, year, slug: lookupSlug } = body;
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
+
+    // Support lookup by slug (for SEO pages)
+    if (lookupSlug) {
+      const { data: cached } = await supabase
+        .from('spotify_track_insights')
+        .select('*')
+        .eq('slug', lookupSlug)
+        .maybeSingle();
+
+      if (cached) {
+        return new Response(JSON.stringify({
+          success: true,
+          insights: cached.insights_data,
+          cached: true,
+          track: { artist: cached.artist, title: cached.title, album: cached.album, year: cached.year, spotify_track_id: cached.spotify_track_id }
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      return new Response(JSON.stringify({ error: 'Track niet gevonden' }), {
+        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Original flow: require track ID + artist + title
+    if (!spotify_track_id || !artist || !title) {
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     // Check cache first
     const { data: cached } = await supabase
@@ -31,7 +70,13 @@ serve(async (req) => {
       .maybeSingle();
 
     if (cached) {
-      return new Response(JSON.stringify({ success: true, insights: cached.insights_data, cached: true }), {
+      return new Response(JSON.stringify({
+        success: true,
+        insights: cached.insights_data,
+        cached: true,
+        slug: cached.slug,
+        track: { artist: cached.artist, title: cached.title, album: cached.album, year: cached.year }
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -107,14 +152,27 @@ Antwoord ALLEEN met valid JSON, geen markdown.`;
     try {
       insights = JSON.parse(jsonStr);
     } catch {
-      // Fix common issues
       jsonStr = jsonStr.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
       insights = JSON.parse(jsonStr);
     }
 
     const generationTime = Date.now() - startTime;
 
-    // Cache in database
+    // Generate unique slug
+    let slug = generateSlug(artist, title);
+    
+    // Check for slug collision, append track ID suffix if needed
+    const { data: existing } = await supabase
+      .from('spotify_track_insights')
+      .select('slug')
+      .eq('slug', slug)
+      .maybeSingle();
+    
+    if (existing) {
+      slug = `${slug}-${spotify_track_id.substring(0, 6)}`;
+    }
+
+    // Cache in database with slug
     await supabase.from('spotify_track_insights').upsert({
       spotify_track_id,
       artist,
@@ -123,11 +181,12 @@ Antwoord ALLEEN met valid JSON, geen markdown.`;
       year: year || null,
       insights_data: insights,
       generation_time_ms: generationTime,
+      slug,
     }, { onConflict: 'spotify_track_id' });
 
-    console.log(`✅ Track insight generated for "${title}" by ${artist} in ${generationTime}ms`);
+    console.log(`✅ Track insight generated for "${title}" by ${artist} in ${generationTime}ms → /nummer/${slug}`);
 
-    return new Response(JSON.stringify({ success: true, insights, cached: false }), {
+    return new Response(JSON.stringify({ success: true, insights, cached: false, slug }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (error) {

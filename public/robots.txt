@@ -59,6 +59,8 @@ Allow: /singles
 Allow: /singles/*
 Allow: /muziek-verhaal
 Allow: /muziek-verhaal/*
+Allow: /nummer
+Allow: /nummer/*
 Allow: /plaat-verhaal
 Allow: /plaat-verhaal/*
 Allow: /anekdotes

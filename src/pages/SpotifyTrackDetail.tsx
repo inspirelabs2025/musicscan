@@ -169,13 +169,7 @@ export default function SpotifyTrackDetail() {
         <div className="max-w-4xl mx-auto space-y-6">
 
           {/* Back button */}
-          <Button variant="ghost" onClick={() => {
-            if (window.history.length > 1) {
-              navigate(-1);
-            } else {
-              navigate('/spotify-profile');
-            }
-          }} className="gap-2">
+          <Button variant="ghost" onClick={() => navigate('/spotify-profile')} className="gap-2">
             <ArrowLeft className="w-4 h-4" /> Terug
           </Button>
 

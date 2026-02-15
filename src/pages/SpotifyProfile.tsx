@@ -48,7 +48,7 @@ export default function SpotifyProfile() {
   const { data: topTracks } = useSpotifyTopTracks(timeRange);
   const { data: topArtists } = useSpotifyTopArtists(timeRange);
   const { data: spotifyStats } = useSpotifyStats();
-  const { data: recentlyPlayed } = useSpotifyRecentlyPlayed(20);
+  const { data: recentlyPlayed } = useSpotifyRecentlyPlayed(50);
   const { data: audioFeatures } = useSpotifyAudioFeatures();
 
   const isConnected = (profile as any)?.spotify_connected || false;

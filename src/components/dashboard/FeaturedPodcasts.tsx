@@ -4,10 +4,12 @@ import { Headphones, ArrowRight } from "lucide-react";
 import { EpisodeCard } from "@/components/podcast/EpisodeCard";
 import { useFeaturedEpisodes } from "@/hooks/useCuratedPodcasts";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export const FeaturedPodcasts = () => {
   const navigate = useNavigate();
   const { data: featuredEpisodes = [], isLoading } = useFeaturedEpisodes(3);
+  const { tr } = useLanguage();
 
   if (isLoading) {
     return (
@@ -15,7 +17,7 @@ export const FeaturedPodcasts = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Headphones className="w-5 h-5" />
-            Featured Podcasts
+            {tr.podcasts.featuredPodcasts}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -37,12 +39,12 @@ export const FeaturedPodcasts = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Headphones className="w-5 h-5" />
-            Featured Podcasts
+            {tr.podcasts.featuredPodcasts}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Nog geen featured podcast afleveringen beschikbaar.
+            {tr.podcasts.noFeaturedEpisodes}
           </p>
           <Button 
             variant="outline" 
@@ -50,7 +52,7 @@ export const FeaturedPodcasts = () => {
             className="mt-3"
             onClick={() => navigate('/podcasts')}
           >
-            Bekijk alle podcasts
+            {tr.podcasts.viewAllPodcasts}
           </Button>
         </CardContent>
       </Card>
@@ -63,14 +65,14 @@ export const FeaturedPodcasts = () => {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Headphones className="w-5 h-5" />
-            Featured Podcasts
+            {tr.podcasts.featuredPodcasts}
           </CardTitle>
           <Button 
             variant="ghost" 
             size="sm"
             onClick={() => navigate('/podcasts')}
           >
-            Alle podcasts
+            {tr.podcasts.allPodcasts}
             <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </div>

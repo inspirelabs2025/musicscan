@@ -16,12 +16,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Artists = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { tr } = useLanguage();
+  const a = tr.artists;
   
-  // Initialize state from URL params (convert genre to lowercase for matching)
   const urlGenre = searchParams.get('genre');
   const urlCountry = searchParams.get('country');
   const initialGenre = urlGenre ? urlGenre.toLowerCase() : 'all';
@@ -33,18 +35,11 @@ const Artists = () => {
   const [selectedCountry, setSelectedCountry] = useState<string>(initialCountry);
   const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'alphabetical'>('newest');
   
-  // Update URL when filters change
   useEffect(() => {
     const params = new URLSearchParams();
-    if (selectedGenre && selectedGenre !== 'all') {
-      params.set('genre', selectedGenre);
-    }
-    if (selectedCountry) {
-      params.set('country', selectedCountry);
-    }
-    if (search) {
-      params.set('search', search);
-    }
+    if (selectedGenre && selectedGenre !== 'all') params.set('genre', selectedGenre);
+    if (selectedCountry) params.set('country', selectedCountry);
+    if (search) params.set('search', search);
     setSearchParams(params, { replace: true });
   }, [selectedGenre, selectedCountry, search, setSearchParams]);
 
@@ -68,41 +63,35 @@ const Artists = () => {
   return (
     <>
       <Helmet>
-        <title>{selectedGenre !== 'all' ? `${selectedGenre} Artiesten` : 'Artiesten'} | Verhalen over Muziek Iconen | MusicScan</title>
+        <title>{selectedGenre !== 'all' ? `${selectedGenre} ${a.artist}` : tr.nav.artists} | {a.title} | MusicScan</title>
         <meta 
           name="description" 
           content={selectedGenre !== 'all' 
-            ? `Ontdek ${selectedGenre} artiesten en hun verhalen. Van biografie tot culturele impact.`
-            : "Ontdek verhalen over iconische muziekartiesten uit verschillende genres en tijdperken. Van biografie tot culturele impact."
+            ? `${a.defaultDesc}`
+            : a.defaultDesc
           } 
         />
-        <meta property="og:title" content={`${selectedGenre !== 'all' ? selectedGenre + ' ' : ''}Artiesten | MusicScan`} />
-        <meta 
-          property="og:description" 
-          content="Ontdek verhalen over iconische muziekartiesten uit verschillende genres en tijdperken." 
-        />
+        <meta property="og:title" content={`${selectedGenre !== 'all' ? selectedGenre + ' ' : ''}${tr.nav.artists} | MusicScan`} />
+        <meta property="og:description" content={a.defaultDesc} />
         <meta property="og:type" content="website" />
         <link rel="canonical" href="https://www.musicscan.app/artists" />
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        {/* Hero Section */}
         <section className="bg-gradient-to-b from-primary/10 to-background py-6">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center space-y-3">
               <div className="flex items-center justify-center gap-2">
                 <Music className="w-7 h-7 text-primary" />
                 <h1 className="text-3xl md:text-4xl font-bold">
-                  {selectedCountry === 'nederland' ? '🇳🇱 Nederlandse Muziek Iconen' : 
-                   selectedCountry === 'frankrijk' ? '🇫🇷 Franse Muziek Iconen' : 'Verhalen over Muziek Iconen'}
+                  {selectedCountry === 'nederland' ? a.dutchIcons : 
+                   selectedCountry === 'frankrijk' ? a.frenchIcons : a.title}
                 </h1>
               </div>
               <p className="text-lg text-muted-foreground">
-                {selectedCountry === 'nederland' 
-                  ? 'Ontdek de verhalen achter de grootste Nederlandse artiesten.'
-                  : selectedCountry === 'frankrijk'
-                  ? 'Ontdek de verhalen achter de grootste Franse artiesten.'
-                  : 'Ontdek de verhalen achter de grootste artiesten uit de muziekgeschiedenis.'}
+                {selectedCountry === 'nederland' ? a.dutchDesc
+                  : selectedCountry === 'frankrijk' ? a.frenchDesc
+                  : a.defaultDesc}
               </p>
 
               {(selectedCountry === 'nederland' || selectedCountry === 'frankrijk') && (
@@ -111,45 +100,42 @@ const Artists = () => {
                   size="sm"
                   onClick={() => setSelectedCountry('')}
                 >
-                  ✕ {selectedCountry === 'nederland' ? 'Nederland' : 'Frankrijk'} filter verwijderen
+                  ✕ {selectedCountry === 'nederland' ? tr.nav.netherlands : tr.nav.france} {a.removeFilter}
                 </Button>
               )}
             </div>
           </div>
         </section>
 
-        {/* Search & Filters */}
         <section className="sticky top-16 z-10 bg-background/95 backdrop-blur-sm border-b py-4">
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
               <Collapsible defaultOpen={false}>
                 <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full justify-center mb-2">
                   <Filter className="w-4 h-4" />
-                  <span>Zoeken & Filteren</span>
+                  <span>{a.searchFilter}</span>
                   <ChevronDown className="w-4 h-4" />
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="flex flex-col md:flex-row gap-4 pt-2">
-                    {/* Search */}
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         type="text"
-                        placeholder="Zoek artiest..."
+                        placeholder={a.searchPlaceholder}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-10"
                       />
                     </div>
 
-                    {/* Genre Filter */}
                     <Select value={selectedGenre} onValueChange={setSelectedGenre}>
                       <SelectTrigger className="w-full md:w-[200px]">
                         <Filter className="w-4 h-4 mr-2" />
-                        <SelectValue placeholder="Alle Genres" />
+                        <SelectValue placeholder={a.allGenres} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Alle Genres</SelectItem>
+                        <SelectItem value="all">{a.allGenres}</SelectItem>
                         {stats?.genres.map(genre => (
                           <SelectItem key={genre} value={genre}>
                             {genre.charAt(0).toUpperCase() + genre.slice(1)}
@@ -158,15 +144,14 @@ const Artists = () => {
                       </SelectContent>
                     </Select>
 
-                    {/* Sort */}
                     <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                       <SelectTrigger className="w-full md:w-[200px]">
-                        <SelectValue placeholder="Sorteer op" />
+                        <SelectValue placeholder={a.sortBy} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="newest">Nieuwste</SelectItem>
-                        <SelectItem value="popular">Populairste</SelectItem>
-                        <SelectItem value="alphabetical">A-Z</SelectItem>
+                        <SelectItem value="newest">{a.newest}</SelectItem>
+                        <SelectItem value="popular">{a.mostPopular}</SelectItem>
+                        <SelectItem value="alphabetical">{a.az}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -176,19 +161,16 @@ const Artists = () => {
           </div>
         </section>
 
-        {/* Artists Grid */}
         <section className="py-12">
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
               {error || statsError ? (
                 <div className="text-center py-12">
                   <Music className="w-16 h-16 mx-auto mb-4 text-red-500/20" />
-                  <h3 className="text-xl font-semibold mb-2">Er is een fout opgetreden</h3>
-                  <p className="text-muted-foreground mb-4">
-                    We konden de artiesten niet laden. Probeer de pagina opnieuw te laden.
-                  </p>
+                  <h3 className="text-xl font-semibold mb-2">{a.errorOccurred}</h3>
+                  <p className="text-muted-foreground mb-4">{a.couldNotLoad}</p>
                   <Button onClick={() => window.location.reload()}>
-                    Opnieuw laden
+                    {tr.common.reloadPage}
                   </Button>
                 </div>
               ) : isLoading ? (
@@ -212,7 +194,6 @@ const Artists = () => {
                       onClick={() => handleStoryClick(story.slug)}
                     >
                       <CardContent className="p-0">
-                        {/* Artist Image */}
                         <div className="aspect-square overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20 relative">
                           {story.artwork_url ? (
                             <img
@@ -225,27 +206,21 @@ const Artists = () => {
                               <Music className="w-20 h-20 text-muted-foreground/20" />
                             </div>
                           )}
-                          
-                          {/* Badge */}
                           <div className="absolute top-3 left-3">
                             <Badge className="bg-purple-500/90 text-white border-0">
                               <Music className="w-3 h-3 mr-1" />
-                              ARTIEST
+                              {a.artist}
                             </Badge>
                           </div>
                         </div>
 
-                        {/* Content */}
                         <div className="p-6">
                           <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
                             {story.artist_name}
                           </h3>
-
                           <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                            {story.biography || (story.story_content ? story.story_content.substring(0, 150) + '...' : 'Ontdek het verhaal van deze artiest.')}
+                            {story.biography || (story.story_content ? story.story_content.substring(0, 150) + '...' : a.discoverStory)}
                           </p>
-
-                          {/* Genres */}
                           {story.music_style && story.music_style.length > 0 && (
                             <div className="flex flex-wrap gap-2 mb-4">
                               {story.music_style.slice(0, 3).map((genre) => (
@@ -255,12 +230,10 @@ const Artists = () => {
                               ))}
                             </div>
                           )}
-
-                          {/* Meta Info */}
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>{story.views_count} weergaven</span>
+                            <span>{story.views_count} {tr.common.views}</span>
                             {story.reading_time && (
-                              <span>{story.reading_time} min lezen</span>
+                              <span>{story.reading_time} {a.minRead}</span>
                             )}
                           </div>
                         </div>
@@ -271,10 +244,8 @@ const Artists = () => {
               ) : (
                 <div className="text-center py-12">
                   <Music className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
-                  <h3 className="text-xl font-semibold mb-2">Geen artiesten gevonden</h3>
-                  <p className="text-muted-foreground">
-                    Probeer je zoekopdracht aan te passen of een ander filter te kiezen.
-                  </p>
+                  <h3 className="text-xl font-semibold mb-2">{a.noArtistsFound}</h3>
+                  <p className="text-muted-foreground">{a.adjustSearch}</p>
                 </div>
               )}
             </div>

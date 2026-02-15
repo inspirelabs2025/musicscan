@@ -5,6 +5,7 @@ import { Users, MessageCircle, Search, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useConversations } from "@/hooks/useConversations";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SocialNavigationProps {
   activeTab: "discover" | "following" | "messages" | "settings";
@@ -18,35 +19,35 @@ const SocialNavigation: React.FC<SocialNavigationProps> = ({
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const { data: conversations } = useConversations();
+  const { tr } = useLanguage();
 
   const unreadCount = conversations?.filter(conv => 
     conv.last_message?.sender_id !== user?.id && 
-    // Simple unread logic - in a real app you'd track read status
     new Date(conv.updated_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)
   ).length || 0;
 
   const navItems = [
     {
       id: "discover" as const,
-      label: "Ontdekken",
+      label: tr.social.discover,
       icon: Search,
       badge: null,
     },
     {
       id: "following" as const,
-      label: "Volgend",
+      label: tr.social.following,
       icon: Users,
       badge: profile?.total_following || 0,
     },
     {
       id: "messages" as const,
-      label: "Berichten",
+      label: tr.social.messages,
       icon: MessageCircle,
       badge: unreadCount > 0 ? unreadCount : null,
     },
     {
       id: "settings" as const,
-      label: "Instellingen",
+      label: tr.social.settings,
       icon: Settings,
       badge: null,
     },

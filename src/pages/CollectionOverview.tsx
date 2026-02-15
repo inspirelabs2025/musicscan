@@ -46,6 +46,7 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { AIAnalysisTab } from "@/components/AIAnalysisTab";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))', '#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
 

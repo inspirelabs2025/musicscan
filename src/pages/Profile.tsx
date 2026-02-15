@@ -12,11 +12,13 @@ import { FanWallProfileStats } from "@/components/profile/FanWallProfileStats";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Profile: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const { user } = useAuth();
   const { data: profile, isLoading, error } = useProfile(userId);
+  const { tr } = useLanguage();
 
   if (!userId) {
     return <Navigate to="/social" replace />;
@@ -46,7 +48,7 @@ const Profile: React.FC = () => {
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            Gebruiker niet gevonden of profiel is privé.
+            {tr.profile.userNotFound}
           </AlertDescription>
         </Alert>
       </div>
@@ -58,33 +60,19 @@ const Profile: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="space-y-8">
-        {/* Profile Header */}
         <ProfileHeader profile={profile} isOwnProfile={isOwnProfile} />
-
-        {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* FanWall Stats */}
           <FanWallProfileStats userId={profile.user_id} />
-
-          {/* Social Stats */}
           <SocialStats profile={profile} />
-
-          {/* FanWall Gallery */}
           <div className="lg:col-span-2">
             <FanWallProfileGallery userId={profile.user_id} />
           </div>
-
-          {/* Collection Summary */}
           {(profile.show_collection || isOwnProfile) && (
             <CollectionSummaryWidget userId={profile.user_id} />
           )}
-
-          {/* Activity Timeline */}
           {(profile.show_activity || isOwnProfile) && (
             <ActivityTimeline userId={profile.user_id} />
           )}
-
-          {/* Personality Insights */}
           {(profile.show_collection || isOwnProfile) && (
             <PersonalityInsights userId={profile.user_id} />
           )}

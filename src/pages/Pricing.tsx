@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Progress } from '@/components/ui/progress';
 import { useQueryClient } from '@tanstack/react-query';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const CREDIT_PACKAGES = [
   { credits: 10, price: '€2,95', priceId: 'price_1T13ukIWa9kBN7qAxdQu2r1P', perCredit: '€0,30' },
@@ -33,25 +34,24 @@ const Pricing = () => {
   const [buyingPriceId, setBuyingPriceId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const { aiScansUsed, aiChatUsed, bulkUploadsUsed } = useUsageTracking();
+  const { tr } = useLanguage();
+  const p = tr.pricing;
 
-  // Handle return from Stripe checkout
   useEffect(() => {
     const creditsPurchased = searchParams.get('credits_purchased');
-    const sessionId = searchParams.get('session_id');
     if (creditsPurchased && user) {
       toast({
-        title: `${creditsPurchased} credits toegevoegd! 🎉`,
-        description: 'Je credits zijn beschikbaar voor gebruik.',
+        title: `${creditsPurchased} ${p.creditsAdded}`,
+        description: p.creditsAvailableForUse,
       });
       queryClient.invalidateQueries({ queryKey: ['user-credits'] });
-      // Clean URL
       window.history.replaceState({}, '', '/pricing');
     }
   }, [searchParams, user]);
 
   const handleBuyCredits = async (priceId: string) => {
     if (!user) {
-      toast({ title: 'Inloggen vereist', description: 'Log eerst in om credits te kopen.', variant: 'destructive' });
+      toast({ title: p.loginRequired, description: p.loginFirst, variant: 'destructive' });
       return;
     }
     setBuyingPriceId(priceId);
@@ -64,7 +64,7 @@ const Pricing = () => {
         window.open(data.url, '_blank');
       }
     } catch (error: any) {
-      toast({ title: 'Fout', description: error.message || 'Probeer het opnieuw.', variant: 'destructive' });
+      toast({ title: tr.common.error, description: error.message || p.tryAgain, variant: 'destructive' });
     } finally {
       setBuyingPriceId(null);
     }
@@ -76,14 +76,14 @@ const Pricing = () => {
       name: 'FREE',
       subtitle: 'Music Explorer',
       price: '€0',
-      period: '/maand',
-      description: 'Perfect om te beginnen met je muziekcollectie',
+      period: tr.common.perMonth,
+      description: p.freeDesc,
       features: [
-        '10 foto scans per maand',
-        'Basis collectie management',
-        'Publieke catalogus toegang',
-        '5 chat queries per maand',
-        'Community features'
+        `10 ${p.photoScansPerMonth}`,
+        p.basicCollectionMgmt,
+        p.publicCatalogAccess,
+        `5 ${p.chatQueriesPerMonth}`,
+        p.communityFeatures
       ],
       icon: Music,
       color: 'bg-gradient-to-br from-slate-500 to-slate-600',
@@ -95,14 +95,14 @@ const Pricing = () => {
       name: 'BASIC',
       subtitle: 'Collection Builder',
       price: '€3,95',
-      period: '/maand',
-      description: 'Perfect voor wie serieus wil beginnen met collectie beheer',
+      period: tr.common.perMonth,
+      description: p.basicDesc,
       features: [
-        '50 foto scans per maand',
-        'Volledige collectie features',
-        '20 chat queries per maand',
-        'Basis blog generatie',
-        'Email ondersteuning'
+        `50 ${p.photoScansPerMonth}`,
+        p.fullCollectionFeatures,
+        `20 ${p.chatQueriesPerMonth}`,
+        p.basicBlogGeneration,
+        p.emailSupport
       ],
       icon: Star,
       color: 'bg-gradient-to-br from-blue-500 to-blue-600',
@@ -114,15 +114,15 @@ const Pricing = () => {
       name: 'PLUS',
       subtitle: 'Music Enthusiast',
       price: '€7,95',
-      period: '/maand',
-      description: 'Voor de echte muziekliefhebber met een groeiende collectie',
+      period: tr.common.perMonth,
+      description: p.plusDesc,
       features: [
-        '200 foto scans per maand',
-        'Onbeperkte chat',
-        'Geavanceerde analytics',
-        'Marketplace integratie',
-        'Priority support',
-        'Bulk upload (20 foto\'s)'
+        `200 ${p.photoScansPerMonth}`,
+        p.unlimitedChat,
+        p.advancedAnalytics,
+        p.marketplaceIntegration,
+        p.prioritySupport,
+        `${p.bulkUpload} (20)`
       ],
       icon: Crown,
       color: 'bg-gradient-to-br from-purple-500 to-purple-600',
@@ -134,16 +134,16 @@ const Pricing = () => {
       name: 'PRO',
       subtitle: 'Serious Collector',
       price: '€14,95',
-      period: '/maand',
-      description: 'Voor de serieuze verzamelaar die alles uit zijn collectie wil halen',
+      period: tr.common.perMonth,
+      description: p.proDesc,
       features: [
-        'Onbeperkte foto scans',
-        'Onbeperkte chat',
-        'Bulk upload (50 foto\'s tegelijk)',
-        'Geavanceerde marketplace tools',
-        'White-label opties',
-        'API toegang',
-        'Priority support'
+        p.unlimitedPhotoScans,
+        p.unlimitedChat,
+        `${p.bulkUpload} (50)`,
+        p.advancedMarketplace,
+        p.whiteLabelOptions,
+        p.apiAccess,
+        p.prioritySupport
       ],
       icon: Crown,
       color: 'bg-gradient-to-br from-gold-500 to-gold-600',
@@ -155,16 +155,16 @@ const Pricing = () => {
       name: 'BUSINESS',
       subtitle: 'Trading House',
       price: '€29,95',
-      period: '/maand',
-      description: 'Voor handelaars en professionals in de muziekindustrie',
+      period: tr.common.perMonth,
+      description: p.businessDesc,
       features: [
-        'Alle PRO features',
-        'Multi-user accounts',
-        'Geavanceerde analytics dashboard',
-        'Custom integraties',
-        'Dedicated account manager',
-        'SLA garanties',
-        'Training & onboarding'
+        p.allProFeatures,
+        p.multiUserAccounts,
+        p.advancedDashboard,
+        p.customIntegrations,
+        p.dedicatedManager,
+        p.slaGuarantees,
+        p.trainingOnboarding
       ],
       icon: Building2,
       color: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
@@ -175,52 +175,49 @@ const Pricing = () => {
 
   const handleSelectPlan = async (planSlug: string) => {
     if (!user) {
-      toast({ title: "Inloggen vereist", description: "Log eerst in om een abonnement af te sluiten.", variant: "destructive" });
+      toast({ title: p.loginRequired, description: p.loginFirstSub, variant: "destructive" });
       return;
     }
     if (planSlug === 'free') {
-      toast({ title: "Gratis plan", description: "Je gebruikt al het gratis plan!" });
+      toast({ title: p.freePlan, description: p.alreadyFree });
       return;
     }
     if (subscription?.plan_slug === planSlug) {
-      toast({ title: "Huidig plan", description: "Dit is je huidige abonnement." });
+      toast({ title: p.currentPlan, description: p.alreadyCurrent });
       return;
     }
     try {
       await createCheckout(planSlug);
-      toast({ title: "Doorgestuurd naar betaling", description: "Je wordt doorgestuurd naar Stripe." });
+      toast({ title: p.redirecting, description: p.redirectingDesc });
     } catch (error: any) {
-      toast({ title: "Fout bij aanmaken checkout", description: error.message || "Probeer het opnieuw.", variant: "destructive" });
+      toast({ title: p.checkoutError, description: error.message || p.tryAgain, variant: "destructive" });
     }
   };
 
   return (
     <>
       <Helmet>
-        <title>Prijzen & Abonnementen - MusicScan</title>
-        <meta name="description" content="Kies het perfecte abonnement of koop losse scan credits. Smart scanning vanaf €2,95." />
+        <title>{p.metaTitle}</title>
+        <meta name="description" content={p.metaDescription} />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-background to-muted">
         <div className="container mx-auto px-4 py-16">
-          {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Kies jouw Perfect Plan
+              {p.title}
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Van hobbyist tot professional - kies een abonnement of koop losse credits
+              {p.subtitle}
             </p>
           </div>
 
-          {/* Account Status Card - visible for logged in users */}
           {user && (
             <Card className="max-w-3xl mx-auto mb-12 border-primary/20 bg-card/80 backdrop-blur">
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Current Plan */}
                   <div className="text-center md:text-left space-y-2">
-                    <p className="text-sm text-muted-foreground font-medium">Huidig Plan</p>
+                    <p className="text-sm text-muted-foreground font-medium">{p.currentPlan}</p>
                     <div className="flex items-center gap-2 justify-center md:justify-start">
                       <Crown className="h-5 w-5 text-primary" />
                       <span className="text-xl font-bold">
@@ -229,32 +226,30 @@ const Pricing = () => {
                     </div>
                     {subscription?.subscription_end && (
                       <p className="text-xs text-muted-foreground">
-                        Verlengt {new Date(subscription.subscription_end).toLocaleDateString('nl-NL')}
+                        {p.renewsOn} {new Date(subscription.subscription_end).toLocaleDateString('nl-NL')}
                       </p>
                     )}
                   </div>
 
-                  {/* Credits Balance */}
                   <div className="text-center space-y-2 border-x-0 md:border-x border-border px-4">
-                    <p className="text-sm text-muted-foreground font-medium">Credits Saldo</p>
+                    <p className="text-sm text-muted-foreground font-medium">{p.creditsBalance}</p>
                     <div className="flex items-center gap-2 justify-center">
                       <Coins className="h-5 w-5 text-primary" />
                       <span className="text-3xl font-bold">{userCredits?.balance ?? 0}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">beschikbaar</p>
+                    <p className="text-xs text-muted-foreground">{tr.common.available}</p>
                   </div>
 
-                  {/* Usage This Month */}
                   <div className="text-center md:text-right space-y-2">
-                    <p className="text-sm text-muted-foreground font-medium">Gebruik deze maand</p>
+                    <p className="text-sm text-muted-foreground font-medium">{p.usageThisMonth}</p>
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-center md:justify-end gap-2 text-sm">
                         <Zap className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span>{aiScansUsed} scans</span>
+                        <span>{aiScansUsed} {tr.common.scans}</span>
                       </div>
                       <div className="flex items-center justify-center md:justify-end gap-2 text-sm">
                         <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span>{aiChatUsed} chats</span>
+                        <span>{aiChatUsed} {tr.common.chats}</span>
                       </div>
                       {bulkUploadsUsed > 0 && (
                         <div className="flex items-center justify-center md:justify-end gap-2 text-sm">
@@ -269,22 +264,20 @@ const Pricing = () => {
             </Card>
           )}
 
-          {/* Tabs */}
           <Tabs defaultValue="credits" className="max-w-7xl mx-auto">
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-10">
               <TabsTrigger value="credits" className="text-base">
-                <Coins className="h-4 w-4 mr-2" /> Losse Credits
+                <Coins className="h-4 w-4 mr-2" /> {p.looseCredits}
               </TabsTrigger>
               <TabsTrigger value="subscriptions" className="text-base">
-                <Crown className="h-4 w-4 mr-2" /> Abonnementen
+                <Crown className="h-4 w-4 mr-2" /> {p.subscriptions}
               </TabsTrigger>
             </TabsList>
 
-            {/* Credits Tab */}
             <TabsContent value="credits">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold mb-2">Koop Scan Credits</h2>
-                <p className="text-muted-foreground">Elke scan kost 1 credit. Hoe meer je koopt, hoe goedkoper per credit.</p>
+                <h2 className="text-2xl font-bold mb-2">{p.buyScanCredits}</h2>
+                <p className="text-muted-foreground">{p.eachScanCosts}</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -297,12 +290,12 @@ const Pricing = () => {
                   >
                     {pkg.popular && (
                       <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
-                        Populairste
+                        {p.mostPopular}
                       </Badge>
                     )}
                     {pkg.best && (
                       <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-purple-600">
-                        <Sparkles className="h-3 w-3 mr-1" /> Beste Deal
+                        <Sparkles className="h-3 w-3 mr-1" /> {p.bestDeal}
                       </Badge>
                     )}
 
@@ -312,7 +305,7 @@ const Pricing = () => {
                       </div>
                       <div>
                         <h3 className="text-xl font-bold">{pkg.credits} Credits</h3>
-                        <p className="text-sm text-muted-foreground">{pkg.perCredit} per credit</p>
+                        <p className="text-sm text-muted-foreground">{pkg.perCredit} {p.perCredit}</p>
                       </div>
                       <div>
                         <span className="text-3xl font-bold">{pkg.price}</span>
@@ -324,9 +317,9 @@ const Pricing = () => {
                         disabled={buyingPriceId === pkg.priceId}
                       >
                         {buyingPriceId === pkg.priceId ? (
-                          <><Loader2 className="h-4 w-4 animate-spin mr-2" />Even geduld...</>
+                          <><Loader2 className="h-4 w-4 animate-spin mr-2" />{p.patience}</>
                         ) : (
-                          'Kopen'
+                          p.buy
                         )}
                       </Button>
                     </div>
@@ -335,16 +328,15 @@ const Pricing = () => {
               </div>
 
               <div className="text-center mt-8 text-sm text-muted-foreground">
-                <p>Credits verlopen niet en zijn direct beschikbaar na betaling.</p>
+                <p>{p.creditsNeverExpire}</p>
               </div>
             </TabsContent>
 
-            {/* Subscriptions Tab */}
             <TabsContent value="subscriptions">
               {subscription && (
                 <div className="text-center mb-8">
                   <Badge variant="outline" className="text-lg px-4 py-2">
-                    Huidig plan: {subscription.plan_name}
+                    {p.currentPlan}: {subscription.plan_name}
                   </Badge>
                 </div>
               )}
@@ -360,10 +352,10 @@ const Pricing = () => {
                       } ${plan.current ? 'ring-2 ring-green-500' : ''}`}
                     >
                       {plan.popular && (
-                        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">Populairste keuze</Badge>
+                        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">{p.popularChoice}</Badge>
                       )}
                       {plan.current && (
-                        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500">Huidig Plan</Badge>
+                        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500">{p.currentPlanBadge}</Badge>
                       )}
                       <div className="text-center mb-6">
                         <div className={`inline-flex p-3 rounded-full ${plan.color} mb-4`}>
@@ -391,7 +383,7 @@ const Pricing = () => {
                         onClick={() => handleSelectPlan(plan.slug)}
                         disabled={loading || plan.current}
                       >
-                        {plan.current ? 'Huidig Plan' : plan.slug === 'free' ? 'Gratis Starten' : 'Kies Dit Plan'}
+                        {plan.current ? p.currentPlanBadge : plan.slug === 'free' ? p.freeStart : p.choosePlan}
                       </Button>
                     </Card>
                   );
@@ -400,41 +392,32 @@ const Pricing = () => {
             </TabsContent>
           </Tabs>
 
-          {/* FAQ */}
           <div className="mt-20 max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12">Veelgestelde Vragen</h2>
+            <h2 className="text-3xl font-bold text-center mb-12">{p.faq}</h2>
             <div className="grid md:grid-cols-2 gap-8">
               <div>
-                <h3 className="text-lg font-semibold mb-3">Wat is het verschil tussen credits en een abonnement?</h3>
-                <p className="text-muted-foreground">
-                  Credits zijn losse scans die je eenmalig koopt en niet verlopen. Een abonnement geeft je maandelijks een vast aantal scans plus extra features.
-                </p>
+                <h3 className="text-lg font-semibold mb-3">{p.faqCreditsVsSub}</h3>
+                <p className="text-muted-foreground">{p.faqCreditsVsSubAnswer}</p>
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-3">Kan ik credits én een abonnement hebben?</h3>
-                <p className="text-muted-foreground">
-                  Ja! Credits en abonnement scans werken naast elkaar. Eerst worden je abonnement scans gebruikt, daarna je losse credits.
-                </p>
+                <h3 className="text-lg font-semibold mb-3">{p.faqBoth}</h3>
+                <p className="text-muted-foreground">{p.faqBothAnswer}</p>
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-3">Verlopen mijn credits?</h3>
-                <p className="text-muted-foreground">
-                  Nee, gekochte credits verlopen nooit. Je kunt ze op elk moment gebruiken.
-                </p>
+                <h3 className="text-lg font-semibold mb-3">{p.faqExpire}</h3>
+                <p className="text-muted-foreground">{p.faqExpireAnswer}</p>
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-3">Kan ik mijn abonnement wijzigen?</h3>
-                <p className="text-muted-foreground">
-                  Ja, je kunt je abonnement op elk moment upgraden of downgraden. Wijzigingen worden pro-rata verrekend.
-                </p>
+                <h3 className="text-lg font-semibold mb-3">{p.faqChange}</h3>
+                <p className="text-muted-foreground">{p.faqChangeAnswer}</p>
               </div>
             </div>
           </div>
 
           <div className="text-center mt-16">
-            <p className="text-muted-foreground mb-4">Vragen over onze prijzen?</p>
+            <p className="text-muted-foreground mb-4">{p.questionsAboutPricing}</p>
             <Button variant="outline" asChild>
-              <a href="mailto:support@musicscan.nl">Neem Contact Op</a>
+              <a href="mailto:support@musicscan.nl">{p.contactUs}</a>
             </Button>
           </div>
         </div>

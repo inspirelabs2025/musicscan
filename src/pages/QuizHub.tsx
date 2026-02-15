@@ -9,17 +9,19 @@ import { RecentQuizScores } from '@/components/quiz/RecentQuizScores';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { BarChart3 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function QuizHub() {
   const { user } = useAuth();
+  const { tr } = useLanguage();
 
   return (
     <>
       <Helmet>
-        <title>Muziek Quizzen | Test Je Kennis | MusicScan</title>
-        <meta name="description" content="Test je muziekkennis met onze interactieve quizzen. Speel tegen vrienden, verdien badges en beklim het leaderboard." />
-        <meta property="og:title" content="Muziek Quizzen | MusicScan" />
-        <meta property="og:description" content="Test je muziekkennis met unieke quizzen over artiesten, albums, en muziekgeschiedenis." />
+        <title>{tr.quiz.metaTitle}</title>
+        <meta name="description" content={tr.quiz.metaDescription} />
+        <meta property="og:title" content={tr.quiz.ogTitle} />
+        <meta property="og:description" content={tr.quiz.ogDescription} />
         <meta property="og:type" content="website" />
       </Helmet>
 
@@ -27,37 +29,32 @@ export default function QuizHub() {
         <QuizHubHero />
         
         <div className="container mx-auto px-4 py-8 space-y-12">
-          {/* User Stats Link */}
           {user && (
             <div className="flex justify-end">
               <Link to="/mijn-quizzen">
                 <Button variant="outline" className="gap-2">
                   <BarChart3 className="w-4 h-4" />
-                  Mijn Quizzen & Scores
+                  {tr.quiz.myQuizzesScores}
                 </Button>
               </Link>
             </div>
           )}
 
-          {/* Daily Challenge Banner */}
           <DailyChallengeBanner />
 
-          {/* Recent Scores for logged-in users */}
           {user && (
             <section>
               <RecentQuizScores userId={user.id} limit={5} />
             </section>
           )}
           
-          {/* Quiz Categories Grid */}
           <section>
-            <h2 className="text-2xl font-bold mb-6">Kies Je Quiz</h2>
+            <h2 className="text-2xl font-bold mb-6">{tr.quiz.chooseYourQuiz}</h2>
             <QuizCategoryGrid />
           </section>
           
-          {/* Leaderboard */}
           <section>
-            <h2 className="text-2xl font-bold mb-6">🏆 Top Spelers</h2>
+            <h2 className="text-2xl font-bold mb-6">{tr.quiz.topPlayers}</h2>
             <QuizLeaderboard limit={10} />
           </section>
         </div>

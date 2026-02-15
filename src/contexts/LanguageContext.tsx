@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import translations, { type Language, type TranslationKeys } from '@/i18n/translations';
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
+  tr: Record<string, any>;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -33,17 +34,20 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, lang);
   }, []);
 
+  // Function-based accessor (backward compatible)
   const t = useCallback((key: string): string => {
-    // Try current language first, fallback to Dutch
     const value = getNestedValue(translations[language], key);
     if (value !== undefined) return String(value);
     const fallback = getNestedValue(translations.nl, key);
     if (fallback !== undefined) return String(fallback);
-    return key; // Return key itself as last resort
+    return key;
   }, [language]);
 
+  // Object-based accessor (new, type-safe)
+  const tr = useMemo(() => translations[language], [language]);
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, tr }}>
       {children}
     </LanguageContext.Provider>
   );

@@ -1,28 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Camera, 
-  TrendingUp, 
-  Music, 
-  Disc, 
-  MessageSquare, 
-  Zap, 
-  Clock, 
-  Star,
-  BarChart3,
-  Upload,
-  Search,
-  Shuffle,
-  Sparkles,
-  Users,
-  Newspaper,
-  Shield,
-  Loader2,
-  Play,
-  Trophy,
-  ShoppingBag,
-  BookOpen,
-  Target
+  Camera, TrendingUp, Music, Disc, MessageSquare, Zap, Clock, Star,
+  BarChart3, Upload, Search, Shuffle, Sparkles, Users, Newspaper, Shield,
+  Loader2, Play, Trophy, ShoppingBag, BookOpen, Target
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +17,7 @@ import { useUnifiedScansStats } from '@/hooks/useUnifiedScansStats';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useSubscriptionContext } from '@/contexts/SubscriptionContext';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
 import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
 import { ChatWidget } from '@/components/dashboard/ChatWidget';
@@ -52,12 +34,12 @@ import { CollectionPersonality } from '@/components/dashboard/CollectionPersonal
 import { SubscriptionStatus } from '@/components/SubscriptionStatus';
 import { NextGoalWidget } from '@/components/dashboard/NextGoalWidget';
 import { MusicStoryWidget } from '@/components/dashboard/MusicStoryWidget';
-
 import { CreditsDisplay } from '@/components/credits/CreditsDisplay';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
+  const { tr: t } = useLanguage();
   const ADMIN_EMAIL = 'rogiervisser76@gmail.com';
   const { data: collectionStats, isLoading: collectionLoading } = useCollectionStats();
   const { data: recentScans, isLoading: scansLoading } = useDirectScans();
@@ -66,32 +48,18 @@ const Dashboard = () => {
   const { data: userStats, isLoading: userStatsLoading } = useUserStats();
   const subscription = useSubscriptionContext();
   const { 
-    isOnboardingOpen,
-    setIsOnboardingOpen,
-    shouldShowOnboarding, 
-    currentStepIndex,
-    currentStepData,
-    totalSteps,
-    nextStep,
-    previousStep,
-    completeOnboarding,
-    skipOnboarding,
-    startOnboarding, 
-    restartOnboarding 
+    isOnboardingOpen, setIsOnboardingOpen, shouldShowOnboarding, 
+    currentStepIndex, currentStepData, totalSteps, nextStep, previousStep,
+    completeOnboarding, skipOnboarding, startOnboarding, restartOnboarding 
   } = useOnboarding();
 
-  // Auto-start onboarding for new users
   React.useEffect(() => {
     if (shouldShowOnboarding) {
-      // Small delay to ensure the dashboard has loaded
-      const timer = setTimeout(() => {
-        startOnboarding();
-      }, 1000);
+      const timer = setTimeout(() => { startOnboarding(); }, 1000);
       return () => clearTimeout(timer);
     }
   }, [shouldShowOnboarding, startOnboarding]);
 
-  // Get recent scans (last 5)
   const latestScans = recentScans?.slice(0, 5) || [];
 
   if (scansLoading || collectionLoading) {
@@ -105,15 +73,10 @@ const Dashboard = () => {
   return (
     <>
       <OnboardingModal 
-        isOnboardingOpen={isOnboardingOpen}
-        setIsOnboardingOpen={setIsOnboardingOpen}
-        currentStepIndex={currentStepIndex}
-        currentStepData={currentStepData}
-        totalSteps={totalSteps}
-        nextStep={nextStep}
-        previousStep={previousStep}
-        completeOnboarding={completeOnboarding}
-        skipOnboarding={skipOnboarding}
+        isOnboardingOpen={isOnboardingOpen} setIsOnboardingOpen={setIsOnboardingOpen}
+        currentStepIndex={currentStepIndex} currentStepData={currentStepData}
+        totalSteps={totalSteps} nextStep={nextStep} previousStep={previousStep}
+        completeOnboarding={completeOnboarding} skipOnboarding={skipOnboarding}
       />
       <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background">
         {/* Musical Background Elements */}
@@ -130,13 +93,11 @@ const Dashboard = () => {
             <div className="flex items-center justify-center gap-3 mb-4">
               <Sparkles className="w-8 h-8 text-vinyl-purple animate-pulse" />
               <h1 className="text-4xl font-bold bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold bg-clip-text text-transparent">
-                🎵 Welkom terug, Muziekontdekker!
+                {t.dashboard.welcomeBack}
               </h1>
               <Sparkles className="w-8 h-8 text-vinyl-gold animate-pulse delay-300" />
             </div>
-            <p className="text-muted-foreground text-lg">
-              ✨ Je persoonlijke muziek ervaring wacht op je
-            </p>
+            <p className="text-muted-foreground text-lg">{t.dashboard.personalExperience}</p>
           </div>
 
           {/* Quick Actions Hero */}
@@ -145,7 +106,6 @@ const Dashboard = () => {
               className="relative overflow-hidden rounded-2xl p-6 shadow-xl"
               style={{ background: 'linear-gradient(135deg, hsl(270 70% 40%), hsl(270 60% 50%), hsl(260 70% 55%))' }}
             >
-              {/* Decorative background elements */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute top-3 left-6 text-3xl opacity-20 animate-bounce" style={{ animationDelay: '0.1s' }}>🎵</div>
                 <div className="absolute top-5 right-10 text-2xl opacity-20 animate-pulse" style={{ animationDelay: '0.5s' }}>🎶</div>
@@ -154,47 +114,29 @@ const Dashboard = () => {
                 <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, hsl(45 100% 60%), transparent)' }} />
                 <div className="absolute -left-6 -bottom-6 w-28 h-28 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, white, transparent)' }} />
               </div>
-
               <div className="relative z-10">
                 <h3 className="text-lg font-bold flex items-center gap-2 mb-5" style={{ color: 'hsl(45 100% 60%)' }}>
                   <Zap className="w-5 h-5" style={{ color: 'hsl(45 100% 60%)' }} />
-                  <span className="font-extrabold tracking-wide">Quick Actions</span>
+                  <span className="font-extrabold tracking-wide">{t.dashboard.quickActions}</span>
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
-                  {/* Scan Nu - Primary CTA */}
-                  <Link 
-                    to="/ai-scan-v2"
-                    className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-bold text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-xl group"
-                    style={{ background: 'linear-gradient(135deg, hsl(45 100% 55%), hsl(45 100% 50%))', color: 'black' }}
-                  >
+                  <Link to="/ai-scan-v2" className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-bold text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-xl group" style={{ background: 'linear-gradient(135deg, hsl(45 100% 55%), hsl(45 100% 50%))', color: 'black' }}>
                     <div className="p-2.5 rounded-full" style={{ background: 'rgba(0,0,0,0.12)' }}>
                       <Camera className="w-6 h-6 group-hover:animate-pulse" />
                     </div>
-                    <span>Scan Nu</span>
+                    <span>{t.dashboard.scanNow}</span>
                   </Link>
-                  
-                  {/* Mijn Collectie */}
-                  <Link 
-                    to="/my-collection"
-                    className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.03] group"
-                    style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', backdropFilter: 'blur(4px)' }}
-                  >
+                  <Link to="/my-collection" className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.03] group" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', backdropFilter: 'blur(4px)' }}>
                     <div className="p-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }}>
                       <Search className="w-6 h-6 group-hover:animate-pulse" />
                     </div>
-                    <span>Mijn Collectie</span>
+                    <span>{t.dashboard.myCollection}</span>
                   </Link>
-                  
-                  {/* Chat - opens floating Mike chat */}
-                  <button 
-                    onClick={() => window.dispatchEvent(new Event('open-magic-mike'))}
-                    className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.03] group cursor-pointer"
-                    style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', backdropFilter: 'blur(4px)' }}
-                  >
+                  <button onClick={() => window.dispatchEvent(new Event('open-magic-mike'))} className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.03] group cursor-pointer" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', backdropFilter: 'blur(4px)' }}>
                     <div className="p-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }}>
                       <MessageSquare className="w-6 h-6 group-hover:animate-pulse" />
                     </div>
-                    <span>Chat</span>
+                    <span>{t.dashboard.chat}</span>
                   </button>
                 </div>
               </div>
@@ -211,33 +153,13 @@ const Dashboard = () => {
           <section className="mb-12 animate-fade-in delay-300">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <BarChart3 className="w-6 h-6 text-vinyl-purple" />
-              📊 Jouw Muziek DNA
+              {t.dashboard.yourMusicDNA}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard
-                title="Totale Collectie"
-                value={statsLoading ? "..." : `${scanStats?.totalScans || 0}`}
-                subtitle="Albums ontdekt"
-                icon={Disc}
-              />
-              <StatCard
-                title="Collectie Waarde"
-                value={collectionLoading ? "..." : `€${collectionStats?.totalValue ? Math.round(collectionStats.totalValue) : 0}`}
-                subtitle="Geschatte totaal"
-                icon={TrendingUp}
-              />
-              <StatCard
-                title="Deze Maand"
-                value={statsLoading ? "..." : `${scanStats?.totalScans || 0}`}
-                subtitle="Nieuwe scans"
-                icon={Camera}
-              />
-              <StatCard
-                title="Success Rate"
-                value={statsLoading ? "..." : `${(scanStats?.successRate || 0).toFixed(1)}%`}
-                subtitle="Geslaagde scans"
-                icon={Star}
-              />
+              <StatCard title={t.dashboard.totalCollection} value={statsLoading ? "..." : `${scanStats?.totalScans || 0}`} subtitle={t.dashboard.albumsDiscovered} icon={Disc} />
+              <StatCard title={t.dashboard.collectionValue} value={collectionLoading ? "..." : `€${collectionStats?.totalValue ? Math.round(collectionStats.totalValue) : 0}`} subtitle={t.dashboard.estimatedTotal} icon={TrendingUp} />
+              <StatCard title={t.dashboard.thisMonth} value={statsLoading ? "..." : `${scanStats?.totalScans || 0}`} subtitle={t.dashboard.newScans} icon={Camera} />
+              <StatCard title={t.dashboard.successRate} value={statsLoading ? "..." : `${(scanStats?.successRate || 0).toFixed(1)}%`} subtitle={t.dashboard.successfulScans} icon={Star} />
             </div>
           </section>
 
@@ -245,7 +167,7 @@ const Dashboard = () => {
           <section className="mb-12 animate-fade-in delay-400">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Sparkles className="w-6 h-6 text-vinyl-purple" />
-              🚀 Jouw Muziek Command Center
+              {t.dashboard.commandCenter}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <EchoWidget />
@@ -256,29 +178,21 @@ const Dashboard = () => {
             </div>
           </section>
 
-          {/* Next Goal Widget - Clean and Minimal */}
+          {/* Next Goal Widget */}
           <section className="mb-12 animate-fade-in delay-450">
-            <NextGoalWidget 
-              totalItems={collectionStats?.totalItems || 0}
-              totalValue={collectionStats?.totalValue || 0}
-              totalScans={scanStats?.totalScans || 0}
-            />
+            <NextGoalWidget totalItems={collectionStats?.totalItems || 0} totalValue={collectionStats?.totalValue || 0} totalScans={scanStats?.totalScans || 0} />
           </section>
 
           {/* Fun & Interactive Section */}
           <section className="mb-12 animate-fade-in delay-500">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Disc className="w-6 h-6 text-vinyl-purple" />
-              🎰 Muziek & Fun
+              {t.dashboard.musicFun}
             </h2>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <AlbumOfTheDay albums={unifiedAlbums || []} />
               <MusicStoryWidget />
-              <CollectionPersonality 
-                genres={collectionStats?.genres || []}
-                totalItems={collectionStats?.totalItems || 0}
-                totalValue={collectionStats?.totalValue || 0}
-              />
+              <CollectionPersonality genres={collectionStats?.genres || []} totalItems={collectionStats?.totalItems || 0} totalValue={collectionStats?.totalValue || 0} />
             </div>
           </section>
 
@@ -286,17 +200,15 @@ const Dashboard = () => {
           <section className="mb-12 animate-fade-in delay-600">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Newspaper className="w-6 h-6 text-vinyl-gold" />
-              📚 Ontdek & Leer
+              {t.dashboard.discoverLearn}
             </h2>
             <div className="grid grid-cols-1 gap-6">
               <UnifiedContentWidget />
-              
-              {/* Recent Activity */}
               <Card className="border-2 hover:border-accent/50 transition-all duration-300 lg:col-span-3">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-accent" />
-                    🕒 Recente Activiteit
+                    {t.dashboard.recentActivity}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -317,18 +229,12 @@ const Dashboard = () => {
                       {latestScans.map((scan) => (
                         <div key={scan.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent/10 transition-colors">
                           <div className="w-12 h-12 bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/20 rounded-lg flex items-center justify-center">
-                            {scan.media_type === 'vinyl' ? (
-                              <Disc className="w-6 h-6 text-vinyl-purple" />
-                            ) : (
-                              <Music className="w-6 h-6 text-vinyl-gold" />
-                            )}
+                            {scan.media_type === 'vinyl' ? <Disc className="w-6 h-6 text-vinyl-purple" /> : <Music className="w-6 h-6 text-vinyl-gold" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium truncate">{scan.artist}</p>
                             <p className="text-sm text-muted-foreground truncate">{scan.title}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(scan.created_at).toLocaleDateString('nl-NL')}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{new Date(scan.created_at).toLocaleDateString('nl-NL')}</p>
                           </div>
                         </div>
                       ))}
@@ -336,12 +242,9 @@ const Dashboard = () => {
                   ) : (
                     <div className="text-center py-8">
                       <Music className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-muted-foreground">Nog geen scans. Begin je collectie!</p>
+                      <p className="text-muted-foreground">{t.dashboard.noScansYet}</p>
                       <Button asChild className="mt-3">
-                        <Link to="/scanner">
-                          <Camera className="w-4 h-4 mr-2" />
-                          Start Scannen
-                        </Link>
+                        <Link to="/scanner"><Camera className="w-4 h-4 mr-2" />{t.dashboard.startScanning}</Link>
                       </Button>
                     </div>
                   )}
@@ -350,7 +253,6 @@ const Dashboard = () => {
             </div>
           </section>
 
-          {/* Community Section - Latest Albums from all users */}
           <LatestAlbumsSection />
 
           {/* Navigation Shortcuts */}
@@ -359,65 +261,34 @@ const Dashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Target className="w-5 h-5 text-primary" />
-                  🎯 Snelle Navigatie
+                  {t.dashboard.quickNavigation}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-purple/10">
-                    <Link to="/collection-overview">
-                      <TrendingUp className="w-5 h-5" />
-                      <span className="text-xs">📊 Overzicht</span>
-                    </Link>
+                    <Link to="/collection-overview"><TrendingUp className="w-5 h-5" /><span className="text-xs">{t.dashboard.overview}</span></Link>
                   </Button>
-                  
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-gold/10">
-                    <Link to="/collection-chat">
-                      <MessageSquare className="w-5 h-5" />
-                      <span className="text-xs">💬 Chat</span>
-                    </Link>
+                    <Link to="/collection-chat"><MessageSquare className="w-5 h-5" /><span className="text-xs">💬 {t.dashboard.chat}</span></Link>
                   </Button>
-                  
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-accent/20">
-                    <Link to="/my-shop">
-                      <Star className="w-5 h-5" />
-                      <span className="text-xs">🏪 Mijn Shop</span>
-                    </Link>
+                    <Link to="/my-shop"><Star className="w-5 h-5" /><span className="text-xs">{t.dashboard.myShop}</span></Link>
                   </Button>
-                  
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-secondary/50">
-                    <Link to="/unified-scan-overview">
-                      <BarChart3 className="w-5 h-5" />
-                      <span className="text-xs">📈 Alle Scans</span>
-                    </Link>
+                    <Link to="/unified-scan-overview"><BarChart3 className="w-5 h-5" /><span className="text-xs">{t.dashboard.allScans}</span></Link>
                   </Button>
-
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-amber-500/10">
-                    <Link to="/quizzen">
-                      <Trophy className="w-5 h-5 text-amber-500" />
-                      <span className="text-xs">🎯 Quizzen</span>
-                    </Link>
+                    <Link to="/quizzen"><Trophy className="w-5 h-5 text-amber-500" /><span className="text-xs">{t.dashboard.quizzes}</span></Link>
                   </Button>
-
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-purple-500/10">
-                    <Link to="/mijn-quizzen">
-                      <Target className="w-5 h-5 text-purple-500" />
-                      <span className="text-xs">🏆 Scores</span>
-                    </Link>
+                    <Link to="/mijn-quizzen"><Target className="w-5 h-5 text-purple-500" /><span className="text-xs">{t.dashboard.scores}</span></Link>
                   </Button>
-
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-cyan-500/10">
-                    <Link to="/artists">
-                      <Users className="w-5 h-5 text-cyan-500" />
-                      <span className="text-xs">🎤 Artiesten</span>
-                    </Link>
+                    <Link to="/artists"><Users className="w-5 h-5 text-cyan-500" /><span className="text-xs">🎤 {t.nav.artists}</span></Link>
                   </Button>
-
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-pink-500/10">
-                    <Link to="/shop">
-                      <ShoppingBag className="w-5 h-5 text-pink-500" />
-                      <span className="text-xs">🛍️ Shop</span>
-                    </Link>
+                    <Link to="/shop"><ShoppingBag className="w-5 h-5 text-pink-500" /><span className="text-xs">🛍️ {t.nav.shop}</span></Link>
                   </Button>
                 </div>
               </CardContent>
@@ -430,7 +301,7 @@ const Dashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5 text-accent" />
-                  👥 Muziek Community
+                  {t.dashboard.musicCommunity}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -446,31 +317,31 @@ const Dashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Music className="w-5 h-5 text-vinyl-purple" />
-                    🎵 Je Muziekstijl
+                    {t.dashboard.yourMusicStyle}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h4 className="font-semibold mb-3 text-sm text-muted-foreground">🎨 TOP GENRES</h4>
+                      <h4 className="font-semibold mb-3 text-sm text-muted-foreground">{t.dashboard.topGenres}</h4>
                       <div className="space-y-2">
-                        {collectionStats.genres?.slice(0, 3).map((genre, index) => (
+                        {collectionStats.genres?.slice(0, 3).map((genre) => (
                           <div key={genre.genre} className="flex justify-between items-center">
                             <span className="text-sm">{genre.genre}</span>
-                            <span className="text-xs text-muted-foreground">{genre.count} albums</span>
+                            <span className="text-xs text-muted-foreground">{genre.count} {t.common.albums}</span>
                           </div>
-                        )) || <p className="text-sm text-muted-foreground">Nog geen genres ontdekt</p>}
+                        )) || <p className="text-sm text-muted-foreground">{t.dashboard.noGenresYet}</p>}
                       </div>
                     </div>
                     <div>
-                      <h4 className="font-semibold mb-3 text-sm text-muted-foreground">🎤 TOP ARTIESTEN</h4>
+                      <h4 className="font-semibold mb-3 text-sm text-muted-foreground">{t.dashboard.topArtists}</h4>
                       <div className="space-y-2">
-                        {collectionStats.artists?.slice(0, 3).map((artist, index) => (
+                        {collectionStats.artists?.slice(0, 3).map((artist) => (
                           <div key={artist.artist} className="flex justify-between items-center">
                             <span className="text-sm">{artist.artist}</span>
-                            <span className="text-xs text-muted-foreground">{artist.count} albums</span>
+                            <span className="text-xs text-muted-foreground">{artist.count} {t.common.albums}</span>
                           </div>
-                        )) || <p className="text-sm text-muted-foreground">Nog geen artiesten ontdekt</p>}
+                        )) || <p className="text-sm text-muted-foreground">{t.dashboard.noArtistsYet}</p>}
                       </div>
                     </div>
                   </div>
@@ -479,7 +350,7 @@ const Dashboard = () => {
             </section>
           )}
 
-          {/* Admin Tools Section - Only visible for admin */}
+          {/* Admin Tools Section */}
           {user?.email === ADMIN_EMAIL && (
             <section className="mt-12 animate-fade-in delay-1000">
               <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
@@ -491,24 +362,12 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <Button 
-                      asChild 
-                      variant="outline" 
-                      className="border-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/20"
-                    >
-                      <Link to="/super-admin" className="flex items-center gap-2">
-                        <BarChart3 className="h-4 w-4" />
-                        SuperAdmin Dashboard
-                      </Link>
+                    <Button asChild variant="outline" className="border-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/20">
+                      <Link to="/super-admin" className="flex items-center gap-2"><BarChart3 className="h-4 w-4" />SuperAdmin Dashboard</Link>
                     </Button>
                     <BatchBlogGenerator />
-                    <Button 
-                      onClick={restartOnboarding}
-                      variant="outline"
-                      className="border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/20"
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      Test Onboarding
+                    <Button onClick={restartOnboarding} variant="outline" className="border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/20">
+                      <Play className="h-4 w-4 mr-2" />Test Onboarding
                     </Button>
                   </div>
                 </CardContent>
@@ -517,7 +376,6 @@ const Dashboard = () => {
           )}
         </div>
       </div>
-      
     </>
   );
 };

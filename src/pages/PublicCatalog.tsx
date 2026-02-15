@@ -6,11 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { CollectionItemCard } from '@/components/CollectionItemCard';
 import { usePublicCatalog } from '@/hooks/usePublicCatalog';
 import { Loader2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const PublicCatalog = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [formatFilter, setFormatFilter] = useState<'all' | 'cd' | 'vinyl'>('all');
   const { items, isLoading } = usePublicCatalog();
+  const { tr } = useLanguage();
+  const pc = tr.publicCatalog;
 
   const filteredItems = items.filter(item => {
     const matchesSearch = !searchTerm || 
@@ -35,16 +38,14 @@ const PublicCatalog = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background/90">
       <div className="max-w-7xl mx-auto p-6">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Openbare Catalogus</h1>
-          <p className="text-muted-foreground">
-            Ontdek CD's en LP's uit openbare collecties en winkels
-          </p>
+          <h1 className="text-4xl font-bold mb-2">{pc.title}</h1>
+          <p className="text-muted-foreground">{pc.subtitle}</p>
           <div className="flex gap-4 mt-4">
             <Badge variant="secondary">
-              {filteredItems.length} items gevonden
+              {filteredItems.length} {pc.itemsFound}
             </Badge>
             <Badge variant="outline">
-              {items.filter(item => item.is_for_sale).length} te koop
+              {items.filter(item => item.is_for_sale).length} {pc.forSale}
             </Badge>
           </div>
         </div>
@@ -53,7 +54,7 @@ const PublicCatalog = () => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Zoek op artiest, titel of label..."
+              placeholder={pc.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -68,7 +69,7 @@ const PublicCatalog = () => {
                 onClick={() => setFormatFilter(format)}
                 className="capitalize"
               >
-                {format === 'all' ? 'Alle' : format.toUpperCase()}
+                {format === 'all' ? pc.all : format.toUpperCase()}
               </Button>
             ))}
           </div>
@@ -77,7 +78,7 @@ const PublicCatalog = () => {
         {filteredItems.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">
-              {searchTerm ? 'Geen items gevonden voor deze zoekopdracht.' : 'Geen openbare items beschikbaar.'}
+              {searchTerm ? pc.noSearchResults : pc.noItems}
             </p>
           </div>
         ) : (

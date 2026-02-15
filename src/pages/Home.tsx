@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useSEO } from '@/hooks/useSEO';
 import { useUnifiedNewsFeed } from '@/hooks/useUnifiedNewsFeed';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { ScannerHero } from '@/components/home/ScannerHero';
 import { HeroFeature } from '@/components/home/HeroFeature';
 
@@ -23,10 +24,11 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 const Home = () => {
   const { data: newsItems, isLoading } = useUnifiedNewsFeed(200);
+  const { tr } = useLanguage();
 
   useSEO({
-    title: "MusicScan - Hét Muziekplatform | Nieuws, Verhalen, Shop, Quiz & Smart Scanner",
-    description: "MusicScan is hét complete muziekplatform. Ontdek muzieknieuws, lees verhalen over albums & artiesten, shop unieke muziekproducten, doe de quiz, en scan je vinyl & CD collectie met waardebepaling.",
+    title: tr.home.metaTitle,
+    description: tr.home.metaDesc,
   });
 
   // Hero = most recent item overall

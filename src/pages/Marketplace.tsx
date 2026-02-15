@@ -7,25 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type SortOption = "newest" | "oldest" | "price-low" | "price-high" | "artist" | "title";
 type FilterOption = "all" | "cd" | "vinyl";
 
 export default function Marketplace() {
   const { items, isLoading } = usePublicMarketplace();
+  const { tr } = useLanguage();
+  const m = tr.marketplace;
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [filterBy, setFilterBy] = useState<FilterOption>("all");
   const [priceRange, setPriceRange] = useState<{ min?: number; max?: number }>({});
 
   // Filter items
   const filteredItems = items.filter(item => {
-    // Media type filter
     if (filterBy !== "all" && item.media_type !== filterBy) return false;
-    
-    // Price range filter
     if (priceRange.min && item.marketplace_price && item.marketplace_price < priceRange.min) return false;
     if (priceRange.max && item.marketplace_price && item.marketplace_price > priceRange.max) return false;
-    
     return true;
   });
 
@@ -61,15 +60,14 @@ export default function Marketplace() {
     return (
       <div className="min-h-screen bg-background">
         <Helmet>
-          <title>Marktplaats - MusicScan</title>
-          <meta name="description" content="Ontdek alle muziekitems te koop van alle verkopers op één plek" />
+          <title>{m.metaTitle}</title>
+          <meta name="description" content={m.metaDesc} />
         </Helmet>
-        
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-              <p className="text-muted-foreground">Marktplaats wordt geladen...</p>
+              <p className="text-muted-foreground">{m.loading}</p>
             </div>
           </div>
         </div>
@@ -80,29 +78,25 @@ export default function Marketplace() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Marktplaats - MusicScan</title>
-        <meta name="description" content="Ontdek alle muziekitems te koop van alle verkopers op één plek" />
-        <meta name="keywords" content="muziek marktplaats, vinyl te koop, cd te koop, muziek verzameling" />
+        <title>{m.metaTitle}</title>
+        <meta name="description" content={m.metaDesc} />
+        <meta name="keywords" content={m.metaKeywords} />
       </Helmet>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
             <Store className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">Marktplaats</h1>
+            <h1 className="text-3xl font-bold">{m.title}</h1>
           </div>
-          <p className="text-lg text-muted-foreground mb-6">
-            Ontdek alle muziekitems te koop van verkopers in de community
-          </p>
+          <p className="text-lg text-muted-foreground mb-6">{m.subtitle}</p>
           
-          {/* Statistics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardContent className="p-4 text-center">
                 <Package className="h-6 w-6 mx-auto mb-2 text-primary" />
                 <div className="text-2xl font-bold">{stats.totalItems}</div>
-                <div className="text-sm text-muted-foreground">Items te koop</div>
+                <div className="text-sm text-muted-foreground">{m.itemsForSale}</div>
               </CardContent>
             </Card>
             <Card>
@@ -121,24 +115,23 @@ export default function Marketplace() {
               <CardContent className="p-4 text-center">
                 <Euro className="h-6 w-6 mx-auto mb-2 text-primary" />
                 <div className="text-2xl font-bold">€{stats.averagePrice.toFixed(0)}</div>
-                <div className="text-sm text-muted-foreground">Gemiddelde prijs</div>
+                <div className="text-sm text-muted-foreground">{m.averagePrice}</div>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* Filters and Sorting */}
         <div className="flex flex-row gap-4 mb-6">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
             <Select value={filterBy} onValueChange={(value: FilterOption) => setFilterBy(value)}>
               <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Alle items" />
+                <SelectValue placeholder={m.allItems} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Alle items</SelectItem>
-                <SelectItem value="cd">Alleen CD's</SelectItem>
-                <SelectItem value="vinyl">Alleen Vinyl</SelectItem>
+                <SelectItem value="all">{m.allItems}</SelectItem>
+                <SelectItem value="cd">{m.onlyCDs}</SelectItem>
+                <SelectItem value="vinyl">{m.onlyVinyl}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -147,33 +140,30 @@ export default function Marketplace() {
             <ArrowUpDown className="h-4 w-4" />
             <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
               <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Sorteer op..." />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="newest">Nieuwste eerst</SelectItem>
-                <SelectItem value="oldest">Oudste eerst</SelectItem>
-                <SelectItem value="price-low">Prijs: laag-hoog</SelectItem>
-                <SelectItem value="price-high">Prijs: hoog-laag</SelectItem>
-                <SelectItem value="artist">Artiest A-Z</SelectItem>
-                <SelectItem value="title">Titel A-Z</SelectItem>
+                <SelectItem value="newest">{m.newestFirst}</SelectItem>
+                <SelectItem value="oldest">{m.oldestFirst}</SelectItem>
+                <SelectItem value="price-low">{m.priceLowHigh}</SelectItem>
+                <SelectItem value="price-high">{m.priceHighLow}</SelectItem>
+                <SelectItem value="artist">{m.artistAZ}</SelectItem>
+                <SelectItem value="title">{m.titleAZ}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="flex items-center gap-2 text-sm text-muted-foreground ml-auto">
             <Grid3x3 className="h-4 w-4" />
-            {filteredItems.length} van {items.length} items
+            {filteredItems.length} {m.ofItems} {items.length} {tr.common.items}
           </div>
         </div>
 
-        {/* Items Grid */}
         {sortedItems.length === 0 ? (
           <div className="text-center py-12">
             <Store className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">Geen items gevonden</h3>
-            <p className="text-muted-foreground">
-              Er zijn momenteel geen items te koop die voldoen aan je filters.
-            </p>
+            <h3 className="text-xl font-semibold mb-2">{m.noItemsFound}</h3>
+            <p className="text-muted-foreground">{m.noItemsDesc}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

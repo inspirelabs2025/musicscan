@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Upload, Eye } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Photo {
   id: string;
@@ -36,6 +37,8 @@ export default function FanWall() {
   const [searchQuery, setSearchQuery] = useState("");
   const [formatFilter, setFormatFilter] = useState<string>("all");
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const { tr } = useLanguage();
+  const f = tr.fanwall;
 
   const ITEMS_PER_PAGE = 20;
 
@@ -78,7 +81,6 @@ export default function FanWall() {
     initialPageParam: 0,
   });
 
-  // Infinite scroll observer
   useEffect(() => {
     if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return;
 
@@ -100,26 +102,24 @@ export default function FanWall() {
   return (
     <>
       <Helmet>
-        <title>FanWall - Muziek Herinneringen | MusicScan</title>
-        <meta name="description" content="Ontdek en deel muziek herinneringen: concertfoto's, vinyl collecties, en meer. Een visueel verhaal van muziekliefhebbers." />
+        <title>{f.metaTitle}</title>
+        <meta name="description" content={f.metaDesc} />
         <link rel="canonical" href="https://www.musicscan.app/fanwall" />
       </Helmet>
 
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
-          {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">FanWall</h1>
-            <p className="text-muted-foreground">Muziek herinneringen gedeeld door fans</p>
+            <h1 className="text-4xl font-bold mb-2">{f.title}</h1>
+            <p className="text-muted-foreground">{f.subtitle}</p>
           </div>
 
-          {/* Filters */}
           <Card className="p-4 mb-8">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder="Zoek op artiest of beschrijving..."
+                  placeholder={f.searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -130,7 +130,7 @@ export default function FanWall() {
                   <SelectValue placeholder="Format" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Alle Formats</SelectItem>
+                  <SelectItem value="all">{f.allFormats}</SelectItem>
                   <SelectItem value="concert">Concert</SelectItem>
                   <SelectItem value="vinyl">Vinyl</SelectItem>
                   <SelectItem value="cd">CD</SelectItem>
@@ -145,7 +145,6 @@ export default function FanWall() {
             </div>
           </Card>
 
-          {/* Grid */}
           {isLoading ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {[...Array(12)].map((_, i) => (
@@ -166,7 +165,6 @@ export default function FanWall() {
                     </div>
                   </Link>
                   <div className="p-3">
-                    {/* Author info */}
                     {photo.profiles && (
                       <Link 
                         to={`/profile/${photo.profiles.user_id}`}
@@ -184,7 +182,7 @@ export default function FanWall() {
                     )}
                     
                     <Link to={`/photo/${photo.seo_slug}`}>
-                      <h3 className="font-semibold text-sm truncate">{photo.artist || "Onbekend"}</h3>
+                      <h3 className="font-semibold text-sm truncate">{photo.artist || f.unknown}</h3>
                       {photo.year && <p className="text-xs text-muted-foreground">{photo.year}</p>}
                       <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                         {photo.view_count > 0 && (
@@ -203,12 +201,11 @@ export default function FanWall() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">Geen foto's gevonden</p>
-              <Button onClick={() => navigate("/upload")}>Upload de eerste foto</Button>
+              <p className="text-muted-foreground mb-4">{f.noPhotos}</p>
+              <Button onClick={() => navigate("/upload")}>{f.uploadFirst}</Button>
             </div>
           )}
 
-          {/* Infinite scroll trigger */}
           {hasNextPage && (
             <div ref={loadMoreRef} className="py-8 text-center">
               {isFetchingNextPage && (

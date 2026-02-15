@@ -1,53 +1,74 @@
 
 
-# Spotify Profiel Pagina Reparatie en Uitbreiding
+# Spotify Analyse 2.0: Diepgaande Inzichten + Collectie Vergelijking
 
 ## Probleem
-De Spotify Profiel pagina bestaat al (`src/pages/SpotifyProfile.tsx`) maar is niet bereikbaar:
-- **Route mismatch**: App.tsx registreert de route als `/spotify/profile`, maar alle links (Navigation, SpotifyWidget, SpotifyCallback) verwijzen naar `/spotify-profile`
-- Hierdoor krijg je een 404
+De huidige Spotify AI analyse is te oppervlakkig -- slechts 6 categorieeen (personality, trends, recommendations, patterns, collectionComparison, funFacts). De collectie-analyse heeft 9 rijke categorieen met veel meer diepgang. Er is geen echte vergelijking tussen Spotify en de fysieke collectie.
 
 ## Oplossing
 
-### Stap 1: Route fix
-Alle verwijzingen consistent maken op `/spotify-profile`:
-- **App.tsx**: Route wijzigen van `/spotify/profile` naar `/spotify-profile`
+### 1. Uitgebreide AI Analyse Prompt
+De `spotify-ai-analysis` edge function krijgt een veel rijkere prompt met meer dimensies:
 
-### Stap 2: Uitbreiding met meer Spotify data
-De bestaande pagina verrijken met extra secties:
+**Nieuwe analyse-categorieeen (naast bestaande):**
+- **Luisterreis Timeline** - Hoe je smaak zich heeft ontwikkeld (recent vs. medium vs. lang)
+- **Genre-Ecosysteem** - Diepere analyse van genre-verbanden, niche-genres, mainstream vs. underground ratio
+- **Artiest-Netwerk** - Verbindingen tussen je top artiesten, samenwerkingen, invloeden
+- **Emotioneel Landschap** - Mood-mapping over de dag/week, energie-patronen
+- **Ontdekker Score** - Hoe avontuurlijk je luistert (obscure vs. populair, genre-diversiteit)
+- **Muzikale Tijdreiziger** - Welke decennia domineren, nostalgie vs. nieuwsgierigheid
+- **Collectie Vergelijking (verrijkt)** - Diepgaande vergelijking fysiek vs. digitaal met overlap-analyse, genre-verschuivingen, "blinde vlekken" in beide collecties
 
-**Nieuwe secties toevoegen:**
-1. **Profiel Header** - Spotify avatar, display name, land, aantal followers (data al beschikbaar via `spotify-sync`)
-2. **Recently Played** - Laatst beluisterde tracks ophalen via Spotify API (`/v1/me/player/recently-played`)
-3. **Audio Features Analyse** - Danceability, energy, valence gemiddelden visualiseren met progress bars (geeft inzicht in muziekstijl)
-4. **Decennia Verdeling** - Pie chart (Recharts) van in welke decennia de verzamelde tracks vallen
-5. **Luister-DNA Samenvatting** - Korte AI-gegenereerde samenvatting van het muziekprofiel
+### 2. UI Redesign Insights Tab
+De Insights tab wordt compleet vernieuwd met een visueel rijkere layout:
 
-### Stap 3: Edge function uitbreiden
-`spotify-sync` uitbreiden met:
-- **Recently played tracks** ophalen en opslaan
-- **Audio features** ophalen voor opgeslagen tracks (batch via `/v1/audio-features`)
-- Spotify profielfoto + land opslaan in `profiles` tabel
+- **Muziek Persoonlijkheid** (hero card met gradient) - Titel + samenvatting + traits
+- **Ontdekker Scorecard** - Visuele meter (mainstream vs. underground, breed vs. niche)
+- **Genre Ecosysteem** - Visuele weergave van genre-clusters en verbanden
+- **Emotioneel Landschap** - Mood kaarten met kleuren
+- **Luisterreis** - Timeline van smaakevolutie
+- **Artiest Connecties** - Netwerk van invloeden
+- **Fysiek vs. Digitaal** - Uitgebreide vergelijking met overlap-stats, blinde vlekken, suggesties
+- **Verborgen Parels** - Unieke ontdekkingen en deep cuts
+- **Fun Facts** - Verbeterde weetjes
 
-### Stap 4: Database uitbreiding
-- Kolommen toevoegen aan `profiles`: `spotify_avatar_url`, `spotify_country`, `spotify_followers`
-- Nieuwe tabel `spotify_recently_played` voor recent beluisterde tracks
+### 3. Collectie Cross-Analyse
+De edge function haalt meer data op uit de fysieke collectie:
+- Genre-verdeling fysiek vs. Spotify
+- Decennia-verdeling vergelijking
+- Artiesten overlap met details (welke albums fysiek, welke tracks digitaal)
+- "Blinde vlekken" - wat heb je fysiek maar luister je niet op Spotify en vice versa
 
 ## Technische Details
 
-### Bestanden die worden aangepast:
+### Bestanden die worden aangepast
+
 | Bestand | Wijziging |
 |---------|-----------|
-| `src/App.tsx` | Route `/spotify/profile` naar `/spotify-profile` |
-| `src/pages/SpotifyProfile.tsx` | Nieuwe secties: profiel header, recently played, audio features chart, decennia chart, muziek-DNA |
-| `supabase/functions/spotify-sync/index.ts` | Recently played + audio features + profieldata ophalen |
-| `src/hooks/useSpotifyData.ts` | Nieuwe hooks: `useSpotifyRecentlyPlayed`, audio features aggregatie |
-| Database migratie | `spotify_recently_played` tabel + extra `profiles` kolommen |
+| `supabase/functions/spotify-ai-analysis/index.ts` | Prompt uitbreiden naar 12+ analyse-dimensies, meer collectie-data ophalen |
+| `src/hooks/useSpotifyAIAnalysis.ts` | Interface uitbreiden met nieuwe categorieeen |
+| `src/pages/SpotifyProfile.tsx` | Insights tab compleet vernieuwen met rijkere visuele componenten |
 
-### Visuele opbouw (van boven naar beneden):
-1. Grote Spotify profiel header met avatar en stats
-2. 4 stat-kaarten (tracks, playlists, gem. duur, explicit %)
-3. Tabs: Overzicht | Top Muziek | Playlists | Insights
-   - Overzicht krijgt: Top Genres + Recently Played + Decennia chart
-   - Insights krijgt: Audio Features bars (energy, danceability, valence) + Muziek-DNA tekst
+### Nieuwe AI Response Structuur
+
+```text
+personality        -> titel, samenvatting, traits (bestaand, verrijkt)
+genreEcosystem     -> clusters, nichescores, mainstream ratio, verbanden
+emotionalLandscape -> moods, energieflow, seizoenspatronen
+explorerProfile    -> score (0-100), diversiteit, obscuriteit, avontuurlijkheid
+listeningJourney   -> smaakevolutie, keermomenten, tijdlijn
+artistNetwork      -> connecties, invloeden, samenwerkingen
+collectionBridge   -> overlap stats, blinde vlekken, genre shifts, suggesties
+hiddenGems         -> underrated tracks, deep cuts, verrassingen
+trends             -> stijgend, dalend, beschrijving (bestaand, verrijkt)
+recommendations    -> artiesten, genres, albums (bestaand, verrijkt)
+funFacts           -> 5-7 weetjes (verrijkt)
+```
+
+### Edge Function Data Ophalen (uitbreiding)
+Naast bestaande queries, extra ophalen uit fysieke collectie:
+- Genre-verdeling per bron (cd_scan, vinyl2_scan)
+- Jaar-verdeling per bron
+- Volledige artiesten-lijst met albums voor overlap-analyse
+- Waarde-informatie uit ai_scan_results voor collector-inzichten
 

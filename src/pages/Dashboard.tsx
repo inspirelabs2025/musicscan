@@ -53,6 +53,8 @@ import { SubscriptionStatus } from '@/components/SubscriptionStatus';
 import { NextGoalWidget } from '@/components/dashboard/NextGoalWidget';
 import { MusicStoryWidget } from '@/components/dashboard/MusicStoryWidget';
 
+import { CreditsDisplay } from '@/components/credits/CreditsDisplay';
+
 const Dashboard = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
@@ -179,8 +181,9 @@ const Dashboard = () => {
             </Card>
           </section>
 
-          {/* Subscription Status */}
-          <section className="mb-12 animate-fade-in delay-250">
+          {/* Credits & Subscription */}
+          <section className="mb-12 animate-fade-in delay-250 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CreditsDisplay />
             <SubscriptionStatus />
           </section>
 

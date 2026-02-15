@@ -408,7 +408,7 @@ ${recentItems}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="fixed bottom-20 md:bottom-6 right-6 z-50 w-[380px] md:w-[520px] lg:w-[600px] max-w-[calc(100vw-2rem)] h-[520px] md:h-[680px] lg:h-[720px] max-h-[calc(100vh-6rem)] rounded-2xl overflow-hidden flex flex-col shadow-2xl border border-border/50 bg-background/95 backdrop-blur-xl"
+            className="fixed bottom-20 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-6rem)] md:inset-0 md:m-auto md:bottom-0 md:right-0 md:w-[640px] md:h-[700px] md:max-h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl border border-border/50 bg-background/95 backdrop-blur-xl"
           >
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-purple-600/90 to-purple-800/90 text-white">

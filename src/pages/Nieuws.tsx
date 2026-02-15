@@ -13,11 +13,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 import { Helmet } from "react-helmet";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Nieuws() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const debouncedSearch = useDebounceSearch(searchTerm, 300);
+  const { tr } = useLanguage();
+  const n = tr.nieuws;
 
   const { data: musicNews = [], isLoading } = useQuery({
     queryKey: ["news-blog-posts"],
@@ -32,7 +35,6 @@ export default function Nieuws() {
       
       if (error) throw error;
       
-      // Transform to match expected structure
       return (data || []).map(post => ({
         id: post.id,
         slug: post.slug,
@@ -70,14 +72,13 @@ export default function Nieuws() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Muzieknieuws | MusicScan</title>
-        <meta name="description" content="Het laatste muzieknieuws, dagelijks automatisch voor jou samengesteld." />
+        <title>{n.metaTitle}</title>
+        <meta name="description" content={n.metaDesc} />
       </Helmet>
 
       <BreadcrumbNavigation className="max-w-7xl mx-auto px-4 pt-4" />
 
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-12">
-        {/* Hero Header */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -85,17 +86,16 @@ export default function Nieuws() {
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm font-medium text-primary mb-4">
             <Sparkles className="w-4 h-4" />
-            Dagelijks Vers
+            {n.dailyFresh}
           </div>
           <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-            Muzieknieuws
+            {n.title}
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Dagelijks automatisch samengesteld • Altijd actueel • Altijd betrouwbaar
+            {n.subtitle}
           </p>
         </motion.div>
 
-        {/* Search & Filters */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -105,7 +105,7 @@ export default function Nieuws() {
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
             <Input 
-              placeholder="Zoek in het nieuws..." 
+              placeholder={n.searchPlaceholder}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="pl-12 h-12 text-lg"
@@ -113,12 +113,12 @@ export default function Nieuws() {
           </div>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-full md:w-[200px] h-12">
-              <SelectValue placeholder="Categorie" />
+              <SelectValue placeholder={n.category} />
             </SelectTrigger>
             <SelectContent>
               {categories.map(cat => (
                 <SelectItem key={cat} value={cat}>
-                  {cat === 'all' ? 'Alle categorieën' : cat}
+                  {cat === 'all' ? n.allCategories : cat}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -136,7 +136,6 @@ export default function Nieuws() {
           </div>
         ) : (
           <>
-            {/* Featured Article */}
             {featuredArticle && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -203,16 +202,15 @@ export default function Nieuws() {
               </motion.div>
             )}
 
-            {/* Regular Articles Grid */}
             {regularArticles.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-2xl font-bold flex items-center gap-2">
                     <Clock className="w-6 h-6 text-primary" />
-                    Recente Artikelen
+                    {n.recentArticles}
                   </h3>
                   <span className="text-sm text-muted-foreground">
-                    {regularArticles.length} artikelen
+                    {regularArticles.length} {n.articles}
                   </span>
                 </div>
 
@@ -268,7 +266,7 @@ export default function Nieuws() {
                             )}
 
                             <div className="flex items-center gap-1 text-primary text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                              Lees meer
+                              {n.readMore}
                               <ExternalLink className="w-4 h-4" />
                             </div>
                           </CardContent>
@@ -285,15 +283,15 @@ export default function Nieuws() {
                 <div className="bg-muted/30 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
                   <Newspaper className="w-10 h-10 text-muted-foreground" />
                 </div>
-                <h3 className="text-2xl font-semibold mb-2">Geen artikelen gevonden</h3>
+                <h3 className="text-2xl font-semibold mb-2">{n.noArticlesFound}</h3>
                 <p className="text-muted-foreground mb-6">
-                  Probeer een andere zoekopdracht of filter
+                  {n.noArticlesDesc}
                 </p>
                 <Button onClick={() => {
                   setSearchTerm("");
                   setCategoryFilter("all");
                 }} variant="outline">
-                  Reset filters
+                  {n.resetFilters}
                 </Button>
               </div>
             )}

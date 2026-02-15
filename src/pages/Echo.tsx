@@ -8,6 +8,7 @@ import { Send, Loader2, Music2, Sparkles, Heart, BookOpen, Lightbulb } from 'luc
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import echoAvatar from '@/assets/echo-avatar.png';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface EchoMessage {
   id: string;
@@ -25,18 +26,15 @@ export default function Echo() {
   const [activeMode, setActiveMode] = useState<string>('general');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { tr } = useLanguage();
+  const e = tr.echoPage;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    loadMessages();
-  }, []);
+  useEffect(() => { scrollToBottom(); }, [messages]);
+  useEffect(() => { loadMessages(); }, []);
 
   const loadMessages = async () => {
     const { data: conversation } = await supabase
@@ -83,13 +81,12 @@ export default function Echo() {
       });
 
       if (error) throw error;
-
       await loadMessages();
     } catch (error) {
       console.error('Echo error:', error);
       toast({
-        title: "Echo had een moment 🎵",
-        description: "Probeer het nog eens. Elke plaat verdient een tweede kans.",
+        title: e.errorTitle,
+        description: e.errorDesc,
         variant: "destructive"
       });
     } finally {
@@ -122,9 +119,7 @@ export default function Echo() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-echo-violet via-background to-background">
-      {/* Echo Header met animatie */}
       <div className="relative overflow-hidden py-12 px-4">
-        {/* Animated background waves */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-echo-lavender to-echo-gold animate-echo-pulse"></div>
           <div className="absolute bottom-0 right-0 w-full h-32 bg-gradient-to-l from-echo-lavender to-echo-violet animate-echo-pulse delay-1000"></div>
@@ -132,34 +127,25 @@ export default function Echo() {
 
         <div className="container mx-auto max-w-5xl relative z-10">
           <div className="text-center space-y-4 animate-fade-in">
-            {/* Echo Logo/Symbol */}
             <div className="flex justify-center mb-6">
               <div className="relative">
                 <img 
                   src={echoAvatar}
-                  alt="Echo - AI Muziekexpert"
+                  alt="Echo"
                   className="w-32 h-32 rounded-full border-4 border-echo-lavender/50 shadow-2xl animate-echo-pulse"
                 />
-                {/* Resonantie rings */}
                 <div className="absolute inset-0 rounded-full border-2 border-echo-lavender animate-ping"></div>
                 <div className="absolute inset-0 rounded-full border-2 border-echo-gold animate-ping delay-500"></div>
               </div>
             </div>
 
-            <h1 className="text-5xl font-bold text-white mb-2 font-serif">
-              Echo
-            </h1>
-            <p className="text-xl text-echo-lavender mb-2">
-              Waar elke plaat iets te vertellen heeft 🎵
-            </p>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Je AI muziekarchivaris, verhalenverteller en persoonlijke gids door de wereld van geluiden en emoties
-            </p>
+            <h1 className="text-5xl font-bold text-white mb-2 font-serif">{e.title}</h1>
+            <p className="text-xl text-echo-lavender mb-2">{e.subtitle}</p>
+            <p className="text-muted-foreground max-w-2xl mx-auto">{e.description}</p>
           </div>
         </div>
       </div>
 
-      {/* Main Chat Interface */}
       <div className="container mx-auto px-4 pb-8 max-w-5xl">
         <Card className="border-2 border-echo-lavender/20 bg-card/95 backdrop-blur">
           <CardHeader>
@@ -167,42 +153,36 @@ export default function Echo() {
               <TabsList className="grid w-full grid-cols-4 bg-echo-violet/20">
                 <TabsTrigger value="general" className="data-[state=active]:bg-echo-lavender data-[state=active]:text-black">
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Verkennen
+                  {e.explore}
                 </TabsTrigger>
                 <TabsTrigger value="album_story" className="data-[state=active]:bg-echo-gold data-[state=active]:text-white">
                   <BookOpen className="w-4 h-4 mr-2" />
-                  Album Verhaal
+                  {e.albumStory}
                 </TabsTrigger>
                 <TabsTrigger value="lyric_analysis" className="data-[state=active]:bg-vinyl-purple data-[state=active]:text-white">
                   <Lightbulb className="w-4 h-4 mr-2" />
-                  Lyric Analyse
+                  {e.lyricAnalysis}
                 </TabsTrigger>
                 <TabsTrigger value="memory" className="data-[state=active]:bg-vinyl-gold data-[state=active]:text-black">
                   <Heart className="w-4 h-4 mr-2" />
-                  Herinneringen
+                  {e.memories}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {/* Messages Area */}
             <ScrollArea className="h-[500px] pr-4">
               {messages.length === 0 && (
                 <div className="text-center py-12 space-y-6">
                   <Music2 className="w-16 h-16 mx-auto text-echo-lavender animate-echo-pulse" />
                   <div>
-                    <h3 className="text-xl font-semibold mb-2 font-serif">
-                      Welkom bij Echo 🎧
-                    </h3>
-                    <p className="text-muted-foreground mb-6">
-                      Stel me een vraag over muziek, of kies een van de suggesties hieronder
-                    </p>
+                    <h3 className="text-xl font-semibold mb-2 font-serif">{e.welcome}</h3>
+                    <p className="text-muted-foreground mb-6">{e.askQuestion}</p>
                   </div>
 
-                  {/* Suggested Questions */}
                   <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground font-semibold">💡 Suggesties:</p>
+                    <p className="text-sm text-muted-foreground font-semibold">{e.suggestions}</p>
                     {suggestedQuestions[activeMode as keyof typeof suggestedQuestions].map((q, i) => (
                       <Button
                         key={i}
@@ -231,11 +211,7 @@ export default function Echo() {
                   >
                     {msg.sender_type === 'echo' && (
                       <div className="flex items-center gap-2 mb-2">
-                        <img 
-                          src={echoAvatar} 
-                          alt="Echo" 
-                          className="w-6 h-6 rounded-full border border-echo-lavender/30"
-                        />
+                        <img src={echoAvatar} alt="Echo" className="w-6 h-6 rounded-full border border-echo-lavender/30" />
                         <span className="text-xs font-semibold text-echo-lavender">Echo</span>
                       </div>
                     )}
@@ -249,7 +225,7 @@ export default function Echo() {
                   <div className="bg-gradient-to-br from-echo-violet/10 to-echo-lavender/10 border border-echo-lavender/20 p-4 rounded-2xl">
                     <div className="flex items-center gap-2">
                       <Music2 className="w-4 h-4 text-echo-lavender animate-echo-pulse" />
-                      <span className="text-sm text-muted-foreground">Echo luistert... 🎵</span>
+                      <span className="text-sm text-muted-foreground">{e.listening}</span>
                       <Loader2 className="w-4 h-4 animate-spin text-echo-lavender" />
                     </div>
                   </div>
@@ -259,13 +235,12 @@ export default function Echo() {
               <div ref={messagesEndRef} />
             </ScrollArea>
 
-            {/* Input Area */}
             <div className="flex gap-2">
               <Input
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                placeholder="Vraag Echo over muziek... 🎵"
+                onChange={(ev) => setInput(ev.target.value)}
+                onKeyPress={(ev) => ev.key === 'Enter' && !ev.shiftKey && sendMessage()}
+                placeholder={e.inputPlaceholder}
                 disabled={isLoading}
                 className="flex-1 border-echo-lavender/20 focus:border-echo-lavender bg-background/50"
               />
@@ -274,11 +249,7 @@ export default function Echo() {
                 disabled={isLoading || !input.trim()}
                 className="bg-gradient-to-r from-echo-lavender to-echo-gold hover:opacity-90"
               >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </Button>
             </div>
           </CardContent>

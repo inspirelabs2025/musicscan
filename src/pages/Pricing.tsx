@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, Star, Crown, Building2, Music, Coins, Loader2, Sparkles } from 'lucide-react';
+import { CheckCircle, Star, Crown, Building2, Music, Coins, Loader2, Sparkles, Zap, MessageSquare, Upload } from 'lucide-react';
 import { useSubscriptionContext } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
+import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Progress } from '@/components/ui/progress';
 import { useQueryClient } from '@tanstack/react-query';
 
 const CREDIT_PACKAGES = [
@@ -30,6 +32,7 @@ const Pricing = () => {
   const [searchParams] = useSearchParams();
   const [buyingPriceId, setBuyingPriceId] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const { aiScansUsed, aiChatUsed, bulkUploadsUsed } = useUsageTracking();
 
   // Handle return from Stripe checkout
   useEffect(() => {
@@ -201,22 +204,70 @@ const Pricing = () => {
       <div className="min-h-screen bg-gradient-to-br from-background to-muted">
         <div className="container mx-auto px-4 py-16">
           {/* Header */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Kies jouw Perfect Plan
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Van hobbyist tot professional - kies een abonnement of koop losse credits
             </p>
-            {user && userCredits && (
-              <div className="mt-4">
-                <Badge variant="outline" className="text-lg px-4 py-2">
-                  <Coins className="h-4 w-4 mr-2" />
-                  {userCredits.balance} credits beschikbaar
-                </Badge>
-              </div>
-            )}
           </div>
+
+          {/* Account Status Card - visible for logged in users */}
+          {user && (
+            <Card className="max-w-3xl mx-auto mb-12 border-primary/20 bg-card/80 backdrop-blur">
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Current Plan */}
+                  <div className="text-center md:text-left space-y-2">
+                    <p className="text-sm text-muted-foreground font-medium">Huidig Plan</p>
+                    <div className="flex items-center gap-2 justify-center md:justify-start">
+                      <Crown className="h-5 w-5 text-primary" />
+                      <span className="text-xl font-bold">
+                        {subscription?.plan_name || 'FREE - Music Explorer'}
+                      </span>
+                    </div>
+                    {subscription?.subscription_end && (
+                      <p className="text-xs text-muted-foreground">
+                        Verlengt {new Date(subscription.subscription_end).toLocaleDateString('nl-NL')}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Credits Balance */}
+                  <div className="text-center space-y-2 border-x-0 md:border-x border-border px-4">
+                    <p className="text-sm text-muted-foreground font-medium">Credits Saldo</p>
+                    <div className="flex items-center gap-2 justify-center">
+                      <Coins className="h-5 w-5 text-primary" />
+                      <span className="text-3xl font-bold">{userCredits?.balance ?? 0}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">beschikbaar</p>
+                  </div>
+
+                  {/* Usage This Month */}
+                  <div className="text-center md:text-right space-y-2">
+                    <p className="text-sm text-muted-foreground font-medium">Gebruik deze maand</p>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-center md:justify-end gap-2 text-sm">
+                        <Zap className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>{aiScansUsed} scans</span>
+                      </div>
+                      <div className="flex items-center justify-center md:justify-end gap-2 text-sm">
+                        <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>{aiChatUsed} chats</span>
+                      </div>
+                      {bulkUploadsUsed > 0 && (
+                        <div className="flex items-center justify-center md:justify-end gap-2 text-sm">
+                          <Upload className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>{bulkUploadsUsed} bulk uploads</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Tabs */}
           <Tabs defaultValue="credits" className="max-w-7xl mx-auto">

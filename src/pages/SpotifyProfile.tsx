@@ -243,7 +243,7 @@ export default function SpotifyProfile() {
                   <CardContent>
                     {recentlyPlayed && recentlyPlayed.length > 0 ? (
                       <div className="space-y-3">
-                        {recentlyPlayed.slice(0, 8).map((track, index) => (
+                        {recentlyPlayed.map((track, index) => (
                           <div key={index} className="flex items-center space-x-3">
                             {track.image_url ? (
                               <img src={track.image_url} alt={track.title} className="w-10 h-10 rounded object-cover" />

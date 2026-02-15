@@ -55,6 +55,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
+      payment_method_types: ["card", "ideal"],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "payment",
       success_url: `${req.headers.get("origin")}/pricing?credits_purchased=${creditsAmount}`,

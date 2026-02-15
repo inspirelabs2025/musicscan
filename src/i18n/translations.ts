@@ -61,6 +61,7 @@ const translations = {
       myProfile: "Mijn Profiel",
       logout: "Uitloggen",
       login: "Inloggen",
+      register: "Aanmelden",
       quiz: "Quizzen",
     },
     hero: {
@@ -195,6 +196,7 @@ const translations = {
       myProfile: "My Profile",
       logout: "Log out",
       login: "Log in",
+      register: "Sign up",
       quiz: "Quizzes",
     },
     hero: {

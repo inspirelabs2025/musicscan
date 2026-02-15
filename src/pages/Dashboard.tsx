@@ -141,48 +141,56 @@ const Dashboard = () => {
 
           {/* Quick Actions Hero */}
           <section className="mb-12 animate-fade-in delay-200">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-vinyl-purple/90 via-vinyl-purple/70 to-primary/80 p-1">
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-4 left-8 text-4xl animate-bounce" style={{ animationDelay: '0.1s' }}>🎵</div>
-                <div className="absolute top-6 right-12 text-3xl animate-pulse" style={{ animationDelay: '0.5s' }}>🎶</div>
-                <div className="absolute bottom-4 left-1/3 text-2xl animate-pulse" style={{ animationDelay: '0.3s' }}>🎸</div>
-                <div className="absolute bottom-6 right-1/4 text-3xl animate-bounce" style={{ animationDelay: '0.7s' }}>🥁</div>
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-vinyl-purple via-vinyl-purple/90 to-primary p-6 shadow-xl shadow-vinyl-purple/20">
+              {/* Decorative background elements */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-3 left-6 text-3xl opacity-15 animate-bounce" style={{ animationDelay: '0.1s' }}>🎵</div>
+                <div className="absolute top-5 right-10 text-2xl opacity-15 animate-pulse" style={{ animationDelay: '0.5s' }}>🎶</div>
+                <div className="absolute bottom-3 left-1/3 text-xl opacity-15 animate-pulse" style={{ animationDelay: '0.3s' }}>🎸</div>
+                <div className="absolute bottom-4 right-1/4 text-2xl opacity-15 animate-bounce" style={{ animationDelay: '0.7s' }}>🥁</div>
+                {/* Vinyl record glow */}
+                <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-vinyl-gold/10 blur-2xl" />
+                <div className="absolute -left-6 -bottom-6 w-24 h-24 rounded-full bg-white/5 blur-xl" />
               </div>
-              <div className="relative bg-background/5 backdrop-blur-sm rounded-xl p-6">
+
+              <div className="relative z-10">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-5">
                   <Zap className="w-5 h-5 text-vinyl-gold" />
-                  <span className="bg-gradient-to-r from-vinyl-gold to-yellow-300 bg-clip-text text-transparent">Quick Actions</span>
+                  <span className="text-vinyl-gold font-extrabold tracking-wide">Quick Actions</span>
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
-                  <Button asChild size="lg" className="h-24 bg-gradient-to-br from-vinyl-gold to-yellow-500 hover:from-yellow-400 hover:to-vinyl-gold text-black hover:shadow-xl hover:shadow-vinyl-gold/30 hover:scale-[1.03] transition-all duration-300 group rounded-xl border-0">
+                  {/* Scan Nu - Primary CTA */}
+                  <Button asChild size="lg" className="h-24 bg-gradient-to-br from-vinyl-gold to-yellow-500 hover:from-yellow-400 hover:to-vinyl-gold text-black hover:shadow-xl hover:shadow-vinyl-gold/40 hover:scale-[1.03] transition-all duration-300 group rounded-xl border-0">
                     <Link to="/ai-scan-v2">
                       <div className="flex flex-col items-center gap-2">
-                        <div className="p-2 rounded-full bg-black/10">
-                          <Camera className="w-7 h-7 group-hover:animate-pulse" />
+                        <div className="p-2.5 rounded-full bg-black/15">
+                          <Camera className="w-6 h-6 group-hover:animate-pulse" />
                         </div>
                         <span className="text-sm font-bold">Scan Nu</span>
                       </div>
                     </Link>
                   </Button>
                   
-                  <Button asChild size="lg" variant="outline" className="h-24 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/40 hover:scale-[1.03] transition-all duration-300 group rounded-xl backdrop-blur-sm">
+                  {/* Mijn Collectie */}
+                  <Button asChild size="lg" className="h-24 bg-white/15 border border-white/25 text-white hover:bg-white/25 hover:border-white/40 hover:scale-[1.03] transition-all duration-300 group rounded-xl backdrop-blur-sm">
                     <Link to="/my-collection">
                       <div className="flex flex-col items-center gap-2">
-                        <div className="p-2 rounded-full bg-white/10">
-                          <Search className="w-7 h-7 group-hover:animate-pulse" />
+                        <div className="p-2.5 rounded-full bg-white/15">
+                          <Search className="w-6 h-6 group-hover:animate-pulse" />
                         </div>
-                        <span className="text-sm font-medium">Mijn Collectie</span>
+                        <span className="text-sm font-semibold">Mijn Collectie</span>
                       </div>
                     </Link>
                   </Button>
                   
-                  <Button asChild size="lg" variant="outline" className="h-24 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/40 hover:scale-[1.03] transition-all duration-300 group rounded-xl backdrop-blur-sm">
+                  {/* Chat */}
+                  <Button asChild size="lg" className="h-24 bg-white/15 border border-white/25 text-white hover:bg-white/25 hover:border-white/40 hover:scale-[1.03] transition-all duration-300 group rounded-xl backdrop-blur-sm">
                     <Link to="/collection-chat">
                       <div className="flex flex-col items-center gap-2">
-                        <div className="p-2 rounded-full bg-white/10">
-                          <MessageSquare className="w-7 h-7 group-hover:animate-pulse" />
+                        <div className="p-2.5 rounded-full bg-white/15">
+                          <MessageSquare className="w-6 h-6 group-hover:animate-pulse" />
                         </div>
-                        <span className="text-sm font-medium">Chat</span>
+                        <span className="text-sm font-semibold">Chat</span>
                       </div>
                     </Link>
                   </Button>

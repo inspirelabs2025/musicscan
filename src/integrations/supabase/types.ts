@@ -7902,6 +7902,48 @@ export type Database = {
           },
         ]
       }
+      spotify_track_insights: {
+        Row: {
+          ai_model: string | null
+          album: string | null
+          artist: string
+          created_at: string
+          generation_time_ms: number | null
+          id: string
+          insights_data: Json
+          spotify_track_id: string
+          title: string
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          ai_model?: string | null
+          album?: string | null
+          artist: string
+          created_at?: string
+          generation_time_ms?: number | null
+          id?: string
+          insights_data: Json
+          spotify_track_id: string
+          title: string
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          ai_model?: string | null
+          album?: string | null
+          artist?: string
+          created_at?: string
+          generation_time_ms?: number | null
+          id?: string
+          insights_data?: Json
+          spotify_track_id?: string
+          title?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
       spotify_tracks: {
         Row: {
           added_at: string | null

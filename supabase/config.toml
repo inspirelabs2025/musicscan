@@ -742,3 +742,6 @@ verify_jwt = false
 
 [[functions.spotify-auto-sync.schedule]]
 cron = "0 */6 * * *"
+
+[functions.spotify-track-info]
+verify_jwt = false

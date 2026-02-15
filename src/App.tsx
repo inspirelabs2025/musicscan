@@ -165,6 +165,7 @@ const FacebookCatalogFeed = lazy(() => import("./pages/FacebookCatalogFeed"));
 const Feeds = lazy(() => import("./pages/Feeds"));
 const Prestaties = lazy(() => import("./pages/Prestaties"));
 const SpotifyProfile = lazy(() => import("./pages/SpotifyProfile"));
+const SpotifyTrackDetail = lazy(() => import("./pages/SpotifyTrackDetail"));
 const SpotifyCallback = lazy(() => import("./pages/SpotifyCallback"));
 const TrackOrder = lazy(() => import("./pages/TrackOrder").then(m => ({ default: m.TrackOrder })));
 const OrderSuccess = lazy(() => import("./pages/OrderSuccess").then(m => ({ default: m.OrderSuccess })));
@@ -470,6 +471,7 @@ const AppContent = () => {
         <Route path="/feeds" element={<LazyRoute><Feeds /></LazyRoute>} />
         <Route path="/prestaties" element={<ProtectedRoute><LazyRoute><Prestaties /></LazyRoute></ProtectedRoute>} />
         <Route path="/spotify-profile" element={<ProtectedRoute><LazyRoute><SpotifyProfile /></LazyRoute></ProtectedRoute>} />
+        <Route path="/spotify-track/:trackId" element={<ProtectedRoute><LazyRoute><SpotifyTrackDetail /></LazyRoute></ProtectedRoute>} />
         <Route path="/auth/spotify/callback" element={<LazyRoute><SpotifyCallback /></LazyRoute>} />
         
 {/* Admin routes */}

@@ -28,6 +28,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [firstName, setFirstName] = useState('');
+  const [promoCode, setPromoCode] = useState('');
 
   // Check if user is already authenticated
   useEffect(() => {
@@ -139,6 +140,17 @@ const Auth = () => {
           setError(error.message);
         }
       } else {
+        // Try to redeem promo code if provided (after signup, user may not be confirmed yet)
+        if (promoCode.trim()) {
+          try {
+            const { data } = await supabase.rpc('redeem_promo_code', { p_code: promoCode.trim() });
+            if (data?.success) {
+              toast.success(`${data.credits} gratis credits ontvangen!`);
+            }
+          } catch (e) {
+            console.warn('Promo code redemption after signup:', e);
+          }
+        }
         toast.success('Account aangemaakt! Check je email voor bevestiging.');
         setActiveTab('signin');
       }
@@ -357,6 +369,21 @@ const Auth = () => {
                     disabled={isSubmitting}
                     minLength={6}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="promo-code">Promocode (optioneel)</Label>
+                  <Input
+                    id="promo-code"
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    placeholder="Bijv. WELKOM2026"
+                    disabled={isSubmitting}
+                    maxLength={30}
+                    className="uppercase"
+                  />
+                  <p className="text-xs text-muted-foreground">Heb je een code? Ontvang gratis scan credits!</p>
                 </div>
                 
                 {error && (

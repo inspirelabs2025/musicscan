@@ -28,7 +28,8 @@ import {
   RefreshCw,
   Link as LinkIcon,
   Users,
-  Image
+  Image,
+  Gift
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -88,6 +89,14 @@ const adminPages: AdminPage[] = [
     path: "/admin/price-history",
     icon: TrendingUp,
     category: "monitoring"
+  },
+  {
+    title: "Promocodes & Credits",
+    description: "Beheer promocodes en gebruikers credits",
+    path: "/admin/promo-codes",
+    icon: Gift,
+    category: "monitoring",
+    badge: "New"
   },
 
   // Art & Product Management

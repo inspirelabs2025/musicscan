@@ -238,6 +238,7 @@ const Top2000Importer = lazy(() => import("./pages/admin/Top2000Importer"));
 const Top2000Analyse = lazy(() => import("./pages/Top2000Analyse"));
 const MediaLibrary = lazy(() => import("./pages/admin/MediaLibrary"));
 const PopupManager = lazy(() => import("./pages/admin/PopupManager"));
+const AdminPromoCodes = lazy(() => import("./pages/admin/AdminPromoCodes"));
 const AdminYearOverview = lazy(() => import("./pages/admin/AdminYearOverview"));
 const DiscogsLookup = lazy(() => import("./pages/admin/DiscogsLookup"));
 const AutoComments = lazy(() => import("./pages/admin/AutoComments"));
@@ -533,6 +534,7 @@ const AppContent = () => {
         <Route path="/admin/email-notifications" element={<ProtectedRoute><LazyRoute><EmailNotificationsPage /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/seo-keywords" element={<ProtectedRoute><LazyRoute><SEOKeywords /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/status" element={<ProtectedRoute><LazyRoute><StatusDashboard /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/promo-codes" element={<ProtectedRoute><LazyRoute><AdminPromoCodes /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/year-overview" element={<ProtectedRoute><LazyRoute><AdminYearOverview /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/christmas-importer" element={<ProtectedRoute><LazyRoute><ChristmasImporter /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/christmas-logs" element={<ProtectedRoute><LazyRoute><ChristmasImportLogs /></LazyRoute></ProtectedRoute>} />

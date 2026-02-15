@@ -481,40 +481,36 @@ ${recentItems}
               )}
             </div>
 
-            {/* Suggestion Buttons - show when conversation is short */}
-            {messages.length <= 2 && !isStreaming && (
+            {/* Suggestion Buttons - show until user sends a message */}
+            {!isStreaming && !messages.some(m => m.role === 'user') && (
               <div className="px-3 py-2 flex flex-wrap gap-2 border-t border-border/30">
                 <Button
-                  variant="outline"
                   size="sm"
-                  className="text-xs rounded-full border-purple-500/30 hover:bg-purple-500/10 hover:border-purple-500/50 gap-1.5"
+                  className="text-xs rounded-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5"
                   onClick={() => sendMessage('Scan een CD of LP')}
                 >
                   <Disc3 className="h-3.5 w-3.5" />
                   Scan CD of LP
                 </Button>
                 <Button
-                  variant="outline"
                   size="sm"
-                  className="text-xs rounded-full border-purple-500/30 hover:bg-purple-500/10 hover:border-purple-500/50 gap-1.5"
+                  className="text-xs rounded-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5"
                   onClick={() => sendMessage('Wat kun je me vertellen over mijn collectie?')}
                 >
                   <Music className="h-3.5 w-3.5" />
                   Mijn collectie
                 </Button>
                 <Button
-                  variant="outline"
                   size="sm"
-                  className="text-xs rounded-full border-purple-500/30 hover:bg-purple-500/10 hover:border-purple-500/50 gap-1.5"
+                  className="text-xs rounded-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5"
                   onClick={() => sendMessage('Geef me aanbevelingen voor nieuwe muziek')}
                 >
                   <Star className="h-3.5 w-3.5" />
                   Aanbevelingen
                 </Button>
                 <Button
-                  variant="outline"
                   size="sm"
-                  className="text-xs rounded-full border-purple-500/30 hover:bg-purple-500/10 hover:border-purple-500/50 gap-1.5"
+                  className="text-xs rounded-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5"
                   onClick={() => sendMessage('Wat kan Magic Mike allemaal?')}
                 >
                   <HelpCircle className="h-3.5 w-3.5" />

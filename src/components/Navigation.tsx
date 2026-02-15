@@ -286,10 +286,13 @@ export function Navigation() {
                   <NavigationMenuLink asChild>
                     <Link
                       to="/auth"
-                      className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:bg-primary focus:text-primary-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                      className="group inline-flex h-auto w-max items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:bg-primary focus:text-primary-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50"
                     >
                       <LogIn className="h-4 w-4 mr-2" />
-                      {t('nav.login')}
+                      <span className="flex flex-col items-start leading-tight">
+                        <span>{t('nav.register')}</span>
+                        <span className="text-[10px] font-normal opacity-80">{t('nav.login')}</span>
+                      </span>
                     </Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>

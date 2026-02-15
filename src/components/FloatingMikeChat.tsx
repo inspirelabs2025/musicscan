@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Loader2, Trash2 } from 'lucide-react';
+import { X, Send, Loader2, Trash2, Disc3, Music, HelpCircle, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
@@ -480,6 +480,48 @@ ${recentItems}
                 </>
               )}
             </div>
+
+            {/* Suggestion Buttons - show when conversation is short */}
+            {messages.length <= 2 && !isStreaming && (
+              <div className="px-3 py-2 flex flex-wrap gap-2 border-t border-border/30">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs rounded-full border-purple-500/30 hover:bg-purple-500/10 hover:border-purple-500/50 gap-1.5"
+                  onClick={() => sendMessage('Scan een CD of LP')}
+                >
+                  <Disc3 className="h-3.5 w-3.5" />
+                  Scan CD of LP
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs rounded-full border-purple-500/30 hover:bg-purple-500/10 hover:border-purple-500/50 gap-1.5"
+                  onClick={() => sendMessage('Wat kun je me vertellen over mijn collectie?')}
+                >
+                  <Music className="h-3.5 w-3.5" />
+                  Mijn collectie
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs rounded-full border-purple-500/30 hover:bg-purple-500/10 hover:border-purple-500/50 gap-1.5"
+                  onClick={() => sendMessage('Geef me aanbevelingen voor nieuwe muziek')}
+                >
+                  <Star className="h-3.5 w-3.5" />
+                  Aanbevelingen
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs rounded-full border-purple-500/30 hover:bg-purple-500/10 hover:border-purple-500/50 gap-1.5"
+                  onClick={() => sendMessage('Wat kan Magic Mike allemaal?')}
+                >
+                  <HelpCircle className="h-3.5 w-3.5" />
+                  Wat kan je?
+                </Button>
+              </div>
+            )}
 
             {/* Input */}
             <div className="border-t border-border/50 px-3 py-2 bg-background/80">

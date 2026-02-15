@@ -31,13 +31,14 @@ export const CreditsDisplay: React.FC = () => {
           </Button>
         </div>
         {/* Betaalmethodes */}
-        <div className="flex flex-wrap items-center gap-2 justify-center pt-1">
+        <div className="flex items-center gap-3 justify-center pt-1">
           <span className="text-[11px] text-muted-foreground">Betaal met</span>
-          <div className="flex items-center gap-1.5">
-            <span className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">iDEAL</span>
-            <span className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">Creditcard</span>
-            <span className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">PayPal</span>
-            <span className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">Klarna</span>
+          <div className="flex items-center gap-2">
+            <img src="/images/payment/ideal.svg" alt="iDEAL" className="h-6" />
+            <img src="/images/payment/visa.svg" alt="Visa" className="h-4" />
+            <img src="/images/payment/mastercard.svg" alt="Mastercard" className="h-6" />
+            <img src="/images/payment/paypal.svg" alt="PayPal" className="h-5" />
+            <img src="/images/payment/klarna.svg" alt="Klarna" className="h-5" />
           </div>
         </div>
         <div className="border-t pt-3">

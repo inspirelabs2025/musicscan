@@ -13,7 +13,7 @@ import {
   Heart, Zap, Target, RefreshCw, Loader2
 } from 'lucide-react';
 import { SpotifyConnect } from '@/components/SpotifyConnect';
-import { useSpotifyPlaylists, useSpotifyTopTracks, useSpotifyTopArtists, useSpotifyStats } from '@/hooks/useSpotifyData';
+import { useSpotifyPlaylists, useSpotifyTracks, useSpotifyTopTracks, useSpotifyTopArtists, useSpotifyStats } from '@/hooks/useSpotifyData';
 import { useSpotifyRecentlyPlayed, useSpotifyAudioFeatures } from '@/hooks/useSpotifyRecentlyPlayed';
 import { useSpotifyAIAnalysis } from '@/hooks/useSpotifyAIAnalysis';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -45,10 +45,12 @@ export default function SpotifyProfile() {
   const [timeRange, setTimeRange] = useState<'short_term' | 'medium_term' | 'long_term'>('medium_term');
   const { data: profile } = useProfile(user?.id);
   const { data: playlists } = useSpotifyPlaylists();
+  const { data: allTracks } = useSpotifyTracks();
   const { data: topTracks } = useSpotifyTopTracks(timeRange);
   const { data: topArtists } = useSpotifyTopArtists(timeRange);
   const { data: spotifyStats } = useSpotifyStats();
   const { data: recentlyPlayed } = useSpotifyRecentlyPlayed(50);
+  const [showAllTracks, setShowAllTracks] = useState(false);
   const { data: audioFeatures } = useSpotifyAudioFeatures();
 
   const isConnected = (profile as any)?.spotify_connected || false;
@@ -270,6 +272,55 @@ export default function SpotifyProfile() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* All Tracks */}
+              {allTracks && allTracks.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Headphones className="w-5 h-5" /> Alle Nummers ({allTracks.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {(showAllTracks ? allTracks : allTracks.slice(0, 20)).map((track, index) => (
+                        <div key={track.id} className="flex items-center space-x-3">
+                          {track.image_url ? (
+                            <img src={track.image_url} alt={track.title} className="w-10 h-10 rounded object-cover" />
+                          ) : (
+                            <div className="w-10 h-10 bg-[#1DB954]/10 rounded flex items-center justify-center">
+                              <Music className="w-5 h-5 text-[#1DB954]" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{track.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
+                          </div>
+                          <div className="text-right">
+                            {track.year && <span className="text-xs text-muted-foreground">{track.year}</span>}
+                          </div>
+                          {track.spotify_url && (
+                            <Button variant="ghost" size="sm" className="shrink-0" asChild>
+                              <a href={track.spotify_url} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {allTracks.length > 20 && (
+                      <Button
+                        variant="outline"
+                        className="w-full mt-4"
+                        onClick={() => setShowAllTracks(!showAllTracks)}
+                      >
+                        {showAllTracks ? 'Toon minder' : `Toon alle ${allTracks.length} nummers`}
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* === TOP MUSIC TAB === */}

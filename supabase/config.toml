@@ -733,3 +733,12 @@ verify_jwt = false
 
 [functions.fetch-discogs-user-data]
 verify_jwt = false
+
+[functions.spotify-ai-analysis]
+verify_jwt = false
+
+[functions.spotify-auto-sync]
+verify_jwt = false
+
+[[functions.spotify-auto-sync.schedule]]
+cron = "0 */6 * * *"

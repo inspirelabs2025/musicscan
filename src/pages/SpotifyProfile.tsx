@@ -9,12 +9,15 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
   Headphones, Music, PlayCircle, BarChart3, User, ExternalLink, 
-  Clock, TrendingUp, Globe, Users, Disc3, Sparkles
+  Clock, TrendingUp, Globe, Users, Disc3, Sparkles, Brain, Lightbulb,
+  Heart, Zap, Target, RefreshCw, Loader2
 } from 'lucide-react';
 import { SpotifyConnect } from '@/components/SpotifyConnect';
 import { useSpotifyPlaylists, useSpotifyTopTracks, useSpotifyTopArtists, useSpotifyStats } from '@/hooks/useSpotifyData';
 import { useSpotifyRecentlyPlayed, useSpotifyAudioFeatures } from '@/hooks/useSpotifyRecentlyPlayed';
+import { useSpotifyAIAnalysis } from '@/hooks/useSpotifyAIAnalysis';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const DECADE_COLORS = ['#1DB954', '#1ed760', '#169c46', '#0d6b31', '#15803d', '#22c55e', '#4ade80', '#86efac'];
 
@@ -48,6 +51,7 @@ export default function SpotifyProfile() {
   const [timeRange, setTimeRange] = useState<'short_term' | 'medium_term' | 'long_term'>('medium_term');
 
   const isConnected = (profile as any)?.spotify_connected || false;
+  const { data: aiAnalysis, isLoading: aiLoading, refetch: refetchAI } = useSpotifyAIAnalysis(isConnected);
   const spotifyAvatar = (profile as any)?.spotify_avatar_url;
   const spotifyName = (profile as any)?.spotify_display_name;
   const spotifyCountry = (profile as any)?.spotify_country;
@@ -398,8 +402,177 @@ export default function SpotifyProfile() {
 
             {/* === INSIGHTS TAB === */}
             <TabsContent value="insights" className="space-y-6">
+              {/* AI Analysis Section */}
+              <Card className="border-2 border-[#1DB954]/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Brain className="w-5 h-5 text-[#1DB954]" /> Slimme Muziek Analyse
+                    </CardTitle>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => refetchAI()}
+                      disabled={aiLoading}
+                    >
+                      {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                      <span className="ml-1">Analyse</span>
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {aiLoading ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-6 w-48" />
+                      <Skeleton className="h-16 w-full" />
+                      <div className="flex gap-2">
+                        <Skeleton className="h-6 w-20" />
+                        <Skeleton className="h-6 w-20" />
+                        <Skeleton className="h-6 w-20" />
+                      </div>
+                    </div>
+                  ) : aiAnalysis?.analysis ? (
+                    <div className="space-y-6">
+                      {/* Personality */}
+                      <div className="bg-gradient-to-r from-[#1DB954]/10 to-[#191414]/5 p-5 rounded-xl">
+                        <h3 className="text-lg font-bold mb-1">{aiAnalysis.analysis.personality.title}</h3>
+                        <p className="text-sm leading-relaxed text-muted-foreground">{aiAnalysis.analysis.personality.summary}</p>
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {aiAnalysis.analysis.personality.traits.map((trait) => (
+                            <Badge key={trait} className="bg-[#1DB954] text-white">{trait}</Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Trends */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Card>
+                          <CardContent className="p-4">
+                            <h4 className="font-medium flex items-center gap-2 mb-3">
+                              <TrendingUp className="w-4 h-4 text-[#1DB954]" /> Trends & Patronen
+                            </h4>
+                            <p className="text-sm text-muted-foreground mb-3">{aiAnalysis.analysis.trends.description}</p>
+                            {aiAnalysis.analysis.trends.rising.length > 0 && (
+                              <div className="mb-2">
+                                <span className="text-xs font-medium text-[#1DB954]">📈 Stijgend:</span>
+                                <ul className="text-xs text-muted-foreground mt-1 space-y-1">
+                                  {aiAnalysis.analysis.trends.rising.map((t, i) => <li key={i}>• {t}</li>)}
+                                </ul>
+                              </div>
+                            )}
+                            {aiAnalysis.analysis.trends.declining.length > 0 && (
+                              <div>
+                                <span className="text-xs font-medium text-orange-500">📉 Dalend:</span>
+                                <ul className="text-xs text-muted-foreground mt-1 space-y-1">
+                                  {aiAnalysis.analysis.trends.declining.map((t, i) => <li key={i}>• {t}</li>)}
+                                </ul>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardContent className="p-4">
+                            <h4 className="font-medium flex items-center gap-2 mb-3">
+                              <Target className="w-4 h-4 text-[#1DB954]" /> Aanbevelingen
+                            </h4>
+                            <p className="text-sm text-muted-foreground mb-3">{aiAnalysis.analysis.recommendations.description}</p>
+                            <div className="space-y-2">
+                              {aiAnalysis.analysis.recommendations.artists.slice(0, 3).map((a, i) => (
+                                <div key={i} className="text-xs flex items-start gap-1">
+                                  <Sparkles className="w-3 h-3 text-[#1DB954] mt-0.5 flex-shrink-0" />
+                                  <span>{a}</span>
+                                </div>
+                              ))}
+                            </div>
+                            {aiAnalysis.analysis.recommendations.genres.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-3">
+                                {aiAnalysis.analysis.recommendations.genres.map((g, i) => (
+                                  <Badge key={i} variant="outline" className="text-xs">{g}</Badge>
+                                ))}
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* Patterns */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Card>
+                          <CardContent className="p-4">
+                            <h4 className="text-sm font-medium flex items-center gap-1 mb-2">
+                              <Headphones className="w-4 h-4" /> Luisterstijl
+                            </h4>
+                            <p className="text-xs text-muted-foreground">{aiAnalysis.analysis.patterns.listeningStyle}</p>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardContent className="p-4">
+                            <h4 className="text-sm font-medium flex items-center gap-1 mb-2">
+                              <Heart className="w-4 h-4" /> Mood Profiel
+                            </h4>
+                            <p className="text-xs text-muted-foreground">{aiAnalysis.analysis.patterns.moodProfile}</p>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardContent className="p-4">
+                            <h4 className="text-sm font-medium flex items-center gap-1 mb-2">
+                              <Zap className="w-4 h-4" /> Uniekheid
+                            </h4>
+                            <p className="text-xs text-muted-foreground">{aiAnalysis.analysis.patterns.uniqueness}</p>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* Collection Comparison */}
+                      {aiAnalysis.metadata.hasPhysicalCollection && (
+                        <Card className="border-dashed">
+                          <CardContent className="p-4">
+                            <h4 className="font-medium flex items-center gap-2 mb-2">
+                              <Disc3 className="w-4 h-4" /> Fysiek vs. Digitaal
+                            </h4>
+                            <p className="text-sm text-muted-foreground mb-2">{aiAnalysis.analysis.collectionComparison.insight}</p>
+                            <ul className="text-xs text-muted-foreground space-y-1">
+                              {aiAnalysis.analysis.collectionComparison.suggestions.map((s, i) => (
+                                <li key={i} className="flex items-start gap-1">
+                                  <Lightbulb className="w-3 h-3 text-yellow-500 mt-0.5 flex-shrink-0" />
+                                  <span>{s}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Fun Facts */}
+                      {aiAnalysis.analysis.funFacts.length > 0 && (
+                        <Card>
+                          <CardContent className="p-4">
+                            <h4 className="font-medium mb-3">💡 Wist je dat...</h4>
+                            <div className="space-y-2">
+                              {aiAnalysis.analysis.funFacts.map((fact, i) => (
+                                <p key={i} className="text-sm text-muted-foreground">• {fact}</p>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      <p className="text-xs text-muted-foreground text-right">
+                        Geanalyseerd: {aiAnalysis.metadata.tracksAnalyzed} tracks, {aiAnalysis.metadata.playlistCount} playlists
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-muted-foreground mb-3">Klik op "Analyse" voor slimme inzichten over je Spotify profiel</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Audio Features (existing) */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Audio Features */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -439,7 +612,6 @@ export default function SpotifyProfile() {
                   </CardContent>
                 </Card>
 
-                {/* Music DNA */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -459,16 +631,6 @@ export default function SpotifyProfile() {
                             ))}
                           </div>
                         )}
-                        {spotifyStats?.topArtists && spotifyStats.topArtists.length > 0 && (
-                          <div>
-                            <h4 className="font-medium text-sm mb-2">Meest geluisterde artiesten</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {spotifyStats.topArtists.slice(0, 5).map((a) => (
-                                <Badge key={a.artist} variant="outline">{a.artist}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
                       </>
                     ) : (
                       <div className="text-center py-8">
@@ -481,8 +643,8 @@ export default function SpotifyProfile() {
 
                     <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <p className="font-medium text-sm">Data Synchronisatie</p>
-                        <p className="text-xs text-muted-foreground">Automatisch via Spotify</p>
+                        <p className="font-medium text-sm">Auto-Sync</p>
+                        <p className="text-xs text-muted-foreground">Elke 6 uur automatisch</p>
                       </div>
                       <Badge variant="outline" className="text-[#1DB954]">Actief</Badge>
                     </div>

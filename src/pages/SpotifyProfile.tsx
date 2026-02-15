@@ -41,14 +41,14 @@ function formatPlayedAt(dateStr: string) {
 
 export default function SpotifyProfile() {
   const { user } = useAuth();
+  const [timeRange, setTimeRange] = useState<'short_term' | 'medium_term' | 'long_term'>('medium_term');
   const { data: profile } = useProfile(user?.id);
   const { data: playlists } = useSpotifyPlaylists();
-  const { data: topTracks } = useSpotifyTopTracks();
-  const { data: topArtists } = useSpotifyTopArtists();
+  const { data: topTracks } = useSpotifyTopTracks(timeRange);
+  const { data: topArtists } = useSpotifyTopArtists(timeRange);
   const { data: spotifyStats } = useSpotifyStats();
   const { data: recentlyPlayed } = useSpotifyRecentlyPlayed(20);
   const { data: audioFeatures } = useSpotifyAudioFeatures();
-  const [timeRange, setTimeRange] = useState<'short_term' | 'medium_term' | 'long_term'>('medium_term');
 
   const isConnected = (profile as any)?.spotify_connected || false;
   const { data: aiAnalysis, isLoading: aiLoading, refetch: refetchAI } = useSpotifyAIAnalysis(isConnected);

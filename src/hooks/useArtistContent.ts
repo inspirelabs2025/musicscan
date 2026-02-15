@@ -37,7 +37,10 @@ export function useArtistContent(artistName: string | null): ArtistContentResult
     const fetchContent = async () => {
       setIsLoading(true);
       try {
-        const name = artistName.trim();
+        // Handle comma-separated artists (e.g. "Eros Ramazzotti, Alicia Keys")
+        // Use primary artist for exact matching, search all for broader results
+        const allArtists = artistName.split(/[,&]/).map(a => a.replace(/\s*\(feat\..*?\)/i, '').trim()).filter(Boolean);
+        const name = allArtists[0] || artistName.trim();
 
         const [
           artistStoryRes,
@@ -51,7 +54,7 @@ export function useArtistContent(artistName: string | null): ArtistContentResult
           supabase
             .from('artist_stories')
             .select('id, artist_name, slug, artwork_url')
-            .ilike('artist_name', name)
+            .ilike('artist_name', `%${name}%`)
             .eq('is_published', true)
             .limit(1)
             .maybeSingle(),
@@ -62,7 +65,7 @@ export function useArtistContent(artistName: string | null): ArtistContentResult
             .select('id, slug, album_cover_url, yaml_frontmatter')
             .eq('is_published', true)
             .neq('album_type', 'single')
-            .ilike('yaml_frontmatter->>artist', name)
+            .ilike('yaml_frontmatter->>artist', `%${name}%`)
             .order('created_at', { ascending: false })
             .limit(5),
 
@@ -70,7 +73,7 @@ export function useArtistContent(artistName: string | null): ArtistContentResult
           supabase
             .from('music_stories')
             .select('id, title, slug, artwork_url, single_name')
-            .ilike('artist', name)
+            .ilike('artist', `%${name}%`)
             .not('single_name', 'is', null)
             .eq('is_published', true)
             .order('created_at', { ascending: false })
@@ -80,7 +83,7 @@ export function useArtistContent(artistName: string | null): ArtistContentResult
           supabase
             .from('music_anecdotes')
             .select('id, anecdote_title, slug')
-            .ilike('subject_name', name)
+            .ilike('subject_name', `%${name}%`)
             .eq('is_active', true)
             .order('created_at', { ascending: false })
             .limit(5),
@@ -98,7 +101,7 @@ export function useArtistContent(artistName: string | null): ArtistContentResult
           supabase
             .from('platform_products')
             .select('id, title, slug, primary_image, price')
-            .ilike('artist', name)
+            .ilike('artist', `%${name}%`)
             .eq('status', 'active')
             .order('created_at', { ascending: false })
             .limit(6),

@@ -13,11 +13,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/hooks/useProfile";
 import { useCreateConversation } from "@/hooks/useConversations";
 import { useToast } from "@/components/ui/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Community: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { tr } = useLanguage();
+  const c = tr.community;
   const [searchQuery, setSearchQuery] = useState("");
   const createConversation = useCreateConversation();
 
@@ -57,8 +60,8 @@ const Community: React.FC = () => {
       });
       
       toast({
-        title: "Gesprek gestart",
-        description: "Je kunt nu berichten uitwisselen.",
+        title: c.conversationStarted,
+        description: c.conversationStartedDesc,
       });
     } catch (error) {
       console.error("Error creating conversation:", error);
@@ -73,37 +76,35 @@ const Community: React.FC = () => {
     <div className="container mx-auto px-4 py-8 space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-4">
-        <h1 className="text-3xl font-bold">Muziek Community</h1>
-        <p className="text-muted-foreground text-lg">
-          Ontdek muziekliefhebbers, deel je passie en bouw je netwerk uit.
-        </p>
+        <h1 className="text-3xl font-bold">{c.title}</h1>
+        <p className="text-muted-foreground text-lg">{c.subtitle}</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
-          title="Totaal Leden"
+          title={c.totalMembers}
           value={isLoadingStats ? "..." : `${userStats?.totalUsers || 0}`}
-          subtitle="Muziekontdekkers"
+          subtitle={c.musicExplorers}
           icon={Users}
         />
         <StatCard
-          title="Nieuwe Leden (7d)"
+          title={c.newMembers7d}
           value={isLoadingStats ? "..." : `${userStats?.newUsersLast7Days || 0}`}
-          subtitle="Deze week"
+          subtitle={c.thisWeek}
           icon={UserPlus}
         />
         <StatCard
-          title="Nieuwe Leden (30d)"
+          title={c.newMembers30d}
           value={isLoadingStats ? "..." : `${userStats?.newUsersLast30Days || 0}`}
-          subtitle="Deze maand"
+          subtitle={c.thisMonth}
           icon={TrendingUp}
         />
       </div>
 
       {/* New Users Section */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Nieuwe Muziekontdekkers</h2>
+        <h2 className="text-2xl font-semibold">{c.newMusicExplorers}</h2>
         <NewUsersSection />
       </div>
 
@@ -113,7 +114,7 @@ const Community: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Alle Community Leden ({allUsers?.length || 0})
+              {c.allMembers} ({allUsers?.length || 0})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -121,7 +122,7 @@ const Community: React.FC = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Zoek leden op naam of bio..."
+                  placeholder={c.searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -129,7 +130,7 @@ const Community: React.FC = () => {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              {searchQuery ? `Zoekresultaten voor "${searchQuery}"` : "Alle beschikbare community leden"}
+              {searchQuery ? `${c.searchResults} "${searchQuery}"` : c.allAvailable}
             </p>
           </CardContent>
         </Card>
@@ -138,7 +139,7 @@ const Community: React.FC = () => {
           <Card>
             <CardContent className="text-center py-8">
               <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-              <p className="text-muted-foreground">Community leden laden...</p>
+              <p className="text-muted-foreground">{c.loadingMembers}</p>
             </CardContent>
           </Card>
         ) : allUsers && allUsers.length > 0 ? (
@@ -158,8 +159,8 @@ const Community: React.FC = () => {
               <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
               <p className="text-muted-foreground">
                 {searchQuery 
-                  ? `Geen leden gevonden voor "${searchQuery}"`
-                  : "Nog geen community leden beschikbaar"
+                  ? `${c.noMembersFound} "${searchQuery}"`
+                  : c.noMembersAvailable
                 }
               </p>
             </CardContent>

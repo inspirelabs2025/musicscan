@@ -745,3 +745,9 @@ cron = "0 */6 * * *"
 
 [functions.spotify-track-info]
 verify_jwt = false
+
+[functions.create-credit-checkout]
+verify_jwt = false
+
+[functions.verify-credit-purchase]
+verify_jwt = false

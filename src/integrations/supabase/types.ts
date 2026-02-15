@@ -7911,6 +7911,7 @@ export type Database = {
           generation_time_ms: number | null
           id: string
           insights_data: Json
+          slug: string | null
           spotify_track_id: string
           title: string
           updated_at: string
@@ -7924,6 +7925,7 @@ export type Database = {
           generation_time_ms?: number | null
           id?: string
           insights_data: Json
+          slug?: string | null
           spotify_track_id: string
           title: string
           updated_at?: string
@@ -7937,6 +7939,7 @@ export type Database = {
           generation_time_ms?: number | null
           id?: string
           insights_data?: Json
+          slug?: string | null
           spotify_track_id?: string
           title?: string
           updated_at?: string

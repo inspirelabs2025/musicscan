@@ -41,8 +41,22 @@ function formatPlayedAt(dateStr: string) {
   return `${diffDay}d geleden`;
 }
 
+function generateSlug(artist: string, title: string): string {
+  return `${artist}-${title}`
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .substring(0, 100);
+}
+
 function buildTrackUrl(trackId: string, track: { artist: string; title: string; album?: string; year?: number; image_url?: string; spotify_url?: string }) {
+  const slug = generateSlug(track.artist, track.title);
   const params = new URLSearchParams({
+    trackId,
     artist: track.artist,
     title: track.title,
     ...(track.album && { album: track.album }),
@@ -50,7 +64,7 @@ function buildTrackUrl(trackId: string, track: { artist: string; title: string; 
     ...(track.image_url && { image: track.image_url }),
     ...(track.spotify_url && { url: track.spotify_url }),
   });
-  return `/spotify-track/${trackId}?${params.toString()}`;
+  return `/nummer/${slug}?${params.toString()}`;
 }
 
 export default function SpotifyProfile() {

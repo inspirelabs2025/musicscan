@@ -193,7 +193,18 @@ Deno.serve(async (req) => {
     const posterProducts = (artProducts || []).filter(p => p.categories?.includes('POSTER'));
     const metalPrintProducts = (artProducts || []).filter(p => !p.categories?.includes('POSTER'));
 
-    console.log(`Found ${blogPosts?.length || 0} blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${singles?.length || 0} singles, ${newReleases?.length || 0} new releases, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, ${canvasProducts?.length || 0} canvas doeken, ${timeMachineEvents?.length || 0} time machine events, ${artistFanwalls?.length || 0} fanwall artists, ${photos?.length || 0} photos, ${studioStories?.length || 0} studio stories`);
+    // Fetch all spotify track insights with slugs
+    const { data: trackInsights, error: trackInsightsError } = await supabase
+      .from('spotify_track_insights')
+      .select('slug, updated_at, artist, title')
+      .not('slug', 'is', null)
+      .order('updated_at', { ascending: false });
+
+    if (trackInsightsError) {
+      console.error('Failed to fetch track insights:', trackInsightsError.message);
+    }
+
+    console.log(`Found ${blogPosts?.length || 0} blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${singles?.length || 0} singles, ${newReleases?.length || 0} new releases, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, ${canvasProducts?.length || 0} canvas doeken, ${timeMachineEvents?.length || 0} time machine events, ${artistFanwalls?.length || 0} fanwall artists, ${photos?.length || 0} photos, ${studioStories?.length || 0} studio stories, ${trackInsights?.length || 0} track insights`);
 
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
@@ -359,9 +370,18 @@ Deno.serve(async (req) => {
       'image_url'
     );
 
-    console.log(`Found ${nlMuziekFeitenSlugs.length} NL muziekfeiten, ${newReleases?.length || 0} new releases`);
+    console.log(`Found ${nlMuziekFeitenSlugs.length} NL muziekfeiten, ${newReleases?.length || 0} new releases, ${trackInsights?.length || 0} track insights`);
 
-    // Build uploads list (25 files total - added NL muziekfeiten)
+    // Track insights sitemap
+    const trackInsightsSitemapXml = generateSitemapXml(
+      (trackInsights || []).map(t => ({
+        slug: t.slug,
+        updated_at: t.updated_at
+      })),
+      'https://www.musicscan.app/nummer'
+    );
+
+    // Build uploads list
     const uploads = [
       { name: 'sitemap-static.xml', data: staticSitemapXml },
       { name: 'sitemap-blog.xml', data: blogSitemapXml },
@@ -378,6 +398,7 @@ Deno.serve(async (req) => {
       { name: 'sitemap-photos.xml', data: photosSitemapXml },
       { name: 'sitemap-nl-muziekfeiten.xml', data: nlMuziekFeitenSitemapXml },
       { name: 'sitemap-new-releases.xml', data: newReleasesSitemapXml },
+      { name: 'sitemap-track-insights.xml', data: trackInsightsSitemapXml },
       { name: 'sitemap-images-blogs.xml', data: blogImageSitemapXml },
       { name: 'sitemap-images-stories.xml', data: storiesImageSitemapXml },
       { name: 'sitemap-images-singles.xml', data: singlesImageSitemapXml },

@@ -339,21 +339,61 @@ BELANGRIJK:
     const aiData = await aiResponse.json();
     let content = aiData.choices?.[0]?.message?.content || '';
     
-    // Clean markdown wrapping
-    content = content.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/i, '').trim();
-    
+    // Robust JSON extraction
+    function extractJsonFromResponse(response: string): unknown {
+      let cleaned = response
+        .replace(/```json\s*/gi, '')
+        .replace(/```\s*/g, '')
+        .trim();
+
+      const jsonStart = cleaned.indexOf('{');
+      const jsonEnd = cleaned.lastIndexOf('}');
+
+      if (jsonStart === -1 || jsonEnd === -1 || jsonEnd <= jsonStart) {
+        throw new Error('No JSON object found in response');
+      }
+
+      cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+
+      try {
+        return JSON.parse(cleaned);
+      } catch (e) {
+        // Fix common LLM JSON issues
+        cleaned = cleaned
+          .replace(/,\s*}/g, '}')
+          .replace(/,\s*]/g, ']')
+          .replace(/[\x00-\x1F\x7F]/g, '')
+          .replace(/\n/g, '\\n')
+          .replace(/\r/g, '\\r')
+          .replace(/\t/g, '\\t');
+        
+        try {
+          return JSON.parse(cleaned);
+        } catch (e2) {
+          // Last resort: try to fix unbalanced braces
+          const openBraces = (cleaned.match(/{/g) || []).length;
+          const closeBraces = (cleaned.match(/}/g) || []).length;
+          const openBrackets = (cleaned.match(/\[/g) || []).length;
+          const closeBrackets = (cleaned.match(/]/g) || []).length;
+          
+          let fixed = cleaned;
+          // Close unclosed brackets/braces
+          for (let i = 0; i < openBrackets - closeBrackets; i++) fixed += ']';
+          for (let i = 0; i < openBraces - closeBraces; i++) fixed += '}';
+          // Remove trailing commas before closers
+          fixed = fixed.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+          
+          return JSON.parse(fixed);
+        }
+      }
+    }
+
     let analysis;
     try {
-      analysis = JSON.parse(content);
-    } catch {
-      console.error('JSON parse failed, raw:', content.substring(0, 500));
-      const start = content.indexOf('{');
-      const end = content.lastIndexOf('}');
-      if (start !== -1 && end > start) {
-        analysis = JSON.parse(content.substring(start, end + 1));
-      } else {
-        throw new Error('Could not parse AI response');
-      }
+      analysis = extractJsonFromResponse(content);
+    } catch (parseError) {
+      console.error('JSON parse failed after all attempts, raw (first 800 chars):', content.substring(0, 800));
+      throw new Error('Could not parse AI response as JSON');
     }
 
     console.log('✅ Spotify AI analysis 2.0 complete');

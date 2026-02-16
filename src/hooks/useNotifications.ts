@@ -33,23 +33,29 @@ export const useNotifications = () => {
 
       const { data, error } = await supabase
         .from("notifications")
-        .select(`
-          *,
-          actor:profiles!notifications_actor_id_fkey(
-            user_id,
-            first_name,
-            avatar_url
-          ),
-          photo:photos(
-            id,
-            image_url
-          )
-        `)
+        .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(50);
 
       if (error) throw error;
+
+      // Fetch actor profiles separately if we have actor_ids
+      const actorIds = [...new Set((data || []).map((n: any) => n.actor_id).filter(Boolean))];
+      let profilesMap: Record<string, any> = {};
+      if (actorIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, first_name, avatar_url")
+          .in("user_id", actorIds);
+        (profiles || []).forEach((p: any) => { profilesMap[p.user_id] = p; });
+      }
+
+      return (data || []).map((n: any) => ({
+        ...n,
+        actor: n.actor_id ? profilesMap[n.actor_id] || null : null,
+        photo: null, // Photos join also had issues, skip for now
+      })) as Notification[];
       return data as Notification[];
     },
     enabled: !!user?.id,

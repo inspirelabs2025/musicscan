@@ -308,11 +308,6 @@ const AppContent = () => {
   
   return (
     <div className="pb-14 md:pb-0">
-      {/* Temporary build version indicator for debugging */}
-      <div className="fixed bottom-0 left-0 z-[9999] bg-black/80 text-[10px] text-green-400 px-2 py-0.5 font-mono pointer-events-none select-none">
-        v:{getBuildVersion()?.slice(0, 19) || 'dev'}
-      </div>
-      
       <Navigation />
       <MobileBottomNav />
       <Routes>

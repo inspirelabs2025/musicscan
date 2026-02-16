@@ -3,23 +3,24 @@ import { Trophy, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FILMMUZIEK_QUIZ_QUESTIONS } from '@/hooks/useFilmmuziek';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const FilmmuziekQuiz = () => {
+  const { tr } = useLanguage();
+  const fm = tr.filmmuziekUI;
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [answered, setAnswered] = useState(false);
 
-  const questions = FILMMUZIEK_QUIZ_QUESTIONS.slice(0, 5); // Show 5 questions
+  const questions = FILMMUZIEK_QUIZ_QUESTIONS.slice(0, 5);
   const question = questions[currentQuestion];
 
   const handleAnswer = (index: number) => {
     if (answered) return;
-    
     setSelectedAnswer(index);
     setAnswered(true);
-    
     if (index === question.correct) {
       setScore(score + 1);
     }
@@ -50,18 +51,17 @@ export const FilmmuziekQuiz = () => {
           <Card className="max-w-xl mx-auto bg-card/80 backdrop-blur border-amber-500/20">
             <CardHeader className="text-center">
               <Trophy className="w-16 h-16 text-amber-400 mx-auto mb-4" />
-              <CardTitle className="text-2xl">Quiz Voltooid!</CardTitle>
+              <CardTitle className="text-2xl">{fm.quizComplete}</CardTitle>
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-4xl font-bold text-amber-400 mb-4">{score}/{questions.length}</p>
               <p className="text-muted-foreground mb-6">
-                {score === questions.length ? "Perfect! Je bent een echte filmmuziek expert! 🎬" :
-                 score >= 3 ? "Goed gedaan! Je kent je filmmuziek klassiekers! 🎵" :
-                 "Blijf luisteren en leren! Elke score vertelt een verhaal 🎼"}
+                {score === questions.length ? fm.perfectScore :
+                 score >= 3 ? fm.goodScore : fm.lowScore}
               </p>
               <Button onClick={resetQuiz} className="bg-amber-600 hover:bg-amber-700">
                 <RotateCcw className="w-4 h-4 mr-2" />
-                Opnieuw Proberen
+                {fm.tryAgain}
               </Button>
             </CardContent>
           </Card>
@@ -76,17 +76,17 @@ export const FilmmuziekQuiz = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/20 rounded-full mb-4">
             <Trophy className="w-4 h-4 text-amber-400" />
-            <span className="text-amber-400 text-sm">Test Je Kennis</span>
+            <span className="text-amber-400 text-sm">{fm.testKnowledge}</span>
           </div>
-          <h2 className="text-3xl font-bold">Filmmuziek Quiz</h2>
-          <p className="text-muted-foreground mt-2">Hoe goed ken jij de wereld van soundtracks?</p>
+          <h2 className="text-3xl font-bold">{fm.filmMusicQuiz}</h2>
+          <p className="text-muted-foreground mt-2">{fm.quizSubtitle}</p>
         </div>
 
         <Card className="max-w-2xl mx-auto bg-card/80 backdrop-blur border-amber-500/20">
           <CardHeader>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-muted-foreground">Vraag {currentQuestion + 1}/{questions.length}</span>
-              <span className="text-sm text-amber-400">Score: {score}</span>
+              <span className="text-sm text-muted-foreground">{fm.question} {currentQuestion + 1}/{questions.length}</span>
+              <span className="text-sm text-amber-400">{fm.score}: {score}</span>
             </div>
             <CardTitle className="text-xl">{question.question}</CardTitle>
           </CardHeader>
@@ -107,12 +107,8 @@ export const FilmmuziekQuiz = () => {
                 }`}
               >
                 <span>{option}</span>
-                {answered && index === question.correct && (
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                )}
-                {answered && index === selectedAnswer && index !== question.correct && (
-                  <XCircle className="w-5 h-5 text-red-500" />
-                )}
+                {answered && index === question.correct && <CheckCircle className="w-5 h-5 text-green-500" />}
+                {answered && index === selectedAnswer && index !== question.correct && <XCircle className="w-5 h-5 text-red-500" />}
               </button>
             ))}
 
@@ -124,7 +120,7 @@ export const FilmmuziekQuiz = () => {
 
             {answered && (
               <Button onClick={nextQuestion} className="w-full mt-4 bg-amber-600 hover:bg-amber-700">
-                {currentQuestion < questions.length - 1 ? 'Volgende Vraag' : 'Bekijk Resultaat'}
+                {currentQuestion < questions.length - 1 ? fm.nextQuestion : fm.viewResult}
               </Button>
             )}
           </CardContent>

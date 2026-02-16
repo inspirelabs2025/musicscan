@@ -4,8 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { useFilmmuziekArtiesten } from '@/hooks/useFilmmuziek';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-// Featured composers met Wikipedia images (geverifieerd werkend)
 const FEATURED_FILM_COMPOSERS = [
   { name: 'John Williams', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/John_Williams_2024.jpg/250px-John_Williams_2024.jpg', slug: 'john-williams' },
   { name: 'Hans Zimmer', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Hans-Zimmer-profile.jpg/250px-Hans-Zimmer-profile.jpg', slug: 'hans-zimmer' },
@@ -21,18 +21,15 @@ const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1507838153414-b4b71338
 
 export const FilmmuziekArtiesten = () => {
   const { data: artistStories, isLoading } = useFilmmuziekArtiesten(8);
+  const { tr } = useLanguage();
+  const fm = tr.filmmuziekUI;
 
-  // Merge artist stories with featured artists
   const displayArtists = FEATURED_FILM_COMPOSERS.map(featured => {
     const story = artistStories?.find(s => 
       s.artist_name.toLowerCase().includes(featured.name.toLowerCase()) ||
       featured.name.toLowerCase().includes(s.artist_name.toLowerCase())
     );
-    return {
-      ...featured,
-      hasStory: !!story,
-      storySlug: story?.slug || featured.slug
-    };
+    return { ...featured, hasStory: !!story, storySlug: story?.slug || featured.slug };
   });
 
   return (
@@ -41,10 +38,10 @@ export const FilmmuziekArtiesten = () => {
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/20 rounded-full mb-4">
             <Users className="w-4 h-4 text-amber-400" />
-            <span className="text-amber-400 text-sm">Legendes</span>
+            <span className="text-amber-400 text-sm">{fm.legends}</span>
           </div>
-          <h2 className="text-3xl font-bold">Iconische Filmcomponisten</h2>
-          <p className="text-muted-foreground mt-2">De meesters achter de grootste soundtracks</p>
+          <h2 className="text-3xl font-bold">{fm.iconicComposers}</h2>
+          <p className="text-muted-foreground mt-2">{fm.mastersSubtitle}</p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -52,35 +49,20 @@ export const FilmmuziekArtiesten = () => {
             ? [...Array(8)].map((_, i) => (
                 <Card key={i} className="overflow-hidden">
                   <Skeleton className="aspect-square" />
-                  <CardContent className="p-3">
-                    <Skeleton className="h-5 w-24" />
-                  </CardContent>
+                  <CardContent className="p-3"><Skeleton className="h-5 w-24" /></CardContent>
                 </Card>
               ))
             : displayArtists.map((artist) => (
-                <Link
-                  key={artist.name}
-                  to={artist.hasStory ? `/artists/${artist.storySlug}` : `/artists?search=${encodeURIComponent(artist.name)}`}
-                  className="group"
-                >
+                <Link key={artist.name} to={artist.hasStory ? `/artists/${artist.storySlug}` : `/artists?search=${encodeURIComponent(artist.name)}`} className="group">
                   <Card className="overflow-hidden bg-background/50 hover:bg-background transition-colors border-transparent hover:border-amber-500/50">
                     <div className="aspect-square relative overflow-hidden">
-                      <img
-                        src={artist.image}
-                        alt={artist.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
-                        }}
-                      />
+                      <img src={artist.image} alt={artist.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
                         <ExternalLink className="w-5 h-5 text-white" />
                       </div>
                     </div>
                     <CardContent className="p-3 text-center">
-                      <h3 className="font-semibold text-sm group-hover:text-amber-400 transition-colors">
-                        {artist.name}
-                      </h3>
+                      <h3 className="font-semibold text-sm group-hover:text-amber-400 transition-colors">{artist.name}</h3>
                     </CardContent>
                   </Card>
                 </Link>
@@ -88,11 +70,8 @@ export const FilmmuziekArtiesten = () => {
         </div>
 
         <div className="text-center mt-8">
-          <Link
-            to="/artists?genre=soundtrack"
-            className="text-amber-400 hover:text-amber-300 text-sm font-medium inline-flex items-center gap-2"
-          >
-            Bekijk alle filmcomponisten
+          <Link to="/artists?genre=soundtrack" className="text-amber-400 hover:text-amber-300 text-sm font-medium inline-flex items-center gap-2">
+            {fm.viewAllComposers}
             <ExternalLink className="w-4 h-4" />
           </Link>
         </div>

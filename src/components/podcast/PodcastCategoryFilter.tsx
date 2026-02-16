@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePodcastCategories } from "@/hooks/useCuratedPodcasts";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PodcastCategoryFilterProps {
   selectedCategory: string;
@@ -12,6 +13,8 @@ export const PodcastCategoryFilter = ({
   onCategoryChange 
 }: PodcastCategoryFilterProps) => {
   const { data: categories = [], isLoading } = usePodcastCategories();
+  const { tr } = useLanguage();
+  const p = tr.podcastUI;
 
   if (isLoading || categories.length === 0) {
     return null;
@@ -21,13 +24,13 @@ export const PodcastCategoryFilter = ({
 
   const getCategoryLabel = (category: string) => {
     switch (category) {
-      case 'all': return 'Alle categorieën';
-      case 'General': return 'Algemeen';
-      case 'Music History': return 'Muziekgeschiedenis';
-      case 'Artist Interviews': return 'Artiest Interviews';
-      case 'Music Production': return 'Muziekproductie';
-      case 'Genre Specific': return 'Genre Specifiek';
-      case 'Industry News': return 'Industrie Nieuws';
+      case 'all': return p.allCategories;
+      case 'General': return p.general;
+      case 'Music History': return p.musicHistory;
+      case 'Artist Interviews': return p.artistInterviews;
+      case 'Music Production': return p.musicProduction;
+      case 'Genre Specific': return p.genreSpecific;
+      case 'Industry News': return p.industryNews;
       default: return category;
     }
   };
@@ -45,7 +48,7 @@ export const PodcastCategoryFilter = ({
           {getCategoryLabel(category)}
           {selectedCategory === category && (
             <Badge variant="secondary" className="ml-2 text-xs">
-              Actief
+              {p.active}
             </Badge>
           )}
         </Button>

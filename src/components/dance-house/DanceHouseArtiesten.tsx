@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { useDanceHouseArtiesten } from '@/hooks/useDanceHouseMuziek';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Featured artists met Wikipedia/Wikimedia images (stabiele URLs)
 const FEATURED_DANCE_ARTISTS = [
@@ -21,6 +22,8 @@ const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1571266028243-e4733b0f
 
 export const DanceHouseArtiesten = () => {
   const { data: artistStories, isLoading } = useDanceHouseArtiesten(8);
+  const { tr } = useLanguage();
+  const ch = tr.countryHubUI;
 
   // Merge artist stories with featured artists
   const displayArtists = FEATURED_DANCE_ARTISTS.map(featured => {
@@ -41,10 +44,10 @@ export const DanceHouseArtiesten = () => {
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/20 rounded-full mb-4">
             <Users className="w-4 h-4 text-cyan-400" />
-            <span className="text-cyan-400 text-sm">Featured Artists</span>
+            <span className="text-cyan-400 text-sm">{ch.featuredArtistsBadge}</span>
           </div>
-          <h2 className="text-3xl font-bold">Iconische Dance Artiesten</h2>
-          <p className="text-muted-foreground mt-2">De legendes van elektronische dansmuziek</p>
+          <h2 className="text-3xl font-bold">{ch.iconicDanceArtists}</h2>
+          <p className="text-muted-foreground mt-2">{ch.iconicDanceArtistsDesc}</p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -92,7 +95,7 @@ export const DanceHouseArtiesten = () => {
             to="/artists?genre=electronic"
             className="text-cyan-400 hover:text-cyan-300 text-sm font-medium inline-flex items-center gap-2"
           >
-            Bekijk alle dance artiesten
+            {ch.viewAllDanceArtists}
             <ExternalLink className="w-4 h-4" />
           </Link>
         </div>

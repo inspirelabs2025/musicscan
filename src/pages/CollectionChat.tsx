@@ -76,6 +76,8 @@ const CollectionChat = () => {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => { window.scrollTo(0, 0); }, []);
+
   useEffect(() => {
     loadMessages();
     checkSpotifyStatus();

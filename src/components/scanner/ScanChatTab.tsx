@@ -14,6 +14,7 @@ import { ArtistContentCards } from '@/components/scanner/ArtistContentCards';
 import { useArtistContent } from '@/hooks/useArtistContent';
 import { ScannerManualSearch } from '@/components/scanner/ScannerManualSearch';
 import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -101,102 +102,100 @@ const extractScanData = (text: string): ScanData | null => {
 const cleanDisplayText = (text: string): string => {
   return text
     .replace(/\[\[SCAN_DATA:.*?\]\]/g, '')
-    // Strip hallucinated Discogs URLs (markdown links and plain URLs)
     .replace(/\[([^\]]*)\]\(https?:\/\/(?:www\.)?discogs\.com\/release\/\d+[^)]*\)/g, '')
     .replace(/https?:\/\/(?:www\.)?discogs\.com\/release\/\d+\S*/g, '')
-    // Strip lines mentioning "Discogs ID" or "Release ID" with a number (hallucinated)
     .replace(/^.*(?:Discogs|Release)\s*(?:ID|nummer|#)\s*[:=]?\s*\d+.*$/gim, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 };
-// ─── Suggestion pools per fase ──────────────────────────────
-// Fase: Na succesvolle scan, nog niet opgeslagen
-const DISCOVERY_SUGGESTIONS = [
-  { emoji: '💾', text: 'Opslaan in mijn collectie' },
-  { emoji: '🎉', text: 'Leuke feitjes over dit album' },
-  { emoji: '🎤', text: 'Vertel me meer over de artiest' },
-  { emoji: '💰', text: 'Wat is dit album waard?' },
-  { emoji: '🎵', text: 'Welke nummers zijn het bekendst?' },
-  { emoji: '📸', text: 'Scan nog een CD of LP' },
-];
 
-// Fase: Al opgeslagen in collectie
-const SAVED_SUGGESTIONS = [
-  { emoji: '🎉', text: 'Leuke feitjes over dit album' },
-  { emoji: '🎤', text: 'Vertel me meer over de artiest' },
-  { emoji: '💿', text: 'Welke andere albums moet ik kennen?' },
-  { emoji: '🎵', text: 'Welke nummers zijn het bekendst?' },
-  { emoji: '📅', text: 'Hoe was de muziekscene in die tijd?' },
-  { emoji: '📸', text: 'Scan nog een CD of LP' },
-];
+// Helper to build localized suggestion pools
+function buildSuggestionPools(sc: any) {
+  const DISCOVERY_SUGGESTIONS = [
+    { emoji: '💾', text: sc.saveToCollection },
+    { emoji: '🎉', text: sc.funFacts },
+    { emoji: '🎤', text: sc.tellMoreArtist },
+    { emoji: '💰', text: sc.whatIsItWorth },
+    { emoji: '🎵', text: sc.bestKnownTracks },
+    { emoji: '📸', text: sc.scanAnother },
+  ];
 
-// Fase: Na mediatype selectie (foto upload prompt)
-const UPLOAD_PHASE_SUGGESTIONS = [
-  { emoji: '✏️', text: 'Ik typ de artiest en titel zelf in' },
-  { emoji: '💡', text: 'Tips voor de beste scanresultaten' },
-];
+  const SAVED_SUGGESTIONS = [
+    { emoji: '🎉', text: sc.funFacts },
+    { emoji: '🎤', text: sc.tellMoreArtist },
+    { emoji: '💿', text: sc.otherAlbumsToKnow },
+    { emoji: '🎵', text: sc.bestKnownTracks },
+    { emoji: '📅', text: sc.musicSceneBack },
+    { emoji: '📸', text: sc.scanAnother },
+  ];
 
-// Fase: Geen match gevonden
-const NO_MATCH_SUGGESTIONS = [
-  { emoji: '📸', text: 'Ik upload extra foto\'s' },
-  { emoji: '🔍', text: 'Kun je nog eens goed naar de matrix kijken?' },
-  { emoji: '✏️', text: 'Ik typ de artiest en titel zelf in' },
-  { emoji: '💡', text: 'Waar vind ik het matrixnummer?' },
-];
+  const UPLOAD_PHASE_SUGGESTIONS = [
+    { emoji: '✏️', text: sc.typeMyself },
+    { emoji: '💡', text: sc.scanTips },
+  ];
 
-// Fase: Welkomstbericht (nog geen mediatype gekozen)
-const WELCOME_SUGGESTIONS = [
-  { emoji: '❓', text: 'Wat kan Magic Mike allemaal?' },
-  { emoji: '💡', text: 'Hoe werkt de scanner?' },
-];
+  const NO_MATCH_SUGGESTIONS = [
+    { emoji: '📸', text: sc.uploadMorePhotosShort },
+    { emoji: '🔍', text: sc.lookAtMatrixAgain },
+    { emoji: '✏️', text: sc.typeMyself },
+    { emoji: '💡', text: sc.whereIsMatrix },
+  ];
 
-// Fase: Artiest-gerelateerde follow-ups (na antwoord over artiest)
-const ARTIST_FOLLOWUP_SUGGESTIONS = [
-  { emoji: '📚', text: 'Nog meer weetjes over deze artiest?' },
-  { emoji: '💿', text: 'Welke albums zijn het meest gewild?' },
-  { emoji: '🎸', text: 'Wie hebben er aan meegewerkt?' },
-  { emoji: '🏆', text: 'Welke prijzen heeft deze artiest gewonnen?' },
-  { emoji: '📸', text: 'Scan nog een CD of LP' },
-];
+  const WELCOME_SUGGESTIONS = [
+    { emoji: '❓', text: sc.whatCanMikeDo },
+    { emoji: '💡', text: sc.howDoesScanner },
+  ];
 
-// Fase: Album-gerelateerde follow-ups (na antwoord over album/feitjes)
-const ALBUM_FOLLOWUP_SUGGESTIONS = [
-  { emoji: '🤔', text: 'Vertel daar meer over' },
-  { emoji: '🎤', text: 'Hoe zit het met de artiest zelf?' },
-  { emoji: '🔍', text: 'Zijn er bijzondere feiten over de opnames?' },
-  { emoji: '📅', text: 'Hoe was de muziekscene in die tijd?' },
-  { emoji: '💰', text: 'Wat is dit album waard?' },
-  { emoji: '📸', text: 'Scan nog een CD of LP' },
-];
+  const ARTIST_FOLLOWUP_SUGGESTIONS = [
+    { emoji: '📚', text: sc.moreAboutArtist },
+    { emoji: '💿', text: sc.mostWantedAlbums },
+    { emoji: '🎸', text: sc.whoCollaborated },
+    { emoji: '🏆', text: sc.awardsWon },
+    { emoji: '📸', text: sc.scanAnother },
+  ];
 
-// Fase: Waarde/prijs-gerelateerde follow-ups
-const VALUE_FOLLOWUP_SUGGESTIONS = [
-  { emoji: '📈', text: 'Stijgt of daalt de waarde?' },
-  { emoji: '💎', text: 'Welke versies zijn het meest gewild?' },
-  { emoji: '🎉', text: 'Leuke feitjes over dit album' },
-  { emoji: '📸', text: 'Scan nog een CD of LP' },
-];
+  const ALBUM_FOLLOWUP_SUGGESTIONS = [
+    { emoji: '🤔', text: sc.tellMoreAboutThat },
+    { emoji: '🎤', text: sc.whatAboutArtist },
+    { emoji: '🔍', text: sc.specialRecordingFacts },
+    { emoji: '📅', text: sc.musicSceneBack },
+    { emoji: '💰', text: sc.whatIsItWorth },
+    { emoji: '📸', text: sc.scanAnother },
+  ];
 
-// Fase: Na scan-uitleg (scan guide follow-ups)
-const SCAN_GUIDE_FOLLOWUP_SUGGESTIONS = [
-  { emoji: '📸', text: 'Scan een CD of LP' },
-  { emoji: '✏️', text: 'Ik typ de artiest en titel zelf in' },
-  { emoji: '💡', text: 'Uitleg scannen' },
-];
+  const VALUE_FOLLOWUP_SUGGESTIONS = [
+    { emoji: '📈', text: sc.valueGoingUpDown },
+    { emoji: '💎', text: sc.mostWantedVersions },
+    { emoji: '🎉', text: sc.funFacts },
+    { emoji: '📸', text: sc.scanAnother },
+  ];
 
-// Fase: Algemene follow-ups (fallback)
-const GENERAL_FOLLOWUP_SUGGESTIONS = [
-  { emoji: '🤔', text: 'Vertel daar meer over' },
-  { emoji: '🎵', text: 'Welke nummers raad je aan?' },
-  { emoji: '📚', text: 'Nog meer weetjes hierover?' },
-  { emoji: '🎤', text: 'Hoe zit het met de artiest zelf?' },
-  { emoji: '💿', text: 'Welke andere albums moet ik kennen?' },
-  { emoji: '🏆', text: 'Is dit album iconisch geworden?' },
-  { emoji: '🎸', text: 'Wie hebben er aan meegewerkt?' },
-  { emoji: '📅', text: 'Hoe was de muziekscene in die tijd?' },
-  { emoji: '🔍', text: 'Zijn er bijzondere feiten over de opnames?' },
-  { emoji: '💰', text: 'Wat is dit album waard?' },
-];
+  const SCAN_GUIDE_FOLLOWUP_SUGGESTIONS = [
+    { emoji: '📸', text: sc.scanOne },
+    { emoji: '✏️', text: sc.typeMyself },
+    { emoji: '💡', text: sc.scanExplanation },
+  ];
+
+  const GENERAL_FOLLOWUP_SUGGESTIONS = [
+    { emoji: '🤔', text: sc.tellMoreAboutThat },
+    { emoji: '🎵', text: sc.recommendedTracks },
+    { emoji: '📚', text: sc.moreFunFacts },
+    { emoji: '🎤', text: sc.whatAboutArtist },
+    { emoji: '💿', text: sc.otherAlbumsToKnow },
+    { emoji: '🏆', text: sc.isAlbumIconic },
+    { emoji: '🎸', text: sc.whoCollaborated },
+    { emoji: '📅', text: sc.musicSceneBack },
+    { emoji: '🔍', text: sc.specialRecordingFacts },
+    { emoji: '💰', text: sc.whatIsItWorth },
+  ];
+
+  return {
+    DISCOVERY_SUGGESTIONS, SAVED_SUGGESTIONS, UPLOAD_PHASE_SUGGESTIONS,
+    NO_MATCH_SUGGESTIONS, WELCOME_SUGGESTIONS, ARTIST_FOLLOWUP_SUGGESTIONS,
+    ALBUM_FOLLOWUP_SUGGESTIONS, VALUE_FOLLOWUP_SUGGESTIONS,
+    SCAN_GUIDE_FOLLOWUP_SUGGESTIONS, GENERAL_FOLLOWUP_SUGGESTIONS,
+  };
+}
 
 function pickRandom<T>(arr: T[], count: number): T[] {
   const shuffled = [...arr].sort(() => Math.random() - 0.5);
@@ -204,27 +203,21 @@ function pickRandom<T>(arr: T[], count: number): T[] {
 }
 
 // Detect conversation context from last assistant message
-function detectFollowupPool(content: string): Array<{ emoji: string; text: string }> {
+function detectFollowupPool(content: string, pools: ReturnType<typeof buildSuggestionPools>): Array<{ emoji: string; text: string }> {
   const lower = content.toLowerCase();
-  // Scan guide response (uitleg over foto's maken)
-  const scanGuideKeywords = ['belichting', 'matrixnummer', 'barcode', 'hoek', 'scherpte', 'scanfoto', 'scantips', 'flash', 'daglicht'];
+  const scanGuideKeywords = ['belichting', 'matrixnummer', 'barcode', 'hoek', 'scherpte', 'scanfoto', 'scantips', 'flash', 'daglicht', 'lighting', 'sharpness'];
   const scanGuideHits = scanGuideKeywords.filter(kw => lower.includes(kw)).length;
-  if (scanGuideHits >= 2) {
-    return SCAN_GUIDE_FOLLOWUP_SUGGESTIONS;
+  if (scanGuideHits >= 2) return pools.SCAN_GUIDE_FOLLOWUP_SUGGESTIONS;
+  if (lower.includes('artiest') || lower.includes('artist') || lower.includes('biografie') || lower.includes('biography') || lower.includes('carrière') || lower.includes('career') || lower.includes('band')) {
+    return pools.ARTIST_FOLLOWUP_SUGGESTIONS;
   }
-  // Artist-focused response
-  if (lower.includes('artiest') || lower.includes('biografie') || lower.includes('carrière') || lower.includes('band')) {
-    return ARTIST_FOLLOWUP_SUGGESTIONS;
+  if (lower.includes('waarde') || lower.includes('value') || lower.includes('prijs') || lower.includes('price') || lower.includes('€') || lower.includes('marktplaats') || lower.includes('marketplace') || lower.includes('median')) {
+    return pools.VALUE_FOLLOWUP_SUGGESTIONS;
   }
-  // Value/pricing response
-  if (lower.includes('waarde') || lower.includes('prijs') || lower.includes('€') || lower.includes('marktplaats') || lower.includes('median')) {
-    return VALUE_FOLLOWUP_SUGGESTIONS;
+  if (lower.includes('opname') || lower.includes('recording') || lower.includes('studio') || lower.includes('producer') || lower.includes('feitje') || lower.includes('fact') || lower.includes('weetje')) {
+    return pools.ALBUM_FOLLOWUP_SUGGESTIONS;
   }
-  // Album/recording facts
-  if (lower.includes('opname') || lower.includes('studio') || lower.includes('producer') || lower.includes('feitje') || lower.includes('weetje')) {
-    return ALBUM_FOLLOWUP_SUGGESTIONS;
-  }
-  return GENERAL_FOLLOWUP_SUGGESTIONS;
+  return pools.GENERAL_FOLLOWUP_SUGGESTIONS;
 }
 
 interface SuggestionChipsProps {
@@ -242,60 +235,56 @@ interface SuggestionChipsProps {
 const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
   verifiedResult, savedToCollection, isStreaming, isRunningV2, lastAssistantContent, hasNoMatch, artistContent, onSave, onSend,
 }) => {
+  const { tr } = useLanguage();
+  const sc = tr.scanChatUI;
+
+  const pools = useMemo(() => buildSuggestionPools(sc), [sc]);
+
   const suggestions = useMemo(() => {
-    // Fase: Geen match
-    if (hasNoMatch) return pickRandom(NO_MATCH_SUGGESTIONS, 3);
+    if (hasNoMatch) return pickRandom(pools.NO_MATCH_SUGGESTIONS, 3);
     
-    // Fase: Succesvolle scan
     if (verifiedResult?.discogs_id) {
-      const pool = savedToCollection ? SAVED_SUGGESTIONS : DISCOVERY_SUGGESTIONS;
-      const filtered = savedToCollection ? pool : pool.filter(s => s.text !== 'Opslaan in mijn collectie');
+      const pool = savedToCollection ? pools.SAVED_SUGGESTIONS : pools.DISCOVERY_SUGGESTIONS;
+      const filtered = savedToCollection ? pool : pool.filter(s => s.text !== sc.saveToCollection);
       const base = pickRandom(filtered, 3);
       
-      // Add platform content chips
       const platformChips: Array<{ emoji: string; text: string }> = [];
       if (artistContent?.artistStory) {
-        platformChips.push({ emoji: '📖', text: `Lees het verhaal van ${verifiedResult.artist}` });
+        platformChips.push({ emoji: '📖', text: sc.readArtistStory.replace('{artist}', verifiedResult.artist || '') });
       }
       if (artistContent?.products && artistContent.products.length > 0) {
-        platformChips.push({ emoji: '🛍️', text: `Bekijk ${verifiedResult.artist} producten` });
+        platformChips.push({ emoji: '🛍️', text: sc.viewArtistProducts.replace('{artist}', verifiedResult.artist || '') });
       }
       if (artistContent?.anecdotes && artistContent.anecdotes.length > 0) {
-        platformChips.push({ emoji: '💡', text: 'Ken je deze anekdote?' });
+        platformChips.push({ emoji: '💡', text: sc.knowThisAnecdote });
       }
       
-      // Mix: up to 2 platform chips + fill with base chips
       const selected = [...platformChips.slice(0, 2), ...base.slice(0, 3 - Math.min(platformChips.length, 2))];
       return selected;
     }
     
-    // Fase: Na mediatype selectie (foto upload prompt)
-    const isPhotoPrompt = lastAssistantContent?.includes('Upload je foto') || lastAssistantContent?.includes('Eerste knop');
-    if (isPhotoPrompt) {
-      return UPLOAD_PHASE_SUGGESTIONS;
-    }
+    const isPhotoPrompt = lastAssistantContent?.includes('Upload') || lastAssistantContent?.includes('Eerste knop') || lastAssistantContent?.includes('First button');
+    if (isPhotoPrompt) return pools.UPLOAD_PHASE_SUGGESTIONS;
     
-    // Fase: Welkomstbericht — GEEN suggesties (Scannen/Stel een vraag knoppen zijn al zichtbaar)
     const isWelcome = lastAssistantContent?.includes('Magic Mike');
     const isSetupMessage = lastAssistantContent?.includes('Kies hieronder') || 
+      lastAssistantContent?.includes('Choose below') ||
       lastAssistantContent?.includes('Typ je vraag hieronder') ||
+      lastAssistantContent?.includes('Type your question') ||
       lastAssistantContent?.includes('Wil je iets **scannen**') ||
+      lastAssistantContent?.includes('Want to **scan**') ||
       lastAssistantContent?.includes('Wat wil je scannen');
     if (isWelcome || isSetupMessage) return [];
     
-    // Fase: Context-afhankelijke follow-ups na inhoudelijk antwoord
     if (lastAssistantContent && lastAssistantContent.length > 50) {
-      const pool = detectFollowupPool(lastAssistantContent);
+      const pool = detectFollowupPool(lastAssistantContent, pools);
       return pickRandom(pool, 3);
     }
     
-    // Fase: Kort antwoord → algemene suggesties
-    if (lastAssistantContent) {
-      return pickRandom(GENERAL_FOLLOWUP_SUGGESTIONS, 3);
-    }
+    if (lastAssistantContent) return pickRandom(pools.GENERAL_FOLLOWUP_SUGGESTIONS, 3);
     
     return [];
-  }, [verifiedResult?.discogs_id, verifiedResult?.artist, savedToCollection, lastAssistantContent, hasNoMatch, artistContent?.totalCount]);
+  }, [verifiedResult?.discogs_id, verifiedResult?.artist, savedToCollection, lastAssistantContent, hasNoMatch, artistContent?.totalCount, pools, sc]);
 
   if (isStreaming || isRunningV2 || suggestions.length === 0) return null;
 
@@ -309,13 +298,12 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
           onClick={onSave}
         >
           <Save className="h-3.5 w-3.5" />
-          Opslaan in catalogus
+          {sc.saveToCatalog}
         </Button>
       )}
       {suggestions.map((sug, i) => {
-        // Dynamic label: "Scan een CD of LP" vs "Scan nog een CD of LP"
-        const displayText = sug.text === 'Scan nog een CD of LP' && !verifiedResult?.discogs_id
-          ? 'Scan een CD of LP'
+        const displayText = sug.text === sc.scanAnother && !verifiedResult?.discogs_id
+          ? sc.scanOne
           : sug.text;
         return (
         <Button
@@ -345,11 +333,13 @@ interface ScanChatTabProps {
 
 export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>(function ScanChatTab({ autoStartListening = 0 }, ref) {
   const { user } = useAuth();
+  const { tr } = useLanguage();
+  const sc = tr.scanChatUI;
   const lastListenTrigger = useRef(0);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: `🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets **scannen** of iets **vragen** over een artiest of album?`,
+      content: sc.welcomeMessage,
     },
   ]);
   const [showWelcomeActions, setShowWelcomeActions] = useState(true);
@@ -390,13 +380,13 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   const pickMediaType = (type: 'vinyl' | 'cd') => {
     setMediaType(type);
     setShowWelcomeActions(false);
-    const label = type === 'vinyl' ? 'vinyl plaat' : 'CD';
+    const label = type === 'vinyl' ? sc.vinylFull : sc.cdFull;
     setMessages(prev => [
       ...prev,
-      { role: 'user', content: type === 'vinyl' ? '🎵 Vinyl' : '💿 CD' },
+      { role: 'user', content: type === 'vinyl' ? sc.vinylLabel : sc.cdLabel },
       {
         role: 'assistant',
-        content: `Top, een ${label}! 📸\n\nUpload je foto's — hoe meer hoe beter! Voorkant, achterkant, label, matrix... Alles helpt.\n\nGebruik de knoppen hieronder:\n- **Eerste knop** → Foto maken met je camera\n- **Tweede knop** → Foto uploaden uit je galerij`,
+        content: sc.uploadPrompt.replace('{label}', label),
       },
     ]);
   };
@@ -405,33 +395,32 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
     setShowWelcomeActions(false);
     setMessages(prev => [
       ...prev,
-      { role: 'user', content: '🔍 Scannen' },
+      { role: 'user', content: sc.scanAction },
       {
         role: 'assistant',
-        content: `Wat wil je scannen? Kies hieronder 👇`,
+        content: sc.whatToScan,
       },
     ]);
   };
 
   const pickAskAction = () => {
     setShowWelcomeActions(false);
-    setMediaType('cd'); // Set any media type to skip picker, won't actually scan
+    setMediaType('cd');
     setMessages(prev => [
       ...prev,
-      { role: 'user', content: '💬 Stel een vraag' },
+      { role: 'user', content: sc.askAction },
       {
         role: 'assistant',
-        content: `Leuk! Vraag me alles over artiesten, albums, genres, muziekgeschiedenis... Ik weet er alles van! 🎶\n\nTyp je vraag hieronder.`,
+        content: sc.askIntro,
       },
     ]);
   };
 
   const startListening = useCallback(async () => {
-    // Check if MediaRecorder is available (not supported on older iOS)
     if (typeof MediaRecorder === 'undefined') {
       toast({ 
-        title: "Niet ondersteund", 
-        description: "Audio opname wordt niet ondersteund op dit apparaat. Gebruik iOS 16.4+ of een moderne browser.", 
+        title: sc.notSupported, 
+        description: sc.notSupportedDesc, 
         variant: "destructive" 
       });
       return;
@@ -452,7 +441,6 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
       setListeningProgress(0);
       setShowWelcomeActions(false);
 
-      // Mime type fallback chain: webm (Chrome/Android) → mp4 (iOS Safari) → ogg (Firefox)
       const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg']
         .find(type => MediaRecorder.isTypeSupported(type)) || 'audio/webm';
       console.log('[music-rec] Selected mimeType:', mimeType);
@@ -465,7 +453,6 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         }
       };
 
-      // Countdown timer - 12 seconds for recognition (AudD recommends 2-12s)
       const totalSeconds = 12;
       let elapsed = 0;
       const interval = setInterval(() => {
@@ -484,11 +471,10 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         const blobType = blob.type || mediaRecorder.mimeType || mimeType;
         console.log(`[music-rec] Total blob size: ${blob.size} bytes, chunks: ${chunks.length}, type: ${blobType}`);
         
-        // Check minimum size - too small means no real audio captured
         if (blob.size < 10000) {
           setMessages(prev => [...prev, {
             role: 'assistant',
-            content: `⚠️ **Te weinig audio opgenomen** (${Math.round(blob.size/1024)}KB). Zorg dat muziek duidelijk hoorbaar is en probeer het opnieuw.`,
+            content: `${sc.tooLittleAudio} (${Math.round(blob.size/1024)}KB). ${sc.ensureMusicAudible}`,
           }]);
           return;
         }
@@ -502,8 +488,8 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
 
           setIsRecognizing(true);
           setMessages(prev => [...prev, 
-            { role: 'user', content: '🎤 Muziek herkennen...' },
-            { role: 'assistant', content: '🎵 **Even luisteren...** Ik probeer het nummer te herkennen!' }
+            { role: 'user', content: sc.recognizeMusic },
+            { role: 'assistant', content: sc.listening }
           ]);
 
           try {
@@ -513,30 +499,29 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
 
             if (error) throw error;
 
-            // Remove loading message
-            setMessages(prev => prev.filter(m => !m.content.includes('Even luisteren...')));
+            setMessages(prev => prev.filter(m => !m.content.includes('luisteren') && !m.content.includes('Listening')));
 
             if (data?.recognized) {
-              let msg = `🎶 **Nummer herkend!**\n\n`;
+              let msg = `${sc.songRecognized}\n\n`;
               msg += `🎤 **${data.artist}** — *${data.title}*\n`;
-              if (data.album) msg += `💿 Album: ${data.album}\n`;
+              if (data.album) msg += `💿 ${sc.album}: ${data.album}\n`;
               if (data.release_date) msg += `📅 ${data.release_date}\n`;
-              if (data.spotify_url) msg += `\n🎧 [Beluister op Spotify](${data.spotify_url})\n`;
-              msg += `\nWil je meer weten over deze artiest, of zal ik nog een nummer herkennen?`;
+              if (data.spotify_url) msg += `\n🎧 [${sc.listenOnSpotify}](${data.spotify_url})\n`;
+              msg += `\n${sc.wantToKnowMore}`;
 
               setMessages(prev => [...prev, { role: 'assistant', content: msg }]);
             } else {
               setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: `😔 **Niet herkend.** Ik kon het nummer helaas niet identificeren.\n\nProbeer het opnieuw met het nummer wat luider, of probeer een ander fragment. Tik op het microfoon-icoontje om het opnieuw te proberen!`,
+                content: sc.notRecognized,
               }]);
             }
           } catch (err) {
             console.error('Music recognition error:', err);
-            setMessages(prev => prev.filter(m => !m.content.includes('Even luisteren...')));
+            setMessages(prev => prev.filter(m => !m.content.includes('luisteren') && !m.content.includes('Listening')));
             setMessages(prev => [...prev, {
               role: 'assistant',
-              content: `⚠️ **Herkenning mislukt.** ${err instanceof Error ? err.message : 'Probeer het later opnieuw.'}`,
+              content: `${sc.recognitionFailed} ${err instanceof Error ? err.message : ''}`,
             }]);
           } finally {
             setIsRecognizing(false);
@@ -545,7 +530,6 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         reader.readAsDataURL(blob);
       };
 
-      // Start without timeslice for a single complete recording
       mediaRecorder.start();
       setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
@@ -556,16 +540,14 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
     } catch (err) {
       console.error('Microphone error:', err);
       setIsListening(false);
-      toast({ title: "Microfoon niet beschikbaar", description: "Geef toestemming voor de microfoon of controleer je instellingen.", variant: "destructive" });
+      toast({ title: sc.micNotAvailable, description: sc.micNotAvailableDesc, variant: "destructive" });
     }
-  }, []);
+  }, [sc]);
 
-  // Expose startListening to parent via ref (for direct user gesture calls)
   React.useImperativeHandle(ref, () => ({
     triggerListening: () => startListening(),
   }), [startListening]);
 
-  // Auto-start listening when triggered from SoundScan button
   useEffect(() => {
     if (autoStartListening > 0 && autoStartListening !== lastListenTrigger.current) {
       lastListenTrigger.current = autoStartListening;
@@ -574,7 +556,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   }, [autoStartListening, startListening]);
 
   const handleScanGuide = () => {
-    sendMessage('Geef me een uitgebreide uitleg hoe ik de beste scanfoto\'s maak van mijn vinyl platen en CD\'s. Leg per mediatype uit welke foto\'s ik moet maken (voorkant, achterkant, matrix, barcode etc.), met tips voor belichting, hoek en scherpte. Geef ook aan welke details het belangrijkst zijn voor een goede match.');
+    sendMessage(sc.scanGuideRequest);
   };
 
   const handleFilesSelected = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -609,10 +591,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
 
       console.log('📊 V2 pipeline raw response:', JSON.stringify(data, null, 2).slice(0, 2000));
 
-      // Edge function returns { success, result: { discogs_id, ... } }
       const result = data?.result || data;
-
-      // Extract rights society exclusions from collector_audit
       const auditEntries = result?.collector_audit || [];
       const rsExclusions = auditEntries
         .filter((a: any) => a.detail?.includes('⛔'))
@@ -652,14 +631,13 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
     setIsRunningV2(true);
     setMessages(prev => [...prev, {
       role: 'user',
-      content: `Ik kies release #${releaseId}`,
+      content: sc.chooseRelease.replace('{id}', String(releaseId)),
     }, {
       role: 'assistant',
-      content: `🔍 **Verifiëren en prijzen ophalen** voor release #${releaseId}...`,
+      content: sc.verifyingRelease.replace('{id}', String(releaseId)),
     }]);
 
     try {
-      // Verify & enrich
       const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-and-enrich-release', {
         body: { discogs_id: releaseId }
       });
@@ -669,7 +647,6 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
       const vArtist = enrichment?.artist || '';
       const vTitle = enrichment?.title || '';
 
-      // Fetch pricing
       const { data: pricingResp } = await supabase.functions.invoke('fetch-discogs-pricing', {
         body: { discogs_id: releaseId }
       });
@@ -681,26 +658,25 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         num_for_sale: pricingResp?.num_for_sale ?? null,
       };
 
-      // Remove loading message
-      setMessages(prev => prev.filter(m => !m.content.includes('Verifiëren en prijzen ophalen')));
+      setMessages(prev => prev.filter(m => !m.content.includes(sc.verifyingRelease.split(' ')[0])));
 
       let msg = `✅ **${vArtist} - ${vTitle}**\n`;
-      msg += `🔗 [Bekijk op Discogs](https://www.discogs.com/release/${releaseId})\n\n`;
+      msg += `🔗 [${sc.viewOnDiscogs}](https://www.discogs.com/release/${releaseId})\n\n`;
 
       if (pricing.lowest_price || pricing.median_price || pricing.highest_price) {
-        msg += `💰 **Prijsinformatie:**\n`;
-        if (pricing.lowest_price) msg += `📉 **Laagste:** €${Number(pricing.lowest_price).toFixed(2)}\n`;
-        if (pricing.median_price) msg += `📊 **Mediaan:** €${Number(pricing.median_price).toFixed(2)}\n`;
-        if (pricing.highest_price) msg += `📈 **Hoogste:** €${Number(pricing.highest_price).toFixed(2)}\n`;
-        if (pricing.num_for_sale) msg += `\n🏪 **${pricing.num_for_sale}** exemplaren te koop`;
+        msg += `💰 **${sc.pricingInfo}:**\n`;
+        if (pricing.lowest_price) msg += `📉 **${sc.lowest}:** €${Number(pricing.lowest_price).toFixed(2)}\n`;
+        if (pricing.median_price) msg += `📊 **${sc.median}:** €${Number(pricing.median_price).toFixed(2)}\n`;
+        if (pricing.highest_price) msg += `📈 **${sc.highest}:** €${Number(pricing.highest_price).toFixed(2)}\n`;
+        if (pricing.num_for_sale) msg += `\n🏪 **${pricing.num_for_sale}** ${sc.copiesForSale}`;
       }
 
       setMessages(prev => [...prev, { role: 'assistant', content: msg, pricingData: pricing }]);
     } catch (err) {
       console.error('Select candidate error:', err);
       setMessages(prev => {
-        const filtered = prev.filter(m => !m.content.includes('Verifiëren en prijzen ophalen'));
-        return [...filtered, { role: 'assistant', content: '⚠️ Kon de release niet ophalen. Probeer het later opnieuw.' }];
+        const filtered = prev.filter(m => !m.content.includes(sc.verifyingRelease.split(' ')[0]));
+        return [...filtered, { role: 'assistant', content: sc.couldNotFetchRelease }];
       });
     } finally {
       setIsRunningV2(false);
@@ -710,9 +686,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   const uploadAndSend = async () => {
     if (pendingFiles.length === 0) return;
     if (!mediaType) {
-      // Auto-detect: default to vinyl if no media type selected
       setMediaType('vinyl');
-      // Use vinyl as fallback
     }
     const effectiveMediaType = mediaType || 'vinyl';
     setIsUploading(true);
@@ -724,7 +698,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const fileName = `scan-chat/${Date.now()}-${uid}-${safeName}`;
         const { error } = await supabase.storage.from('vinyl_images').upload(fileName, file, { upsert: true });
-        if (error) throw new Error(`Upload mislukt: ${error.message}`);
+        if (error) throw new Error(`Upload failed: ${error.message}`);
         const { data: { publicUrl } } = supabase.storage.from('vinyl_images').getPublicUrl(fileName);
         urls.push(publicUrl);
       }
@@ -733,14 +707,15 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
       const allUrls = [...photoUrls, ...urls];
       setPhotoUrls(allUrls);
 
-      const userContent = `Ik heb ${pendingFiles.length} foto's geüpload van mijn ${effectiveMediaType === 'vinyl' ? 'vinyl plaat' : 'CD'}. Analyseer deze foto's. Bevestig eerst de artiest en titel. Zoek dan naar barcode, catalogusnummer en matrix-nummer op de foto's. Let ook op rechtenorganisaties (BIEM, STEMRA, JASRAC, etc.). Geef je bevindingen.`;
+      const typeLabel = effectiveMediaType === 'vinyl' ? sc.vinylFull : sc.cdFull;
+      const userContent = sc.uploadedPhotos.replace('{count}', String(pendingFiles.length)).replace('{type}', typeLabel);
       const userMsg: ChatMessage = { role: 'user', content: userContent, images: previews };
 
       setPendingFiles([]);
       await sendMessage(userContent, allUrls, userMsg);
     } catch (err) {
       console.error('Upload error:', err);
-      toast({ title: "Upload mislukt", description: err instanceof Error ? err.message : "Fout", variant: "destructive" });
+      toast({ title: sc.uploadFailed, description: err instanceof Error ? err.message : "Error", variant: "destructive" });
     } finally {
       setIsUploading(false);
     }
@@ -776,7 +751,6 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
       let collectionPrefix = '';
       if (user?.id) {
         try {
-          // Query actual tables instead of non-existent unified_scans view
           const [cdCountRes, vinylCountRes, aiCountRes, cdItemsRes, vinylItemsRes, aiItemsRes] = await Promise.all([
             supabase.from('cd_scan').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
             supabase.from('vinyl2_scan').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
@@ -790,7 +764,6 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
           const aiCount = aiCountRes.count || 0;
           const total = cdCount + vinylCount + aiCount;
           if (total > 0) {
-            // Merge all items for analysis
             const allItems = [
               ...(cdItemsRes.data || []).map(i => ({ ...i, media_type: 'CD' })),
               ...(vinylItemsRes.data || []).map(i => ({ ...i, media_type: 'Vinyl' })),
@@ -822,82 +795,70 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         if (artistContent.artistStory) parts.push(`een artiestenverhaal over ${currentArtistName}`);
         if (artistContent.albumStories.length > 0) parts.push(`${artistContent.albumStories.length} albumverhalen`);
         if (artistContent.singles.length > 0) parts.push(`${artistContent.singles.length} singles`);
-        if (artistContent.products.length > 0) parts.push(`${artistContent.products.length} producten in de shop`);
         if (artistContent.anecdotes.length > 0) parts.push(`${artistContent.anecdotes.length} anekdotes`);
-        platformContentTag = `\n[PLATFORM_CONTENT: We hebben ${parts.join(', ')} over ${currentArtistName} op het MusicScan platform.]`;
+        if (artistContent.products.length > 0) parts.push(`${artistContent.products.length} producten in de shop`);
+        platformContentTag = `[PLATFORM_CONTENT: We hebben ${parts.join(', ')} over ${currentArtistName} op het platform]\n\n`;
       }
 
-      const effectiveContent = collectionPrefix + (verifiedResult
-        ? `[CONTEXT: Release al geïdentificeerd - ${verifiedResult.artist} - ${verifiedResult.title}, Discogs ID: ${verifiedResult.discogs_id}. Beantwoord de vraag van de gebruiker over deze release zonder opnieuw te scannen.]${platformContentTag}\n\n${userMsg.content}`
-        : userMsg.content);
+      const chatMessages = messages
+        .filter(m => !m.content.includes('Even geduld...') && !m.content.includes('Please wait...'))
+        .map(m => ({
+          role: m.role,
+          content: m.role === 'user' ? m.content : cleanDisplayText(m.content),
+        }));
 
-      // Use user's JWT if available, otherwise fall back to anon key
-      const { data: { session } } = await supabase.auth.getSession();
-      const authToken = session?.access_token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeGJweXFuamZpeXVic3VvbmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMDgyNTMsImV4cCI6MjA2MTY4NDI1M30.UFZKmrN-gz4VUUlKmVfwocS5OQuxGm4ATYltBJn3Kq4';
+      const enrichedText = collectionPrefix + platformContentTag + text;
+      const enrichedMessages = [...chatMessages, { role: 'user', content: enrichedText }];
 
-      const allMessages = [...messages, { role: userMsg.role, content: effectiveContent }];
-      const resp = await fetch(`${SUPABASE_URL}/functions/v1/scan-chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${authToken}`,
-          'x-device-fingerprint': getDeviceFingerprint(),
+      const activeUrls = urls || photoUrls;
+
+      const response = await supabase.functions.invoke('scan-chat', {
+        body: {
+          messages: enrichedMessages,
+          photoUrls: activeUrls.length > 0 ? activeUrls : undefined,
+          mediaType: mediaType || undefined,
         },
-        body: JSON.stringify({
-          messages: allMessages.map(m => ({ role: m.role, content: m.content })),
-          photoUrls: urls || photoUrls,
-          mediaType,
-        }),
       });
 
-      if (!resp.ok) {
-        const errData = await resp.json().catch(() => ({ error: 'Onbekende fout' }));
-        throw new Error(errData.error || `HTTP ${resp.status}`);
-      }
-      if (!resp.body) throw new Error('Geen stream');
+      if (response.error) throw response.error;
 
-      const reader = resp.body.getReader();
+      const reader = response.data?.getReader?.();
+      if (!reader) {
+        const text = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+        upsertAssistant(text);
+        setIsStreaming(false);
+        return;
+      }
+
       const decoder = new TextDecoder();
-      let buf = '';
+      let buffer = '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        buf += decoder.decode(value, { stream: true });
-        let nl: number;
-        while ((nl = buf.indexOf('\n')) !== -1) {
-          let line = buf.slice(0, nl);
-          buf = buf.slice(nl + 1);
-          if (line.endsWith('\r')) line = line.slice(0, -1);
-          if (line.startsWith(':') || line.trim() === '' || !line.startsWith('data: ')) continue;
-          const json = line.slice(6).trim();
-          if (json === '[DONE]') break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const payload = line.slice(6).trim();
+          if (payload === '[DONE]') continue;
           try {
-            const p = JSON.parse(json);
-            const c = p.choices?.[0]?.delta?.content;
-            if (c) upsertAssistant(c);
-          } catch {
-            buf = line + '\n' + buf;
-            break;
-          }
+            const json = JSON.parse(payload);
+            const delta = json.choices?.[0]?.delta?.content;
+            if (delta) upsertAssistant(delta);
+          } catch {}
         }
-      }
-      for (let raw of buf.split('\n')) {
-        if (!raw || !raw.startsWith('data: ')) continue;
-        const j = raw.slice(6).trim();
-        if (j === '[DONE]') continue;
-        try { const p = JSON.parse(j); const c = p.choices?.[0]?.delta?.content; if (c) upsertAssistant(c); } catch {}
       }
 
       setIsStreaming(false);
 
-      // ─── AUTO-RUN V2 PIPELINE after stream completes (only if photos were sent AND no verified result yet) ────
-      const activeUrls = urls || photoUrls;
-      const shouldRunV2 = activeUrls.length > 0 && mediaType && !verifiedResult;
-      if (shouldRunV2) {
+      // ─── Auto-trigger V2 pipeline after AI analysis for photo-based messages ───
+      if (activeUrls.length > 0 && !verifiedResult && mediaType) {
         setIsRunningV2(true);
-        
-        // Extract rights_societies from Magic Mike's SCAN_DATA to forward to V2 pipeline
+
         const lastScanData = extractScanData(assistantSoFar);
         const chatRightsSocieties = lastScanData?.rights_societies || [];
         if (chatRightsSocieties.length > 0) {
@@ -906,20 +867,18 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
 
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: `🎯 **Even geduld...** Ik doorzoek nu duizenden releases om jouw exacte pressing te vinden. Barcode, matrix-codes, labels — alles wordt gecheckt! 🔎`,
+          content: sc.patience,
         }]);
 
         const v2Result = await runV2Pipeline(activeUrls, mediaType, chatRightsSocieties);
 
-        // Remove loading message
-        setMessages(prev => prev.filter(m => !m.content.includes('Even geduld...')));
+        setMessages(prev => prev.filter(m => !m.content.includes('Even geduld') && !m.content.includes('Please wait')));
 
         if (v2Result && v2Result.discogs_id) {
-          // ── MATCH FOUND ──
           const isVerified = v2Result.verification?.status === 'verified' || v2Result.status === 'single_match';
           const isLikely = v2Result.verification?.status === 'likely' || v2Result.status === 'multiple_candidates';
           const statusEmoji = isVerified ? '✅' : isLikely ? '🟡' : '🔵';
-          const statusLabel = isVerified ? 'Geverifieerd' : isLikely ? 'Waarschijnlijk correct' : 'Voorgestelde match';
+          const statusLabel = isVerified ? sc.verified : isLikely ? sc.likelyCorrect : sc.suggestedMatch;
 
           let resultMsg = `${statusEmoji} **${statusLabel}** — **${v2Result.artist} - ${v2Result.title}**\n`;
           if (v2Result.label) resultMsg += `🏷️ ${v2Result.label}`;
@@ -928,23 +887,20 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
           if (v2Result.country || v2Result.year) {
             resultMsg += `📀 ${v2Result.country || ''}${v2Result.year ? ` (${v2Result.year})` : ''}\n`;
           }
-          resultMsg += `📊 Confidence: ${((v2Result.confidence_score || 0) * 100).toFixed(0)}%\n`;
-          resultMsg += `🔗 [Bekijk op Discogs](https://www.discogs.com/release/${v2Result.discogs_id})\n`;
+          resultMsg += `📊 ${sc.confidence}: ${((v2Result.confidence_score || 0) * 100).toFixed(0)}%\n`;
+          resultMsg += `🔗 [${sc.viewOnDiscogs}](https://www.discogs.com/release/${v2Result.discogs_id})\n`;
 
-          // Show verification details
           if (v2Result.verification?.confirmations?.length) {
-            resultMsg += `\n🔒 **Verificatie:** ${v2Result.verification.confirmations.join(', ')}\n`;
+            resultMsg += `\n🔒 **${sc.verification}:** ${v2Result.verification.confirmations.join(', ')}\n`;
           }
 
-          // Show rights society exclusions
           if (v2Result.rights_society_exclusions && v2Result.rights_society_exclusions.length > 0) {
-            resultMsg += `\n⛔ **Uitgesloten releases:**\n`;
+            resultMsg += `\n⛔ **${sc.excludedReleases}:**\n`;
             for (const excl of v2Result.rights_society_exclusions) {
               resultMsg += `- ${excl}\n`;
             }
           }
 
-          // Use pricing_stats from V2 response (already fetched by the edge function)
           const pricing: PricingData = {
             lowest_price: v2Result.pricing_stats?.lowest_price ?? null,
             median_price: v2Result.pricing_stats?.median_price ?? null,
@@ -953,14 +909,13 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
           };
 
           if (pricing.lowest_price || pricing.median_price || pricing.highest_price) {
-            resultMsg += `\n💰 **Prijsinformatie:**\n`;
-            if (pricing.lowest_price) resultMsg += `📉 **Laagste:** €${Number(pricing.lowest_price).toFixed(2)}\n`;
-            if (pricing.median_price) resultMsg += `📊 **Mediaan:** €${Number(pricing.median_price).toFixed(2)}\n`;
-            if (pricing.highest_price) resultMsg += `📈 **Hoogste:** €${Number(pricing.highest_price).toFixed(2)}\n`;
-            if (pricing.num_for_sale) resultMsg += `\n🏪 **${pricing.num_for_sale}** exemplaren te koop op Discogs`;
+            resultMsg += `\n💰 **${sc.pricingInfo}:**\n`;
+            if (pricing.lowest_price) resultMsg += `📉 **${sc.lowest}:** €${Number(pricing.lowest_price).toFixed(2)}\n`;
+            if (pricing.median_price) resultMsg += `📊 **${sc.median}:** €${Number(pricing.median_price).toFixed(2)}\n`;
+            if (pricing.highest_price) resultMsg += `📈 **${sc.highest}:** €${Number(pricing.highest_price).toFixed(2)}\n`;
+            if (pricing.num_for_sale) resultMsg += `\n🏪 **${pricing.num_for_sale}** ${sc.copiesForSaleDiscogs}`;
           }
 
-          // Fetch marketplace listings in parallel (non-blocking for UI)
           try {
             const { data: marketplaceData } = await supabase.functions.invoke('fetch-discogs-marketplace-listings', {
               body: { discogs_id: v2Result.discogs_id }
@@ -975,12 +930,10 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
             console.error('Marketplace listings fetch error:', mlErr);
           }
 
-          // Show alternative suggestions if available
           if (v2Result.suggestions && v2Result.suggestions.length > 1) {
-            resultMsg += `\n\n📋 **Andere mogelijke releases:**`;
+            resultMsg += `\n\n📋 **${sc.otherPossibleReleases}:**`;
           }
 
-          // Save verified result so follow-up questions don't re-trigger the pipeline
           setVerifiedResult(v2Result);
 
           setMessages(prev => [...prev, {
@@ -991,19 +944,18 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
           }]);
 
         } else if (v2Result && v2Result.suggestions && v2Result.suggestions.length > 0) {
-          // ── MULTIPLE SUGGESTIONS, NO CLEAR WINNER ──
-          let sugMsg = `🔍 **Geen eenduidige match gevonden.**\n\n`;
-          sugMsg += `De scanner heeft **${v2Result.artist || 'onbekend'} - ${v2Result.title || 'onbekend'}** herkend, maar kan de exacte persing niet bevestigen.\n\n`;
+          let sugMsg = `${sc.noUniqueMatch}\n\n`;
+          sugMsg += `${sc.scannerRecognized.replace('{artist}', v2Result.artist || '?').replace('{title}', v2Result.title || '?')}\n\n`;
 
           if (v2Result.rights_society_exclusions && v2Result.rights_society_exclusions.length > 0) {
-            sugMsg += `⛔ **Uitgesloten op basis van rechtenorganisaties:**\n`;
+            sugMsg += `⛔ **${sc.excludedBasedOnRights}:**\n`;
             for (const excl of v2Result.rights_society_exclusions) {
               sugMsg += `- ${excl}\n`;
             }
             sugMsg += `\n`;
           }
 
-          sugMsg += `Selecteer de juiste release hieronder, of upload extra foto's voor een betere match:`;
+          sugMsg += sc.selectCorrectRelease;
 
           setMessages(prev => [...prev, {
             role: 'assistant',
@@ -1012,22 +964,21 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
           }]);
 
         } else {
-          // ── NO MATCH ──
-          let noMatchMsg = `⚠️ **Geen match gevonden** in de Discogs-database.\n\n`;
+          let noMatchMsg = `${sc.noMatchFound}\n\n`;
           
           if (v2Result?.artist || v2Result?.title) {
-            noMatchMsg += `🔎 Herkend: **${v2Result.artist || '?'} - ${v2Result.title || '?'}**\n\n`;
+            noMatchMsg += `🔎 ${sc.recognized}: **${v2Result.artist || '?'} - ${v2Result.title || '?'}**\n\n`;
           }
 
           if (v2Result?.rights_society_exclusions && v2Result.rights_society_exclusions.length > 0) {
-            noMatchMsg += `⛔ **Uitgesloten releases:**\n`;
+            noMatchMsg += `⛔ **${sc.excludedReleases}:**\n`;
             for (const excl of v2Result.rights_society_exclusions) {
               noMatchMsg += `- ${excl}\n`;
             }
             noMatchMsg += `\n`;
           }
 
-          noMatchMsg += `📸 Upload extra foto's (matrix-nummer, achterkant, disc label) voor een betere identificatie.`;
+          noMatchMsg += sc.uploadMorePhotos;
 
           setMessages(prev => [...prev, {
             role: 'assistant',
@@ -1041,7 +992,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
 
     } catch (err) {
       console.error('Chat error:', err);
-      toast({ title: "Chat fout", description: err instanceof Error ? err.message : "Fout", variant: "destructive" });
+      toast({ title: sc.chatError, description: err instanceof Error ? err.message : "Error", variant: "destructive" });
       setMessages(prev => {
         const last = prev[prev.length - 1];
         if (last?.role === 'assistant' && !last.content) return prev.slice(0, -1);
@@ -1056,9 +1007,8 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
     if (!input.trim() || isStreaming || isRunningV2) return;
     const trimmed = input.trim();
 
-    // Check if user rejects the current result
     const rejectKeywords = ['niet juist', 'niet correct', 'verkeerde', 'fout', 'klopt niet',
-      'andere release', 'niet goed', 'opnieuw zoeken', 'wrong', 'incorrect'];
+      'andere release', 'niet goed', 'opnieuw zoeken', 'wrong', 'incorrect', 'not correct'];
     const isRejection = rejectKeywords.some(kw => trimmed.toLowerCase().includes(kw));
     if (isRejection) {
       setVerifiedResult(null);
@@ -1074,7 +1024,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   const resetChat = () => {
     setMessages([{
       role: 'assistant',
-      content: `🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets **scannen** of iets **vragen** over een artiest of album?`,
+      content: sc.welcomeMessage,
     }]);
     setShowWelcomeActions(true);
     setMediaType('');
@@ -1090,10 +1040,9 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
     if (scrollRef.current) {
       scrollRef.current.scrollTop = 0;
     }
-    toast({ title: "Chat gereset", description: "Klaar voor een nieuwe scan!" });
+    toast({ title: sc.chatReset, description: sc.readyForNewScan });
   };
 
-  // Handle manual search form submission
   const handleManualSearch = async (artist: string, title: string, barcode?: string, year?: string, country?: string, matrix?: string) => {
     setIsManualSearching(true);
     setShowManualSearch(false);
@@ -1101,10 +1050,10 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
     const searchDesc = [artist, title].filter(Boolean).join(' - ');
     setMessages(prev => [...prev, {
       role: 'user',
-      content: `🔍 Handmatig zoeken: ${searchDesc}`,
+      content: sc.manualSearch.replace('{desc}', searchDesc),
     }, {
       role: 'assistant',
-      content: `🔎 **Zoeken...** Even geduld, ik doorzoek de database voor "${searchDesc}"...`,
+      content: sc.searching.replace('{desc}', searchDesc),
     }]);
 
     try {
@@ -1120,8 +1069,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         },
       });
 
-      // Remove loading message
-      setMessages(prev => prev.filter(m => !m.content.includes('Even geduld, ik doorzoek')));
+      setMessages(prev => prev.filter(m => !m.content.includes('doorzoek de database') && !m.content.includes('searching the database')));
 
       if (error) throw error;
 
@@ -1129,7 +1077,6 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         const topResult = data.results[0];
         const releaseId = topResult.discogs_id || topResult.id;
 
-        // Build verified result
         const v2Result: V2PipelineResult = {
           discogs_id: releaseId,
           discogs_url: `https://www.discogs.com/release/${releaseId}`,
@@ -1167,7 +1114,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         if (v2Result.country || v2Result.year) {
           msg += `📀 ${v2Result.country || ''}${v2Result.year ? ` (${v2Result.year})` : ''}\n`;
         }
-        msg += `🔗 [Bekijk op Discogs](https://www.discogs.com/release/${releaseId})\n`;
+        msg += `🔗 [${sc.viewOnDiscogs}](https://www.discogs.com/release/${releaseId})\n`;
 
         const pricing: PricingData = {
           lowest_price: topResult.pricing_stats?.lowest_price ?? null,
@@ -1177,15 +1124,15 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         };
 
         if (pricing.lowest_price || pricing.median_price || pricing.highest_price) {
-          msg += `\n💰 **Prijsinformatie:**\n`;
-          if (pricing.lowest_price) msg += `📉 **Laagste:** €${Number(pricing.lowest_price).toFixed(2)}\n`;
-          if (pricing.median_price) msg += `📊 **Mediaan:** €${Number(pricing.median_price).toFixed(2)}\n`;
-          if (pricing.highest_price) msg += `📈 **Hoogste:** €${Number(pricing.highest_price).toFixed(2)}\n`;
-          if (pricing.num_for_sale) msg += `\n🏪 **${pricing.num_for_sale}** exemplaren te koop op Discogs`;
+          msg += `\n💰 **${sc.pricingInfo}:**\n`;
+          if (pricing.lowest_price) msg += `📉 **${sc.lowest}:** €${Number(pricing.lowest_price).toFixed(2)}\n`;
+          if (pricing.median_price) msg += `📊 **${sc.median}:** €${Number(pricing.median_price).toFixed(2)}\n`;
+          if (pricing.highest_price) msg += `📈 **${sc.highest}:** €${Number(pricing.highest_price).toFixed(2)}\n`;
+          if (pricing.num_for_sale) msg += `\n🏪 **${pricing.num_for_sale}** ${sc.copiesForSaleDiscogs}`;
         }
 
         if (data.results.length > 1) {
-          msg += `\n\n📋 **Andere mogelijke releases:**`;
+          msg += `\n\n📋 **${sc.otherPossibleReleases}:**`;
         }
 
         setMessages(prev => [...prev, {
@@ -1197,15 +1144,15 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
       } else {
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: `⚠️ **Geen resultaten gevonden** voor "${searchDesc}".\n\nProbeer andere zoektermen of upload foto's voor een betere match.`,
+          content: sc.noResultsFound.replace('{desc}', searchDesc),
         }]);
       }
     } catch (err) {
       console.error('Manual search error:', err);
-      setMessages(prev => prev.filter(m => !m.content.includes('Even geduld, ik doorzoek')));
+      setMessages(prev => prev.filter(m => !m.content.includes('doorzoek de database') && !m.content.includes('searching the database')));
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: `⚠️ **Zoeken mislukt.** Probeer het later opnieuw.`,
+        content: sc.searchFailed,
       }]);
     } finally {
       setIsManualSearching(false);
@@ -1214,7 +1161,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
 
   const saveToCollection = async () => {
     if (!user || !verifiedResult || !verifiedResult.discogs_id) {
-      toast({ title: "Kan niet opslaan", description: "Je moet ingelogd zijn en een geverifieerde release hebben.", variant: "destructive" });
+      toast({ title: sc.cannotSave, description: sc.cannotSaveDesc, variant: "destructive" });
       return;
     }
 
@@ -1246,12 +1193,10 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         highest_price: pricing?.highest_price ?? null,
       };
 
-      // Add sleeve condition for cd_scan table
       if (mediaType === 'cd' && conditionSleeve) {
         record.marketplace_sleeve_condition = conditionSleeve;
       }
 
-      // Add first photo as image
       if (photoUrls.length > 0) {
         if (mediaType === 'cd') {
           record.front_image = photoUrls[0];
@@ -1268,13 +1213,13 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
       setSavedToCollection(true);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: `✅ **Opgeslagen!** ${verifiedResult.artist} - ${verifiedResult.title} staat nu in je catalogus.\n\nJe kunt de conditie, prijs en winkelstatus later aanpassen in je collectie.`,
+        content: sc.savedMessage.replace('{artist}', verifiedResult.artist || '').replace('{title}', verifiedResult.title || ''),
       }]);
 
-      toast({ title: "Opgeslagen in catalogus", description: `${verifiedResult.artist} - ${verifiedResult.title}` });
+      toast({ title: sc.savedToCatalog, description: `${verifiedResult.artist} - ${verifiedResult.title}` });
     } catch (err) {
       console.error('Save to collection error:', err);
-      toast({ title: "Opslaan mislukt", description: err instanceof Error ? err.message : "Fout", variant: "destructive" });
+      toast({ title: sc.saveFailed, description: err instanceof Error ? err.message : "Error", variant: "destructive" });
     } finally {
       setIsSavingToCollection(false);
     }
@@ -1291,12 +1236,12 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
           </div>
           <div>
             <span className="text-sm font-bold tracking-tight">Magic Mike</span>
-            {mediaType && <span className="text-xs text-muted-foreground ml-1.5 bg-muted px-1.5 py-0.5 rounded-full">{mediaType === 'vinyl' ? '🎵 Vinyl' : '💿 CD'}</span>}
-            <p className="text-xs text-muted-foreground">Muziek-detective</p>
+            {mediaType && <span className="text-xs text-muted-foreground ml-1.5 bg-muted px-1.5 py-0.5 rounded-full">{mediaType === 'vinyl' ? sc.vinylLabel : sc.cdLabel}</span>}
+            <p className="text-xs text-muted-foreground">{sc.musicDetective}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" onClick={resetChat} className="rounded-full h-8 w-8 border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 cursor-pointer relative z-10" title="Opnieuw">
+          <Button variant="outline" size="icon" onClick={resetChat} className="rounded-full h-8 w-8 border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 cursor-pointer relative z-10" title={sc.restart}>
             <RotateCcw className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -1351,7 +1296,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
                   {msg.images && msg.images.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {msg.images.map((src, j) => (
-                        <img key={j} src={src} alt={`Foto ${j + 1}`} className="h-16 w-16 object-cover rounded-lg border border-primary-foreground/20" />
+                        <img key={j} src={src} alt={`${sc.photo} ${j + 1}`} className="h-16 w-16 object-cover rounded-lg border border-primary-foreground/20" />
                       ))}
                     </div>
                   )}
@@ -1368,7 +1313,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
                     className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
                   >
                     <ExternalLink className="h-3 w-3" />
-                    Bekijk op Discogs
+                    {sc.viewOnDiscogs}
                   </a>
                   {msg.pricingData && !savedToCollection && (
                     <Button
@@ -1383,13 +1328,13 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
                       ) : (
                         <Save className="h-3 w-3" />
                       )}
-                      Opslaan in catalogus
+                      {sc.saveToCatalog}
                     </Button>
                   )}
                   {msg.pricingData && savedToCollection && (
                     <span className="inline-flex items-center gap-1 text-xs text-primary">
                       <Check className="h-3 w-3" />
-                      Opgeslagen
+                      {sc.saved}
                     </span>
                   )}
                 </div>
@@ -1401,26 +1346,26 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
                   <div className="grid grid-cols-3 gap-2 text-center">
                     {msg.pricingData.lowest_price && (
                       <div>
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Laagste</div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{sc.lowest}</div>
                         <div className="text-lg font-bold text-primary">€{Number(msg.pricingData.lowest_price).toFixed(2)}</div>
                       </div>
                     )}
                     {msg.pricingData.median_price && (
                       <div>
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Mediaan</div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{sc.median}</div>
                         <div className="text-lg font-bold text-foreground">€{Number(msg.pricingData.median_price).toFixed(2)}</div>
                       </div>
                     )}
                     {msg.pricingData.highest_price && (
                       <div>
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Hoogste</div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{sc.highest}</div>
                         <div className="text-lg font-bold text-foreground">€{Number(msg.pricingData.highest_price).toFixed(2)}</div>
                       </div>
                     )}
                   </div>
               {msg.pricingData.num_for_sale != null && msg.pricingData.num_for_sale > 0 && (
                     <div className="text-xs text-muted-foreground text-center mt-2 pt-2 border-t border-border/30">
-                      🏪 {msg.pricingData.num_for_sale} exemplaren te koop op Discogs
+                      🏪 {msg.pricingData.num_for_sale} {sc.copiesForSaleDiscogs}
                     </div>
                   )}
                 </div>
@@ -1430,7 +1375,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
               {msg.pricingData?.marketplace_listings && msg.pricingData.marketplace_listings.length > 0 && (
                 <div className="mt-3 p-3 bg-background/60 rounded-lg border border-border/50">
                   <div className="text-xs font-semibold mb-2 flex items-center gap-1">
-                    🏪 {msg.pricingData.num_for_sale || msg.pricingData.marketplace_listings.length} exemplaren te koop
+                    🏪 {msg.pricingData.num_for_sale || msg.pricingData.marketplace_listings.length} {sc.copiesForSale}
                   </div>
                   <div className="space-y-1.5">
                     {msg.pricingData.marketplace_listings.slice(0, 5).map((listing, idx) => (
@@ -1451,13 +1396,13 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
                       className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
                     >
                       <ExternalLink className="h-3 w-3" />
-                      Bekijk alle aanbiedingen
+                      {sc.viewAllOffers}
                     </a>
                   )}
                 </div>
               )}
 
-              {/* Condition grading panel - shown after pricing for verified results */}
+              {/* Condition grading panel */}
               {msg.v2Result?.discogs_id && msg.pricingData && !savedToCollection && (
                 <ConditionGradingPanel
                   mediaType={mediaType}
@@ -1504,16 +1449,16 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
           <div className="flex gap-3 justify-center my-4 animate-fadeIn">
             <Button variant="outline" size="lg" onClick={pickScanAction} className="h-20 px-10 flex flex-col gap-2 rounded-2xl border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all">
               <ScanLine className="h-7 w-7 text-primary" />
-              <span className="text-sm font-semibold">Scannen</span>
+              <span className="text-sm font-semibold">{sc.scanButton}</span>
             </Button>
             <Button variant="outline" size="lg" onClick={pickAskAction} className="h-20 px-10 flex flex-col gap-2 rounded-2xl border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all">
               <MessageCircle className="h-7 w-7 text-primary" />
-              <span className="text-sm font-semibold">Stel een vraag</span>
+              <span className="text-sm font-semibold">{sc.askButton}</span>
             </Button>
           </div>
         )}
 
-        {/* Media type picker - shown after choosing "Scannen" */}
+        {/* Media type picker */}
         {!showWelcomeActions && !mediaType && (
           <div className="flex flex-col items-center gap-2 my-3 animate-fadeIn">
             <div className="flex gap-3 justify-center">
@@ -1529,8 +1474,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
           </div>
         )}
 
-        {/* Suggestion chips - context aware */}
-        {/* Artist content cards - shown after verified result */}
+        {/* Artist content cards */}
         {verifiedResult?.artist && !isStreaming && !isRunningV2 && (
           <ArtistContentCards artistName={verifiedResult.artist} />
         )}
@@ -1546,21 +1490,21 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
           })()}
           hasNoMatch={(() => {
             const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
-            return !!(lastAssistant?.content?.includes('Geen match gevonden') || lastAssistant?.content?.includes('Geen eenduidige match'));
+            return !!(lastAssistant?.content?.includes('Geen match gevonden') || lastAssistant?.content?.includes('No match found') || lastAssistant?.content?.includes('Geen eenduidige match') || lastAssistant?.content?.includes('No unique match'));
           })()}
           artistContent={verifiedResult?.artist ? artistContent : null}
           onSave={saveToCollection}
           onSend={(text) => {
-            if (text === 'Ik typ de artiest en titel zelf in') {
+            if (text === sc.typeMyself) {
               setShowManualSearch(true);
-              setMessages(prev => [...prev, { role: 'user', content: '✏️ Ik typ de artiest en titel zelf in' }, { role: 'assistant', content: '📝 **Vul de gegevens in** die je weet. Hoe meer je invult, hoe preciezer het resultaat!' }]);
+              setMessages(prev => [...prev, { role: 'user', content: sc.typeArtistTitle }, { role: 'assistant', content: sc.fillDetails }]);
             } else {
               sendMessage(text);
             }
           }}
         />
 
-        {/* Manual search form - inline in chat */}
+        {/* Manual search form */}
         {showManualSearch && (
           <div className="mx-2 my-2 space-y-2">
             <ScannerManualSearch
@@ -1575,7 +1519,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
                 onClick={() => { setShowManualSearch(false); fileInputRef.current?.click(); }}
               >
                 <span>📸</span>
-                Foto kiezen
+                {sc.choosePhoto}
               </Button>
             </div>
           </div>
@@ -1599,23 +1543,23 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
                   <button
                     onClick={() => cameraInputRef.current?.click()}
                     className="h-20 w-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 transition-colors"
-                    title="Maak een foto"
+                    title={sc.takePhoto}
                   >
                     <Camera className="h-5 w-5 text-muted-foreground" />
                   </button>
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     className="h-20 w-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 transition-colors"
-                    title="Kies uit galerij"
+                    title={sc.chooseFromGallery}
                   >
                     <ImagePlus className="h-5 w-5 text-muted-foreground" />
                   </button>
                 </div>
                 <Button onClick={uploadAndSend} disabled={isUploading} className="w-full" size="sm">
                   {isUploading ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Uploaden...</>
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{sc.uploading}</>
                   ) : (
-                    <><Send className="mr-2 h-4 w-4" />Stuur {pendingFiles.length} foto's naar Magic Mike</>
+                    <><Send className="mr-2 h-4 w-4" />{sc.sendPhotos.replace('{count}', String(pendingFiles.length))}</>
                   )}
                 </Button>
               </CardContent>
@@ -1637,7 +1581,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         )}
       </div>
 
-      {/* Input bar - floating fixed at bottom */}
+      {/* Input bar */}
       {true && (
         <div className="fixed bottom-14 left-0 right-0 z-40 px-3 pb-2">
         <div className="max-w-2xl mx-auto flex items-end gap-1.5 p-2 rounded-2xl bg-card/95 backdrop-blur-md border border-border/50 shadow-[0_-2px_15px_rgba(0,0,0,0.1)]">
@@ -1648,7 +1592,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
               onClick={() => cameraInputRef.current?.click()}
               disabled={isStreaming || isUploading || isRunningV2 || isListening || isRecognizing}
               className="h-8 w-8 rounded-full hover:bg-primary/10"
-              title="Maak een foto"
+              title={sc.takePhoto}
             >
               <Camera className="h-3.5 w-3.5 text-muted-foreground" />
             </Button>
@@ -1658,7 +1602,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
               onClick={() => fileInputRef.current?.click()}
               disabled={isStreaming || isUploading || isRunningV2 || isListening || isRecognizing}
               className="h-8 w-8 rounded-full hover:bg-primary/10"
-              title="Kies uit galerij"
+              title={sc.chooseFromGallery}
             >
               <ImagePlus className="h-3.5 w-3.5 text-muted-foreground" />
             </Button>
@@ -1672,7 +1616,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
                   ? 'bg-primary text-primary-foreground animate-pulse shadow-lg shadow-primary/30' 
                   : 'hover:bg-primary/10'
               }`}
-              title={isListening ? "Luisteren..." : "Herken muziek"}
+              title={isListening ? sc.listeningPlaceholder : sc.recognizeMusic2}
             >
               {isRecognizing ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -1698,7 +1642,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isListening ? "🎵 Luisteren..." : "Stel je vraag..."}
+            placeholder={isListening ? sc.listeningPlaceholder : sc.askYourQuestion}
             className="min-h-[44px] max-h-[120px] flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60 text-sm py-3"
             rows={1}
             disabled={isStreaming || isRunningV2 || isListening || isRecognizing}
@@ -1712,4 +1656,3 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
     </div>
   );
 });
-

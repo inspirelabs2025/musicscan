@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DANCE_HOUSE_FEITEN, getDanceHouseFeitenByDecade } from '@/data/danceHouseMuziekFeiten';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const DECADES = [
   { id: '80s', label: "Jaren '80", color: 'from-orange-500 to-red-500', icon: '📻' },
@@ -14,6 +15,8 @@ const DECADES = [
 
 export const DecenniumSliderDH = () => {
   const [activeDecade, setActiveDecade] = useState('90s');
+  const { tr } = useLanguage();
+  const ch = tr.countryHubUI;
   const feiten = getDanceHouseFeitenByDecade(activeDecade);
   const currentDecade = DECADES.find(d => d.id === activeDecade);
 
@@ -35,72 +38,41 @@ export const DecenniumSliderDH = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-500/20 rounded-full mb-4">
             <Calendar className="w-4 h-4 text-purple-400" />
-            <span className="text-purple-400 text-sm">Door de Decennia</span>
+            <span className="text-purple-400 text-sm">{ch.throughDecades}</span>
           </div>
-          <h2 className="text-3xl font-bold">Dance Muziek Tijdlijn</h2>
+          <h2 className="text-3xl font-bold">{ch.danceTimeline}</h2>
         </div>
 
-        {/* Decade selector */}
         <div className="flex items-center justify-center gap-2 mb-8 flex-wrap">
           {DECADES.map((decade) => (
-            <button
-              key={decade.id}
-              onClick={() => setActiveDecade(decade.id)}
-              className={`px-4 py-2 rounded-full transition-all flex items-center gap-2 ${
-                activeDecade === decade.id
-                  ? `bg-gradient-to-r ${decade.color} text-white shadow-lg`
-                  : 'bg-muted hover:bg-muted/80'
-              }`}
-            >
-              <span>{decade.icon}</span>
-              <span>{decade.label}</span>
+            <button key={decade.id} onClick={() => setActiveDecade(decade.id)} className={`px-4 py-2 rounded-full transition-all flex items-center gap-2 ${activeDecade === decade.id ? `bg-gradient-to-r ${decade.color} text-white shadow-lg` : 'bg-muted hover:bg-muted/80'}`}>
+              <span>{decade.icon}</span><span>{decade.label}</span>
             </button>
           ))}
         </div>
 
-        {/* Navigation and content */}
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={goToPrevious} className="shrink-0">
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-
+          <Button variant="outline" size="icon" onClick={goToPrevious} className="shrink-0"><ChevronLeft className="w-4 h-4" /></Button>
           <div className="flex-1 overflow-hidden">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {feiten.slice(0, 6).map((feit) => (
-                <Link
-                  key={feit.slug}
-                  to={`/dh-muziekfeit/${feit.slug}`}
-                  className="group block"
-                >
+                <Link key={feit.slug} to={`/dh-muziekfeit/${feit.slug}`} className="group block">
                   <div className={`p-4 rounded-xl bg-gradient-to-br ${currentDecade?.color} bg-opacity-10 border border-white/10 hover:border-white/30 transition-all h-full`}>
                     <div className="text-sm font-bold text-white/60 mb-1">{feit.year}</div>
-                    <h3 className="font-semibold text-white group-hover:text-cyan-400 transition-colors line-clamp-2 mb-2">
-                      {feit.title}
-                    </h3>
+                    <h3 className="font-semibold text-white group-hover:text-cyan-400 transition-colors line-clamp-2 mb-2">{feit.title}</h3>
                     <p className="text-sm text-white/70 line-clamp-2">{feit.description}</p>
-                    {feit.subgenre && (
-                      <span className="inline-block mt-2 px-2 py-0.5 bg-white/10 rounded text-xs text-white/60">
-                        {feit.subgenre}
-                      </span>
-                    )}
+                    {feit.subgenre && (<span className="inline-block mt-2 px-2 py-0.5 bg-white/10 rounded text-xs text-white/60">{feit.subgenre}</span>)}
                   </div>
                 </Link>
               ))}
             </div>
           </div>
-
-          <Button variant="outline" size="icon" onClick={goToNext} className="shrink-0">
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+          <Button variant="outline" size="icon" onClick={goToNext} className="shrink-0"><ChevronRight className="w-4 h-4" /></Button>
         </div>
 
-        {/* View all link */}
         <div className="text-center mt-8">
-          <Link
-            to={`/dance-house/jaren-${activeDecade}`}
-            className="text-cyan-400 hover:text-cyan-300 text-sm font-medium"
-          >
-            Bekijk alle {currentDecade?.label} feiten →
+          <Link to={`/dance-house/jaren-${activeDecade}`} className="text-cyan-400 hover:text-cyan-300 text-sm font-medium">
+            {ch.viewAllFacts.replace('{label}', currentDecade?.label || '')}
           </Link>
         </div>
       </div>

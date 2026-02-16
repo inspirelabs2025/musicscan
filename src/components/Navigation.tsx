@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ShoppingCart, Menu, X, Images, Brain, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy, Users, DollarSign, Archive, Clock, Heart, Package, Headphones, Calendar, BookOpen, Sparkles, CircleDot, Youtube, Globe, Flag, Building2, Disc3 } from "lucide-react";
+import { Home, ShoppingCart, Menu, X, Images, Brain, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy, Users, DollarSign, Archive, Clock, Heart, Package, Headphones, Calendar, BookOpen, Sparkles, CircleDot, Youtube, Globe, Flag, Building2, Disc3, RefreshCw } from "lucide-react";
 import { NotificationsDropdown } from "@/components/NotificationsDropdown";
 import {
   NavigationMenu,
@@ -149,6 +149,22 @@ export function Navigation() {
           <Link to="/" className="flex-shrink-0">
             <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-[58px] cursor-pointer" />
           </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-primary animate-pulse"
+            title="Hard Refresh"
+            onClick={async () => {
+              if ('caches' in window) {
+                const names = await caches.keys();
+                await Promise.all(names.map(n => caches.delete(n)));
+              }
+              sessionStorage.removeItem('musicscan_last_reload_version');
+              window.location.reload();
+            }}
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
           
           <NavigationMenu className="flex-1">
           <NavigationMenuList className="gap-1">
@@ -310,10 +326,26 @@ export function Navigation() {
       </div>
 
       {/* Mobile: only show logo centered, no hamburger menu */}
-      <div className="md:hidden flex items-center justify-center w-full">
+      <div className="md:hidden flex items-center justify-center w-full gap-2">
         <Link to="/" className="flex-shrink-0">
           <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-[58px] cursor-pointer" />
         </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-primary animate-pulse"
+          title="Hard Refresh"
+          onClick={async () => {
+            if ('caches' in window) {
+              const names = await caches.keys();
+              await Promise.all(names.map(n => caches.delete(n)));
+            }
+            sessionStorage.removeItem('musicscan_last_reload_version');
+            window.location.reload();
+          }}
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
       </div>
       </div>
     </header>

@@ -1,6 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface MusicHistoryTimeline {
   overview: string;
@@ -125,11 +126,12 @@ export interface CollectionAIAnalysisResult {
 }
 
 export const useCollectionAIAnalysis = () => {
+  const { language } = useLanguage();
   return useQuery({
-    queryKey: ["collection-ai-analysis"],
+    queryKey: ["collection-ai-analysis", language],
     queryFn: async (): Promise<CollectionAIAnalysisResult> => {
       const { data, error } = await supabase.functions.invoke('collection-ai-analysis', {
-        body: {} // Empty body, function will use auth user automatically
+        body: { language }
       });
       
       if (error) {

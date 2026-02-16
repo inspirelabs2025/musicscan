@@ -304,7 +304,9 @@ serve(async (req) => {
     );
 
     // Get user ID from request
-    const { user_id } = await req.json().catch(() => ({}));
+    const { user_id, language: reqLanguage } = await req.json().catch(() => ({}));
+    const language = reqLanguage || 'nl';
+    const isEnglish = language === 'en';
     const authHeader = req.headers.get('Authorization');
     
     let userId = user_id;
@@ -392,7 +394,7 @@ serve(async (req) => {
         success: true,
         analysis: {
           musicHistoryTimeline: {
-            overview: "Je hebt nog geen items in je collectie en geen Spotify data. Tijd om muzikale geschiedenis te verzamelen! 🎵",
+            overview: isEnglish ? "You don't have any items in your collection or Spotify data yet. Time to start collecting music history! 🎵" : "Je hebt nog geen items in je collectie en geen Spotify data. Tijd om muzikale geschiedenis te verzamelen! 🎵",
             keyPeriods: [],
             culturalMovements: [],
             musicalEvolution: ""
@@ -502,9 +504,13 @@ serve(async (req) => {
     }, {});
 
     // Enhanced music historian AI prompt with Spotify integration
-    let prompt = `Je bent een muziekhistoricus die diepgaand en fascinerend vertelt over dit complete muziekprofiel!
-
-COMPLETE MUZIEKPROFIEL:`;
+    const langInstruction = isEnglish 
+      ? 'You are a music historian providing deep, fascinating insights. Respond in English.'
+      : 'Je bent een muziekhistoricus die diepgaand en fascinerend vertelt. Antwoord in het Nederlands.';
+    
+    let prompt = isEnglish 
+      ? `You are a music historian providing deep and fascinating insights about this complete music profile!\n\nCOMPLETE MUSIC PROFILE:`
+      : `Je bent een muziekhistoricus die diepgaand en fascinerend vertelt over dit complete muziekprofiel!\n\nCOMPLETE MUZIEKPROFIEL:`;
 
     if (hasPhysicalCollection) {
       prompt += `
@@ -551,85 +557,182 @@ Deze persoon heeft interessante verschillen tussen fysiek bezit en digitaal luis
 Analyseer de verschillen tussen fysieke collectie voorkeur en Spotify luistergedrag.`;
     }
 
+    const analysisInstruction = isEnglish
+      ? `\n\nANALYSIS TASK:\nCreate a rich, in-depth music personality analysis combining both physical collection and digital listening behavior.\n${hasPhysicalCollection && hasSpotifyData ? 
+        'Focus on the fascinating comparison between what they OWN vs what they LISTEN to. Why do they physically collect certain artists but listen digitally to others?' : 
+        hasPhysicalCollection ? 
+        'Focus on curatorial choices and the significance of physical music ownership.' :
+        'Focus on listening patterns and digital music discovery.'}\n\nProvide a COMPLETE JSON response with English text in this exact structure:`
+      : `\n\nANALYSE OPDRACHT:\nCreeer een rijke, diepgaande muziekpersoonlijkheidsanalyse die zowel fysieke collectie als digitaal luistergedrag combineert.\n${hasPhysicalCollection && hasSpotifyData ? 
+        'Focus op de fascinerende vergelijking tussen wat ze BEZITTEN vs wat ze LUISTEREN. Waarom verzamelen ze bepaalde artiesten fysiek maar luisteren ze digitaal naar anderen?' : 
+        hasPhysicalCollection ? 
+        'Focus op de curatoriale keuzes en de betekenis van fysiek muziekbezit.' :
+        'Focus op luisterpatronen en digitale muziekontdekking.'}\n\nGeef een COMPLETE JSON response met Nederlandse tekst in deze exacte structuur:`;
+
+    prompt += analysisInstruction;
+
+    // JSON structure template (field names stay the same, descriptions match language)
+    const jsonDescriptions = isEnglish ? {
+      overview: "A fascinating journey through music history via this collection",
+      keyPeriods: "Descriptions of important time periods represented in the collection",
+      culturalMovements: "Important cultural movements and their impact",
+      musicalEvolution: "How music evolved through the years in this collection",
+      legendaryFigures: "Stories about the most influential artists in the collection",
+      hiddenConnections: "Fascinating connections between artists",
+      collaborationTales: "Stories about collaborations and mutual influences",
+      artisticJourneys: "Evolution of important artists through their careers",
+      crossGenreInfluences: "How artists transcended and influenced genres",
+      legendaryStudios: "Stories about famous studios where albums were recorded",
+      iconicProducers: "Stories about producers and their unique sound",
+      recordingInnovations: "Technical breakthroughs in recording technology",
+      labelHistories: "History and significance of important record labels",
+      soundEngineering: "Special aspects of sound engineering and production",
+      societalInfluence: "How these albums influenced society",
+      generationalMovements: "Musical movements that defined generations",
+      politicalMessages: "Political and social messages in the music",
+      fashionAndStyle: "Influence on fashion, lifestyle and culture",
+      globalReach: "International impact and cultural exchange",
+      technicalBreakthroughs: "Technical innovations in instrumentation and recording",
+      genreCreation: "New genres that emerged from these movements",
+      instrumentalPioneering: "Innovative use of instruments",
+      vocalTechniques: "Special vocal techniques and styles",
+      productionMethods: "Groundbreaking production methods",
+      underratedMasterpieces: "Underrated gems in the collection",
+      rareFfinds: "Rare finds and special editions",
+      collectorSecrets: "Insider tips for collectors",
+      sleepersHits: "Albums that were later recognized as classics",
+      deepCuts: "Hidden tracks and B-sides worth discovering",
+      genreEvolution: "How genres evolved and influenced each other",
+      artistInfluences: "Mutual influence between artists",
+      labelConnections: "Connections between record labels and their sound",
+      sceneConnections: "Local scenes and their international impact",
+      crossPollination: "Cultural exchange and genre blending",
+      soundQuality: "Analysis of sound quality and recording techniques",
+      formatSignificance: "Significance of different formats (vinyl vs CD)",
+      pressingQuality: "Quality of different pressings and editions",
+      artwork: "Iconic album covers and visual aspects",
+      packaging: "Special packaging and limited editions",
+      nextExplorations: "Suggestions for further exploration",
+      relatedArtists: "Related artists to discover",
+      genreExpansions: "Genres to explore further",
+      eraExplorations: "Eras to learn more about",
+      labelDiveDeeps: "Labels with interesting catalogs to explore"
+    } : {
+      overview: "Een fascinerende reis door de muziekgeschiedenis via deze collectie",
+      keyPeriods: "Beschrijvingen van belangrijke tijdperioden vertegenwoordigd in de collectie",
+      culturalMovements: "Belangrijke culturele bewegingen en hun impact",
+      musicalEvolution: "Hoe de muziek evolueerde door de jaren heen in deze collectie",
+      legendaryFigures: "Verhalen over de meest invloedrijke artiesten in de collectie",
+      hiddenConnections: "Fascinerende verbanden tussen artiesten",
+      collaborationTales: "Verhalen over samenwerkingen en wederzijdse invloeden",
+      artisticJourneys: "Evolutie van belangrijke artiesten door hun carrières",
+      crossGenreInfluences: "Hoe artiesten genres hebben overstegen en beïnvloed",
+      legendaryStudios: "Verhalen over beroemde studio's waar albums zijn opgenomen",
+      iconicProducers: "Verhalen over producers en hun unieke sound",
+      recordingInnovations: "Technische doorbraken in de opnametechniek",
+      labelHistories: "Geschiedenis en betekenis van belangrijke platenlabels",
+      soundEngineering: "Bijzondere aspecten van geluidstechniek en productie",
+      societalInfluence: "Hoe deze albums de maatschappij hebben beïnvloed",
+      generationalMovements: "Muzikale bewegingen die generaties hebben gedefinieerd",
+      politicalMessages: "Politieke en sociale boodschappen in de muziek",
+      fashionAndStyle: "Invloed op mode, lifestyle en cultuur",
+      globalReach: "Internationale impact en cultuuruitwisseling",
+      technicalBreakthroughs: "Technische vernieuwingen in instrumentatie en opname",
+      genreCreation: "Nieuwe genres die ontstonden uit deze bewegingen",
+      instrumentalPioneering: "Innovatief gebruik van instrumenten",
+      vocalTechniques: "Bijzondere zangtechnieken en stijlen",
+      productionMethods: "Baanbrekende productiemethoden",
+      underratedMasterpieces: "Ondergewaardeerde pareltjes in de collectie",
+      rareFfinds: "Zeldzame vondsten en speciale uitgaven",
+      collectorSecrets: "Insider tips voor verzamelaars",
+      sleepersHits: "Albums die later erkend werden als classics",
+      deepCuts: "Verborgen tracks en B-sides die de moeite waard zijn",
+      genreEvolution: "Hoe genres evolueerden en elkaar beïnvloedden",
+      artistInfluences: "Wederzijdse beïnvloeding tussen artiesten",
+      labelConnections: "Verbanden tussen platenlabels en hun sound",
+      sceneConnections: "Lokale scenes en hun internationale impact",
+      crossPollination: "Cultuuruitwisseling en genre-vermenging",
+      soundQuality: "Analyse van geluidskwaliteit en opnametechnieken",
+      formatSignificance: "Betekenis van verschillende formats (vinyl vs CD)",
+      pressingQuality: "Kwaliteit van verschillende persingen en uitgaven",
+      artwork: "Iconische album hoezen en visuele aspecten",
+      packaging: "Bijzondere verpakkingen en limited editions",
+      nextExplorations: "Suggesties voor verdere verkenning",
+      relatedArtists: "Gerelateerde artiesten om te ontdekken",
+      genreExpansions: "Genres om verder te verdiepen",
+      eraExplorations: "Tijdperken om meer van te leren",
+      labelDiveDeeps: "Labels waarvan de catalogus interessant is"
+    };
+    const d = jsonDescriptions;
+
     prompt += `
-
-ANALYSE OPDRACHT:
-Creeer een rijke, diepgaande muziekpersoonlijkheidsanalyse die zowel fysieke collectie als digitaal luistergedrag combineert.
-${hasPhysicalCollection && hasSpotifyData ? 
-  'Focus op de fascinerende vergelijking tussen wat ze BEZITTEN vs wat ze LUISTEREN. Waarom verzamelen ze bepaalde artiesten fysiek maar luisteren ze digitaal naar anderen?' : 
-  hasPhysicalCollection ? 
-  'Focus op de curatoriale keuzes en de betekenis van fysiek muziekbezit.' :
-  'Focus op luisterpatronen en digitale muziekontdekking.'
-}
-
-Geef een COMPLETE JSON response met Nederlandse tekst in deze exacte structuur:
 
 {
   "musicHistoryTimeline": {
-    "overview": "Een fascinerende reis door de muziekgeschiedenis via deze collectie",
-    "keyPeriods": ["Beschrijvingen van belangrijke tijdperioden vertegenwoordigd in de collectie"],
-    "culturalMovements": ["Belangrijke culturele bewegingen en hun impact"],
-    "musicalEvolution": "Hoe de muziek evolueerde door de jaren heen in deze collectie"
+    "overview": "${d.overview}",
+    "keyPeriods": ["${d.keyPeriods}"],
+    "culturalMovements": ["${d.culturalMovements}"],
+    "musicalEvolution": "${d.musicalEvolution}"
   },
   "artistStories": {
-    "legendaryFigures": ["Verhalen over de meest invloedrijke artiesten in de collectie"],
-    "hiddenConnections": ["Fascinerende verbanden tussen artiesten"],
-    "collaborationTales": ["Verhalen over samenwerkingen en wederzijdse invloeden"],
-    "artisticJourneys": ["Evolutie van belangrijke artiesten door hun carrières"],
-    "crossGenreInfluences": ["Hoe artiesten genres hebben overstegen en beïnvloed"]
+    "legendaryFigures": ["${d.legendaryFigures}"],
+    "hiddenConnections": ["${d.hiddenConnections}"],
+    "collaborationTales": ["${d.collaborationTales}"],
+    "artisticJourneys": ["${d.artisticJourneys}"],
+    "crossGenreInfluences": ["${d.crossGenreInfluences}"]
   },
   "studioLegends": {
-    "legendaryStudios": ["Verhalen over beroemde studio's waar albums zijn opgenomen"],
-    "iconicProducers": ["Verhalen over producers en hun unieke sound"],
-    "recordingInnovations": ["Technische doorbraken in de opnametechniek"],
-    "labelHistories": ["Geschiedenis en betekenis van belangrijke platenlabels"],
-    "soundEngineering": ["Bijzondere aspecten van geluidstechniek en productie"]
+    "legendaryStudios": ["${d.legendaryStudios}"],
+    "iconicProducers": ["${d.iconicProducers}"],
+    "recordingInnovations": ["${d.recordingInnovations}"],
+    "labelHistories": ["${d.labelHistories}"],
+    "soundEngineering": ["${d.soundEngineering}"]
   },
   "culturalImpact": {
-    "societalInfluence": ["Hoe deze albums de maatschappij hebben beïnvloed"],
-    "generationalMovements": ["Muzikale bewegingen die generaties hebben gedefinieerd"],
-    "politicalMessages": ["Politieke en sociale boodschappen in de muziek"],
-    "fashionAndStyle": ["Invloed op mode, lifestyle en cultuur"],
-    "globalReach": ["Internationale impact en cultuuruitwisseling"]
+    "societalInfluence": ["${d.societalInfluence}"],
+    "generationalMovements": ["${d.generationalMovements}"],
+    "politicalMessages": ["${d.politicalMessages}"],
+    "fashionAndStyle": ["${d.fashionAndStyle}"],
+    "globalReach": ["${d.globalReach}"]
   },
   "musicalInnovations": {
-    "technicalBreakthroughs": ["Technische vernieuwingen in instrumentatie en opname"],
-    "genreCreation": ["Nieuwe genres die ontstonden uit deze bewegingen"],
-    "instrumentalPioneering": ["Innovatief gebruik van instrumenten"],
-    "vocalTechniques": ["Bijzondere zangtechnieken en stijlen"],
-    "productionMethods": ["Baanbrekende productiemethoden"]
+    "technicalBreakthroughs": ["${d.technicalBreakthroughs}"],
+    "genreCreation": ["${d.genreCreation}"],
+    "instrumentalPioneering": ["${d.instrumentalPioneering}"],
+    "vocalTechniques": ["${d.vocalTechniques}"],
+    "productionMethods": ["${d.productionMethods}"]
   },
   "hiddenGems": {
-    "underratedMasterpieces": ["Ondergewaardeerde pareltjes in de collectie"],
-    "rareFfinds": ["Zeldzame vondsten en speciale uitgaven"],
-    "collectorSecrets": ["Insider tips voor verzamelaars"],
-    "sleepersHits": ["Albums die later erkend werden als classics"],
-    "deepCuts": ["Verborgen tracks en B-sides die de moeite waard zijn"]
+    "underratedMasterpieces": ["${d.underratedMasterpieces}"],
+    "rareFfinds": ["${d.rareFfinds}"],
+    "collectorSecrets": ["${d.collectorSecrets}"],
+    "sleepersHits": ["${d.sleepersHits}"],
+    "deepCuts": ["${d.deepCuts}"]
   },
   "musicalConnections": {
-    "genreEvolution": ["Hoe genres evolueerden en elkaar beïnvloedden"],
-    "artistInfluences": ["Wederzijdse beïnvloeding tussen artiesten"],
-    "labelConnections": ["Verbanden tussen platenlabels en hun sound"],
-    "sceneConnections": ["Lokale scenes en hun internationale impact"],
-    "crossPollination": ["Cultuuruitwisseling en genre-vermenging"]
+    "genreEvolution": ["${d.genreEvolution}"],
+    "artistInfluences": ["${d.artistInfluences}"],
+    "labelConnections": ["${d.labelConnections}"],
+    "sceneConnections": ["${d.sceneConnections}"],
+    "crossPollination": ["${d.crossPollination}"]
   },
   "technicalMastery": {
-    "soundQuality": "Analyse van geluidskwaliteit en opnametechnieken",
-    "formatSignificance": "Betekenis van verschillende formats (vinyl vs CD)",
-    "pressingQuality": "Kwaliteit van verschillende persingen en uitgaven",
-    "artwork": "Iconische album hoezen en visuele aspecten",
-    "packaging": "Bijzondere verpakkingen en limited editions"
+    "soundQuality": "${d.soundQuality}",
+    "formatSignificance": "${d.formatSignificance}",
+    "pressingQuality": "${d.pressingQuality}",
+    "artwork": "${d.artwork}",
+    "packaging": "${d.packaging}"
   },
   "discoveryPaths": {
-    "nextExplorations": ["Suggesties voor verdere verkenning"],
-    "relatedArtists": ["Gerelateerde artiesten om te ontdekken"],
-    "genreExpansions": ["Genres om verder te verdiepen"],
-    "eraExplorations": ["Tijdperken om meer van te leren"],
-    "labelDiveDeeps": ["Labels waarvan de catalogus interessant is"]
+    "nextExplorations": ["${d.nextExplorations}"],
+    "relatedArtists": ["${d.relatedArtists}"],
+    "genreExpansions": ["${d.genreExpansions}"],
+    "eraExplorations": ["${d.eraExplorations}"],
+    "labelDiveDeeps": ["${d.labelDiveDeeps}"]
   }
 }
 
-BELANGRIJK: Return ALLEEN valid JSON zonder markdown backticks of andere formatting!`;
+${isEnglish ? 'IMPORTANT: Return ONLY valid JSON without markdown backticks or other formatting!' : 'BELANGRIJK: Return ALLEEN valid JSON zonder markdown backticks of andere formatting!'}`;
 
     console.log('🤖 Calling Lovable AI with music historian prompt...');
     
@@ -664,7 +767,7 @@ BELANGRIJK: Return ALLEEN valid JSON zonder markdown backticks of andere formatt
             messages: [
               {
                 role: 'system',
-                content: 'You are a music historian and cultural analyst specializing in music collections and listening patterns. You provide deep, fascinating insights about music history, cultural context, and artistic connections. Always respond in Dutch and return only valid JSON without any markdown formatting.'
+                content: langInstruction + ' You specialize in music collections and listening patterns. You provide deep, fascinating insights about music history, cultural context, and artistic connections. Return only valid JSON without any markdown formatting.'
               },
               {
                 role: 'user', 

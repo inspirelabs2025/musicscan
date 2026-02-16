@@ -8,6 +8,7 @@ import { InteractiveTimeline } from './InteractiveTimeline';
 import { MusicalGalaxy } from './MusicalGalaxy';
 import { CollectionHighlights } from './CollectionHighlights';
 import { AchievementSystem } from './AchievementSystem';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface StoryChapterProps {
   chapter: {
@@ -27,6 +28,8 @@ interface StoryChapterProps {
 
 export function StoryChapter({ chapter, analysis, chartData, stats, isActive, onActivate }: StoryChapterProps) {
   const Icon = chapter.icon;
+  const { tr } = useLanguage();
+  const a = tr.aiAnalysis;
 
   const renderChapterContent = () => {
     switch (chapter.content) {
@@ -35,11 +38,11 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
           <div className="space-y-4 md:space-y-6">
             <Card variant="default">
               <CardHeader>
-                <CardTitle className="text-foreground text-lg md:text-xl">Jouw Muziekgeschiedenis Timeline</CardTitle>
+                <CardTitle className="text-foreground text-lg md:text-xl">{a.timelineTitle}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-foreground/90 text-sm md:text-base leading-relaxed mb-4 md:mb-6">
-                  {analysis.musicHistoryTimeline?.overview || "Je collectie vertelt een verhaal door de tijd..."}
+                  {analysis.musicHistoryTimeline?.overview || a.timelineFallback}
                 </p>
                 <div className="space-y-3 md:space-y-4">
                   {analysis.musicHistoryTimeline?.keyPeriods?.slice(0, 3).map((period: string, index: number) => (
@@ -50,7 +53,6 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                 </div>
               </CardContent>
             </Card>
-            
             {chartData.decadeDistribution && (
               <InteractiveTimeline chartData={chartData} analysis={analysis} />
             )}
@@ -62,12 +64,12 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
           <div className="space-y-4 md:space-y-6">
             <Card variant="default">
               <CardHeader>
-                <CardTitle className="text-foreground text-lg md:text-xl">Artiest Legends & Connecties</CardTitle>
+                <CardTitle className="text-foreground text-lg md:text-xl">{a.artistLegendsTitle}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div>
-                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">Legendes in je collectie</h4>
+                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">{a.legendsInCollection}</h4>
                     <div className="space-y-2 md:space-y-3">
                       {analysis.artistStories?.legendaryFigures?.slice(0, 4).map((figure: string, index: number) => (
                         <div key={index} className="p-2 md:p-3 bg-muted rounded-lg border border-border">
@@ -76,9 +78,8 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                       ))}
                     </div>
                   </div>
-                  
                   <div>
-                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">Verborgen Connecties</h4>
+                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">{a.hiddenConnections}</h4>
                     <div className="space-y-2 md:space-y-3">
                       {analysis.artistStories?.hiddenConnections?.slice(0, 4).map((connection: string, index: number) => (
                         <div key={index} className="p-2 md:p-3 bg-muted rounded-lg border border-border">
@@ -90,10 +91,9 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                 </div>
               </CardContent>
             </Card>
-
             <Card variant="default">
               <CardHeader>
-                <CardTitle className="text-foreground text-lg md:text-xl">Artistieke Reizen</CardTitle>
+                <CardTitle className="text-foreground text-lg md:text-xl">{a.artisticJourneys}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 md:space-y-4">
@@ -113,12 +113,12 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
           <div className="space-y-4 md:space-y-6">
             <Card variant="default">
               <CardHeader>
-                <CardTitle className="text-foreground text-lg md:text-xl">Studio Legends & Producers</CardTitle>
+                <CardTitle className="text-foreground text-lg md:text-xl">{a.studioLegendsTitle}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div>
-                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">Iconische Studios</h4>
+                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">{a.iconicStudios}</h4>
                     <div className="space-y-2 md:space-y-3">
                       {analysis.studioLegends?.legendaryStudios?.slice(0, 4).map((studio: string, index: number) => (
                         <div key={index} className="p-2 md:p-3 bg-muted rounded-lg border border-border">
@@ -127,9 +127,8 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                       ))}
                     </div>
                   </div>
-                  
                   <div>
-                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">Legendary Producers</h4>
+                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">{a.legendaryProducers}</h4>
                     <div className="space-y-2 md:space-y-3">
                       {analysis.studioLegends?.iconicProducers?.slice(0, 4).map((producer: string, index: number) => (
                         <div key={index} className="p-2 md:p-3 bg-muted rounded-lg border border-border">
@@ -141,10 +140,9 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                 </div>
               </CardContent>
             </Card>
-
             <Card variant="default">
               <CardHeader>
-                <CardTitle className="text-foreground text-lg md:text-xl">Opname Innovaties</CardTitle>
+                <CardTitle className="text-foreground text-lg md:text-xl">{a.recordingInnovations}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 md:space-y-4">
@@ -164,12 +162,12 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
           <div className="space-y-4 md:space-y-6">
             <Card variant="default">
               <CardHeader>
-                <CardTitle className="text-foreground text-lg md:text-xl">Culturele Impact & Invloed</CardTitle>
+                <CardTitle className="text-foreground text-lg md:text-xl">{a.culturalImpactTitle}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div>
-                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">Maatschappelijke Invloed</h4>
+                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">{a.societalInfluence}</h4>
                     <div className="space-y-2 md:space-y-3">
                       {analysis.culturalImpact?.societalInfluence?.slice(0, 4).map((influence: string, index: number) => (
                         <div key={index} className="p-2 md:p-3 bg-muted rounded-lg border border-border">
@@ -178,9 +176,8 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                       ))}
                     </div>
                   </div>
-                  
                   <div>
-                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">Generatie Bewegingen</h4>
+                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">{a.generationalMovements}</h4>
                     <div className="space-y-2 md:space-y-3">
                       {analysis.culturalImpact?.generationalMovements?.slice(0, 4).map((movement: string, index: number) => (
                         <div key={index} className="p-2 md:p-3 bg-muted rounded-lg border border-border">
@@ -192,10 +189,9 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                 </div>
               </CardContent>
             </Card>
-
             <Card variant="default">
               <CardHeader>
-                <CardTitle className="text-foreground text-lg md:text-xl">Wereldwijde Invloed</CardTitle>
+                <CardTitle className="text-foreground text-lg md:text-xl">{a.globalReach}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 md:space-y-4">
@@ -215,12 +211,12 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
           <div className="space-y-4 md:space-y-6">
             <Card variant="default">
               <CardHeader>
-                <CardTitle className="text-foreground text-lg md:text-xl">Muzikale & Technische Innovaties</CardTitle>
+                <CardTitle className="text-foreground text-lg md:text-xl">{a.innovationsTitle}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div>
-                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">Technische Doorbraken</h4>
+                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">{a.technicalBreakthroughs}</h4>
                     <div className="space-y-2 md:space-y-3">
                       {analysis.musicalInnovations?.technicalBreakthroughs?.slice(0, 4).map((breakthrough: string, index: number) => (
                         <div key={index} className="p-2 md:p-3 bg-muted rounded-lg border border-border">
@@ -229,9 +225,8 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                       ))}
                     </div>
                   </div>
-                  
                   <div>
-                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">Genre Creaties</h4>
+                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">{a.genreCreations}</h4>
                     <div className="space-y-2 md:space-y-3">
                       {analysis.musicalInnovations?.genreCreation?.slice(0, 4).map((genre: string, index: number) => (
                         <div key={index} className="p-2 md:p-3 bg-muted rounded-lg border border-border">
@@ -243,10 +238,9 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                 </div>
               </CardContent>
             </Card>
-
             <Card variant="default">
               <CardHeader>
-                <CardTitle className="text-foreground text-lg md:text-xl">Productie Methoden</CardTitle>
+                <CardTitle className="text-foreground text-lg md:text-xl">{a.productionMethods}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 md:space-y-4">
@@ -265,15 +259,14 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
         return (
           <div className="space-y-4 md:space-y-6">
             <MusicalGalaxy chartData={chartData} analysis={analysis} />
-            
             <Card variant="default">
               <CardHeader>
-                <CardTitle className="text-foreground text-lg md:text-xl">Ontdekkingsreis & Verborgen Parels</CardTitle>
+                <CardTitle className="text-foreground text-lg md:text-xl">{a.discoveryTitle}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div>
-                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">Ondergewaardeerde Meesterwerken</h4>
+                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">{a.underratedMasterpieces}</h4>
                     <div className="space-y-2 md:space-y-3">
                       {analysis.hiddenGems?.underratedMasterpieces?.slice(0, 4).map((gem: string, index: number) => (
                         <div key={index} className="p-2 md:p-3 bg-muted rounded-lg border border-border">
@@ -282,9 +275,8 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                       ))}
                     </div>
                   </div>
-                  
                   <div>
-                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">Nieuwe Ontdekkingen</h4>
+                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">{a.newDiscoveries}</h4>
                     <div className="space-y-2 md:space-y-3">
                       {analysis.discoveryPaths?.nextExplorations?.slice(0, 4).map((exploration: string, index: number) => (
                         <div key={index} className="p-2 md:p-3 bg-muted rounded-lg border border-border">
@@ -296,10 +288,9 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                 </div>
               </CardContent>
             </Card>
-
             <Card variant="default">
               <CardHeader>
-                <CardTitle className="text-foreground text-lg md:text-xl">Volgende Stappen</CardTitle>
+                <CardTitle className="text-foreground text-lg md:text-xl">{a.nextSteps}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 md:space-y-4">
@@ -315,13 +306,12 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
         );
 
       default:
-        return <CollectionHighlights stats={stats} profile={{ summary: "Je collectie profiel...", keyHighlights: [] }} />;
+        return <CollectionHighlights stats={stats} profile={{ summary: a.collectionProfile, keyHighlights: [] }} />;
     }
   };
 
   return (
     <div className="mb-12 md:mb-16" id={`chapter-${chapter.id}`}>
-      {/* Chapter Header */}
       <Card 
         variant="dark"
         className={`cursor-pointer transition-all duration-500 transform hover:scale-[1.02] mb-6 md:mb-8 ${
@@ -342,7 +332,7 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
             </div>
             <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
               <Badge className="bg-white/10 text-white border-white/20 text-xs md:text-sm">
-                <span className="hidden sm:inline">Hoofdstuk </span>{chapter.id}
+                <span className="hidden sm:inline">{a.chapter} </span>{chapter.id}
               </Badge>
               {isActive ? (
                 <ChevronDown className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -354,7 +344,6 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
         </CardContent>
       </Card>
 
-      {/* Chapter Content */}
       {isActive && (
         <div className="space-y-6 md:space-y-8 pl-2 md:pl-4 border-l-2 md:border-l-4 border-primary ml-4 md:ml-8">
           {renderChapterContent()}

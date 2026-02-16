@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Send, Loader2, Music2, Sparkles, Heart, BookOpen, Lightbulb } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import echoAvatar from '@/assets/magic-mike-logo.png';
+const echoAvatar = '/magic-mike-logo.png';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface EchoMessage {

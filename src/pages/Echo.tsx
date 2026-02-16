@@ -131,7 +131,7 @@ export default function Echo() {
               <div className="relative">
                 <img 
                   src={echoAvatar}
-                  alt="Echo"
+                   alt="Magic Mike"
                   className="w-32 h-32 rounded-full border-4 border-echo-lavender/50 shadow-2xl animate-echo-pulse"
                 />
                 <div className="absolute inset-0 rounded-full border-2 border-echo-lavender animate-ping"></div>
@@ -211,8 +211,8 @@ export default function Echo() {
                   >
                     {msg.sender_type === 'echo' && (
                       <div className="flex items-center gap-2 mb-2">
-                        <img src={echoAvatar} alt="Echo" className="w-6 h-6 rounded-full border border-echo-lavender/30" />
-                        <span className="text-xs font-semibold text-echo-lavender">Echo</span>
+                        <img src={echoAvatar} alt="Magic Mike" className="w-6 h-6 rounded-full border border-echo-lavender/30" />
+                        <span className="text-xs font-semibold text-echo-lavender">Magic Mike</span>
                       </div>
                     )}
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>

@@ -18,19 +18,19 @@ export function EchoSpotlight() {
               <div className="flex items-center gap-4 flex-shrink-0">
                 <img 
                   src={echoAvatar} 
-                  alt="Echo - Muziekexpert" 
+                  alt="Magic Mike - Muziekdetective" 
                   className="w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-echo-lavender/50 shadow-lg"
                 />
                 <div className="md:hidden">
-                  <h3 className="font-bold text-lg">Echo</h3>
-                  <p className="text-sm text-muted-foreground">Muziekexpert</p>
+                   <h3 className="font-bold text-lg">Magic Mike</h3>
+                   <p className="text-sm text-muted-foreground">Muziekdetective</p>
                 </div>
               </div>
 
               {/* Center: Content */}
               <div className="flex-1 space-y-3">
                 <div className="hidden md:block">
-                  <h3 className="font-bold text-xl mb-1">🎵 Praat met Echo, onze muziekexpert</h3>
+                  <h3 className="font-bold text-xl mb-1">🎩 Praat met Magic Mike, onze muziekdetective</h3>
                   <p className="text-sm text-muted-foreground italic">
                     "Ah — <em>Blue Train</em> van Coltrane. Elke noot hier voelt als een gebed in koper..."
                   </p>
@@ -67,7 +67,7 @@ export function EchoSpotlight() {
                 >
                   <Link to="/echo">
                     <Music2 className="w-4 h-4 mr-2" />
-                    Chat met Echo
+                    Chat met Magic Mike
                   </Link>
                 </Button>
               </div>

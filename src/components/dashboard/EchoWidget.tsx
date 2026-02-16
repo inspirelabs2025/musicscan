@@ -15,12 +15,12 @@ export function EchoWidget() {
           <div className="relative">
             <img 
               src={echoAvatar} 
-              alt="Echo" 
-              className="w-8 h-8 rounded-full border-2 border-echo-turquoise/50 shadow-md"
-            />
-            <div className="absolute inset-0 rounded-full border border-echo-turquoise animate-ping opacity-30"></div>
-          </div>
-          <span>Echo 🎵</span>
+               alt="Magic Mike" 
+               className="w-8 h-8 rounded-full border-2 border-echo-turquoise/50 shadow-md"
+             />
+             <div className="absolute inset-0 rounded-full border border-echo-turquoise animate-ping opacity-30"></div>
+           </div>
+           <span>Magic Mike 🎩</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

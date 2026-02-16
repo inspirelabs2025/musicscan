@@ -106,7 +106,7 @@ export const PUBLIC_ROUTES: RouteInfo[] = [
   { path: '/fanwall', title: 'FanWall', description: 'Fan fotos', category: 'Community' },
   { path: '/forum', title: 'Forum', description: 'Community forum', category: 'Community' },
   { path: '/community', title: 'Community', category: 'Community' },
-  { path: '/echo', title: 'Echo AI', description: 'AI chat assistent', category: 'Features' },
+  { path: '/echo', title: 'Magic Mike', description: 'Muziekdetective chat', category: 'Features' },
   { path: '/sokken', title: 'Sokken Shop', category: 'Shop' },
   { path: '/shirts', title: 'T-Shirts Shop', category: 'Shop' },
   { path: '/posters', title: 'Poster Shop', category: 'Shop' },

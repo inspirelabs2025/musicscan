@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Send, Loader2, Music2, Sparkles, Heart, BookOpen, Lightbulb } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-const echoAvatar = '/magic-mike-logo.png';
+
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface EchoMessage {
@@ -119,26 +119,21 @@ export default function Echo() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-echo-violet via-background to-background">
-      <div className="relative overflow-hidden py-12 px-4">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-echo-lavender to-echo-gold animate-echo-pulse"></div>
-          <div className="absolute bottom-0 right-0 w-full h-32 bg-gradient-to-l from-echo-lavender to-echo-violet animate-echo-pulse delay-1000"></div>
-        </div>
-
+      <div className="relative overflow-hidden py-8 px-4 bg-gradient-to-b from-[hsl(var(--echo-violet))] to-transparent">
         <div className="container mx-auto max-w-5xl relative z-10">
           <div className="text-center space-y-4 animate-fade-in">
-            <div className="flex justify-center mb-6">
-              <img 
-                src={echoAvatar}
-                alt="Magic Mike"
-                className="w-40 h-40 object-contain"
-                onError={(e) => console.error('Logo failed to load:', e)}
-              />
+            <div className="flex justify-center mb-4">
+              <div className="w-28 h-28 rounded-2xl bg-background/80 backdrop-blur-sm shadow-lg flex items-center justify-center p-3">
+                <img 
+                  src="/magic-mike-logo.png"
+                  alt="Magic Mike"
+                  className="w-full h-full object-contain"
+                />
+              </div>
             </div>
 
-            <h1 className="text-5xl font-bold text-white mb-2 font-serif">{e.title}</h1>
-            <p className="text-xl text-echo-lavender mb-2">{e.subtitle}</p>
-            <p className="text-muted-foreground max-w-2xl mx-auto">{e.description}</p>
+            <h1 className="text-4xl font-bold text-foreground mb-2 font-serif">{e.title}</h1>
+            <p className="text-lg text-muted-foreground">{e.subtitle}</p>
           </div>
         </div>
       </div>
@@ -208,7 +203,7 @@ export default function Echo() {
                   >
                     {msg.sender_type === 'echo' && (
                       <div className="flex items-center gap-2 mb-2">
-                        <img src={echoAvatar} alt="Magic Mike" className="w-6 h-6 rounded-full border border-echo-lavender/30" />
+                        <img src="/magic-mike-logo.png" alt="Magic Mike" className="w-6 h-6 rounded-full border border-echo-lavender/30" />
                         <span className="text-xs font-semibold text-echo-lavender">Magic Mike</span>
                       </div>
                     )}

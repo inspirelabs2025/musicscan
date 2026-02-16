@@ -4,12 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useUserCollectionStats } from "@/hooks/useUserCollectionStats";
 import { Brain, Music, Calendar, TrendingUp } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PersonalityInsightsProps {
   userId: string;
 }
 
 export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({ userId }) => {
+  const { tr } = useLanguage();
+  const p = tr.profile;
   const { data: stats, isLoading } = useUserCollectionStats(userId);
 
   if (isLoading) {
@@ -38,19 +41,18 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({ userId
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5" />
-            Muziek DNA
+            {p.musicDNA}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-center py-8">
-            Niet genoeg collectiedata voor inzichten.
+            {p.notEnoughData}
           </p>
         </CardContent>
       </Card>
     );
   }
 
-  // Calculate collection personality
   const getCollectionPersonality = () => {
     const cdPercentage = (stats.totalCDs / stats.totalItems) * 100;
     const vinylPercentage = (stats.totalVinyls / stats.totalItems) * 100;
@@ -62,34 +64,33 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({ userId
     
     if (vinylPercentage > 70) {
       return {
-        type: "Vinyl Purist",
-        description: `Een echte vinylliefhebber met ${Math.round(vinylPercentage)}% vinyl in de collectie.`,
-        mood: "🎵 Analoge Ziel"
+        type: p.vinylPurist,
+        description: p.vinylPuristDesc.replace('{pct}', String(Math.round(vinylPercentage))),
+        mood: p.analogSoul
       };
     } else if (cdPercentage > 70) {
       return {
-        type: "CD Enthusiast",
-        description: `Digital native met ${Math.round(cdPercentage)}% CDs in de collectie.`,
-        mood: "💿 Digitale Pioneer"
+        type: p.cdEnthusiast,
+        description: p.cdEnthusiastDesc.replace('{pct}', String(Math.round(cdPercentage))),
+        mood: p.digitalPioneer
       };
-      } else if (ageSpan > 40) {
-        return {
-          type: "Tijdreiziger",
-          description: `Collecteert muziek van ${stats.oldestYear} tot ${stats.newestYear}.`,
-          mood: "⏰ Cross-Generationeel"
-        };
+    } else if (ageSpan > 40) {
+      return {
+        type: p.timeTraveler,
+        description: p.timeTravelerDesc.replace('{from}', String(stats.oldestYear)).replace('{to}', String(stats.newestYear)),
+        mood: p.crossGenerational
+      };
     } else {
       return {
-        type: `${topGenre} Specialist`,
-        description: `Gespecialiseerd in ${topGenre.toLowerCase()} muziek.`,
-        mood: `🎯 Genre Expert`
+        type: p.specialist.replace('{genre}', topGenre),
+        description: p.specialistDesc.replace('{genre}', topGenre.toLowerCase()),
+        mood: p.genreExpert
       };
     }
   };
 
   const personality = getCollectionPersonality();
 
-  // Calculate decade distribution
   const decadeStats = Object.entries(stats.decadeAnalysis || {})
     .sort(([,a], [,b]) => (b as any).count - (a as any).count)
     .slice(0, 4);
@@ -103,11 +104,10 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({ userId
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Brain className="h-5 w-5" />
-          Muziek DNA & Persoonlijkheid
+          {p.musicDNA}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Personality Type */}
         <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
             <Badge variant="default" className="text-sm">
@@ -120,11 +120,10 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({ userId
           </p>
         </div>
 
-        {/* Format Distribution */}
         <div>
           <h4 className="font-medium mb-3 flex items-center gap-2">
             <Music className="h-4 w-4" />
-            Format Voorkeur
+            {p.formatPreference}
           </h4>
           <div className="space-y-3">
             <div>
@@ -150,12 +149,11 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({ userId
           </div>
         </div>
 
-        {/* Decade Analysis */}
         {decadeStats.length > 0 && (
           <div>
             <h4 className="font-medium mb-3 flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Tijdperk Voorkeur
+              {p.eraPreference}
             </h4>
             <div className="grid grid-cols-2 gap-2">
               {decadeStats.map(([decade, data]) => (
@@ -170,11 +168,10 @@ export const PersonalityInsights: React.FC<PersonalityInsightsProps> = ({ userId
           </div>
         )}
 
-        {/* Expertise Areas */}
         <div>
           <h4 className="font-medium mb-3 flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Expertise Gebieden
+            {p.expertiseAreas}
           </h4>
           <div className="flex flex-wrap gap-2">
             {Object.entries(stats.genreCounts)

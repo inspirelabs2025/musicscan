@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Heart, MessageCircle, Eye } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FanWallProfileGalleryProps {
   userId: string;
@@ -22,6 +23,9 @@ interface Photo {
 }
 
 export const FanWallProfileGallery: React.FC<FanWallProfileGalleryProps> = ({ userId }) => {
+  const { tr } = useLanguage();
+  const p = tr.profile;
+
   const { data: photos, isLoading } = useQuery({
     queryKey: ["fanwall-user-photos", userId],
     queryFn: async () => {
@@ -41,7 +45,7 @@ export const FanWallProfileGallery: React.FC<FanWallProfileGalleryProps> = ({ us
   if (isLoading) {
     return (
       <Card className="p-6">
-        <h3 className="text-xl font-semibold mb-4">FanWall Foto's</h3>
+        <h3 className="text-xl font-semibold mb-4">{p.fanwallPhotos}</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
             <Skeleton key={i} className="aspect-square rounded-lg" />
@@ -54,9 +58,9 @@ export const FanWallProfileGallery: React.FC<FanWallProfileGalleryProps> = ({ us
   if (!photos || photos.length === 0) {
     return (
       <Card className="p-6">
-        <h3 className="text-xl font-semibold mb-4">FanWall Foto's</h3>
+        <h3 className="text-xl font-semibold mb-4">{p.fanwallPhotos}</h3>
         <p className="text-muted-foreground text-center py-8">
-          Nog geen foto's geüpload
+          {p.noPhotosUploaded}
         </p>
       </Card>
     );
@@ -65,9 +69,9 @@ export const FanWallProfileGallery: React.FC<FanWallProfileGalleryProps> = ({ us
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold">FanWall Foto's</h3>
+        <h3 className="text-xl font-semibold">{p.fanwallPhotos}</h3>
         <span className="text-sm text-muted-foreground">
-          {photos.length} foto{photos.length !== 1 ? "'s" : ""}
+          {photos.length} {p.photo}{photos.length !== 1 ? "'s" : ""}
         </span>
       </div>
       
@@ -80,11 +84,10 @@ export const FanWallProfileGallery: React.FC<FanWallProfileGalleryProps> = ({ us
           >
             <img
               src={photo.display_url}
-              alt={photo.title || "FanWall foto"}
+              alt={photo.title || "FanWall"}
               className="h-full w-full object-cover transition-transform group-hover:scale-105"
             />
             
-            {/* Overlay with stats */}
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
               <div className="flex items-center gap-1 text-white">
                 <Heart className="h-4 w-4" />
@@ -109,7 +112,7 @@ export const FanWallProfileGallery: React.FC<FanWallProfileGalleryProps> = ({ us
             to={`/fanwall?user=${userId}`}
             className="text-sm text-primary hover:underline"
           >
-            Bekijk alle foto's →
+            {p.viewAllPhotos}
           </Link>
         </div>
       )}

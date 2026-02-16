@@ -9,12 +9,15 @@ import { useUserQuizResults } from "@/hooks/useUserQuizResults";
 import { Profile } from "@/hooks/useProfile";
 import { Users, FileText, Trophy, Heart, Eye, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SocialStatsProps {
   profile: Profile;
 }
 
 export const SocialStats: React.FC<SocialStatsProps> = ({ profile }) => {
+  const { tr } = useLanguage();
+  const p = tr.profile;
   const { data: followers, isLoading: followersLoading } = useFollowers(profile.user_id);
   const { data: following, isLoading: followingLoading } = useFollowing(profile.user_id);
   const { data: blogPosts, isLoading: blogLoading } = useUserBlogPosts(profile.user_id);
@@ -53,18 +56,17 @@ export const SocialStats: React.FC<SocialStatsProps> = ({ profile }) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5" />
-          Sociale Statistieken
+          {p.socialStats}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Community Stats Grid */}
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center p-3 rounded-lg bg-muted/30">
             <div className="flex items-center justify-center mb-1">
               <FileText className="h-4 w-4 text-primary" />
             </div>
             <div className="font-semibold">{blogPosts?.length || 0}</div>
-            <div className="text-xs text-muted-foreground">Blog Posts</div>
+            <div className="text-xs text-muted-foreground">{p.blogPosts}</div>
           </div>
 
           <div className="text-center p-3 rounded-lg bg-muted/30">
@@ -72,7 +74,7 @@ export const SocialStats: React.FC<SocialStatsProps> = ({ profile }) => {
               <Eye className="h-4 w-4 text-primary" />
             </div>
             <div className="font-semibold">{totalBlogViews}</div>
-            <div className="text-xs text-muted-foreground">Blog Views</div>
+            <div className="text-xs text-muted-foreground">{p.blogViews}</div>
           </div>
 
           <div className="text-center p-3 rounded-lg bg-muted/30">
@@ -80,7 +82,7 @@ export const SocialStats: React.FC<SocialStatsProps> = ({ profile }) => {
               <Trophy className="h-4 w-4 text-primary" />
             </div>
             <div className="font-semibold">{quizResults?.length || 0}</div>
-            <div className="text-xs text-muted-foreground">Quiz Results</div>
+            <div className="text-xs text-muted-foreground">{p.quizResults}</div>
           </div>
 
           <div className="text-center p-3 rounded-lg bg-muted/30">
@@ -88,16 +90,15 @@ export const SocialStats: React.FC<SocialStatsProps> = ({ profile }) => {
               <Heart className="h-4 w-4 text-primary" />
             </div>
             <div className="font-semibold">{averageQuizScore}%</div>
-            <div className="text-xs text-muted-foreground">Avg Quiz Score</div>
+            <div className="text-xs text-muted-foreground">{p.avgQuizScore}</div>
           </div>
         </div>
 
-        {/* Recent Blog Posts */}
         {blogPosts && blogPosts.length > 0 && (
           <div>
             <h4 className="font-medium mb-3 flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Recente Blog Posts
+              {p.recentBlogPosts}
             </h4>
             <div className="space-y-2">
               {blogPosts.slice(0, 3).map((post) => (
@@ -110,7 +111,7 @@ export const SocialStats: React.FC<SocialStatsProps> = ({ profile }) => {
                       {(post.yaml_frontmatter as any)?.title || "Untitled"}
                     </Link>
                     <div className="text-xs text-muted-foreground">
-                      {post.views_count || 0} views
+                      {post.views_count || 0} {p.views.toLowerCase()}
                     </div>
                   </div>
                   <Badge variant="outline" className="text-xs ml-2">
@@ -122,12 +123,11 @@ export const SocialStats: React.FC<SocialStatsProps> = ({ profile }) => {
           </div>
         )}
 
-        {/* Recent Followers */}
         {recentFollowers.length > 0 && (
           <div>
             <h4 className="font-medium mb-3 flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Recente Volgers
+              {p.recentFollowers}
             </h4>
             <div className="flex gap-2">
               {recentFollowers.map((follower) => (
@@ -142,7 +142,7 @@ export const SocialStats: React.FC<SocialStatsProps> = ({ profile }) => {
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-xs text-muted-foreground truncate max-w-16">
-                    Gebruiker
+                    {p.user}
                   </span>
                 </Link>
               ))}
@@ -150,18 +150,17 @@ export const SocialStats: React.FC<SocialStatsProps> = ({ profile }) => {
           </div>
         )}
 
-        {/* Engagement Summary */}
         <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4">
-          <h4 className="font-medium mb-2">Community Engagement</h4>
+          <h4 className="font-medium mb-2">{p.communityEngagement}</h4>
           <div className="text-sm text-muted-foreground">
             {profile.total_followers > 0 && profile.total_following > 0 ? (
               <>
-                Actief in de community met {profile.total_followers} volgers en {profile.total_following} connecties.
-                {blogPosts && blogPosts.length > 0 && ` Heeft ${blogPosts.length} blog posts geschreven.`}
-                {quizResults && quizResults.length > 0 && ` Gemiddelde quiz score: ${averageQuizScore}%.`}
+                {p.activeInCommunity.replace('{followers}', String(profile.total_followers)).replace('{following}', String(profile.total_following))}
+                {blogPosts && blogPosts.length > 0 && p.hasBlogPosts.replace('{count}', String(blogPosts.length))}
+                {quizResults && quizResults.length > 0 && p.avgQuizScoreText.replace('{score}', String(averageQuizScore))}
               </>
             ) : (
-              "Nieuwe gebruiker in de community."
+              p.newUser
             )}
           </div>
         </div>

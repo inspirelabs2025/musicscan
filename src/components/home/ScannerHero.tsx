@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export const ScannerHero = () => {
-  const { t } = useLanguage();
+  const { t, tr } = useLanguage();
+  const h = tr.homeUI;
 
   const navButtons = [
     { icon: Newspaper, label: t('quickLinks.albums'), href: '/nieuws' },
@@ -68,7 +69,7 @@ export const ScannerHero = () => {
           {/* Secondary subtitle */}
           <p className="mt-4 text-white/50 text-sm flex items-center justify-center gap-1.5">
             <Disc3 className="w-3.5 h-3.5" />
-            Voeg toe aan Collectie & Discogs
+            {h.addToCollection}
           </p>
 
           <p className="text-vinyl-gold/80 text-sm md:text-base font-semibold mt-4 animate-pulse">

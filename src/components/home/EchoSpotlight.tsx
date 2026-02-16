@@ -4,9 +4,12 @@ import { Music2, Sparkles, BookOpen, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import echoAvatar from '@/assets/echo-avatar.png';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function EchoSpotlight() {
   const isMobile = useIsMobile();
+  const { tr } = useLanguage();
+  const h = tr.homeUI;
   
   return (
     <section className="py-6 md:py-8 bg-gradient-to-br from-background via-green-50/30 to-red-50/20 dark:via-green-950/10 dark:to-red-950/10">
@@ -18,21 +21,21 @@ export function EchoSpotlight() {
               <div className="flex items-center gap-4 flex-shrink-0">
                 <img 
                   src={echoAvatar} 
-                  alt="Magic Mike - Muziekdetective" 
+                  alt={h.echoAlt} 
                   className="w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-echo-lavender/50 shadow-lg"
                 />
                 <div className="md:hidden">
                    <h3 className="font-bold text-lg">Magic Mike</h3>
-                   <p className="text-sm text-muted-foreground">Muziekdetective</p>
+                   <p className="text-sm text-muted-foreground">{h.echoRole}</p>
                 </div>
               </div>
 
               {/* Center: Content */}
               <div className="flex-1 space-y-3">
                 <div className="hidden md:block">
-                  <h3 className="font-bold text-xl mb-1">🎩 Praat met Magic Mike, onze muziekdetective</h3>
+                  <h3 className="font-bold text-xl mb-1">{h.echoTitle}</h3>
                   <p className="text-sm text-muted-foreground italic">
-                    "Ah — <em>Blue Train</em> van Coltrane. Elke noot hier voelt als een gebed in koper..."
+                    {h.echoQuoteDesktop}
                   </p>
                 </div>
 
@@ -40,21 +43,21 @@ export function EchoSpotlight() {
                 <div className="flex flex-wrap gap-2">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-echo-lavender/10 text-xs font-medium">
                     <Sparkles className="w-3 h-3 text-echo-lavender" />
-                    Muziekgeschiedenis
+                    {h.echoMusicHistory}
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-echo-gold/10 text-xs font-medium">
                     <BookOpen className="w-3 h-3 text-echo-gold" />
-                    Album Verhalen
+                    {h.echoAlbumStories}
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600/10 text-xs font-medium">
                     <Heart className="w-3 h-3 text-red-600" />
-                    Herinneringen
+                    {h.echoMemories}
                   </span>
                 </div>
 
                 {/* Mobile quote */}
                 <p className="md:hidden text-sm text-muted-foreground italic">
-                  "Elke plaat heeft een verhaal te vertellen..."
+                  {h.echoQuoteMobile}
                 </p>
               </div>
 
@@ -67,7 +70,7 @@ export function EchoSpotlight() {
                 >
                   <Link to="/echo">
                     <Music2 className="w-4 h-4 mr-2" />
-                    Chat met Magic Mike
+                    {h.echoCTA}
                   </Link>
                 </Button>
               </div>

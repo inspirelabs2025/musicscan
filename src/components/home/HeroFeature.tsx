@@ -1,13 +1,17 @@
 import { Link } from 'react-router-dom';
 import { NewsItem } from '@/hooks/useUnifiedNewsFeed';
 import { formatDistanceToNow } from 'date-fns';
-import { nl } from 'date-fns/locale';
+import { nl, enUS } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HeroFeatureProps {
   item: NewsItem;
 }
 
 export const HeroFeature = ({ item }: HeroFeatureProps) => {
+  const { language } = useLanguage();
+  const dateLocale = language === 'nl' ? nl : enUS;
+
   return (
     <Link 
       to={item.link} 
@@ -19,10 +23,8 @@ export const HeroFeature = ({ item }: HeroFeatureProps) => {
         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
       />
       
-      {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
       
-      {/* Content */}
       <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
         <span className="inline-block px-3 py-1.5 mb-4 text-xs font-bold uppercase tracking-widest bg-primary text-primary-foreground">
           {item.category_label}
@@ -37,7 +39,7 @@ export const HeroFeature = ({ item }: HeroFeatureProps) => {
         )}
         
         <p className="text-sm text-white/50 mt-4">
-          {formatDistanceToNow(new Date(item.date), { addSuffix: true, locale: nl })}
+          {formatDistanceToNow(new Date(item.date), { addSuffix: true, locale: dateLocale })}
         </p>
       </div>
     </Link>

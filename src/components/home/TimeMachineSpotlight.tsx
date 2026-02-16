@@ -6,90 +6,42 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTimeMachineEvents } from '@/hooks/useTimeMachineEvents';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function TimeMachineSpotlight() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { data: events } = useTimeMachineEvents({ published: true, featured: true, limit: 3 });
+  const { tr } = useLanguage();
+  const h = tr.homeUI;
 
   if (!events || events.length === 0) return null;
 
   return (
     <section className={isMobile ? "py-8 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5" : "py-16 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5"}>
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className={isMobile ? "text-center mb-6" : "text-center mb-12"}
-        >
-          {!isMobile && (
-            <Badge variant="secondary" className="mb-4">
-              <Sparkles className="w-3 h-3 mr-1" />
-              Nieuw: Time Machine
-            </Badge>
-          )}
-          <h2 className={isMobile ? "text-2xl font-bold mb-2" : "text-4xl font-bold mb-4"}>
-            🕰️ Herleef Legendarische Concerten
-          </h2>
-          {!isMobile && (
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Ontdek iconische momenten uit de muziekgeschiedenis. Elk event komt tot leven 
-              met verhalen, setlists, archiefmateriaal en exclusieve limited edition posters.
-            </p>
-          )}
+        <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className={isMobile ? "text-center mb-6" : "text-center mb-12"}>
+          {!isMobile && <Badge variant="secondary" className="mb-4"><Sparkles className="w-3 h-3 mr-1" />{h.newTimeMachine}</Badge>}
+          <h2 className={isMobile ? "text-2xl font-bold mb-2" : "text-4xl font-bold mb-4"}>{h.reliveTitle}</h2>
+          {!isMobile && <p className="text-xl text-muted-foreground max-w-2xl mx-auto">{h.reliveDesc}</p>}
         </motion.div>
 
         {isMobile ? (
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            className="w-full mb-6"
-          >
+          <Carousel opts={{ align: "start", loop: true }} className="w-full mb-6">
             <CarouselContent className="-ml-2">
-              {events.map((event, index) => {
-                const displayPosterUrl = event.poster_source === 'original'
-                  ? (event.original_poster_url || event.poster_image_url)
-                  : event.poster_image_url;
-                
+              {events.map((event) => {
+                const displayPosterUrl = event.poster_source === 'original' ? (event.original_poster_url || event.poster_image_url) : event.poster_image_url;
                 return (
                   <CarouselItem key={event.id} className="pl-2 basis-[70%]">
-                    <Card
-                      className="overflow-hidden cursor-pointer hover:border-primary transition-all hover:shadow-lg group"
-                      onClick={() => navigate(`/time-machine/${event.slug}`)}
-                    >
+                    <Card className="overflow-hidden cursor-pointer hover:border-primary transition-all hover:shadow-lg group" onClick={() => navigate(`/time-machine/${event.slug}`)}>
                       <div className="aspect-[3/4] relative overflow-hidden bg-muted">
-                        {displayPosterUrl ? (
-                          <img
-                            src={displayPosterUrl}
-                            alt={event.event_title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Music2 className="w-16 h-16 text-muted-foreground" />
-                          </div>
-                        )}
-                        <div className="absolute top-2 right-2">
-                          <Badge className="bg-primary text-xs">Featured</Badge>
-                        </div>
+                        {displayPosterUrl ? <img src={displayPosterUrl} alt={event.event_title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center"><Music2 className="w-16 h-16 text-muted-foreground" /></div>}
+                        <div className="absolute top-2 right-2"><Badge className="bg-primary text-xs">Featured</Badge></div>
                       </div>
                       <div className="p-3">
-                        <h3 className="font-bold text-base mb-1 line-clamp-1 group-hover:text-primary transition-colors">
-                          {event.event_title}
-                        </h3>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Clock className="w-3 h-3" />
-                          <span>{new Date(event.concert_date).getFullYear()}</span>
-                        </div>
+                        <h3 className="font-bold text-base mb-1 line-clamp-1 group-hover:text-primary transition-colors">{event.event_title}</h3>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground"><Clock className="w-3 h-3" /><span>{new Date(event.concert_date).getFullYear()}</span></div>
                       </div>
                     </Card>
                   </CarouselItem>
@@ -100,47 +52,18 @@ export function TimeMachineSpotlight() {
         ) : (
           <div className="grid gap-6 md:grid-cols-3 mb-8">
             {events.map((event, index) => {
-              const displayPosterUrl = event.poster_source === 'original'
-                ? (event.original_poster_url || event.poster_image_url)
-                : event.poster_image_url;
-              
+              const displayPosterUrl = event.poster_source === 'original' ? (event.original_poster_url || event.poster_image_url) : event.poster_image_url;
               return (
-                <motion.div
-                  key={event.id}
-                  initial={{ y: 20, opacity: 0 }}
-                  whileInView={{ y: 0, opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                >
-                  <Card
-                    className="overflow-hidden cursor-pointer hover:border-primary transition-all hover:shadow-lg group"
-                    onClick={() => navigate(`/time-machine/${event.slug}`)}
-                  >
+                <motion.div key={event.id} initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: index * 0.1 }}>
+                  <Card className="overflow-hidden cursor-pointer hover:border-primary transition-all hover:shadow-lg group" onClick={() => navigate(`/time-machine/${event.slug}`)}>
                     <div className="aspect-[3/4] relative overflow-hidden bg-muted">
-                      {displayPosterUrl ? (
-                        <img
-                          src={displayPosterUrl}
-                          alt={event.event_title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Music2 className="w-16 h-16 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="absolute top-3 right-3">
-                        <Badge className="bg-primary">Featured</Badge>
-                      </div>
+                      {displayPosterUrl ? <img src={displayPosterUrl} alt={event.event_title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center"><Music2 className="w-16 h-16 text-muted-foreground" /></div>}
+                      <div className="absolute top-3 right-3"><Badge className="bg-primary">Featured</Badge></div>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                     <div className="p-4">
-                      <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                        {event.event_title}
-                      </h3>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="w-4 h-4" />
-                        <span>{new Date(event.concert_date).getFullYear()}</span>
-                      </div>
+                      <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">{event.event_title}</h3>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground"><Clock className="w-4 h-4" /><span>{new Date(event.concert_date).getFullYear()}</span></div>
                     </div>
                   </Card>
                 </motion.div>
@@ -149,20 +72,9 @@ export function TimeMachineSpotlight() {
           </div>
         )}
 
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center"
-        >
-          <Button
-            size="lg"
-            onClick={() => navigate('/time-machine')}
-            className="bg-primary hover:bg-primary/90"
-          >
-            <Music2 className="w-4 h-4 mr-2" />
-            Ontdek Alle Time Machine Events
+        <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.4 }} className="text-center">
+          <Button size="lg" onClick={() => navigate('/time-machine')} className="bg-primary hover:bg-primary/90">
+            <Music2 className="w-4 h-4 mr-2" />{h.discoverAllEvents}
           </Button>
         </motion.div>
       </div>

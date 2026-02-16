@@ -15,7 +15,8 @@ export function AIAnalysisTab() {
       <TabsList className="grid w-full grid-cols-2 bg-muted border border-border">
         <TabsTrigger 
           value="dna" 
-          className="flex items-center gap-2 !bg-vinyl-purple !text-primary-foreground hover:!bg-vinyl-purple hover:!text-primary-foreground data-[state=active]:!bg-vinyl-purple data-[state=active]:!text-primary-foreground"
+          className="flex items-center gap-2"
+          style={{ backgroundColor: 'hsl(271 81% 56%)', color: 'white' }}
         >
           <Brain className="h-4 w-4" />
           🧠 Muziek DNA

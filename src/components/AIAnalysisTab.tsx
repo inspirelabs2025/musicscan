@@ -12,10 +12,10 @@ export function AIAnalysisTab() {
   
   return (
     <Tabs value={activeSubtab} className="w-full">
-      <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-md border border-white/20">
+      <TabsList className="grid w-full grid-cols-2 bg-muted border border-border">
         <TabsTrigger 
           value="dna" 
-          className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white"
+          className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-primary-foreground"
         >
           <Brain className="h-4 w-4" />
           🧠 Muziek DNA

@@ -18,10 +18,13 @@ import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
 import { PosterStyleSelector } from "@/components/timemachine/PosterStyleSelector";
 import { ShareButtons } from "@/components/ShareButtons";
 import { trackProductView, trackAddToCart } from "@/utils/googleAnalytics";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PlatformProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { data: product, isLoading } = usePlatformProductDetail(slug!);
+  const { tr } = useLanguage();
+  const dp = tr.detailPageUI;
   const { data: similarProducts = [] } = useSimilarProducts(
     product?.id || "",
     product?.categories?.[0],
@@ -131,13 +134,13 @@ export default function PlatformProductDetail() {
     return (
       <>
         <Helmet>
-          <title>Product niet gevonden | MusicScan Shop</title>
+          <title>{dp.productNotFound} | MusicScan Shop</title>
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>
         <div className="container mx-auto px-4 py-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Product niet gevonden</h1>
+          <h1 className="text-2xl font-bold mb-4">{dp.productNotFound}</h1>
           <Link to="/">
-            <Button>Terug naar home</Button>
+            <Button>{dp.backToHome}</Button>
           </Link>
         </div>
       </>
@@ -347,7 +350,7 @@ export default function PlatformProductDetail() {
       {/* Back button */}
       <Link to={isPoster ? "/posters" : "/art-shop"} className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6">
         <ArrowLeft className="h-4 w-4" />
-        Terug naar {isPoster ? "Posters" : "Art Shop"}
+        {isPoster ? dp.backToPosters : dp.backToArtShop}
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8 mb-12">
@@ -369,7 +372,7 @@ export default function PlatformProductDetail() {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                Geen afbeelding
+                {dp.noImage}
               </div>
             )}
           </div>
@@ -445,13 +448,13 @@ export default function PlatformProductDetail() {
                 <>
                   <Package className="h-4 w-4 text-green-600" />
                   <span className="text-green-600">
-                    {product.stock_quantity} op voorraad
+                    {product.stock_quantity} {dp.inStock}
                   </span>
                 </>
               ) : (
                 <>
                   <Clock className="h-4 w-4 text-orange-600" />
-                  <span className="text-orange-600">Uitverkocht</span>
+                  <span className="text-orange-600">{dp.outOfStock}</span>
                 </>
               )}
             </div>
@@ -467,12 +470,12 @@ export default function PlatformProductDetail() {
                   {inCart ? (
                     <>
                       <Check className="h-5 w-5 mr-2" />
-                      In winkelwagen
+                      {dp.inCart}
                     </>
                   ) : (
                     <>
                       <ShoppingCart className="h-5 w-5 mr-2" />
-                      Toevoegen aan winkelwagen
+                      {dp.addToCart}
                     </>
                   )}
                 </Button>
@@ -646,7 +649,7 @@ export default function PlatformProductDetail() {
               <div className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5 text-primary" />
                 <span className="text-sm font-semibold uppercase tracking-wide text-primary">
-                  Verhaal over dit album
+                  {dp.albumStoryLabel}
                 </span>
               </div>
               
@@ -677,7 +680,7 @@ export default function PlatformProductDetail() {
                 className="w-full bg-gradient-to-r from-vinyl-purple to-accent hover:from-vinyl-purple/90 hover:to-accent/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
               >
                 <BookOpen className="h-5 w-5 mr-2" />
-                Lees verhaal
+                {dp.readStory}
               </Button>
             </Link>
           </div>
@@ -687,7 +690,7 @@ export default function PlatformProductDetail() {
       {/* Similar Products */}
       {similarProducts.length > 0 && (
         <div>
-          <h2 className="text-2xl font-bold mb-6">Vergelijkbare producten</h2>
+          <h2 className="text-2xl font-bold mb-6">{dp.similarProducts}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {similarProducts.map((similar) => (
               <Link key={similar.id} to={`/product/${similar.slug}`}>
@@ -701,7 +704,7 @@ export default function PlatformProductDetail() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        Geen afbeelding
+                        {dp.noImage}
                       </div>
                     )}
                   </div>

@@ -7,6 +7,7 @@ import { usePublicCollection } from "@/hooks/usePublicCollection";
 import { useUserCollectionStats } from "@/hooks/useUserCollectionStats";
 import { Disc3, Music2, Euro, TrendingUp, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CollectionSummaryWidgetProps {
   userId: string;
@@ -15,6 +16,8 @@ interface CollectionSummaryWidgetProps {
 export const CollectionSummaryWidget: React.FC<CollectionSummaryWidgetProps> = ({ userId }) => {
   const { items, isLoading } = usePublicCollection(userId);
   const { data: stats, isLoading: statsLoading } = useUserCollectionStats(userId);
+  const { tr } = useLanguage();
+  const m = tr.miscUI;
 
   if (isLoading || statsLoading) {
     return (
@@ -38,12 +41,12 @@ export const CollectionSummaryWidget: React.FC<CollectionSummaryWidgetProps> = (
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Music2 className="h-5 w-5" />
-            Collectie Overzicht
+            {m.collectionOverview}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-center py-8">
-            Geen openbare collectie-items gevonden.
+            {m.noPublicItems}
           </p>
         </CardContent>
       </Card>
@@ -67,12 +70,12 @@ export const CollectionSummaryWidget: React.FC<CollectionSummaryWidgetProps> = (
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Music2 className="h-5 w-5" />
-            Collectie Overzicht
+            {m.collectionOverview}
           </CardTitle>
           <Link to={`/collection/${userId}`}>
             <Button variant="outline" size="sm">
               <Eye className="h-4 w-4 mr-2" />
-              Bekijk Volledig
+              {m.viewFull}
             </Button>
           </Link>
         </div>
@@ -81,14 +84,14 @@ export const CollectionSummaryWidget: React.FC<CollectionSummaryWidgetProps> = (
         {/* Key Stats */}
         <div className="grid grid-cols-2 gap-4">
           <StatCard
-            title="Totaal Items"
+            title={m.totalItems}
             value={stats.totalItems}
             icon={Disc3}
             subtitle={`${stats.totalCDs} CDs • ${stats.totalVinyls} Vinyl`}
           />
           {stats.totalValue > 0 && (
             <StatCard
-              title="Geschatte Waarde"
+              title={m.estimatedValue}
               value={formatCurrency(stats.totalValue)}
               icon={Euro}
               subtitle={`Ø ${formatCurrency(stats.averageValue)}`}
@@ -101,7 +104,7 @@ export const CollectionSummaryWidget: React.FC<CollectionSummaryWidgetProps> = (
           <div>
             <h4 className="font-medium mb-3 flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              Favoriete Genres
+              {m.favoriteGenres}
             </h4>
             <div className="flex flex-wrap gap-2">
               {topGenres.map(([genre, count]) => (
@@ -115,12 +118,12 @@ export const CollectionSummaryWidget: React.FC<CollectionSummaryWidgetProps> = (
 
         {/* Collection Highlights */}
         <div className="bg-muted/30 rounded-lg p-4">
-          <h4 className="font-medium mb-2">Collectie Highlights</h4>
+          <h4 className="font-medium mb-2">{m.collectionHighlights}</h4>
           <div className="text-sm text-muted-foreground space-y-1">
-            <div>📅 Oudste item: {stats.oldestYear || "Onbekend"}</div>
-            <div>🆕 Nieuwste item: {stats.newestYear || "Onbekend"}</div>
+            <div>📅 {m.oldestItem}: {stats.oldestYear || m.unknown}</div>
+            <div>🆕 {m.newestItem}: {stats.newestYear || m.unknown}</div>
             {stats.mostValuableItem && (
-              <div>💎 Waardevolste: {stats.mostValuableItem.artist} - {stats.mostValuableItem.title}</div>
+              <div>💎 {m.mostValuable}: {stats.mostValuableItem.artist} - {stats.mostValuableItem.title}</div>
             )}
           </div>
         </div>

@@ -7,6 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import type { ScanResult, ScanStatus } from '@/hooks/useUnifiedScan';
 import { EnhancedScanPreview } from './EnhancedScanPreview';
 import { UserConfirmationFeedback } from './UserConfirmationFeedback';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ConfidenceInfo {
   artist?: number;
@@ -22,7 +23,6 @@ interface ExtendedScanResult extends ScanResult {
     artist?: string;
     title?: string;
   };
-  // Enhanced scan data
   enhanced_image?: string;
   original_image?: string;
   processing_stats?: {
@@ -39,6 +39,8 @@ interface ScannerResultCardProps {
 }
 
 const ConfidenceIndicator = ({ confidence, ocrNotes }: { confidence?: ConfidenceInfo; ocrNotes?: string }) => {
+  const { tr } = useLanguage();
+  const m = tr.miscUI;
   if (!confidence) return null;
   
   const overall = confidence.overall ?? 0.5;
@@ -52,12 +54,11 @@ const ConfidenceIndicator = ({ confidence, ocrNotes }: { confidence?: Confidence
       <div className="flex items-center gap-2">
         <AlertTriangle className="h-5 w-5 flex-shrink-0" />
         <span className="font-medium">
-          ⚠️ Let op: Smart herkenning onzeker
+          ⚠️ {m.smartRecognitionUncertain}
         </span>
       </div>
       <p className="text-xs opacity-80">
-        De automatische herkenning kon dit album niet met zekerheid identificeren. 
-        Controleer of de artiest en titel kloppen voordat je opslaat.
+        {m.recognitionUncertainDesc}
       </p>
       {ocrNotes && (
         <p className="text-xs italic opacity-70 border-t border-orange-500/20 pt-2 mt-1">
@@ -70,6 +71,8 @@ const ConfidenceIndicator = ({ confidence, ocrNotes }: { confidence?: Confidence
 
 export const ScannerResultCard = React.memo(({ result, status, scanId }: ScannerResultCardProps) => {
   const [showEnhanced, setShowEnhanced] = useState(false);
+  const { tr } = useLanguage();
+  const m = tr.miscUI;
   const isLoading = status === 'analyzing' || status === 'searching';
   const extendedResult = result as ExtendedScanResult | null;
 
@@ -91,7 +94,7 @@ export const ScannerResultCard = React.memo(({ result, status, scanId }: Scanner
             </div>
           </div>
           <p className="text-sm text-muted-foreground mt-4 text-center">
-            {status === 'analyzing' ? '🔍 Album wordt geanalyseerd...' : '📀 Zoeken in Discogs...'}
+            {status === 'analyzing' ? `🔍 ${m.analyzing}` : `📀 ${m.searchingDiscogs}`}
           </p>
         </CardContent>
       </Card>
@@ -100,13 +103,12 @@ export const ScannerResultCard = React.memo(({ result, status, scanId }: Scanner
 
   if (!result) return null;
 
-  // Prepare confirmation fields from uncertain data
   const confirmationFields = [];
   if (extendedResult?.confidence) {
     if (extendedResult.confidence.artist && extendedResult.confidence.artist < 0.85 && result.artist) {
       confirmationFields.push({
         field: 'artist',
-        label: 'Artiest',
+        label: m.artistLabel,
         value: result.artist,
         confidence: extendedResult.confidence.artist,
         alternatives: extendedResult.raw_spelling?.artist ? [extendedResult.raw_spelling.artist] : undefined
@@ -115,7 +117,7 @@ export const ScannerResultCard = React.memo(({ result, status, scanId }: Scanner
     if (extendedResult.confidence.title && extendedResult.confidence.title < 0.85 && result.title) {
       confirmationFields.push({
         field: 'title',
-        label: 'Titel',
+        label: m.titleLabel,
         value: result.title,
         confidence: extendedResult.confidence.title,
         alternatives: extendedResult.raw_spelling?.title ? [extendedResult.raw_spelling.title] : undefined
@@ -133,9 +135,7 @@ export const ScannerResultCard = React.memo(({ result, status, scanId }: Scanner
           ocrNotes={extendedResult?.ocr_notes}
         />
 
-        {/* Main result content */}
         <div className="flex gap-4">
-          {/* Cover image */}
           <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 bg-muted rounded-lg overflow-hidden">
             {result.cover_image ? (
               <img
@@ -150,18 +150,16 @@ export const ScannerResultCard = React.memo(({ result, status, scanId }: Scanner
             )}
           </div>
 
-          {/* Album info */}
           <div className="flex-1 min-w-0 space-y-2">
             <div>
               <h3 className="font-semibold text-lg leading-tight truncate">
-                {result.title || 'Onbekend album'}
+                {result.title || m.unknownAlbum}
               </h3>
               <p className="text-muted-foreground truncate">
-                {result.artist || 'Onbekende artiest'}
+                {result.artist || m.unknownArtist}
               </p>
             </div>
 
-            {/* Badges */}
             <div className="flex flex-wrap gap-1.5">
               {result.year && (
                 <Badge variant="outline" className="text-xs">
@@ -189,7 +187,6 @@ export const ScannerResultCard = React.memo(({ result, status, scanId }: Scanner
               )}
             </div>
 
-            {/* Label & catalog */}
             {(result.label || result.catalog_number) && (
               <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <Tag className="h-3 w-3" />
@@ -197,7 +194,6 @@ export const ScannerResultCard = React.memo(({ result, status, scanId }: Scanner
               </p>
             )}
 
-            {/* Discogs link */}
             {(result.discogs_url || result.discogs_id) && (
               <Button
                 variant="link"
@@ -211,14 +207,13 @@ export const ScannerResultCard = React.memo(({ result, status, scanId }: Scanner
                   rel="noopener noreferrer"
                 >
                   <ExternalLink className="h-3 w-3 mr-1" />
-                  Bekijk op Discogs
+                  {m.viewOnDiscogs}
                 </a>
               </Button>
             )}
           </div>
         </div>
 
-        {/* User confirmation for uncertain fields */}
         {confirmationFields.length > 0 && (
           <UserConfirmationFeedback
             scanId={scanId}
@@ -226,12 +221,11 @@ export const ScannerResultCard = React.memo(({ result, status, scanId }: Scanner
           />
         )}
 
-        {/* Enhanced scan preview (collapsible) */}
         {hasEnhancedData && (
           <Collapsible open={showEnhanced} onOpenChange={setShowEnhanced}>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="sm" className="w-full justify-between text-xs text-muted-foreground">
-                <span>🔬 Bekijk smart verbetering</span>
+                <span>🔬 {m.viewEnhancement}</span>
                 {showEnhanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
             </CollapsibleTrigger>

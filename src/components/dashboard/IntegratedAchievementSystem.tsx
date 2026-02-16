@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Trophy, Star, Zap, Crown, Target, Music, Disc, Camera, MessageSquare, ChevronRight, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Achievement {
   id: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descKey: string;
   icon: React.ElementType;
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
   condition: (stats: any) => boolean;
@@ -35,92 +36,24 @@ export const IntegratedAchievementSystem = ({
   const [newlyUnlocked, setNewlyUnlocked] = useState<string[]>([]);
   const previousUnlockedRef = useRef<string[]>(unlockedAchievements);
   const lastNotificationRef = useRef<number>(0);
-  const NOTIFICATION_COOLDOWN = 5000; // 5 seconds
+  const NOTIFICATION_COOLDOWN = 5000;
+  const { tr } = useLanguage();
+  const m = tr.miscUI;
 
   const achievements: Achievement[] = [
-    {
-      id: 'first_album',
-      title: 'Eerste Album',
-      description: 'Je eerste album toegevoegd aan de collectie',
-      icon: Music,
-      rarity: 'common',
-      condition: (stats) => (stats?.totalItems || 0) >= 1,
-      points: 10,
-      progressCondition: (stats) => ({ current: stats?.totalItems || 0, target: 1 })
-    },
-    {
-      id: 'collector_novice',
-      title: 'Verzamelaar Novice',
-      description: '10 albums in je collectie',
-      icon: Disc,
-      rarity: 'common',
-      condition: (stats) => (stats?.totalItems || 0) >= 10,
-      points: 25,
-      progressCondition: (stats) => ({ current: stats?.totalItems || 0, target: 10 })
-    },
-    {
-      id: 'collector_enthusiast',
-      title: 'Muziek Enthousiasteling',
-      description: '50 albums verzameld',
-      icon: Star,
-      rarity: 'rare',
-      condition: (stats) => (stats?.totalItems || 0) >= 50,
-      points: 100,
-      progressCondition: (stats) => ({ current: stats?.totalItems || 0, target: 50 })
-    },
-    {
-      id: 'collector_expert',
-      title: 'Collectie Expert',
-      description: '100 albums in je bezit',
-      icon: Trophy,
-      rarity: 'epic',
-      condition: (stats) => (stats?.totalItems || 0) >= 100,
-      points: 250,
-      progressCondition: (stats) => ({ current: stats?.totalItems || 0, target: 100 })
-    },
-    {
-      id: 'collector_master',
-      title: 'Verzamel Meester',
-      description: '500 albums verzameld',
-      icon: Crown,
-      rarity: 'legendary',
-      condition: (stats) => (stats?.totalItems || 0) >= 500,
-      points: 1000,
-      progressCondition: (stats) => ({ current: stats?.totalItems || 0, target: 500 })
-    },
-    {
-      id: 'scanner_streak',
-      title: 'Scan Specialist',
-      description: '20 succesvolle scans',
-      icon: Camera,
-      rarity: 'rare',
-      condition: (stats) => (stats?.totalScans || 0) >= 20,
-      points: 75,
-      progressCondition: (stats) => ({ current: stats?.totalScans || 0, target: 20 })
-    },
-    {
-      id: 'valuable_collection',
-      title: 'Waardevolle Collectie',
-      description: 'Collectie ter waarde van €1000+',
-      icon: Target,
-      rarity: 'epic',
-      condition: (stats) => (stats?.totalValue || 0) >= 1000,
-      points: 300,
-      progressCondition: (stats) => ({ current: stats?.totalValue || 0, target: 1000 })
-    },
-    {
-      id: 'scanner_pro',
-      title: 'Scan Professional',
-      description: '95%+ success rate behalen',
-      icon: Zap,
-      rarity: 'epic',
-      condition: (stats) => (stats?.successRate || 0) >= 95,
-      points: 200,
-      progressCondition: (stats) => ({ current: stats?.successRate || 0, target: 95 })
-    }
+    { id: 'first_album', titleKey: 'achFirstAlbum', descKey: 'achFirstAlbumDesc', icon: Music, rarity: 'common', condition: (stats) => (stats?.totalItems || 0) >= 1, points: 10, progressCondition: (stats) => ({ current: stats?.totalItems || 0, target: 1 }) },
+    { id: 'collector_novice', titleKey: 'achNovice', descKey: 'achNoviceDesc', icon: Disc, rarity: 'common', condition: (stats) => (stats?.totalItems || 0) >= 10, points: 25, progressCondition: (stats) => ({ current: stats?.totalItems || 0, target: 10 }) },
+    { id: 'collector_enthusiast', titleKey: 'achEnthusiast', descKey: 'achEnthusiastDesc', icon: Star, rarity: 'rare', condition: (stats) => (stats?.totalItems || 0) >= 50, points: 100, progressCondition: (stats) => ({ current: stats?.totalItems || 0, target: 50 }) },
+    { id: 'collector_expert', titleKey: 'achExpert', descKey: 'achExpertDesc', icon: Trophy, rarity: 'epic', condition: (stats) => (stats?.totalItems || 0) >= 100, points: 250, progressCondition: (stats) => ({ current: stats?.totalItems || 0, target: 100 }) },
+    { id: 'collector_master', titleKey: 'achMaster', descKey: 'achMasterDesc', icon: Crown, rarity: 'legendary', condition: (stats) => (stats?.totalItems || 0) >= 500, points: 1000, progressCondition: (stats) => ({ current: stats?.totalItems || 0, target: 500 }) },
+    { id: 'scanner_streak', titleKey: 'achScanner', descKey: 'achScannerDesc', icon: Camera, rarity: 'rare', condition: (stats) => (stats?.totalScans || 0) >= 20, points: 75, progressCondition: (stats) => ({ current: stats?.totalScans || 0, target: 20 }) },
+    { id: 'valuable_collection', titleKey: 'achValuable', descKey: 'achValuableDesc', icon: Target, rarity: 'epic', condition: (stats) => (stats?.totalValue || 0) >= 1000, points: 300, progressCondition: (stats) => ({ current: stats?.totalValue || 0, target: 1000 }) },
+    { id: 'scanner_pro', titleKey: 'achPro', descKey: 'achProDesc', icon: Zap, rarity: 'epic', condition: (stats) => (stats?.successRate || 0) >= 95, points: 200, progressCondition: (stats) => ({ current: stats?.successRate || 0, target: 95 }) },
   ];
 
-  // Memoize calculations to prevent unnecessary re-renders
+  const getTitle = (a: Achievement) => (m as any)[a.titleKey] || a.titleKey;
+  const getDesc = (a: Achievement) => (m as any)[a.descKey] || a.descKey;
+
   const combinedStats = useMemo(() => ({ ...collectionStats, ...scanStats }), [collectionStats, scanStats]);
   
   const currentlyUnlocked = useMemo(() => {
@@ -128,12 +61,9 @@ export const IntegratedAchievementSystem = ({
     return achievements.filter(achievement => achievement.condition(combinedStats)).map(a => a.id);
   }, [combinedStats, achievements]);
 
-  // Check for newly unlocked achievements with proper dependency management
   useEffect(() => {
-    // Skip if data is not ready or cooldown is active
     if (!collectionStats || !scanStats || Date.now() - lastNotificationRef.current < NOTIFICATION_COOLDOWN) return;
 
-    // Get stored achievements to prevent duplicate notifications
     const storedAchievements = JSON.parse(localStorage.getItem('shownAchievements') || '[]');
     
     const newUnlocks = currentlyUnlocked.filter(id => 
@@ -144,29 +74,23 @@ export const IntegratedAchievementSystem = ({
       setNewlyUnlocked(newUnlocks);
       lastNotificationRef.current = Date.now();
       
-      // Store shown achievements to prevent duplicates
       const updatedShownAchievements = [...storedAchievements, ...newUnlocks];
       localStorage.setItem('shownAchievements', JSON.stringify(updatedShownAchievements));
       
-      // Show toast notification for new achievements (max 1 to avoid spam)
       const firstAchievement = achievements.find(a => a.id === newUnlocks[0]);
       if (firstAchievement) {
         toast({
-          title: "🏆 Nieuwe Prestatie Behaald!",
+          title: `🏆 ${m.newAchievement}`,
           description: newUnlocks.length > 1 
-            ? `${firstAchievement.title} en ${newUnlocks.length - 1} andere!`
-            : `${firstAchievement.title} - ${firstAchievement.points} punten!`,
+            ? `${getTitle(firstAchievement)} ${m.andOthers.replace('{count}', String(newUnlocks.length - 1))}`
+            : `${getTitle(firstAchievement)} - ${firstAchievement.points} ${m.points}!`,
         });
       }
       
-      // Call callback for each achievement
       newUnlocks.forEach(id => onAchievementUnlock?.(id));
-      
-      // Clear newly unlocked after animation
       setTimeout(() => setNewlyUnlocked([]), 3000);
     }
 
-    // Update previous reference
     previousUnlockedRef.current = [...unlockedAchievements, ...currentlyUnlocked];
   }, [collectionStats, scanStats, currentlyUnlocked, unlockedAchievements, onAchievementUnlock]);
 
@@ -190,7 +114,6 @@ export const IntegratedAchievementSystem = ({
     }
   };
 
-  // Memoize expensive calculations
   const { totalUnlocked, totalPoints, nextAchievement } = useMemo(() => {
     if (!collectionStats || !scanStats) {
       return { totalUnlocked: 0, totalPoints: 0, nextAchievement: achievements[0] };
@@ -207,14 +130,13 @@ export const IntegratedAchievementSystem = ({
     return { totalUnlocked, totalPoints, nextAchievement };
   }, [combinedStats, achievements]);
 
-  // Don't render if data is not ready
   if (!collectionStats || !scanStats) {
     return (
       <section className="animate-fade-in delay-500">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <Trophy className="w-6 h-6 text-vinyl-gold" />
-            🏆 Prestaties & Voortgang
+            🏆 {m.achievementsTitle}
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -231,25 +153,24 @@ export const IntegratedAchievementSystem = ({
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold flex items-center gap-2">
           <Trophy className="w-6 h-6 text-vinyl-gold" />
-          🏆 Prestaties & Voortgang
+          🏆 {m.achievementsTitle}
         </h2>
         <div className="flex items-center gap-3">
           <Badge variant="secondary" className="text-sm px-3 py-1">
-            {totalUnlocked}/{achievements.length} behaald
+            {totalUnlocked}/{achievements.length} {m.achieved}
           </Badge>
           <Badge className="bg-gradient-to-r from-vinyl-purple to-vinyl-gold text-white text-sm px-3 py-1">
-            {totalPoints} punten
+            {totalPoints} {m.points}
           </Badge>
         </div>
       </div>
 
-      {/* Next Achievement Spotlight */}
       {nextAchievement && (
         <Card className="mb-6 border-2 border-dashed border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <Target className="w-5 h-5 text-primary animate-pulse" />
-              🎯 Volgende Doel
+              🎯 {m.nextGoal}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -258,8 +179,8 @@ export const IntegratedAchievementSystem = ({
                 <nextAchievement.icon className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold">{nextAchievement.title}</h3>
-                <p className="text-sm text-muted-foreground mb-2">{nextAchievement.description}</p>
+                <h3 className="font-semibold">{getTitle(nextAchievement)}</h3>
+                <p className="text-sm text-muted-foreground mb-2">{getDesc(nextAchievement)}</p>
                 {nextAchievement.progressCondition && (
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs">
@@ -281,7 +202,6 @@ export const IntegratedAchievementSystem = ({
         </Card>
       )}
 
-      {/* Achievement Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <AnimatePresence>
           {achievements.map((achievement) => {
@@ -348,10 +268,10 @@ export const IntegratedAchievementSystem = ({
                       <h3 className={`font-semibold ${
                         isUnlocked ? 'text-foreground' : 'text-muted-foreground'
                       }`}>
-                        {achievement.title}
+                        {getTitle(achievement)}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {achievement.description}
+                        {getDesc(achievement)}
                       </p>
                     </div>
                     
@@ -363,7 +283,7 @@ export const IntegratedAchievementSystem = ({
                         </div>
                         <Progress value={progressPercentage} className="h-2" />
                         <p className="text-xs text-muted-foreground text-center">
-                          {Math.round(progressPercentage)}% voltooid
+                          {Math.round(progressPercentage)}% {m.completed}
                         </p>
                       </div>
                     )}
@@ -401,8 +321,8 @@ export const IntegratedAchievementSystem = ({
                       >
                         <p className="text-xs text-muted-foreground">
                           {isUnlocked 
-                            ? "🎉 Gefeliciteerd! Je hebt deze prestatie behaald." 
-                            : `💡 Tip: ${achievement.description.toLowerCase()}`
+                            ? `🎉 ${m.congratulations}` 
+                            : `💡 ${m.tip} ${getDesc(achievement).toLowerCase()}`
                           }
                         </p>
                       </motion.div>

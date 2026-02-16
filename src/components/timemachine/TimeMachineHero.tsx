@@ -1,26 +1,28 @@
 import { TimeMachineEvent } from '@/hooks/useTimeMachineEvents';
 import { Calendar, MapPin, Music2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TimeMachineHeroProps {
   event: TimeMachineEvent;
 }
 
 export function TimeMachineHero({ event }: TimeMachineHeroProps) {
-  const formattedDate = new Date(event.concert_date).toLocaleDateString('nl-NL', {
+  const { tr, language } = useLanguage();
+  const m = tr.miscUI;
+
+  const formattedDate = new Date(event.concert_date).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
   });
 
-  // Determine display poster URL with fallback
   const displayPosterUrl = event.poster_source === 'original'
     ? (event.original_poster_url || event.poster_image_url)
     : event.poster_image_url;
 
   return (
     <div className="relative h-[70vh] min-h-[500px] overflow-hidden">
-      {/* Background poster with parallax effect */}
       <motion.div
         initial={{ scale: 1.1 }}
         animate={{ scale: 1 }}
@@ -39,7 +41,6 @@ export function TimeMachineHero({ event }: TimeMachineHeroProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
       </motion.div>
 
-      {/* Floating musical notes animation */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {[...Array(6)].map((_, i) => (
           <motion.div
@@ -67,7 +68,6 @@ export function TimeMachineHero({ event }: TimeMachineHeroProps) {
         ))}
       </div>
 
-      {/* Content */}
       <div className="relative h-full flex items-end">
         <div className="container mx-auto px-4 pb-12">
           <motion.div
@@ -77,7 +77,7 @@ export function TimeMachineHero({ event }: TimeMachineHeroProps) {
             className="max-w-3xl"
           >
             <p className="text-primary font-semibold mb-2 text-sm tracking-widest uppercase">
-              🕰️ Music Time Machine
+              🕰️ {m.timeMachine}
             </p>
             
             <h1 className="text-5xl md:text-7xl font-bold mb-4 text-foreground">
@@ -109,7 +109,7 @@ export function TimeMachineHero({ event }: TimeMachineHeroProps) {
 
             {event.attendance_count && (
               <p className="mt-4 text-sm text-muted-foreground">
-                ~{event.attendance_count.toLocaleString()} bezoekers aanwezig
+                ~{event.attendance_count.toLocaleString()} {m.visitorsPresent}
               </p>
             )}
           </motion.div>

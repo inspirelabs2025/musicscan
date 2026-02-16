@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Ticket } from 'lucide-react';
 import { TourInfo, FestivalInfo } from '@/hooks/useYearOverview';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ToursFestivalsSectionProps {
   narrative: string;
@@ -16,6 +17,9 @@ export const ToursFestivalsSection: React.FC<ToursFestivalsSectionProps> = ({
   festivals,
   venueRecords
 }) => {
+  const { tr } = useLanguage();
+  const m = tr.miscUI;
+
   if (!narrative && biggestTours?.length === 0 && festivals?.length === 0) return null;
 
   const getFestivalName = (festival: string | FestivalInfo): string => {
@@ -33,7 +37,7 @@ export const ToursFestivalsSection: React.FC<ToursFestivalsSectionProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Ticket className="h-5 w-5 text-purple-500" />
-          🎪 Tours & Festivals
+          🎪 {m.toursAndFestivals}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -42,11 +46,10 @@ export const ToursFestivalsSection: React.FC<ToursFestivalsSectionProps> = ({
         )}
         
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Biggest Tours */}
           {biggestTours && biggestTours.length > 0 && (
             <div>
               <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                🎤 Grootste Tours
+                🎤 {m.biggestTours}
               </h3>
               <div className="space-y-3">
                 {biggestTours.slice(0, 6).map((tour, index) => (
@@ -59,14 +62,14 @@ export const ToursFestivalsSection: React.FC<ToursFestivalsSectionProps> = ({
                     <div className="flex flex-wrap gap-2 mt-1 text-xs">
                       {(tour.gross_millions || tour.gross) && (
                         <span className="text-green-500">
-                          ${tour.gross_millions || (tour.gross ? (tour.gross / 1000000).toFixed(1) : 0)}M omzet
+                          ${tour.gross_millions || (tour.gross ? (tour.gross / 1000000).toFixed(1) : 0)}M {m.revenue}
                         </span>
                       )}
                       {tour.shows && (
-                        <span className="text-muted-foreground">{tour.shows} shows</span>
+                        <span className="text-muted-foreground">{tour.shows} {m.shows}</span>
                       )}
                       {tour.attendance_millions && (
-                        <span className="text-muted-foreground">{tour.attendance_millions}M bezoekers</span>
+                        <span className="text-muted-foreground">{tour.attendance_millions}M {m.visitors}</span>
                       )}
                     </div>
                     {tour.notable_venues && tour.notable_venues.length > 0 && (
@@ -80,11 +83,10 @@ export const ToursFestivalsSection: React.FC<ToursFestivalsSectionProps> = ({
             </div>
           )}
           
-          {/* Festivals */}
           {festivals && festivals.length > 0 && (
             <div>
               <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                🎉 Festivals
+                🎉 {m.festivals}
               </h3>
               <div className="space-y-2">
                 {festivals.slice(0, 8).map((festival, index) => {
@@ -99,12 +101,12 @@ export const ToursFestivalsSection: React.FC<ToursFestivalsSectionProps> = ({
                           <div className="font-medium text-sm">{details.name}</div>
                           {details.headliners && details.headliners.length > 0 && (
                             <div className="text-xs text-muted-foreground">
-                              Headliners: {details.headliners.slice(0, 3).join(', ')}
+                              {m.headliners}: {details.headliners.slice(0, 3).join(', ')}
                             </div>
                           )}
                           {details.attendance && (
                             <div className="text-xs text-muted-foreground">
-                              {details.attendance.toLocaleString()} bezoekers
+                              {details.attendance.toLocaleString()} {m.visitors}
                             </div>
                           )}
                         </>
@@ -121,11 +123,10 @@ export const ToursFestivalsSection: React.FC<ToursFestivalsSectionProps> = ({
           )}
         </div>
 
-        {/* Venue Records */}
         {venueRecords && venueRecords.length > 0 && (
           <div>
             <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-              🏟️ Venue Records
+              🏟️ {m.venueRecords}
             </h3>
             <ul className="space-y-1">
               {venueRecords.map((record, index) => (

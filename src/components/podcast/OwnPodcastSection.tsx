@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Mic, ChevronRight, Headphones } from 'lucide-react';
 import { useOwnPodcasts, useOwnPodcastEpisodes } from '@/hooks/useOwnPodcasts';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface OwnPodcastCardProps {
   podcast: {
@@ -18,9 +19,10 @@ interface OwnPodcastCardProps {
 
 function OwnPodcastCard({ podcast }: OwnPodcastCardProps) {
   const { data: episodes = [] } = useOwnPodcastEpisodes(podcast.id);
+  const { tr } = useLanguage();
+  const m = tr.miscUI;
   const publishedEpisodes = episodes.filter(ep => ep.is_published);
 
-  // Use dedicated page for "de-plaat-en-het-verhaal", otherwise generic podcast route
   const podcastUrl = podcast.slug === 'de-plaat-en-het-verhaal' 
     ? '/de-plaat-en-het-verhaal' 
     : `/podcast/${podcast.slug}`;
@@ -47,7 +49,7 @@ function OwnPodcastCard({ podcast }: OwnPodcastCardProps) {
             </Badge>
             <h3 className="text-xl font-bold text-white mb-1">{podcast.name}</h3>
             {podcast.author && (
-              <p className="text-sm text-white/80">door {podcast.author}</p>
+              <p className="text-sm text-white/80">{m.by} {podcast.author}</p>
             )}
           </div>
         </div>
@@ -62,11 +64,11 @@ function OwnPodcastCard({ podcast }: OwnPodcastCardProps) {
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground flex items-center gap-1">
             <Headphones className="w-4 h-4" />
-            {publishedEpisodes.length} aflevering{publishedEpisodes.length !== 1 ? 'en' : ''}
+            {publishedEpisodes.length} {publishedEpisodes.length !== 1 ? m.episodesPlural : m.episodes}
           </span>
           <Link to={podcastUrl}>
             <Button variant="ghost" size="sm" className="gap-1 group-hover:text-primary">
-              Bekijk podcast
+              {m.viewPodcast}
               <ChevronRight className="w-4 h-4" />
             </Button>
           </Link>
@@ -78,8 +80,9 @@ function OwnPodcastCard({ podcast }: OwnPodcastCardProps) {
 
 export function OwnPodcastSection() {
   const { data: podcasts = [], isLoading } = useOwnPodcasts();
+  const { tr } = useLanguage();
+  const m = tr.miscUI;
   
-  // Only show published podcasts
   const publishedPodcasts = podcasts.filter(p => p.is_published);
 
   if (isLoading) {
@@ -112,7 +115,7 @@ export function OwnPodcastSection() {
         MusicScan Originals
       </h2>
       <p className="text-muted-foreground">
-        Exclusieve podcasts gemaakt door MusicScan over muziek, vinyl en de verhalen erachter.
+        {m.podcastSubtitle}
       </p>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {publishedPodcasts.map((podcast) => (

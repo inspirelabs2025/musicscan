@@ -10,15 +10,16 @@ import { Button } from "@/components/ui/button";
 export function MobileBottomNav() {
   const location = useLocation();
   const { user, signOut } = useAuth();
-  const { t } = useLanguage();
+  const { t, tr } = useLanguage();
   const currentPath = location.pathname;
   const [menuOpen, setMenuOpen] = useState(false);
+  const m = tr.miscUI;
 
   const navItems = [
     { icon: Home, label: t('nav.home'), url: "/" },
-    { icon: ScanLine, label: "Scan", url: "/ai-scan-v2", requiresAuth: true },
-    { icon: Library, label: "Collectie", url: "/my-collection", requiresAuth: true },
-    { icon: Trophy, label: "Quiz", url: "/quizzen" },
+    { icon: ScanLine, label: m.scan, url: "/ai-scan-v2", requiresAuth: true },
+    { icon: Library, label: m.collection, url: "/my-collection", requiresAuth: true },
+    { icon: Trophy, label: m.quiz, url: "/quizzen" },
   ];
 
   const filteredNavItems = navItems.filter(item => !('requiresAuth' in item && item.requiresAuth && !user));
@@ -29,7 +30,7 @@ export function MobileBottomNav() {
       items: [
         { icon: Brain, label: t('nav.smartScan'), url: "/ai-scan-v2" },
         { icon: Music, label: t('nav.myCollection'), url: "/my-collection" },
-        { icon: Disc3, label: "Mijn Discogs", url: "/mijn-discogs" },
+        { icon: Disc3, label: m.myDiscogs, url: "/mijn-discogs" },
         { icon: BarChart3, label: t('nav.collectionInsight'), url: "/collection-overview" },
       ],
       requiresAuth: true,

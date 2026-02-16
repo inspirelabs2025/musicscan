@@ -15,6 +15,8 @@ import { ShareButtons } from '@/components/ShareButtons';
 import { Helmet } from 'react-helmet';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Single {
   id: string;
@@ -52,22 +54,21 @@ export default function SingleDetail() {
   const [notFound, setNotFound] = useState(false);
   const [hasIncrementedView, setHasIncrementedView] = useState(false);
   const { toast } = useToast();
+  const { tr, language } = useLanguage();
+  const dp = tr.detailPageUI;
+  const dateFnsLocale = language === 'nl' ? nl : enUS;
 
   const currentUrl = `https://www.musicscan.app/singles/${slug}`;
   const singleImage = single?.artwork_url || 'https://www.musicscan.app/placeholder.svg';
-  const singleDescription = single?.meta_description || single?.story_content?.slice(0, 160).replace(/[#*]/g, '') || 'Ontdek het verhaal achter deze iconische single';
+  const singleDescription = single?.meta_description || single?.story_content?.slice(0, 160).replace(/[#*]/g, '') || dp.discoverStory;
 
   const seoKeywords = [
-    single?.artist,
-    single?.single_name,
-    single?.genre,
-    'single',
-    'muziek verhaal',
+    single?.artist, single?.single_name, single?.genre, 'single',
     ...(single?.tags || [])
   ].filter(Boolean).join(', ');
 
   useSEO({
-    title: single?.meta_title || `${single?.artist} - ${single?.single_name} | Single Verhaal | MusicScan`,
+    title: single?.meta_title || `${single?.artist} - ${single?.single_name} | MusicScan`,
     description: singleDescription,
     keywords: seoKeywords,
     image: singleImage,
@@ -78,10 +79,8 @@ export default function SingleDetail() {
   useEffect(() => {
     const fetchSingle = async () => {
       if (!slug) return;
-
       try {
         setLoading(true);
-        
         const { data, error } = await supabase
           .from('music_stories')
           .select('*')
@@ -89,34 +88,22 @@ export default function SingleDetail() {
           .eq('is_published', true)
           .not('single_name', 'is', null)
           .single();
-
         if (error) throw error;
-
-        if (!data) {
-          setNotFound(true);
-          return;
-        }
-
+        if (!data) { setNotFound(true); return; }
         setSingle(data as Single);
-
-      } catch (error) {
-        console.error('Error fetching single:', error);
+      } catch {
         setNotFound(true);
       } finally {
         setLoading(false);
       }
     };
-
     fetchSingle();
   }, [slug]);
 
   useEffect(() => {
     if (single && !hasIncrementedView) {
       const incrementView = async () => {
-        await supabase
-          .from('music_stories')
-          .update({ views_count: (single.views_count || 0) + 1 })
-          .eq('id', single.id);
+        await supabase.from('music_stories').update({ views_count: (single.views_count || 0) + 1 }).eq('id', single.id);
         setHasIncrementedView(true);
       };
       incrementView();
@@ -133,7 +120,6 @@ export default function SingleDetail() {
                 item_type: 'music_stories'
               }
             });
-            
             if (response.data?.success && response.data?.artwork_url) {
               setSingle(prev => prev ? { ...prev, artwork_url: response.data.artwork_url } : null);
             }
@@ -146,10 +132,7 @@ export default function SingleDetail() {
     }
   }, [single, hasIncrementedView]);
 
-  if (!slug) {
-    navigate('/singles');
-    return null;
-  }
+  if (!slug) { navigate('/singles'); return null; }
 
   if (loading) {
     return (
@@ -180,7 +163,7 @@ export default function SingleDetail() {
     return (
       <>
         <Helmet>
-          <title>Single niet gevonden | MusicScan</title>
+          <title>{dp.singleNotFound} | MusicScan</title>
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>
         <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
@@ -188,13 +171,11 @@ export default function SingleDetail() {
           <div className="relative text-center max-w-md mx-auto px-4">
             <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-8 border border-border/50">
               <Music className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-pulse" />
-              <h1 className="text-2xl font-bold mb-4">Single niet gevonden</h1>
-              <p className="text-muted-foreground mb-6">
-                De single die je zoekt bestaat niet of is niet meer beschikbaar.
-              </p>
+              <h1 className="text-2xl font-bold mb-4">{dp.singleNotFound}</h1>
+              <p className="text-muted-foreground mb-6">{dp.singleNotFoundDesc}</p>
               <Button onClick={() => navigate('/singles')} size="lg" className="group">
                 <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                Terug naar singles
+                {dp.backToSingles}
               </Button>
             </div>
           </div>
@@ -209,17 +190,17 @@ export default function SingleDetail() {
     { name: `${single.artist} - ${single.single_name}`, url: `/singles/${slug}` }
   ];
 
-  const publishedDate = format(new Date(single.created_at), 'dd MMMM yyyy', { locale: nl });
+  const publishedDate = format(new Date(single.created_at), 'dd MMMM yyyy', { locale: dateFnsLocale });
   const readingTime = single.reading_time || Math.ceil(single.story_content.length / 1000);
 
   const faqQuestions = [
     {
-      question: `Wat is het verhaal achter ${single.artist} - ${single.single_name}?`,
+      question: `${dp.whatIsStory} ${single.artist} - ${single.single_name}?`,
       answer: single.story_content.slice(0, 300).replace(/[#*]/g, '') + '...'
     },
     {
-      question: `Wie is ${single.artist}?`,
-      answer: `Ontdek alles over ${single.artist} in dit muziekverhaal. Lees over de achtergrond, betekenis en impact van deze single.`
+      question: `${dp.whoIs} ${single.artist}?`,
+      answer: dp.discoverAllAbout.replace('{artist}', single.artist || '')
     }
   ];
 
@@ -234,15 +215,13 @@ export default function SingleDetail() {
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content={`${single.artist} - ${single.single_name}`} />
-        
         <meta property="music:musician" content={single?.artist} />
         {single?.year && <meta property="music:release_date" content={single.year.toString()} />}
-        
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={single?.meta_title || `${single.artist} - ${single.single_name}`} />
         <meta name="twitter:description" content={singleDescription} />
         <meta name="twitter:image" content={singleImage} />
-        {single?.reading_time && <meta name="twitter:label1" content="Leestijd" />}
+        {single?.reading_time && <meta name="twitter:label1" content={dp.readingTime} />}
         {single?.reading_time && <meta name="twitter:data1" content={`${single.reading_time} min`} />}
         {single?.views_count && <meta name="twitter:label2" content="Views" />}
         {single?.views_count && <meta name="twitter:data2" content={single.views_count.toString()} />}
@@ -258,7 +237,6 @@ export default function SingleDetail() {
         genre={single.genre}
         recordLabel={single.label}
       />
-      
       <ReviewSchema
         itemName={`${single.artist} - ${single.single_name}`}
         artist={single.artist}
@@ -269,12 +247,10 @@ export default function SingleDetail() {
         imageUrl={single.artwork_url}
         itemType="MusicRecording"
       />
-      
       <FAQSchema questions={faqQuestions} />
       
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <Music className="absolute top-20 left-[10%] w-6 h-6 text-blue-500/20 animate-float" style={{ animationDelay: '0s' }} />
           <BookOpen className="absolute top-40 right-[15%] w-4 h-4 text-purple-500/20 animate-float" style={{ animationDelay: '2s' }} />
@@ -284,14 +260,9 @@ export default function SingleDetail() {
         <div className="relative container mx-auto px-4 py-8 max-w-4xl">
           <BreadcrumbNavigation items={breadcrumbs} />
           
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/singles')}
-            className="mb-6 hover:bg-primary/10 group"
-          >
+          <Button variant="ghost" size="sm" onClick={() => navigate('/singles')} className="mb-6 hover:bg-primary/10 group">
             <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-            Terug naar singles
+            {dp.backToSingles}
           </Button>
 
           <div className="relative mb-12">
@@ -305,9 +276,7 @@ export default function SingleDetail() {
                         src={single.artwork_url}
                         alt={`${single.artist} - ${single.single_name}`}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
                     </div>
                   </div>
@@ -315,16 +284,13 @@ export default function SingleDetail() {
                 
                 <div className={single.artwork_url ? "lg:col-span-2" : "lg:col-span-3"}>
                   <div className="flex flex-wrap items-center gap-3 mb-6">
-                    <Badge 
-                      variant="secondary" 
-                      className="bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30 transition-colors"
-                    >
+                    <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30 transition-colors">
                       <Music className="w-3 h-3 mr-1" />
-                      SINGLE
+                      {dp.singleBadge}
                     </Badge>
                     <Badge variant="outline" className="border-primary/30 hover:bg-primary/10 transition-colors">
                       <Sparkles className="w-3 h-3 mr-1" />
-                      Digitaal Verhaal
+                      {dp.digitalStory}
                     </Badge>
                     <Badge variant="outline" className="border-muted-foreground/30">
                       <Calendar className="w-3 h-3 mr-1" />
@@ -332,11 +298,11 @@ export default function SingleDetail() {
                     </Badge>
                     <Badge variant="outline" className="border-muted-foreground/30">
                       <Clock className="w-3 h-3 mr-1" />
-                      {readingTime} min leestijd
+                      {readingTime} min {dp.readingTime}
                     </Badge>
                     <Badge variant="outline" className="border-muted-foreground/30">
                       <Eye className="w-3 h-3 mr-1" />
-                      {single.views_count || 0} views
+                      {single.views_count || 0} {dp.views}
                     </Badge>
                   </div>
 
@@ -346,7 +312,7 @@ export default function SingleDetail() {
                   
                   {single.year && (
                     <div className="text-xl text-muted-foreground mb-8 font-medium">
-                      <span className="text-primary">Release jaar:</span>
+                      <span className="text-primary">{dp.releaseYear}</span>
                       <span className="mx-3 text-blue-500">•</span>
                       <span>{single.year}</span>
                     </div>
@@ -355,7 +321,7 @@ export default function SingleDetail() {
                   <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
                     <span className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      Gepubliceerd op {publishedDate}
+                      {dp.publishedOn} {publishedDate}
                     </span>
                     <ShareButtons 
                       url={currentUrl}
@@ -373,32 +339,16 @@ export default function SingleDetail() {
               <div className="prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-foreground prose-p:text-foreground/90 prose-p:leading-relaxed prose-strong:text-foreground prose-blockquote:border-l-primary prose-blockquote:text-foreground/80 prose-code:bg-muted prose-code:text-foreground prose-code:px-2 prose-code:py-1 prose-code:rounded">
                 <ReactMarkdown
                   components={{
-                    h1: ({ children }) => (
-                      <h1 className="text-3xl font-bold mt-12 mb-6 first:mt-0 bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
-                        {children}
-                      </h1>
-                    ),
+                    h1: ({ children }) => <h1 className="text-3xl font-bold mt-12 mb-6 first:mt-0 bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">{children}</h1>,
                     h2: ({ children }) => (
                       <h2 className="text-2xl font-semibold mt-10 mb-5 text-foreground flex items-center gap-3">
                         <Music className="w-6 h-6 text-blue-500 flex-shrink-0" />
                         {children}
                       </h2>
                     ),
-                    h3: ({ children }) => (
-                      <h3 className="text-xl font-medium mt-8 mb-4 text-foreground">
-                        {children}
-                      </h3>
-                    ),
-                    p: ({ children }) => (
-                      <p className="mb-6 leading-relaxed text-foreground/90 text-lg">
-                        {children}
-                      </p>
-                    ),
-                    ul: ({ children }) => (
-                      <ul className="list-none pl-0 mb-6 space-y-2">
-                        {children}
-                      </ul>
-                    ),
+                    h3: ({ children }) => <h3 className="text-xl font-medium mt-8 mb-4 text-foreground">{children}</h3>,
+                    p: ({ children }) => <p className="mb-6 leading-relaxed text-foreground/90 text-lg">{children}</p>,
+                    ul: ({ children }) => <ul className="list-none pl-0 mb-6 space-y-2">{children}</ul>,
                     li: ({ children }) => (
                       <li className="flex items-start gap-3 text-foreground/90">
                         <span className="text-blue-500 mt-1 flex-shrink-0">▸</span>

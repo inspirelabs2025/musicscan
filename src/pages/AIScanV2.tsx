@@ -20,6 +20,7 @@ import { EnhancedScanPreview } from '@/components/scanner/EnhancedScanPreview';
 import { AIScanV2Results } from '@/components/scanner/AIScanV2Results';
 import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
 import { ScanChatTab, ScanChatTabHandle } from '@/components/scanner/ScanChatTab';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Simple V2 components for media type and condition selection
 
@@ -71,6 +72,8 @@ interface AnalysisResult {
   version: string;
 }
 export default function AIScanV2() {
+  const { tr } = useLanguage();
+  const s = tr.scannerUI;
   const [soundScanTrigger, setSoundScanTrigger] = useState(0);
   const [showSoundScanPrompt, setShowSoundScanPrompt] = useState(false);
   const chatRef = useRef<ScanChatTabHandle>(null);
@@ -168,36 +171,34 @@ export default function AIScanV2() {
   const startAnalysis = async () => {
     if (!user) {
       toast({
-        title: "Niet ingelogd",
-        description: "Je moet ingelogd zijn om de AI analyse te gebruiken.",
+        title: s.notLoggedIn,
+        description: s.mustBeLoggedIn,
         variant: "destructive"
       });
       return;
     }
     if (uploadedFiles.length === 0) {
       toast({
-        title: "Geen bestanden",
-        description: "Upload eerst één of meer foto's om te analyseren.",
+        title: s.noFiles,
+        description: s.uploadFirst,
         variant: "destructive"
       });
       return;
     }
 
-    // Add validation for media type
     if (!mediaType) {
       toast({
-        title: "Geen media type geselecteerd",
-        description: "Selecteer eerst een media type (Vinyl of CD).",
+        title: s.noMediaType,
+        description: s.selectMediaType,
         variant: "destructive"
       });
       return;
     }
 
-    // Add validation for condition grade
     if (!conditionGrade) {
       toast({
-        title: "Geen conditie geselecteerd",
-        description: "Selecteer eerst een conditie voor je item.",
+        title: s.noCondition,
+        description: s.selectConditionFirst,
         variant: "destructive"
       });
       return;
@@ -279,16 +280,16 @@ export default function AIScanV2() {
       }
       console.log('✅ Analysis completed successfully');
       toast({
-        title: "Analyse voltooid!",
-        description: `V2 analyse succesvol afgerond met ${Math.round(data.result.confidence_score * 100)}% vertrouwen.`
+        title: `${s.analysisComplete}`,
+        description: `${s.analysisSuccess} ${Math.round(data.result.confidence_score * 100)}% ${s.confidence}.`
       });
     } catch (err) {
       console.error('❌ Analysis error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
       toast({
-        title: "Analyse mislukt",
-        description: `Fout: ${errorMessage}`,
+        title: s.analysisFailed,
+        description: `${s.error}: ${errorMessage}`,
         variant: "destructive"
       });
     } finally {
@@ -318,7 +319,7 @@ export default function AIScanV2() {
     return <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center">
         <div className="text-center">
           <Clock className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Laden...</p>
+          <p className="text-muted-foreground">{s.loading}</p>
         </div>
       </div>;
   }
@@ -353,24 +354,22 @@ export default function AIScanV2() {
           {/* SoundScan prompt */}
           {showSoundScanPrompt && (
             <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 animate-fadeIn">
-              <p className="text-sm text-center text-muted-foreground">
-                🎵 Zet de muziek aan die je wilt herkennen en druk op <strong>Start</strong>. SoundScan luistert 12 seconden mee.
+             <p className="text-sm text-center text-muted-foreground">
+                🎵 {s.soundScanDesc}
               </p>
               <Button
                 onClick={() => {
                   setShowSoundScanPrompt(false);
-                  // Direct call from user gesture — critical for microphone access
                   if (chatRef.current) {
                     chatRef.current.triggerListening();
                   } else {
-                    // Fallback: trigger via prop
                     setSoundScanTrigger(prev => prev + 1);
                   }
                 }}
                 className="bg-amber-500 hover:bg-amber-600 text-white rounded-full px-6 gap-2"
               >
                 <Mic className="h-4 w-4" />
-                Start luisteren
+                {s.startListening}
               </Button>
             </div>
           )}

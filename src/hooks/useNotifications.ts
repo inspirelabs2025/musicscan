@@ -56,7 +56,6 @@ export const useNotifications = () => {
         actor: n.actor_id ? profilesMap[n.actor_id] || null : null,
         photo: null, // Photos join also had issues, skip for now
       })) as Notification[];
-      return data as Notification[];
     },
     enabled: !!user?.id,
   });

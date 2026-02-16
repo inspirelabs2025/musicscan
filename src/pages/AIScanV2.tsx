@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Loader2, Camera, Eye, Mic } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ import testCdMatrix from '@/assets/test-cd-matrix.jpg';
 import { EnhancedScanPreview } from '@/components/scanner/EnhancedScanPreview';
 import { AIScanV2Results } from '@/components/scanner/AIScanV2Results';
 import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
-import { ScanChatTab } from '@/components/scanner/ScanChatTab';
+import { ScanChatTab, ScanChatTabHandle } from '@/components/scanner/ScanChatTab';
 
 // Simple V2 components for media type and condition selection
 
@@ -73,6 +73,7 @@ interface AnalysisResult {
 export default function AIScanV2() {
   const [soundScanTrigger, setSoundScanTrigger] = useState(0);
   const [showSoundScanPrompt, setShowSoundScanPrompt] = useState(false);
+  const chatRef = useRef<ScanChatTabHandle>(null);
   const {
     user,
     loading
@@ -357,8 +358,14 @@ export default function AIScanV2() {
               </p>
               <Button
                 onClick={() => {
-                  setSoundScanTrigger(prev => prev + 1);
                   setShowSoundScanPrompt(false);
+                  // Direct call from user gesture — critical for microphone access
+                  if (chatRef.current) {
+                    chatRef.current.triggerListening();
+                  } else {
+                    // Fallback: trigger via prop
+                    setSoundScanTrigger(prev => prev + 1);
+                  }
                 }}
                 className="bg-amber-500 hover:bg-amber-600 text-white rounded-full px-6 gap-2"
               >
@@ -370,7 +377,7 @@ export default function AIScanV2() {
 
           {/* Chat Scanner - directly rendered without tabs */}
           <div className="w-full mt-4">
-            <ScanChatTab autoStartListening={soundScanTrigger} />
+            <ScanChatTab ref={chatRef} autoStartListening={soundScanTrigger} />
           </div>
         </div>
       </div>

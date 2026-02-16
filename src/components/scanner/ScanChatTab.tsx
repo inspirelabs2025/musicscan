@@ -335,11 +335,15 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
 });
 SuggestionChips.displayName = 'SuggestionChips';
 
+export interface ScanChatTabHandle {
+  triggerListening: () => void;
+}
+
 interface ScanChatTabProps {
   autoStartListening?: number;
 }
 
-export function ScanChatTab({ autoStartListening = 0 }: ScanChatTabProps) {
+export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>(function ScanChatTab({ autoStartListening = 0 }, ref) {
   const { user } = useAuth();
   const lastListenTrigger = useRef(0);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -382,14 +386,6 @@ export function ScanChatTab({ autoStartListening = 0 }: ScanChatTabProps) {
     }
   }, [messages, pendingFiles]);
 
-  // Auto-start listening when triggered from SoundScan button
-  useEffect(() => {
-    if (autoStartListening > 0 && autoStartListening !== lastListenTrigger.current) {
-      lastListenTrigger.current = autoStartListening;
-      const timer = setTimeout(() => startListening(), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [autoStartListening]);
 
   const pickMediaType = (type: 'vinyl' | 'cd') => {
     setMediaType(type);
@@ -563,6 +559,19 @@ export function ScanChatTab({ autoStartListening = 0 }: ScanChatTabProps) {
       toast({ title: "Microfoon niet beschikbaar", description: "Geef toestemming voor de microfoon of controleer je instellingen.", variant: "destructive" });
     }
   }, []);
+
+  // Expose startListening to parent via ref (for direct user gesture calls)
+  React.useImperativeHandle(ref, () => ({
+    triggerListening: () => startListening(),
+  }), [startListening]);
+
+  // Auto-start listening when triggered from SoundScan button
+  useEffect(() => {
+    if (autoStartListening > 0 && autoStartListening !== lastListenTrigger.current) {
+      lastListenTrigger.current = autoStartListening;
+      startListening();
+    }
+  }, [autoStartListening, startListening]);
 
   const handleScanGuide = () => {
     sendMessage('Geef me een uitgebreide uitleg hoe ik de beste scanfoto\'s maak van mijn vinyl platen en CD\'s. Leg per mediatype uit welke foto\'s ik moet maken (voorkant, achterkant, matrix, barcode etc.), met tips voor belichting, hoek en scherpte. Geef ook aan welke details het belangrijkst zijn voor een goede match.');
@@ -1702,4 +1711,5 @@ export function ScanChatTab({ autoStartListening = 0 }: ScanChatTabProps) {
       )}
     </div>
   );
-}
+});
+

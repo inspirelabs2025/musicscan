@@ -119,14 +119,14 @@ export default function Echo() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-echo-violet via-background to-background">
-      <div className="relative overflow-hidden py-8 px-4 bg-gradient-to-b from-[hsl(var(--echo-violet))] to-transparent">
+      <div className="relative overflow-hidden py-8 px-4 bg-gradient-to-b from-[hsl(270,60%,25%)] to-[hsl(270,40%,15%)]">
         <div className="container mx-auto max-w-5xl relative z-10">
           <div className="text-center space-y-4 animate-fade-in">
             <div className="flex justify-center mb-4">
               <img 
                 src="/magic-mike-logo.png"
                 alt="Magic Mike"
-                className="w-48 h-48 object-contain drop-shadow-xl"
+                className="w-56 h-56 object-contain drop-shadow-xl"
               />
             </div>
 

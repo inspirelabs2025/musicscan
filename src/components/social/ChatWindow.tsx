@@ -8,6 +8,7 @@ import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 import { Conversation } from '@/hooks/useConversations';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ChatWindowProps {
   conversation: Conversation;
@@ -18,6 +19,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack }) => {
   const { user } = useAuth();
   const { data: messages, isLoading } = useConversationMessages(conversation.id);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { tr } = useLanguage();
+  const s = tr.socialUI;
 
   // Get the other participant (not the current user)
   const otherParticipant = conversation.participants?.find(
@@ -41,9 +44,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack }) => {
           table: 'messages',
           filter: `conversation_id=eq.${conversation.id}`,
         },
-        () => {
-          // The useConversationMessages query will automatically refetch
-        }
+        () => {}
       )
       .subscribe();
 
@@ -83,9 +84,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack }) => {
                   || (otherParticipant as any)?.display_name?.trim()
                   || (messages?.find(m => m.sender_id !== user?.id)?.sender?.first_name)
                   || ((messages?.find(m => m.sender_id !== user?.id)?.sender as any)?.spotify_display_name)
-                  || 'Onbekende gebruiker'}
+                  || s.unknownUser}
               </h3>
-              <p className="text-sm text-muted-foreground">Online</p>
+              <p className="text-sm text-muted-foreground">{s.online}</p>
             </div>
           </>
         )}
@@ -97,7 +98,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack }) => {
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Berichten laden...</p>
+              <p className="text-sm text-muted-foreground">{s.loadingMessages}</p>
             </div>
           </div>
         ) : messages && messages.length > 0 ? (
@@ -124,10 +125,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack }) => {
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <MessageCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="font-medium mb-2">Nog geen berichten</h3>
-              <p className="text-sm text-muted-foreground">
-                Start een gesprek door een bericht te sturen!
-              </p>
+              <h3 className="font-medium mb-2">{s.noMessagesYet}</h3>
+              <p className="text-sm text-muted-foreground">{s.startConversation}</p>
             </div>
           </div>
         )}

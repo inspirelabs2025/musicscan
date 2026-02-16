@@ -8,6 +8,7 @@ import { Loader2, MessageCircle, Plus } from 'lucide-react';
 import { Conversation } from '@/hooks/useConversations';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MessagesListProps {
   onConversationSelect: (conversation: Conversation) => void;
@@ -20,8 +21,9 @@ const MessagesList: React.FC<MessagesListProps> = ({
 }) => {
   const { user } = useAuth();
   const { data: conversations, isLoading } = useConversations();
+  const { tr } = useLanguage();
+  const s = tr.socialUI;
 
-  // Get the other participant for a conversation
   const getOtherParticipant = (conversation: Conversation) => {
     return conversation.participants?.find(p => p.user_id !== user?.id);
   };
@@ -34,7 +36,7 @@ const MessagesList: React.FC<MessagesListProps> = ({
     if (diffInHours < 24) {
       return format(date, 'HH:mm');
     } else if (diffInHours < 48) {
-      return 'Gisteren';
+      return s.yesterday;
     } else {
       return format(date, 'dd/MM');
     }
@@ -46,7 +48,7 @@ const MessagesList: React.FC<MessagesListProps> = ({
         <CardContent className="flex items-center justify-center py-8">
           <div className="text-center">
             <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Gesprekken laden...</p>
+            <p className="text-sm text-muted-foreground">{s.loadingConversations}</p>
           </div>
         </CardContent>
       </Card>
@@ -58,13 +60,11 @@ const MessagesList: React.FC<MessagesListProps> = ({
       <Card>
         <CardContent className="text-center py-8">
           <MessageCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="font-medium mb-2">Nog geen gesprekken</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Start een gesprek door een bericht te sturen naar andere gebruikers.
-          </p>
+          <h3 className="font-medium mb-2">{s.noConversationsYet}</h3>
+          <p className="text-sm text-muted-foreground mb-4">{s.noConversationsDesc}</p>
           <Button variant="outline" size="sm">
             <Plus className="h-4 w-4 mr-2" />
-            Nieuw gesprek starten
+            {s.newConversation}
           </Button>
         </CardContent>
       </Card>
@@ -106,7 +106,7 @@ const MessagesList: React.FC<MessagesListProps> = ({
                       || (otherParticipant as any)?.display_name?.trim()
                       || conversation.last_message?.sender?.first_name?.trim()
                       || (conversation.last_message?.sender as any)?.spotify_display_name?.trim()
-                      || 'Onbekende gebruiker'}
+                      || s.unknownUser}
                   </h4>
                   {conversation.last_message && (
                     <span className="text-xs text-muted-foreground">
@@ -117,13 +117,11 @@ const MessagesList: React.FC<MessagesListProps> = ({
                 
                 {conversation.last_message ? (
                   <p className="text-sm text-muted-foreground truncate">
-                    {conversation.last_message.sender_id === user?.id && "Je: "}
+                    {conversation.last_message.sender_id === user?.id && s.you}
                     {conversation.last_message.content}
                   </p>
                 ) : (
-                  <p className="text-sm text-muted-foreground italic">
-                    Nog geen berichten
-                  </p>
+                  <p className="text-sm text-muted-foreground italic">{s.noMoreMessages}</p>
                 )}
               </div>
             </div>

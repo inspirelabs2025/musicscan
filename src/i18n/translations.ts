@@ -165,7 +165,7 @@ const translations = {
     dashboard: {
       welcomeBack: "🎵 Welkom terug, Muziekontdekker!",
       personalExperience: "✨ Je persoonlijke muziek ervaring wacht op je",
-      quickActions: "Quick Actions",
+      quickActions: "Snelle Acties",
       scanNow: "Scan Nu",
       myCollection: "Mijn Collectie",
       chat: "Chat",
@@ -181,7 +181,7 @@ const translations = {
       estimatedTotal: "Geschatte totaal",
       thisMonth: "Deze Maand",
       newScans: "Nieuwe scans",
-      successRate: "Success Rate",
+      successRate: "Slagingspercentage",
       successfulScans: "Geslaagde scans",
       commandCenter: "🚀 Jouw Muziek Command Center",
       musicFun: "🎰 Muziek & Fun",

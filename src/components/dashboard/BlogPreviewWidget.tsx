@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { BookOpen, Newspaper, ArrowRight, Clock } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BlogPost {
   id: string;
@@ -28,7 +29,6 @@ const useLatestBlogs = () => {
   return useQuery({
     queryKey: ['latest-blogs'],
     queryFn: async () => {
-      // Get latest news blog posts
       const { data: newsBlogs, error: newsError } = await supabase
         .from('news_blog_posts')
         .select('id, title, summary, slug, published_at, source')
@@ -37,7 +37,6 @@ const useLatestBlogs = () => {
 
       if (newsError) console.error('Error fetching news blogs:', newsError);
 
-      // Get latest user blog posts (Plaat & Verhaal)
       const { data: userBlogs, error: userError } = await supabase
         .from('blog_posts')
         .select('id, slug, yaml_frontmatter, published_at, album_type')
@@ -52,12 +51,14 @@ const useLatestBlogs = () => {
         userBlogs: userBlogs || []
       };
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };
 
 export const BlogPreviewWidget = () => {
   const { data, isLoading } = useLatestBlogs();
+  const { tr, language } = useLanguage();
+  const d = tr.dashboardUI;
 
   if (isLoading) {
     return (
@@ -65,7 +66,7 @@ export const BlogPreviewWidget = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-primary" />
-            📚 Nieuwste Verhalen
+            📚 {d.latestStories}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -84,15 +85,15 @@ export const BlogPreviewWidget = () => {
   }
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('nl-NL', {
+    return new Date(dateStr).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US', {
       day: 'numeric',
       month: 'short'
     });
   };
 
   const getAlbumTitle = (yamlFrontmatter: any) => {
-    if (!yamlFrontmatter) return 'Onbekend Album';
-    return `${yamlFrontmatter.artist || 'Onbekende Artiest'} - ${yamlFrontmatter.title || 'Onbekende Titel'}`;
+    if (!yamlFrontmatter) return d.unknownAlbum;
+    return `${yamlFrontmatter.artist || d.unknownArtist} - ${yamlFrontmatter.title || d.unknownTitle}`;
   };
 
   return (
@@ -100,24 +101,19 @@ export const BlogPreviewWidget = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-primary animate-pulse" />
-          📚 Nieuwste Verhalen & Nieuws
+          📚 {d.latestStoriesNews}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* User Blog Posts (Plaat & Verhaal) */}
         {data?.userBlogs && data.userBlogs.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-3">
               <BookOpen className="w-4 h-4 text-vinyl-purple" />
-              <span className="text-sm font-medium">🎵 Plaat & Verhaal</span>
+              <span className="text-sm font-medium">🎵 {d.recordStory}</span>
             </div>
             <div className="space-y-2">
               {data.userBlogs.slice(0, 2).map((post: UserBlogPost) => (
-                <Link
-                  key={post.id}
-                  to={`/plaat-verhaal/${post.slug}`}
-                  className="block p-2 rounded-lg hover:bg-accent/10 transition-colors group"
-                >
+                <Link key={post.id} to={`/plaat-verhaal/${post.slug}`} className="block p-2 rounded-lg hover:bg-accent/10 transition-colors group">
                   <div className="text-sm font-medium line-clamp-1 group-hover:text-vinyl-purple transition-colors">
                     {getAlbumTitle(post.yaml_frontmatter)}
                   </div>
@@ -133,23 +129,16 @@ export const BlogPreviewWidget = () => {
           </div>
         )}
 
-        {/* News Blog Posts */}
         {data?.newsBlogs && data.newsBlogs.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Newspaper className="w-4 h-4 text-vinyl-gold" />
-              <span className="text-sm font-medium">📰 Muzieknieuws</span>
+              <span className="text-sm font-medium">📰 {d.musicNews}</span>
             </div>
             <div className="space-y-2">
               {data.newsBlogs.slice(0, 1).map((post: BlogPost) => (
-                <Link
-                  key={post.id}
-                  to={`/nieuws/${post.slug}`}
-                  className="block p-2 rounded-lg hover:bg-accent/10 transition-colors group"
-                >
-                  <div className="text-sm font-medium line-clamp-2 group-hover:text-vinyl-gold transition-colors">
-                    {post.title}
-                  </div>
+                <Link key={post.id} to={`/nieuws/${post.slug}`} className="block p-2 rounded-lg hover:bg-accent/10 transition-colors group">
+                  <div className="text-sm font-medium line-clamp-2 group-hover:text-vinyl-gold transition-colors">{post.title}</div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Clock className="w-3 h-3" />
                     <span>{formatDate(post.published_at)}</span>
@@ -162,28 +151,24 @@ export const BlogPreviewWidget = () => {
           </div>
         )}
 
-        {/* No Content State */}
         {(!data?.userBlogs?.length && !data?.newsBlogs?.length) && (
           <div className="text-center py-4">
             <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-2 opacity-50" />
-            <p className="text-sm text-muted-foreground">
-              Nog geen verhalen beschikbaar
-            </p>
+            <p className="text-sm text-muted-foreground">{d.noStoriesAvailable}</p>
           </div>
         )}
 
-        {/* Action Buttons */}
         <div className="flex gap-2">
           <Button asChild size="sm" variant="outline" className="flex-1 hover:bg-vinyl-purple/10">
             <Link to="/plaat-verhaal">
               <BookOpen className="w-4 h-4 mr-2" />
-              Alle Verhalen
+              {d.allStories}
             </Link>
           </Button>
           <Button asChild size="sm" variant="outline" className="flex-1 hover:bg-vinyl-gold/10">
             <Link to="/news">
               <Newspaper className="w-4 h-4 mr-2" />
-              Meer Nieuws
+              {d.moreNews}
             </Link>
           </Button>
         </div>

@@ -3,25 +3,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Headphones, 
-  Music, 
-  PlayCircle, 
-  TrendingUp,
-  ExternalLink,
-  Plus,
-  AlertTriangle,
-  RefreshCw
+  Headphones, Music, PlayCircle, TrendingUp, ExternalLink, Plus, AlertTriangle, RefreshCw
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useSpotifyStats } from '@/hooks/useSpotifyData';
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function SpotifyWidget() {
   const { user } = useAuth();
   const { data: profile } = useProfile(user?.id);
   const { data: spotifyStats } = useSpotifyStats();
   const { connectSpotify, syncSpotifyData, isConnecting } = useSpotifyAuth();
+  const { tr } = useLanguage();
+  const d = tr.dashboardUI;
   
   const [needsReauth, setNeedsReauth] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
@@ -39,9 +35,7 @@ export function SpotifyWidget() {
             </div>
             <div>
               <CardTitle className="text-lg">Spotify Connect</CardTitle>
-              <CardDescription className="text-sm">
-                Verrijk je muziekprofiel
-              </CardDescription>
+              <CardDescription className="text-sm">{d.enrichProfile}</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -49,24 +43,18 @@ export function SpotifyWidget() {
           <div className="text-center py-4">
             <div className="mb-4">
               <Music className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">
-                Koppel je Spotify account voor verbeterde analyses en quiz vragen
-              </p>
+              <p className="text-sm text-muted-foreground">{d.linkSpotifyDesc}</p>
             </div>
-            <Button 
-              onClick={connectSpotify}
-              disabled={isConnecting}
-              className="bg-[#1DB954] hover:bg-[#1ed760] text-white"
-            >
+            <Button onClick={connectSpotify} disabled={isConnecting} className="bg-[#1DB954] hover:bg-[#1ed760] text-white">
               {isConnecting ? (
                 <>
                   <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Verbinden...
+                  {d.connecting}
                 </>
               ) : (
                 <>
                   <Plus className="w-4 h-4 mr-2" />
-                  Koppel Spotify
+                  {d.linkSpotify}
                 </>
               )}
             </Button>
@@ -87,37 +75,22 @@ export function SpotifyWidget() {
             <div>
               <CardTitle className="text-lg">Spotify</CardTitle>
               <CardDescription className="text-sm">
-                Verbonden als {spotifyDisplayName}
+                {d.connectedAs.replace('{name}', spotifyDisplayName || '')}
               </CardDescription>
             </div>
           </div>
           {needsReauth ? (
-            <Button
-              onClick={() => {
-                setNeedsReauth(false);
-                connectSpotify();
-              }}
-              size="sm"
-              className="bg-amber-500 hover:bg-amber-600 text-white"
-            >
+            <Button onClick={() => { setNeedsReauth(false); connectSpotify(); }} size="sm" className="bg-amber-500 hover:bg-amber-600 text-white">
               <RefreshCw className="w-3 h-3 mr-1" />
               Reauth
             </Button>
           ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={async () => {
-                setIsSyncing(true);
-                const result = await syncSpotifyData();
-                if (result?.needsReauth) {
-                  setNeedsReauth(true);
-                }
-                setIsSyncing(false);
-              }}
-              disabled={isSyncing}
-              className="h-8 w-8 p-0"
-            >
+            <Button variant="ghost" size="sm" onClick={async () => {
+              setIsSyncing(true);
+              const result = await syncSpotifyData();
+              if (result?.needsReauth) setNeedsReauth(true);
+              setIsSyncing(false);
+            }} disabled={isSyncing} className="h-8 w-8 p-0">
               {isSyncing ? (
                 <div className="w-4 h-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
               ) : (
@@ -133,11 +106,9 @@ export function SpotifyWidget() {
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
             <div className="flex items-center gap-2 text-amber-800">
               <AlertTriangle className="w-4 h-4" />
-              <span className="text-sm font-medium">Autorisatie verlopen</span>
+              <span className="text-sm font-medium">{d.authExpired}</span>
             </div>
-            <p className="text-xs text-amber-700 mt-1">
-              Verbind opnieuw met Spotify voor actuele data.
-            </p>
+            <p className="text-xs text-amber-700 mt-1">{d.reconnectSpotify}</p>
           </div>
         </CardContent>
       )}
@@ -147,22 +118,20 @@ export function SpotifyWidget() {
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">{spotifyStats.totalTracks}</div>
-              <div className="text-xs text-muted-foreground">Tracks</div>
+              <div className="text-xs text-muted-foreground">{d.tracks}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">{spotifyStats.totalPlaylists}</div>
-              <div className="text-xs text-muted-foreground">Playlists</div>
+              <div className="text-xs text-muted-foreground">{d.playlists}</div>
             </div>
           </div>
 
           {spotifyStats.topGenres.length > 0 && (
             <div>
-              <h4 className="font-medium text-sm mb-2">Top Genres</h4>
+              <h4 className="font-medium text-sm mb-2">{d.topGenres}</h4>
               <div className="flex flex-wrap gap-1">
                 {spotifyStats.topGenres.slice(0, 3).map((genre, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs bg-green-100 text-green-800">
-                    {genre.genre}
-                  </Badge>
+                  <Badge key={index} variant="secondary" className="text-xs bg-green-100 text-green-800">{genre.genre}</Badge>
                 ))}
               </div>
             </div>
@@ -170,7 +139,7 @@ export function SpotifyWidget() {
 
           {spotifyStats.recentActivity && spotifyStats.recentActivity.length > 0 && (
             <div>
-              <h4 className="font-medium text-sm mb-2">Recent Toegevoegd</h4>
+              <h4 className="font-medium text-sm mb-2">{d.recentlyAdded}</h4>
               <div className="space-y-1">
                 {spotifyStats.recentActivity.slice(0, 2).map((track, index) => (
                   <div key={index} className="flex items-center space-x-2 text-xs">
@@ -183,14 +152,9 @@ export function SpotifyWidget() {
           )}
 
           <div className="pt-2 border-t">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full h-8 text-xs"
-              onClick={() => window.open('/spotify-profile', '_self')}
-            >
+            <Button variant="outline" size="sm" className="w-full h-8 text-xs" onClick={() => window.open('/spotify-profile', '_self')}>
               <ExternalLink className="w-3 h-3 mr-1" />
-              Bekijk Details
+              {d.viewDetails}
             </Button>
           </div>
         </CardContent>

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Brain, Heart, Star, TrendingUp, Clock, Palette } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Genre {
   genre: string;
@@ -22,92 +23,87 @@ export const CollectionPersonality = ({
   totalValue = 0,
   averageYear 
 }: CollectionPersonalityProps) => {
+  const { tr } = useLanguage();
+  const d = tr.dashboardUI;
   
-  // Helper functions (defined before useMemo to avoid hoisting issues)
   const getPersonalityType = (traits: any[], diversityScore: number, averageValue: number) => {
-    if (diversityScore > 15) return 'De Ontdekker';
-    if (averageValue > 50) return 'De Kenner';
-    if (traits.some(t => t.trait.includes('Specialist'))) return 'De Specialist';
-    return 'De Verzamelaar';
+    if (diversityScore > 15) return d.theExplorer;
+    if (averageValue > 50) return d.theExpert;
+    if (traits.some(t => t.trait.includes(d.specialist))) return d.theSpecialist;
+    return d.theCollector;
   };
 
   const personality = useMemo(() => {
     if (!genres.length) return null;
 
-    // Calculate personality traits based on collection
     const totalGenreItems = genres.reduce((sum, g) => sum + g.count, 0);
     const diversityScore = genres.length / Math.max(totalItems, 1) * 100;
-    const averageAlbumsPerGenre = totalGenreItems / genres.length;
     
-    // Determine dominant traits
     const traits = [];
     const primaryGenre = genres[0];
     const genrePercentage = (primaryGenre?.count || 0) / totalItems * 100;
 
-    // Genre-based personality
     if (genrePercentage > 50) {
       traits.push({
-        trait: `${primaryGenre.genre} Specialist`,
-        description: `Je bent een echte ${primaryGenre.genre.toLowerCase()} liefhebber`,
+        trait: `${primaryGenre.genre} ${d.specialist}`,
+        description: d.trueLovers.replace('{genre}', primaryGenre.genre.toLowerCase()),
         strength: Math.min(genrePercentage, 100),
         icon: Heart,
         color: 'text-red-500'
       });
     } else if (diversityScore > 15) {
       traits.push({
-        trait: 'Muzikale Ontdekkingsreiziger',
-        description: 'Je houdt van diverse muziekstijlen',
+        trait: d.musicalExplorer,
+        description: d.diverseStyles,
         strength: Math.min(diversityScore * 5, 100),
         icon: Palette,
         color: 'text-purple-500'
       });
     } else {
       traits.push({
-        trait: 'Gebalanceerde Verzamelaar',
-        description: 'Je hebt een evenwichtige smaak',
+        trait: d.balancedCollector,
+        description: d.balancedTaste,
         strength: 75,
         icon: Star,
         color: 'text-yellow-500'
       });
     }
 
-    // Value-based traits
     const averageValue = totalValue / Math.max(totalItems, 1);
     if (averageValue > 50) {
       traits.push({
-        trait: 'Kwaliteit Zoeker',
-        description: 'Je kiest voor waardevolle albums',
+        trait: d.qualitySeeker,
+        description: d.valuableAlbums,
         strength: Math.min((averageValue / 100) * 100, 100),
         icon: TrendingUp,
         color: 'text-green-500'
       });
     } else if (averageValue > 20) {
       traits.push({
-        trait: 'Slimme Koper',
-        description: 'Je vindt goede deals',
+        trait: d.smartBuyer,
+        description: d.goodDeals,
         strength: 70,
         icon: Brain,
         color: 'text-blue-500'
       });
     }
 
-    // Era-based traits
     if (averageYear) {
       const currentYear = new Date().getFullYear();
       const agePreference = currentYear - averageYear;
       
       if (agePreference > 40) {
         traits.push({
-          trait: 'Vintage Liefhebber',
-          description: 'Je prefereert klassieke albums',
+          trait: d.vintageLover,
+          description: d.classicAlbums,
           strength: Math.min((agePreference / 50) * 100, 100),
           icon: Clock,
           color: 'text-amber-500'
         });
       } else if (agePreference < 15) {
         traits.push({
-          trait: 'Moderne Verzamelaar',
-          description: 'Je houdt van recente releases',
+          trait: d.modernCollector,
+          description: d.recentReleases,
           strength: 80,
           icon: TrendingUp,
           color: 'text-cyan-500'
@@ -115,11 +111,10 @@ export const CollectionPersonality = ({
       }
     }
 
-    // Collection size traits
     if (totalItems > 100) {
       traits.push({
-        trait: 'Toegewijde Verzamelaar',
-        description: 'Je hebt een indrukwekkende collectie',
+        trait: d.dedicatedCollector,
+        description: d.impressiveCollection,
         strength: Math.min((totalItems / 500) * 100, 100),
         icon: Star,
         color: 'text-violet-500'
@@ -127,26 +122,20 @@ export const CollectionPersonality = ({
     }
 
     return {
-      traits: traits.slice(0, 3), // Keep top 3 traits
+      traits: traits.slice(0, 3),
       diversityScore,
-      dominantGenre: primaryGenre?.genre || 'Onbekend',
+      dominantGenre: primaryGenre?.genre || d.unknown,
       averageValue,
       personalityType: getPersonalityType(traits, diversityScore, averageValue)
     };
-  }, [genres, totalItems, totalValue, averageYear]);
+  }, [genres, totalItems, totalValue, averageYear, d]);
 
 
   const getPersonalityDescription = (type: string) => {
-    switch (type) {
-      case 'De Ontdekker':
-        return 'Je hebt een brede muzikale smaak en bent altijd op zoek naar nieuwe genres en artiesten.';
-      case 'De Kenner':
-        return 'Je weet kwaliteit te herkennen en investeert in waardevolle, bijzondere albums.';
-      case 'De Specialist':
-        return 'Je hebt een diepe passie voor specifieke genres en kent alle ins en outs.';
-      default:
-        return 'Je bouwt gestaag aan een mooie, gevarieerde collectie met oog voor detail.';
-    }
+    if (type === d.theExplorer) return d.explorerDesc;
+    if (type === d.theExpert) return d.expertDesc;
+    if (type === d.theSpecialist) return d.specialistDesc;
+    return d.collectorDesc;
   };
 
   if (!personality) {
@@ -155,14 +144,12 @@ export const CollectionPersonality = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-vinyl-purple" />
-            🧠 Je Collectie Persoonlijkheid
+            🧠 {d.collectionPersonality}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center py-8">
           <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">
-            Voeg meer albums toe om je unieke collectie persoonlijkheid te ontdekken!
-          </p>
+          <p className="text-muted-foreground">{d.addMoreAlbums}</p>
         </CardContent>
       </Card>
     );
@@ -173,11 +160,10 @@ export const CollectionPersonality = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Brain className="w-5 h-5 text-vinyl-purple" />
-          🧠 Je Collectie Persoonlijkheid
+          🧠 {d.collectionPersonality}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Personality Type */}
         <div className="text-center space-y-2">
           <Badge className="bg-gradient-to-r from-vinyl-purple to-vinyl-gold text-white text-lg px-4 py-2">
             {personality.personalityType}
@@ -187,11 +173,8 @@ export const CollectionPersonality = ({
           </p>
         </div>
 
-        {/* Personality Traits */}
         <div className="space-y-4">
-          <h4 className="font-semibold text-sm text-muted-foreground">
-            ✨ Jouw Kenmerken
-          </h4>
+          <h4 className="font-semibold text-sm text-muted-foreground">✨ {d.yourTraits}</h4>
           {personality.traits.map((trait, index) => (
             <div key={index} className="space-y-2">
               <div className="flex items-center justify-between">
@@ -199,41 +182,28 @@ export const CollectionPersonality = ({
                   <trait.icon className={`w-4 h-4 ${trait.color}`} />
                   <span className="font-medium text-sm">{trait.trait}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  {Math.round(trait.strength)}%
-                </span>
+                <span className="text-xs text-muted-foreground">{Math.round(trait.strength)}%</span>
               </div>
               <Progress value={trait.strength} className="h-2" />
-              <p className="text-xs text-muted-foreground">
-                {trait.description}
-              </p>
+              <p className="text-xs text-muted-foreground">{trait.description}</p>
             </div>
           ))}
         </div>
 
-        {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-4 pt-4 border-t border-accent/20">
           <div className="text-center">
-            <div className="text-lg font-bold text-vinyl-purple">
-              {Math.round(personality.diversityScore)}%
-            </div>
-            <div className="text-xs text-muted-foreground">Diversiteit</div>
+            <div className="text-lg font-bold text-vinyl-purple">{Math.round(personality.diversityScore)}%</div>
+            <div className="text-xs text-muted-foreground">{d.diversity}</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-vinyl-gold">
-              {personality.dominantGenre}
-            </div>
-            <div className="text-xs text-muted-foreground">Top Genre</div>
+            <div className="text-lg font-bold text-vinyl-gold">{personality.dominantGenre}</div>
+            <div className="text-xs text-muted-foreground">{d.topGenre}</div>
           </div>
         </div>
 
-        {/* Fun Insight */}
         <div className="bg-accent/10 rounded-lg p-3 text-center">
           <p className="text-sm">
-            🎵 <span className="font-medium">Fun fact:</span> Je collectie heeft een 
-            <span className="text-vinyl-purple font-medium"> 
-              {personality.diversityScore > 15 ? ' zeer diverse' : ' gefocuste'}
-            </span> persoonlijkheid!
+            🎵 <span className="font-medium">{d.funFactLabel}</span> {d.personalityText.replace('{type}', personality.diversityScore > 15 ? d.veryDiverse : d.focused)}
           </p>
         </div>
       </CardContent>

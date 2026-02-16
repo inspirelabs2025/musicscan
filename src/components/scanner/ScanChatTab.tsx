@@ -469,8 +469,8 @@ export function ScanChatTab({ autoStartListening = 0 }: ScanChatTabProps) {
         }
       };
 
-      // Countdown timer - 10 seconds for recognition
-      const totalSeconds = 10;
+      // Countdown timer - 12 seconds for recognition (AudD recommends 2-12s)
+      const totalSeconds = 12;
       let elapsed = 0;
       const interval = setInterval(() => {
         elapsed++;

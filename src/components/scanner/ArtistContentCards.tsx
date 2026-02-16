@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useArtistContent } from '@/hooks/useArtistContent';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Music, BookOpen, Disc3, ShoppingBag, Sparkles } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ArtistContentCardsProps {
   artistName: string | null;
@@ -18,10 +19,7 @@ interface ContentCardProps {
 }
 
 const ContentCard: React.FC<ContentCardProps> = ({ title, image, link, type, icon, badgeColor }) => (
-  <Link
-    to={link}
-    className="flex-shrink-0 w-36 group cursor-pointer"
-  >
+  <Link to={link} className="flex-shrink-0 w-36 group cursor-pointer">
     <div className="relative h-36 w-36 rounded-xl overflow-hidden border border-border/40 bg-muted/30 shadow-sm group-hover:shadow-md group-hover:border-primary/30 transition-all">
       {image ? (
         <img src={image} alt={title} className="h-full w-full object-cover" />
@@ -42,6 +40,8 @@ const ContentCard: React.FC<ContentCardProps> = ({ title, image, link, type, ico
 
 export const ArtistContentCards: React.FC<ArtistContentCardsProps> = ({ artistName }) => {
   const { artistStory, albumStories, singles, anecdotes, products, totalCount, isLoading } = useArtistContent(artistName);
+  const { tr } = useLanguage();
+  const s = tr.scannerUI;
 
   if (isLoading || totalCount === 0) return null;
 
@@ -52,28 +52,28 @@ export const ArtistContentCards: React.FC<ArtistContentCardsProps> = ({ artistNa
       title: artistStory.title,
       image: artistStory.image_url,
       link: `/artists/${artistStory.slug}`,
-      type: 'Artiest',
+      type: s.artistBadge,
       icon: <Music className="h-8 w-8 text-primary/40" />,
       badgeColor: 'bg-purple-600/80',
     });
   }
 
-  albumStories.forEach(s => {
+  albumStories.forEach(story => {
     cards.push({
-      title: s.title,
-      image: s.image_url,
-      link: `/muziek-verhaal/${s.slug}`,
-      type: 'Verhaal',
+      title: story.title,
+      image: story.image_url,
+      link: `/muziek-verhaal/${story.slug}`,
+      type: s.storyBadge,
       icon: <BookOpen className="h-8 w-8 text-primary/40" />,
       badgeColor: 'bg-blue-600/80',
     });
   });
 
-  singles.forEach(s => {
+  singles.forEach(single => {
     cards.push({
-      title: s.title,
-      image: s.image_url,
-      link: `/singles/${s.slug}`,
+      title: single.title,
+      image: single.image_url,
+      link: `/singles/${single.slug}`,
       type: 'Single',
       icon: <Disc3 className="h-8 w-8 text-primary/40" />,
       badgeColor: 'bg-green-600/80',
@@ -96,7 +96,7 @@ export const ArtistContentCards: React.FC<ArtistContentCardsProps> = ({ artistNa
       title: a.title,
       image: a.image_url,
       link: `/anekdotes/${a.slug}`,
-      type: 'Anekdote',
+      type: s.anecdoteBadge,
       icon: <Sparkles className="h-8 w-8 text-primary/40" />,
       badgeColor: 'bg-pink-600/80',
     });
@@ -109,7 +109,7 @@ export const ArtistContentCards: React.FC<ArtistContentCardsProps> = ({ artistNa
       <div className="flex items-center gap-2 mb-2 px-1">
         <Sparkles className="h-3.5 w-3.5 text-primary" />
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          Ontdek meer over {artistName}
+          {s.discoverMore} {artistName}
         </span>
       </div>
       <ScrollArea className="w-full">

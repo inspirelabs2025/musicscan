@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { useDiscogsConnection } from "@/hooks/useDiscogsConnection";
 import { ExternalLink, Link2, Link2Off, Loader2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export const DiscogsConnectButton = () => {
+  const { tr } = useLanguage();
+  const s = tr.scannerUI;
   const {
     connection,
     isLoading,
@@ -17,7 +20,7 @@ export const DiscogsConnectButton = () => {
     return (
       <Button variant="outline" size="sm" disabled>
         <Loader2 className="w-4 h-4 animate-spin mr-2" />
-        Laden...
+        {s.loading}
       </Button>
     );
   }
@@ -63,7 +66,7 @@ export const DiscogsConnectButton = () => {
       ) : (
         <Link2 className="w-4 h-4 mr-2" />
       )}
-      Koppel Discogs
+      {s.connectDiscogs}
     </Button>
   );
 };

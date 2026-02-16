@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CollectionItem } from "@/hooks/useMyCollection";
 import { Disc, Disc3, Music, ExternalLink, TrendingUp, Euro, ShoppingCart, Upload, MapPin, Tag, Calendar, Hash, Barcode, Layers } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CollectionItemDetailProps {
   item: CollectionItem | null;
@@ -13,6 +14,9 @@ interface CollectionItemDetailProps {
 }
 
 export const CollectionItemDetail = ({ item, open, onOpenChange, onExport }: CollectionItemDetailProps) => {
+  const { tr } = useLanguage();
+  const s = tr.scannerUI;
+
   if (!item) return null;
 
   const images = [
@@ -27,20 +31,20 @@ export const CollectionItemDetail = ({ item, open, onOpenChange, onExport }: Col
   const mainImage = images[0];
 
   const infoRows: { label: string; value: string | number | null | undefined; icon?: React.ReactNode }[] = [
-    { label: "Artiest", value: item.artist, icon: <Music className="w-4 h-4" /> },
-    { label: "Titel", value: item.title, icon: <Tag className="w-4 h-4" /> },
-    { label: "Label", value: item.label, icon: <Layers className="w-4 h-4" /> },
-    { label: "Catalogusnummer", value: item.catalog_number, icon: <Hash className="w-4 h-4" /> },
-    { label: "Jaar", value: item.year, icon: <Calendar className="w-4 h-4" /> },
-    { label: "Format", value: item.format },
-    { label: "Genre", value: item.genre },
-    { label: "Land", value: item.country, icon: <MapPin className="w-4 h-4" /> },
-    { label: "Conditie", value: item.condition_grade },
-    { label: "Barcode", value: item.barcode_number, icon: <Barcode className="w-4 h-4" /> },
-    { label: "Matrix nummer", value: item.matrix_number },
-    { label: "Kant", value: item.side },
-    { label: "Stamper codes", value: item.stamper_codes },
-    { label: "Stijl", value: item.style?.join(", ") },
+    { label: s.artist, value: item.artist, icon: <Music className="w-4 h-4" /> },
+    { label: s.title, value: item.title, icon: <Tag className="w-4 h-4" /> },
+    { label: s.label, value: item.label, icon: <Layers className="w-4 h-4" /> },
+    { label: s.catalogNumber, value: item.catalog_number, icon: <Hash className="w-4 h-4" /> },
+    { label: s.year, value: item.year, icon: <Calendar className="w-4 h-4" /> },
+    { label: s.format, value: item.format },
+    { label: s.genre, value: item.genre },
+    { label: s.country, value: item.country, icon: <MapPin className="w-4 h-4" /> },
+    { label: s.conditionLabel, value: item.condition_grade },
+    { label: s.barcode, value: item.barcode_number, icon: <Barcode className="w-4 h-4" /> },
+    { label: s.matrixNumberLabel, value: item.matrix_number },
+    { label: s.side, value: item.side },
+    { label: s.stamperCodes, value: item.stamper_codes },
+    { label: s.style, value: item.style?.join(", ") },
   ];
 
   return (
@@ -49,11 +53,10 @@ export const CollectionItemDetail = ({ item, open, onOpenChange, onExport }: Col
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             {item.media_type === "cd" ? <Disc className="w-5 h-5 text-primary" /> : <Disc3 className="w-5 h-5 text-primary" />}
-            {item.artist ? `${item.artist} – ${item.title || "Onbekend"}` : item.title || "Onbekend item"}
+            {item.artist ? `${item.artist} – ${item.title || s.unknown}` : item.title || s.unknownItem}
           </DialogTitle>
         </DialogHeader>
 
-        {/* Images */}
         {images.length > 0 && (
           <div className="space-y-2">
             {mainImage && (
@@ -67,7 +70,7 @@ export const CollectionItemDetail = ({ item, open, onOpenChange, onExport }: Col
                   <img
                     key={i}
                     src={img}
-                    alt={`Foto ${i + 1}`}
+                    alt={`Photo ${i + 1}`}
                     className="w-20 h-20 rounded-md object-cover border border-border flex-shrink-0"
                   />
                 ))}
@@ -76,34 +79,33 @@ export const CollectionItemDetail = ({ item, open, onOpenChange, onExport }: Col
           </div>
         )}
 
-        {/* Price section */}
         {(item.calculated_advice_price || item.lowest_price || item.median_price || item.highest_price) && (
           <div className="bg-muted/50 rounded-lg p-4 space-y-2">
             <h4 className="font-semibold text-sm flex items-center gap-2">
-              <Euro className="w-4 h-4 text-primary" /> Prijsinformatie
+              <Euro className="w-4 h-4 text-primary" /> {s.priceInfo}
             </h4>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
               {item.calculated_advice_price != null && (
                 <div>
-                  <span className="text-muted-foreground block text-xs">Adviesprijs</span>
+                  <span className="text-muted-foreground block text-xs">{s.advicePrice}</span>
                   <span className="font-bold text-primary">€{item.calculated_advice_price.toFixed(2)}</span>
                 </div>
               )}
               {item.lowest_price != null && (
                 <div>
-                  <span className="text-muted-foreground block text-xs">Laagste</span>
+                  <span className="text-muted-foreground block text-xs">{s.lowest}</span>
                   <span className="font-medium">€{item.lowest_price.toFixed(2)}</span>
                 </div>
               )}
               {item.median_price != null && (
                 <div>
-                  <span className="text-muted-foreground block text-xs">Mediaan</span>
+                  <span className="text-muted-foreground block text-xs">{s.median}</span>
                   <span className="font-medium">€{item.median_price.toFixed(2)}</span>
                 </div>
               )}
               {item.highest_price != null && (
                 <div>
-                  <span className="text-muted-foreground block text-xs">Hoogste</span>
+                  <span className="text-muted-foreground block text-xs">{s.highest}</span>
                   <span className="font-medium">€{item.highest_price.toFixed(2)}</span>
                 </div>
               )}
@@ -113,7 +115,6 @@ export const CollectionItemDetail = ({ item, open, onOpenChange, onExport }: Col
 
         <Separator />
 
-        {/* Details */}
         <div className="space-y-2">
           {infoRows
             .filter(r => r.value != null && r.value !== "" && r.value !== "Not Graded")
@@ -128,53 +129,49 @@ export const CollectionItemDetail = ({ item, open, onOpenChange, onExport }: Col
             ))}
         </div>
 
-        {/* Status badges */}
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary">
             {item.media_type === "cd" ? "CD" : "Vinyl"}
           </Badge>
-          {item.is_public && <Badge variant="outline">Publiek</Badge>}
+          {item.is_public && <Badge variant="outline">{s.publicBadge}</Badge>}
           {item.is_for_sale && (
             <Badge className="bg-green-600 hover:bg-green-700">
-              <ShoppingCart className="w-3 h-3 mr-1" />Te koop
+              <ShoppingCart className="w-3 h-3 mr-1" />{s.forSale}
               {item.marketplace_price ? ` · €${item.marketplace_price.toFixed(2)}` : ""}
             </Badge>
           )}
           {item.marketplace_sleeve_condition && (
-            <Badge variant="outline">Hoes: {item.marketplace_sleeve_condition}</Badge>
+            <Badge variant="outline">{s.sleeve}: {item.marketplace_sleeve_condition}</Badge>
           )}
         </div>
 
-        {/* Shop description */}
         {item.shop_description && (
           <div className="text-sm">
-            <span className="text-muted-foreground text-xs block mb-1">Beschrijving</span>
+            <span className="text-muted-foreground text-xs block mb-1">{s.description}</span>
             <p>{item.shop_description}</p>
           </div>
         )}
 
-        {/* Marketplace details */}
         {item.marketplace_comments && (
           <div className="text-sm">
-            <span className="text-muted-foreground text-xs block mb-1">Opmerkingen</span>
+            <span className="text-muted-foreground text-xs block mb-1">{s.comments}</span>
             <p>{item.marketplace_comments}</p>
           </div>
         )}
 
-        {/* Actions */}
         <div className="flex flex-wrap gap-2 pt-2">
           {item.discogs_url && (
             <Button variant="outline" size="sm" asChild>
               <a href={item.discogs_url} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="w-4 h-4 mr-1" />
-                Discogs pagina
+                {s.discogsPage}
               </a>
             </Button>
           )}
           {item.discogs_id && item.discogs_id > 0 && onExport && (
             <Button variant="outline" size="sm" onClick={() => onExport(item.discogs_id!)}>
               <Upload className="w-4 h-4 mr-1" />
-              Exporteer naar Discogs
+              {s.exportToDiscogs}
             </Button>
           )}
         </div>

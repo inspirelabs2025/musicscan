@@ -234,7 +234,7 @@ const Dashboard = () => {
                           <div className="flex-1 min-w-0">
                             <p className="font-medium truncate">{scan.artist}</p>
                             <p className="text-sm text-muted-foreground truncate">{scan.title}</p>
-                            <p className="text-xs text-muted-foreground">{new Date(scan.created_at).toLocaleDateString('nl-NL')}</p>
+                            <p className="text-xs text-muted-foreground">{new Date(scan.created_at).toLocaleDateString(t.common?.locale === 'en' ? 'en-US' : 'nl-NL')}</p>
                           </div>
                         </div>
                       ))}

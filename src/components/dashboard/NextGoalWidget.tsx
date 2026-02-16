@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Target, Trophy, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Milestone {
   id: string;
@@ -28,67 +29,19 @@ export const NextGoalWidget = ({
   totalScans = 0 
 }: NextGoalWidgetProps) => {
   const navigate = useNavigate();
+  const { tr } = useLanguage();
+  const d = tr.dashboardUI;
 
   const milestones: Milestone[] = [
-    {
-      id: 'first_10',
-      title: 'Eerste Collectie',
-      description: '10 albums verzameld',
-      target: 10,
-      icon: Target,
-      reward: '🎵 Muziek Ontdekker Badge',
-      rarity: 'bronze'
-    },
-    {
-      id: 'quarter_century',
-      title: 'Kwart Eeuw',
-      description: '25 albums in bezit',
-      target: 25,
-      icon: Trophy,
-      reward: '🏆 Verzamelaar Badge',
-      rarity: 'bronze'
-    },
-    {
-      id: 'half_century',
-      title: 'Halve Eeuw',
-      description: '50 albums verzameld',
-      target: 50,
-      icon: Target,
-      reward: '⭐ Enthusiast Status',
-      rarity: 'silver'
-    },
-    {
-      id: 'century_club',
-      title: 'Century Club',
-      description: '100 albums collectie',
-      target: 100,
-      icon: Trophy,
-      reward: '👑 Expert Status',
-      rarity: 'gold'
-    },
-    {
-      id: 'double_century',
-      title: 'Dubbele Eeuw',
-      description: '200 albums sterk',
-      target: 200,
-      icon: Target,
-      reward: '🎁 Master Collector Status',
-      rarity: 'gold'
-    },
-    {
-      id: 'half_millennium',
-      title: 'Halve Millennium',
-      description: '500 albums verzameld',
-      target: 500,
-      icon: Trophy,
-      reward: '💎 Legendary Status',
-      rarity: 'platinum'
-    }
+    { id: 'first_10', title: d.firstCollection, description: d.firstCollectionDesc, target: 10, icon: Target, reward: d.musicDiscovererBadge, rarity: 'bronze' },
+    { id: 'quarter_century', title: d.quarterCentury, description: d.quarterCenturyDesc, target: 25, icon: Trophy, reward: d.collectorBadge, rarity: 'bronze' },
+    { id: 'half_century', title: d.halfCentury, description: d.halfCenturyDesc, target: 50, icon: Target, reward: d.enthusiastStatus, rarity: 'silver' },
+    { id: 'century_club', title: d.centuryClub, description: d.centuryClubDesc, target: 100, icon: Trophy, reward: d.expertStatus, rarity: 'gold' },
+    { id: 'double_century', title: d.doubleCentury, description: d.doubleCenturyDesc, target: 200, icon: Target, reward: d.masterCollectorStatus, rarity: 'gold' },
+    { id: 'half_millennium', title: d.halfMillennium, description: d.halfMillenniumDesc, target: 500, icon: Trophy, reward: d.legendaryStatus, rarity: 'platinum' },
   ];
 
-  const getNextMilestone = () => {
-    return milestones.find(milestone => totalItems < milestone.target);
-  };
+  const getNextMilestone = () => milestones.find(milestone => totalItems < milestone.target);
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
@@ -110,15 +63,10 @@ export const NextGoalWidget = ({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Target className="w-5 h-5 text-vinyl-purple" />
-            🎯 Volgende Doel
+            {d.nextGoal}
           </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/prestaties')}
-            className="text-vinyl-purple hover:text-vinyl-purple hover:bg-vinyl-purple/10"
-          >
-            Alle prestaties
+          <Button variant="ghost" size="sm" onClick={() => navigate('/prestaties')} className="text-vinyl-purple hover:text-vinyl-purple hover:bg-vinyl-purple/10">
+            {d.allAchievements}
             <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
@@ -133,14 +81,10 @@ export const NextGoalWidget = ({
                   <nextMilestone.icon className="w-5 h-5 text-vinyl-purple" />
                   <div>
                     <h4 className="font-semibold text-sm">{nextMilestone.title}</h4>
-                    <p className="text-xs text-muted-foreground">
-                      {nextMilestone.description}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{nextMilestone.description}</p>
                   </div>
                 </div>
-                <Badge 
-                  className={`bg-gradient-to-r ${getRarityColor(nextMilestone.rarity)} text-white text-xs`}
-                >
+                <Badge className={`bg-gradient-to-r ${getRarityColor(nextMilestone.rarity)} text-white text-xs`}>
                   {nextMilestone.rarity}
                 </Badge>
               </div>
@@ -148,29 +92,21 @@ export const NextGoalWidget = ({
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>{totalItems} / {nextMilestone.target}</span>
-                  <span className="text-vinyl-purple font-medium">
-                    {remaining} te gaan
-                  </span>
+                  <span className="text-vinyl-purple font-medium">{remaining} {d.toGo}</span>
                 </div>
                 <Progress value={progress} className="h-2" />
               </div>
 
               <div className="bg-accent/10 rounded-lg p-2 text-center">
-                <p className="text-xs font-medium text-accent">
-                  🎁 {nextMilestone.reward}
-                </p>
+                <p className="text-xs font-medium text-accent">🎁 {nextMilestone.reward}</p>
               </div>
             </div>
           </>
         ) : (
           <div className="text-center py-2">
             <Trophy className="w-8 h-8 text-vinyl-gold mx-auto mb-2" />
-            <h4 className="font-bold text-sm text-foreground mb-1">
-              🏆 Alle Mijlpalen Behaald!
-            </h4>
-            <p className="text-xs text-muted-foreground">
-              Je bent een verzamelmeester!
-            </p>
+            <h4 className="font-bold text-sm text-foreground mb-1">{d.allMilestonesReached}</h4>
+            <p className="text-xs text-muted-foreground">{d.youAreCollectionMaster}</p>
           </div>
         )}
       </CardContent>

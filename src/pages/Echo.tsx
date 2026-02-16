@@ -119,10 +119,10 @@ export default function Echo() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-echo-violet via-background to-background">
-      <div className="relative overflow-hidden py-2 px-4 bg-gradient-to-br from-[hsl(270,60%,20%)] via-[hsl(270,50%,18%)] to-[hsl(270,55%,12%)]">
+      <div className="relative overflow-hidden pt-2 pb-3 px-4 bg-gradient-to-br from-[hsl(270,60%,20%)] via-[hsl(270,50%,18%)] to-[hsl(270,55%,12%)]">
         <div className="container mx-auto max-w-5xl relative z-10">
-          <div className="text-center space-y-1 animate-fade-in">
-            <div className="flex justify-center">
+          <div className="text-center animate-fade-in">
+            <div className="flex justify-center -mb-6">
               <img 
                 src="/magic-mike-logo.png"
                 alt="Magic Mike"
@@ -130,7 +130,7 @@ export default function Echo() {
               />
             </div>
             <h1 className="text-3xl font-bold text-white font-serif">{e.title}</h1>
-            <p className="text-sm text-muted-foreground">{e.subtitle}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{e.subtitle}</p>
           </div>
         </div>
       </div>

@@ -4,14 +4,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuizPlayerStats } from '@/hooks/useQuizPlayerStats';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function QuizHubHero() {
   const { user } = useAuth();
   const { stats, isLoading } = useQuizPlayerStats(user?.id);
+  const { tr } = useLanguage();
+  const q = tr.quizUI;
 
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-purple-900/30 via-primary/20 to-blue-900/30 py-16">
-      {/* Background decoration */}
       <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5"></div>
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl"></div>
@@ -19,47 +21,23 @@ export function QuizHubHero() {
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-400 to-blue-400 bg-clip-text text-transparent">
-            🎮 Muziek Quiz Hub
+            {q.title}
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Test je muziekkennis, verdien badges en daag vrienden uit!
-          </p>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{q.subtitle}</p>
         </div>
         
         {user ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
-            <StatCard 
-              icon={<Trophy className="w-5 h-5 text-yellow-500" />}
-              label="Punten"
-              value={isLoading ? '...' : stats?.total_points?.toLocaleString() || '0'}
-              color="yellow"
-            />
-            <StatCard 
-              icon={<Flame className="w-5 h-5 text-orange-500" />}
-              label="Streak"
-              value={isLoading ? '...' : `${stats?.daily_streak || 0} 🔥`}
-              color="orange"
-            />
-            <StatCard 
-              icon={<Target className="w-5 h-5 text-green-500" />}
-              label="Quizzen"
-              value={isLoading ? '...' : stats?.total_quizzes?.toString() || '0'}
-              color="green"
-            />
-            <StatCard 
-              icon={<Star className="w-5 h-5 text-blue-500" />}
-              label="Best"
-              value={isLoading ? '...' : `${stats?.best_score || 0}%`}
-              color="blue"
-            />
+            <StatCard icon={<Trophy className="w-5 h-5 text-yellow-500" />} label={q.points} value={isLoading ? '...' : stats?.total_points?.toLocaleString() || '0'} color="yellow" />
+            <StatCard icon={<Flame className="w-5 h-5 text-orange-500" />} label={q.streak} value={isLoading ? '...' : `${stats?.daily_streak || 0} 🔥`} color="orange" />
+            <StatCard icon={<Target className="w-5 h-5 text-green-500" />} label={q.quizzes} value={isLoading ? '...' : stats?.total_quizzes?.toString() || '0'} color="green" />
+            <StatCard icon={<Star className="w-5 h-5 text-blue-500" />} label={q.best} value={isLoading ? '...' : `${stats?.best_score || 0}%`} color="blue" />
           </div>
         ) : (
           <div className="text-center">
-            <p className="text-muted-foreground mb-4">Log in om je voortgang bij te houden</p>
+            <p className="text-muted-foreground mb-4">{q.loginPrompt}</p>
             <Link to="/auth">
-              <Button size="lg" className="bg-gradient-to-r from-primary to-purple-600">
-                Start met Spelen
-              </Button>
+              <Button size="lg" className="bg-gradient-to-r from-primary to-purple-600">{q.startPlaying}</Button>
             </Link>
           </div>
         )}
@@ -68,17 +46,7 @@ export function QuizHubHero() {
   );
 }
 
-function StatCard({ 
-  icon, 
-  label, 
-  value, 
-  color 
-}: { 
-  icon: React.ReactNode; 
-  label: string; 
-  value: string; 
-  color: string;
-}) {
+function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: string; }) {
   const colorClasses = {
     yellow: 'from-yellow-500/20 to-yellow-600/10 border-yellow-500/30',
     orange: 'from-orange-500/20 to-orange-600/10 border-orange-500/30',

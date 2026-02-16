@@ -5,6 +5,7 @@ import { MessageCircle, ArrowLeft } from 'lucide-react';
 import MessagesList from './MessagesList';
 import ChatWindow from './ChatWindow';
 import { Conversation, useConversations } from '@/hooks/useConversations';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MessagingInterfaceProps {
   selectedConversationId?: string;
@@ -14,6 +15,8 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ selectedConvers
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [showConversationList, setShowConversationList] = useState(true);
   const { data: conversations } = useConversations();
+  const { tr } = useLanguage();
+  const s = tr.socialUI;
 
   // Auto-select conversation when selectedConversationId prop changes
   useEffect(() => {
@@ -28,7 +31,7 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ selectedConvers
 
   const handleConversationSelect = (conversation: Conversation) => {
     setSelectedConversation(conversation);
-    setShowConversationList(false); // Hide list on mobile
+    setShowConversationList(false);
   };
 
   const handleBackToList = () => {
@@ -45,7 +48,7 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ selectedConvers
       `}>
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
-            <h3 className="font-medium">Berichten</h3>
+            <h3 className="font-medium">{s.messages}</h3>
             <Button variant="ghost" size="sm">
               <MessageCircle className="h-4 w-4" />
             </Button>
@@ -73,10 +76,8 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ selectedConvers
           <Card className="h-full flex items-center justify-center border-0 lg:border">
             <div className="text-center p-8">
               <MessageCircle className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">Selecteer een gesprek</h3>
-              <p className="text-muted-foreground">
-                Kies een gesprek uit de lijst om te beginnen met chatten.
-              </p>
+              <h3 className="text-lg font-medium mb-2">{s.selectConversation}</h3>
+              <p className="text-muted-foreground">{s.selectConversationDesc}</p>
             </div>
           </Card>
         )}

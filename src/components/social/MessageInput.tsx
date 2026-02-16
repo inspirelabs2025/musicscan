@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Loader2 } from 'lucide-react';
 import { useSendMessage } from '@/hooks/useConversations';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MessageInputProps {
   conversationId: string;
@@ -11,15 +12,13 @@ interface MessageInputProps {
 const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) => {
   const [message, setMessage] = useState('');
   const sendMessage = useSendMessage();
+  const { tr } = useLanguage();
+  const s = tr.socialUI;
 
   const handleSend = async () => {
     if (!message.trim()) return;
-
     try {
-      await sendMessage.mutateAsync({
-        conversationId,
-        content: message.trim(),
-      });
+      await sendMessage.mutateAsync({ conversationId, content: message.trim() });
       setMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
@@ -36,7 +35,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) => {
   return (
     <div className="flex gap-2 p-4 border-t bg-background">
       <Textarea
-        placeholder="Typ een bericht..."
+        placeholder={s.typePlaceholder}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}

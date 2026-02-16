@@ -131,11 +131,9 @@ export default function Echo() {
               <div className="relative">
                 <img 
                   src={echoAvatar}
-                   alt="Magic Mike"
-                  className="w-32 h-32 rounded-full border-4 border-echo-lavender/50 shadow-2xl animate-echo-pulse"
+                  alt="Magic Mike"
+                  className="w-32 h-32 object-contain drop-shadow-2xl animate-echo-pulse"
                 />
-                <div className="absolute inset-0 rounded-full border-2 border-echo-lavender animate-ping"></div>
-                <div className="absolute inset-0 rounded-full border-2 border-echo-gold animate-ping delay-500"></div>
               </div>
             </div>
 

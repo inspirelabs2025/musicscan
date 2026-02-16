@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { MessageSquare, Bot, Sparkles, ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ChatMessage {
   id: string;
@@ -26,36 +27,37 @@ const useRecentChatMessages = () => {
       if (error) throw error;
       return data as ChatMessage[];
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
   });
 };
 
-const quickPrompts = [
-  "Vertel over mijn zeldzaamste albums",
-  "Welke genres heb ik het meest?",
-  "Aanbevelingen voor nieuwe muziek",
-  "Wat is mijn collectie waard?"
-];
-
 export const ChatWidget = () => {
   const { data: messages, isLoading } = useRecentChatMessages();
+  const { tr } = useLanguage();
+  const d = tr.dashboardUI;
+
+  const quickPrompts = [
+    d.promptRarestAlbums,
+    d.promptTopGenres,
+    d.promptRecommendations,
+    d.promptCollectionValue,
+  ];
 
   return (
     <Card className="border-2 hover:border-vinyl-gold/50 transition-all duration-300 hover:shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bot className="w-5 h-5 text-vinyl-gold animate-pulse" />
-          💬 Chat met je Muziek
+          {d.chatWithYourMusic}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Recent Chat Preview */}
         {!isLoading && messages && messages.length > 0 ? (
           <div className="space-y-2">
-            <div className="text-sm font-medium text-muted-foreground mb-2">🕒 Laatste gesprek:</div>
+            <div className="text-sm font-medium text-muted-foreground mb-2">{d.lastConversation}</div>
             <div className="bg-accent/10 p-3 rounded-lg">
               <div className="text-xs text-muted-foreground mb-1">
-                {messages[0].sender_type === 'user' ? '👤 Jij' : '🤖 Assistant'}
+                {messages[0].sender_type === 'user' ? `👤 ${d.you}` : `🤖 ${d.assistant}`}
               </div>
               <div className="text-sm line-clamp-2">
                 {messages[0].message}
@@ -66,14 +68,13 @@ export const ChatWidget = () => {
           <div className="text-center py-3">
             <MessageSquare className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
             <p className="text-sm text-muted-foreground">
-              Begin een gesprek over je muziek!
+              {d.startAConversation}
             </p>
           </div>
         )}
 
-        {/* Quick Prompt Suggestions */}
         <div className="space-y-2">
-          <div className="text-sm font-medium text-muted-foreground">💡 Vraag me iets:</div>
+          <div className="text-sm font-medium text-muted-foreground">{d.askMeSomething}</div>
           <div className="grid grid-cols-1 gap-1">
             {quickPrompts.slice(0, 2).map((prompt, index) => (
               <Button 
@@ -92,11 +93,10 @@ export const ChatWidget = () => {
           </div>
         </div>
 
-        {/* Action Button */}
         <Button asChild className="w-full bg-gradient-to-r from-vinyl-gold to-vinyl-gold/80">
           <Link to="/collection-chat">
             <MessageSquare className="w-4 h-4 mr-2" />
-            Open Chat
+            {d.openChat}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Link>
         </Button>

@@ -128,13 +128,12 @@ export default function Echo() {
         <div className="container mx-auto max-w-5xl relative z-10">
           <div className="text-center space-y-4 animate-fade-in">
             <div className="flex justify-center mb-6">
-              <div className="relative">
-                <img 
-                  src={echoAvatar}
-                  alt="Magic Mike"
-                  className="w-32 h-32 object-contain drop-shadow-2xl animate-echo-pulse"
-                />
-              </div>
+              <img 
+                src={echoAvatar}
+                alt="Magic Mike"
+                className="w-40 h-40 object-contain"
+                onError={(e) => console.error('Logo failed to load:', e)}
+              />
             </div>
 
             <h1 className="text-5xl font-bold text-white mb-2 font-serif">{e.title}</h1>

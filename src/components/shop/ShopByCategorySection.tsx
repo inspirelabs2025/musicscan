@@ -1,36 +1,19 @@
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-const categories = [
-  { 
-    name: "Vinyl", 
-    emoji: "🎧", 
-    slug: "vinyl",
-    description: "LP's en singles"
-  },
-  { 
-    name: "CD's", 
-    emoji: "💿", 
-    slug: "cd",
-    description: "Albums en boxsets"
-  },
-  { 
-    name: "Merchandise", 
-    emoji: "🎁", 
-    slug: "merchandise",
-    description: "T-shirts"
-  },
-  { 
-    name: "Art", 
-    emoji: "🎨", 
-    slug: "art",
-    description: "Kunstwerken"
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function ShopByCategorySection() {
   const isMobile = useIsMobile();
+  const { tr } = useLanguage();
+  const sp = tr.shopPageUI;
+
+  const categories = [
+    { name: sp.catVinyl, emoji: "🎧", slug: "vinyl", description: sp.catVinylDesc },
+    { name: sp.catCds, emoji: "💿", slug: "cd", description: sp.catCdsDesc },
+    { name: sp.catMerch, emoji: "🎁", slug: "merchandise", description: sp.catMerchDesc },
+    { name: sp.catArt, emoji: "🎨", slug: "art", description: sp.catArtDesc },
+  ];
 
   if (isMobile) {
     return (
@@ -61,7 +44,7 @@ export function ShopByCategorySection() {
               <h3 className="font-bold text-xl">{cat.name}</h3>
               <p className="text-sm text-muted-foreground">{cat.description}</p>
               <div className="pt-2">
-                <p className="text-lg font-bold text-vinyl-gold">Vanaf €{cat.slug === 'art' ? '29,95' : cat.slug === 'merchandise' ? '24,95' : cat.slug === 'buttons' ? '4,50' : cat.slug === 'vinyl' ? '15' : '5'}</p>
+                <p className="text-lg font-bold text-vinyl-gold">{sp.fromPrice} €{cat.slug === 'art' ? '29,95' : cat.slug === 'merchandise' ? '24,95' : cat.slug === 'buttons' ? '4,50' : cat.slug === 'vinyl' ? '15' : '5'}</p>
               </div>
             </div>
           </Card>

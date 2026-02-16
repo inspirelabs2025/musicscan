@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Sparkles, Eye, Palette } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
 import { CategoryNavigation } from "@/components/CategoryNavigation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PosterShop() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -21,6 +22,8 @@ export default function PosterShop() {
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc" | "popular">("newest");
   const [showFeatured, setShowFeatured] = useState(false);
   const [showOnSale, setShowOnSale] = useState(false);
+  const { tr } = useLanguage();
+  const sp = tr.shopPageUI;
 
   const { data: posterProducts, isLoading } = usePlatformProducts({ 
     mediaType: 'art',
@@ -29,34 +32,22 @@ export default function PosterShop() {
     onSale: showOnSale || undefined,
   });
 
-  // Get accurate counts from database
   const { data: productCounts } = usePlatformProductCounts();
 
-  // Products are already filtered by the hook, no need for client-side filtering
-  // Get other product counts for navigation (from counts hook)
-  
-
-  // Filter and sort products
   const filteredProducts = posterProducts
     ?.filter(product => {
       if (!searchQuery) return true;
-      
       const searchTerms = searchQuery.toLowerCase().split(/\s+/).filter(term => term.length > 0);
       const searchableText = `${product.artist || ''} ${product.title || ''} ${product.tags?.join(' ') || ''}`.toLowerCase();
-      
       return searchTerms.every(term => searchableText.includes(term));
     })
     .sort((a, b) => {
       switch (sortBy) {
-        case "price-asc":
-          return a.price - b.price;
-        case "price-desc":
-          return b.price - a.price;
-        case "popular":
-          return b.view_count - a.view_count;
+        case "price-asc": return a.price - b.price;
+        case "price-desc": return b.price - a.price;
+        case "popular": return b.view_count - a.view_count;
         case "newest":
-        default:
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       }
     });
 
@@ -75,7 +66,6 @@ export default function PosterShop() {
         <meta property="og:title" content="Premium Art Posters - Unieke Muziek Kunst" />
         <meta property="og:description" content="Unieke posters van iconische muziek artiesten. Museum-kwaliteit kunst voor aan de muur." />
         <meta property="og:type" content="website" />
-        
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -84,10 +74,7 @@ export default function PosterShop() {
             "description": "Unieke posters van muziek artiesten",
             "url": "https://www.musicscan.app/posters",
             "numberOfItems": posterProducts?.length || 0,
-            "about": {
-              "@type": "Thing",
-              "name": "Art Posters"
-            }
+            "about": { "@type": "Thing", "name": "Art Posters" }
           })}
         </script>
       </Helmet>
@@ -99,7 +86,6 @@ export default function PosterShop() {
             { name: "Poster Shop", url: "/posters" }
           ]} />
 
-          {/* Category Navigation */}
           <CategoryNavigation
             currentCategory="poster"
             metalPrintsCount={productCounts?.metalPrintsCount || 0}
@@ -110,39 +96,33 @@ export default function PosterShop() {
             canvasMinPrice={productCounts?.canvasMinPrice || 0}
           />
 
-          {/* Hero Header - hidden on mobile for compact layout */}
+          {/* Hero */}
           <div className="hidden md:block relative overflow-hidden rounded-2xl p-12 text-white" style={{ background: 'linear-gradient(to bottom right, hsl(271, 81%, 56%), hsl(271, 81%, 45%))' }}>
             <div className="relative z-10 space-y-4">
               <div className="flex items-center gap-2">
                 <Palette className="h-6 w-6" />
-                <span className="text-sm font-semibold uppercase tracking-wide">Digitale Kunst</span>
+                <span className="text-sm font-semibold uppercase tracking-wide">{sp.digitalArt}</span>
               </div>
-              <h1 className="text-5xl font-bold">
-                Premium Art Posters
-              </h1>
-              <p className="text-xl text-white/90 max-w-2xl">
-                Unieke posters van iconische muziek artiesten in verschillende kunststijlen. 
-                Van Pop Art tot Vectorized Cartoon - elk kunstwerk is uniek.
-              </p>
+              <h1 className="text-5xl font-bold">{sp.posterHeroTitle}</h1>
+              <p className="text-xl text-white/90 max-w-2xl">{sp.posterHeroSubtitle}</p>
               
-              {/* Stats Row */}
               <div className="flex flex-wrap gap-6 pt-4">
                 <div className="space-y-1">
                   <div className="text-3xl font-bold">{productCounts?.postersCount || 0}</div>
-                  <div className="text-sm text-white/80">Posters</div>
+                  <div className="text-sm text-white/80">{sp.posters}</div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-3xl font-bold">€{avgPrice}</div>
-                  <div className="text-sm text-white/80">Gem. Prijs</div>
+                  <div className="text-sm text-white/80">{sp.avgPrice}</div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-3xl font-bold">{featuredCount}</div>
-                  <div className="text-sm text-white/80">Featured</div>
+                  <div className="text-sm text-white/80">{sp.featured}</div>
                 </div>
                 {onSaleCount > 0 && (
                   <div className="space-y-1">
                     <div className="text-3xl font-bold">{onSaleCount}</div>
-                    <div className="text-sm text-white/80">In Aanbieding</div>
+                    <div className="text-sm text-white/80">{sp.onSale}</div>
                   </div>
                 )}
               </div>
@@ -150,43 +130,26 @@ export default function PosterShop() {
             <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
           </div>
 
-          {/* Filters & Search */}
+          {/* Filters */}
           <Card>
             <CardContent className="p-6">
               <div className="flex flex-col lg:flex-row gap-4">
-                {/* Search */}
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Zoek op artiest, album of stijl..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
+                  <Input placeholder={sp.searchArtistAlbumStyle} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
                 </div>
-
-                {/* Sort */}
                 <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                  <SelectTrigger className="w-full lg:w-[200px]">
-                    <SelectValue placeholder="Sorteer op..." />
-                  </SelectTrigger>
+                  <SelectTrigger className="w-full lg:w-[200px]"><SelectValue placeholder={sp.sortPlaceholder} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="newest">Nieuwste eerst</SelectItem>
-                    <SelectItem value="price-asc">Prijs: Laag - Hoog</SelectItem>
-                    <SelectItem value="price-desc">Prijs: Hoog - Laag</SelectItem>
-                    <SelectItem value="popular">Meest populair</SelectItem>
+                    <SelectItem value="newest">{sp.newestFirst}</SelectItem>
+                    <SelectItem value="price-asc">{sp.priceLowHigh}</SelectItem>
+                    <SelectItem value="price-desc">{sp.priceHighLow}</SelectItem>
+                    <SelectItem value="popular">{sp.mostPopular}</SelectItem>
                   </SelectContent>
                 </Select>
-
-                {/* Filter Toggles */}
                 <div className="flex gap-2">
-                  <Button
-                    variant={showFeatured ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setShowFeatured(!showFeatured)}
-                  >
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Featured
+                  <Button variant={showFeatured ? "default" : "outline"} size="sm" onClick={() => setShowFeatured(!showFeatured)}>
+                    <Sparkles className="h-4 w-4 mr-2" />{sp.featured}
                   </Button>
                 </div>
               </div>
@@ -199,11 +162,7 @@ export default function PosterShop() {
               {[...Array(8)].map((_, i) => (
                 <Card key={i} className="overflow-hidden">
                   <Skeleton className="aspect-square w-full" />
-                  <CardContent className="p-4 space-y-2">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                    <Skeleton className="h-6 w-20" />
-                  </CardContent>
+                  <CardContent className="p-4 space-y-2"><Skeleton className="h-4 w-3/4" /><Skeleton className="h-4 w-1/2" /><Skeleton className="h-6 w-20" /></CardContent>
                 </Card>
               ))}
             </div>
@@ -212,82 +171,31 @@ export default function PosterShop() {
               {filteredProducts.map((product) => (
                 <Link key={product.id} to={`/product/${product.slug}`}>
                   <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-2 hover:border-primary h-full">
-                    {/* Image */}
                     <div className="relative aspect-square overflow-hidden bg-muted">
-                      <img
-                        src={product.primary_image || product.images[0] || '/placeholder.svg'}
-                        alt={`${product.artist} - ${product.title} poster`}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                      
-                      {/* Badges Overlay */}
+                      <img src={product.primary_image || product.images[0] || '/placeholder.svg'} alt={`${product.artist} - ${product.title} poster`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <div className="absolute top-3 left-3 flex flex-col gap-2">
-                        {product.is_featured && (
-                          <Badge className="bg-vinyl-gold text-black font-bold">
-                            <Sparkles className="h-3 w-3 mr-1" />
-                            Featured
-                          </Badge>
-                        )}
-                        {product.is_on_sale && (
-                          <Badge variant="destructive" className="font-bold">
-                            Sale
-                          </Badge>
-                        )}
-                        {product.is_new && (
-                          <Badge variant="secondary" className="font-bold">
-                            Nieuw
-                          </Badge>
-                        )}
-                        {/* Style Badge */}
+                        {product.is_featured && (<Badge className="bg-vinyl-gold text-black font-bold"><Sparkles className="h-3 w-3 mr-1" />{sp.featured}</Badge>)}
+                        {product.is_on_sale && (<Badge variant="destructive" className="font-bold">{sp.sale}</Badge>)}
+                        {product.is_new && (<Badge variant="secondary" className="font-bold">{sp.newBadge}</Badge>)}
                         {product.tags && product.tags.length > 0 && (
-                          <Badge variant="outline" className="bg-black/60 text-white border-white/20">
-                            {product.tags[0]}
-                          </Badge>
+                          <Badge variant="outline" className="bg-black/60 text-white border-white/20">{product.tags[0]}</Badge>
                         )}
                       </div>
-
-                      {/* View Count */}
-                      <div className="absolute bottom-3 right-3">
-                        <Badge variant="secondary" className="bg-black/60 text-white border-0">
-                          <Eye className="h-3 w-3 mr-1" />
-                          {product.view_count}
-                        </Badge>
-                      </div>
+                      <div className="absolute bottom-3 right-3"><Badge variant="secondary" className="bg-black/60 text-white border-0"><Eye className="h-3 w-3 mr-1" />{product.view_count}</Badge></div>
                     </div>
-
-                    {/* Content */}
                     <CardContent className="p-4 space-y-2">
                       <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground font-medium">
-                          {product.artist || 'Various Artists'}
-                        </p>
-                        <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                          {product.title}
-                        </h3>
+                        <p className="text-sm text-muted-foreground font-medium">{product.artist || 'Various Artists'}</p>
+                        <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors">{product.title}</h3>
                       </div>
-
-                      {product.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {product.description}
-                        </p>
-                      )}
+                      {product.description && (<p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>)}
                     </CardContent>
-
-                    {/* Footer */}
                     <CardFooter className="p-4 pt-0 flex items-center justify-between">
                       <div className="space-y-1">
-                        {product.is_on_sale && product.compare_at_price && (
-                          <p className="text-sm text-muted-foreground line-through">
-                            €{product.compare_at_price.toFixed(2)}
-                          </p>
-                        )}
-                        <p className="text-2xl font-bold text-vinyl-gold">
-                          €{product.price.toFixed(2)}
-                        </p>
+                        {product.is_on_sale && product.compare_at_price && (<p className="text-sm text-muted-foreground line-through">€{product.compare_at_price.toFixed(2)}</p>)}
+                        <p className="text-2xl font-bold text-vinyl-gold">€{product.price.toFixed(2)}</p>
                       </div>
-                      <Button variant="outline" size="sm">
-                        Bekijk
-                      </Button>
+                      <Button variant="outline" size="sm">{sp.view}</Button>
                     </CardFooter>
                   </Card>
                 </Link>
@@ -297,17 +205,11 @@ export default function PosterShop() {
             <Card className="p-12 text-center">
               <div className="space-y-4">
                 <div className="text-4xl">🎨</div>
-                <h3 className="text-xl font-bold">Geen posters gevonden</h3>
+                <h3 className="text-xl font-bold">{sp.noPostersFound}</h3>
                 <p className="text-muted-foreground">
-                  {searchQuery 
-                    ? `Geen resultaten voor "${searchQuery}". Probeer een andere zoekopdracht.`
-                    : "Er zijn momenteel geen posters beschikbaar."}
+                  {searchQuery ? sp.noResultsFor.replace('{query}', searchQuery) : sp.noPostersAvailable}
                 </p>
-                {searchQuery && (
-                  <Button onClick={() => setSearchQuery("")} variant="outline">
-                    Wis filters
-                  </Button>
-                )}
+                {searchQuery && (<Button onClick={() => setSearchQuery("")} variant="outline">{sp.clearFilters}</Button>)}
               </div>
             </Card>
           )}

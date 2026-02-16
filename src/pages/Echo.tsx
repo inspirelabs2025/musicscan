@@ -123,13 +123,11 @@ export default function Echo() {
         <div className="container mx-auto max-w-5xl relative z-10">
           <div className="text-center space-y-4 animate-fade-in">
             <div className="flex justify-center mb-4">
-              <div className="w-28 h-28 rounded-2xl bg-background/80 backdrop-blur-sm shadow-lg flex items-center justify-center p-3">
-                <img 
-                  src="/magic-mike-logo.png"
-                  alt="Magic Mike"
-                  className="w-full h-full object-contain"
-                />
-              </div>
+              <img 
+                src="/magic-mike-logo.png"
+                alt="Magic Mike"
+                className="w-48 h-48 object-contain drop-shadow-xl"
+              />
             </div>
 
             <h1 className="text-4xl font-bold text-foreground mb-2 font-serif">{e.title}</h1>

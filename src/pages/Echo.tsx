@@ -35,6 +35,7 @@ export default function Echo() {
 
   useEffect(() => { scrollToBottom(); }, [messages]);
   useEffect(() => { loadMessages(); }, []);
+  useEffect(() => { window.scrollTo(0, 0); }, []);
 
   const loadMessages = async () => {
     const { data: conversation } = await supabase

@@ -1,3 +1,3 @@
 # Force Vercel deployment
-timestamp: 2025-01-06T12:00:00Z
-reason: Activate vercel.json rewrites for sitemap routing to Supabase Storage
+timestamp: 2026-02-16T17:00:00Z
+reason: Add CDN-level cache-busting headers (Vercel-CDN-Cache-Control, Surrogate-Control) to prevent stale index.html serving

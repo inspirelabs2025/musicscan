@@ -8,7 +8,6 @@ if ('serviceWorker' in navigator) {
       });
     });
   });
-  // Also clear the SW controller immediately
   if (navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
   }
@@ -21,6 +20,16 @@ if ('caches' in window) {
       }
     });
   });
+}
+
+// Clear any stale version tracking on fresh load
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.has('_v')) {
+  // Remove the cache-busting param from URL without reload
+  const cleanUrl = window.location.pathname + window.location.hash;
+  window.history.replaceState(null, '', cleanUrl);
+  // Clear reload tracking since we just did a forced reload
+  sessionStorage.removeItem('musicscan_reload_count');
 }
 
 import React, { Suspense, lazy, useState, useEffect } from 'react'

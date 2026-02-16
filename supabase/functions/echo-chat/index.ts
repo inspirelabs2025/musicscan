@@ -89,32 +89,32 @@ serve(async (req) => {
       { role: 'user', content: message }
     ];
 
-    // Call OpenAI
-    const openaiKey = Deno.env.get('OPENAI_API_KEY');
+    // Call AI via Lovable gateway
+    const apiKey = Deno.env.get('LOVABLE_API_KEY');
     const startTime = Date.now();
     
-    console.log(`Calling OpenAI with ${messages.length} messages...`);
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    console.log(`Calling Lovable AI gateway with ${messages.length} messages...`);
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'google/gemini-2.5-flash',
         messages,
         temperature: 0.8,
         max_tokens: 2000,
       }),
     });
 
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
-      console.error('OpenAI error:', errorText);
-      throw new Error(`OpenAI API error: ${openaiResponse.status}`);
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('AI gateway error:', errorText);
+      throw new Error(`AI gateway error: ${aiResponse.status}`);
     }
 
-    const aiData = await openaiResponse.json();
+    const aiData = await aiResponse.json();
     const echoReply = aiData.choices[0].message.content;
     const tokensUsed = aiData.usage?.total_tokens;
     const responseTime = Date.now() - startTime;

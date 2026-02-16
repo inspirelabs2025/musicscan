@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { TrendingUp, TrendingDown, Minus, Euro } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PriceAnalysisSectionProps {
   lowestPrice?: number | null;
@@ -13,17 +14,12 @@ interface PriceAnalysisSectionProps {
 }
 
 export function PriceAnalysisSection({
-  lowestPrice,
-  medianPrice,
-  highestPrice,
-  calculatedAdvicePrice,
-  marketplacePrice,
-  currency = "€"
+  lowestPrice, medianPrice, highestPrice, calculatedAdvicePrice, marketplacePrice, currency = "€"
 }: PriceAnalysisSectionProps) {
-  // If no price data available, don't render
-  if (!lowestPrice && !medianPrice && !highestPrice && !calculatedAdvicePrice && !marketplacePrice) {
-    return null;
-  }
+  const { tr } = useLanguage();
+  const sc = tr.scanCollectionUI;
+
+  if (!lowestPrice && !medianPrice && !highestPrice && !calculatedAdvicePrice && !marketplacePrice) return null;
 
   const formatPrice = (price: number | null | undefined) => {
     if (!price) return "N/A";
@@ -39,17 +35,11 @@ export function PriceAnalysisSection({
 
   const getMarketComparison = () => {
     if (!marketplacePrice || !calculatedAdvicePrice) return null;
-    
     const difference = marketplacePrice - calculatedAdvicePrice;
     const percentageDiff = (difference / calculatedAdvicePrice) * 100;
-    
-    if (Math.abs(percentageDiff) < 5) {
-      return { status: "fair", icon: Minus, text: "Marktconform geprijsd" };
-    } else if (percentageDiff > 0) {
-      return { status: "high", icon: TrendingUp, text: `${percentageDiff.toFixed(1)}% boven marktwaarde` };
-    } else {
-      return { status: "low", icon: TrendingDown, text: `${Math.abs(percentageDiff).toFixed(1)}% onder marktwaarde` };
-    }
+    if (Math.abs(percentageDiff) < 5) return { status: "fair", icon: Minus, text: sc.fairlyPriced };
+    if (percentageDiff > 0) return { status: "high", icon: TrendingUp, text: sc.aboveMarket.replace('{pct}', percentageDiff.toFixed(1)) };
+    return { status: "low", icon: TrendingDown, text: sc.belowMarket.replace('{pct}', Math.abs(percentageDiff).toFixed(1)) };
   };
 
   const marketComparison = getMarketComparison();
@@ -57,65 +47,42 @@ export function PriceAnalysisSection({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Euro className="w-5 h-5" />
-          Prijsanalyse
-        </CardTitle>
+        <CardTitle className="flex items-center gap-2"><Euro className="w-5 h-5" />{sc.priceAnalysis}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Market Value Range */}
         {(lowestPrice || medianPrice || highestPrice) && (
           <div className="space-y-3">
-            <h4 className="font-medium text-sm text-muted-foreground">Marktwaarde Bereik</h4>
+            <h4 className="font-medium text-sm text-muted-foreground">{sc.marketValueRange}</h4>
             <div className="flex justify-between text-sm">
-              <span className="text-green-600">Min: {formatPrice(lowestPrice)}</span>
-              <span className="font-medium">Med: {formatPrice(medianPrice)}</span>
-              <span className="text-red-600">Max: {formatPrice(highestPrice)}</span>
+              <span className="text-green-600">{sc.min}: {formatPrice(lowestPrice)}</span>
+              <span className="font-medium">{sc.med}: {formatPrice(medianPrice)}</span>
+              <span className="text-red-600">{sc.max}: {formatPrice(highestPrice)}</span>
             </div>
-            {lowestPrice && highestPrice && (
-              <Progress value={50} className="h-2" />
-            )}
+            {lowestPrice && highestPrice && <Progress value={50} className="h-2" />}
           </div>
         )}
-
-        {/* Calculated Advice Price */}
         {calculatedAdvicePrice && (
           <div className="space-y-2">
-            <h4 className="font-medium text-sm text-muted-foreground">Geadviseerde Waarde</h4>
-            <div className="text-2xl font-bold text-primary">
-              {formatPrice(calculatedAdvicePrice)}
-            </div>
-            {lowestPrice && highestPrice && (
-              <Progress value={getPricePosition()} className="h-3" />
-            )}
+            <h4 className="font-medium text-sm text-muted-foreground">{sc.advisedValue}</h4>
+            <div className="text-2xl font-bold text-primary">{formatPrice(calculatedAdvicePrice)}</div>
+            {lowestPrice && highestPrice && <Progress value={getPricePosition()} className="h-3" />}
           </div>
         )}
-
-        {/* Current Marketplace Price */}
         {marketplacePrice && (
           <div className="space-y-2">
-            <h4 className="font-medium text-sm text-muted-foreground">Huidige Vraagprijs</h4>
+            <h4 className="font-medium text-sm text-muted-foreground">{sc.currentAskingPrice}</h4>
             <div className="flex items-center gap-2">
               <span className="text-xl font-semibold">{formatPrice(marketplacePrice)}</span>
               {marketComparison && (
-                <Badge 
-                  variant={marketComparison.status === 'fair' ? 'secondary' : 
-                          marketComparison.status === 'high' ? 'destructive' : 'default'}
-                  className="flex items-center gap-1"
-                >
-                  <marketComparison.icon className="w-3 h-3" />
-                  {marketComparison.text}
+                <Badge variant={marketComparison.status === 'fair' ? 'secondary' : marketComparison.status === 'high' ? 'destructive' : 'default'} className="flex items-center gap-1">
+                  <marketComparison.icon className="w-3 h-3" />{marketComparison.text}
                 </Badge>
               )}
             </div>
           </div>
         )}
-
-        {/* Price Insights */}
         {(lowestPrice && highestPrice) && (
-          <div className="text-xs text-muted-foreground pt-2 border-t">
-            Prijsdata gebaseerd op recente verkopen en huidige marktaanbod
-          </div>
+          <div className="text-xs text-muted-foreground pt-2 border-t">{sc.priceDataBased}</div>
         )}
       </CardContent>
     </Card>

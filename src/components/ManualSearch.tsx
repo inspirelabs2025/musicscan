@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ManualSearchProps {
   analysisResult: any;
@@ -14,156 +15,88 @@ interface ManualSearchProps {
   onBack?: () => void;
 }
 
-export const ManualSearch: React.FC<ManualSearchProps> = ({
-  analysisResult,
-  onResultsFound,
-  mediaType,
-  onBack
-}) => {
+export const ManualSearch: React.FC<ManualSearchProps> = ({ analysisResult, onResultsFound, mediaType, onBack }) => {
+  const { tr } = useLanguage();
+  const sc = tr.scanCollectionUI;
   const [searchQuery, setSearchQuery] = useState({
     artist: analysisResult?.analysis?.artist || '',
     title: analysisResult?.analysis?.title || '',
     catalog: analysisResult?.analysis?.catalog_number || ''
   });
-  
   const [showAdvanced, setShowAdvanced] = useState(false);
   const { searchCatalog, isSearching } = useDiscogsSearch();
 
   const handleSearch = async () => {
-    if (!searchQuery.artist.trim() && !searchQuery.title.trim() && !searchQuery.catalog.trim()) {
-      return;
-    }
-    
+    if (!searchQuery.artist.trim() && !searchQuery.title.trim() && !searchQuery.catalog.trim()) return;
     try {
-      const results = await searchCatalog(
-        searchQuery.catalog,
-        searchQuery.artist,
-        searchQuery.title,
-        true,
-        true // force retry
-      );
-      
-      if (results?.results?.length > 0) {
-        onResultsFound(results.results);
-      }
-    } catch (error) {
-      console.error('Manual search failed:', error);
-    }
-  };
-
-  const handleQuickFix = (field: string, value: string) => {
-    setSearchQuery(prev => ({
-      ...prev,
-      [field]: value
-    }));
+      const results = await searchCatalog(searchQuery.catalog, searchQuery.artist, searchQuery.title, true, true);
+      if (results?.results?.length > 0) onResultsFound(results.results);
+    } catch (error) { console.error('Manual search failed:', error); }
   };
 
   return (
     <Card className="border-blue-200 bg-blue-50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Search className="h-5 w-5 text-blue-600" />
-          Manual Search
+          <Search className="h-5 w-5 text-blue-600" />{sc.manualSearchTitle}
         </CardTitle>
-        <CardDescription>
-          Search manually with corrected or alternative terms
-        </CardDescription>
+        <CardDescription>{sc.manualSearchDesc}</CardDescription>
       </CardHeader>
-      
       <CardContent className="space-y-4">
-        {/* Quick diagnostics */}
         <div className="space-y-2">
-          <h4 className="font-semibold text-sm">Detected Info:</h4>
+          <h4 className="font-semibold text-sm">{sc.detectedInfo}</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
             <div className="flex items-center gap-2">
-              {analysisResult?.analysis?.artist ? (
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              ) : (
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-              )}
-              <span>Artist: {analysisResult?.analysis?.artist || 'Missing'}</span>
+              {analysisResult?.analysis?.artist ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertTriangle className="h-4 w-4 text-amber-500" />}
+              <span>{sc.artist}: {analysisResult?.analysis?.artist || sc.missing}</span>
             </div>
             <div className="flex items-center gap-2">
-              {analysisResult?.analysis?.title ? (
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              ) : (
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-              )}
-              <span>Title: {analysisResult?.analysis?.title || 'Missing'}</span>
+              {analysisResult?.analysis?.title ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertTriangle className="h-4 w-4 text-amber-500" />}
+              <span>{sc.titel}: {analysisResult?.analysis?.title || sc.missing}</span>
             </div>
             <div className="flex items-center gap-2">
-              {analysisResult?.analysis?.catalog_number ? (
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              ) : (
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-              )}
-              <span>Catalog: {analysisResult?.analysis?.catalog_number || 'Missing'}</span>
+              {analysisResult?.analysis?.catalog_number ? <CheckCircle className="h-4 w-4 text-green-500" /> : <AlertTriangle className="h-4 w-4 text-amber-500" />}
+              <span>{sc.catalogNumber}: {analysisResult?.analysis?.catalog_number || sc.missing}</span>
             </div>
           </div>
         </div>
 
-        {/* Basic search fields */}
         <div className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="artist">Artist</Label>
-              <Input
-                id="artist"
-                value={searchQuery.artist}
-                onChange={(e) => setSearchQuery(prev => ({ ...prev, artist: e.target.value }))}
-                placeholder="Enter artist name"
-              />
+              <Label htmlFor="artist">{sc.artist}</Label>
+              <Input id="artist" value={searchQuery.artist} onChange={(e) => setSearchQuery(prev => ({ ...prev, artist: e.target.value }))} placeholder={sc.enterArtist} />
             </div>
             <div>
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={searchQuery.title}
-                onChange={(e) => setSearchQuery(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter album/track title"
-              />
+              <Label htmlFor="title">{sc.titel}</Label>
+              <Input id="title" value={searchQuery.title} onChange={(e) => setSearchQuery(prev => ({ ...prev, title: e.target.value }))} placeholder={sc.enterTitle} />
             </div>
           </div>
-          
           {showAdvanced && (
             <div>
-              <Label htmlFor="catalog">Catalog Number</Label>
-              <Input
-                id="catalog"
-                value={searchQuery.catalog}
-                onChange={(e) => setSearchQuery(prev => ({ ...prev, catalog: e.target.value }))}
-                placeholder="Enter catalog number"
-              />
+              <Label htmlFor="catalog">{sc.catalogNumber}</Label>
+              <Input id="catalog" value={searchQuery.catalog} onChange={(e) => setSearchQuery(prev => ({ ...prev, catalog: e.target.value }))} placeholder={sc.enterCatalog} />
             </div>
           )}
         </div>
 
-        {/* Quick fix suggestions */}
         {analysisResult?.analysis && (
           <div className="space-y-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="text-blue-600"
-            >
-              {showAdvanced ? 'Hide' : 'Show'} Advanced Options
+            <Button variant="ghost" size="sm" onClick={() => setShowAdvanced(!showAdvanced)} className="text-blue-600">
+              {showAdvanced ? sc.hideAdvanced : sc.showAdvanced}
             </Button>
-            
             {showAdvanced && (
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
                   <div className="space-y-2">
-                    <p>Try these fixes:</p>
+                    <p>{sc.tryFixes}</p>
                     <ul className="text-sm space-y-1">
-                      <li>• Check for OCR errors in artist/title</li>
-                      <li>• Try searching without catalog number</li>
-                      <li>• Try abbreviated artist names</li>
-                      <li>• Check for alternative spellings</li>
-                      {mediaType === 'cd' && (
-                        <li>• Barcode not required - artist+title enough</li>
-                      )}
+                      <li>• {sc.checkOcrErrors}</li>
+                      <li>• {sc.tryWithoutCatalog}</li>
+                      <li>• {sc.tryAbbreviated}</li>
+                      <li>• {sc.checkSpellings}</li>
+                      {mediaType === 'cd' && <li>• {sc.barcodeNotRequired}</li>}
                     </ul>
                   </div>
                 </AlertDescription>
@@ -172,30 +105,15 @@ export const ManualSearch: React.FC<ManualSearchProps> = ({
           </div>
         )}
 
-        {/* Search button */}
         <div className="flex gap-3">
           {onBack && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onBack}
-              disabled={isSearching}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Terug
+            <Button type="button" variant="outline" onClick={onBack} disabled={isSearching}>
+              <ArrowLeft className="h-4 w-4 mr-2" />{sc.back}
             </Button>
           )}
-          <Button
-            onClick={handleSearch}
-            disabled={isSearching || (!searchQuery.artist.trim() && !searchQuery.title.trim() && !searchQuery.catalog.trim())}
-            className="flex-1"
-          >
-            {isSearching ? (
-              <RefreshCcw className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Search className="h-4 w-4 mr-2" />
-            )}
-            Search Discogs
+          <Button onClick={handleSearch} disabled={isSearching || (!searchQuery.artist.trim() && !searchQuery.title.trim() && !searchQuery.catalog.trim())} className="flex-1">
+            {isSearching ? <RefreshCcw className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+            {sc.searchDiscogs}
           </Button>
         </div>
       </CardContent>

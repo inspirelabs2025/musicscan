@@ -6,10 +6,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Brain, Sparkles, Trophy, ArrowRight } from 'lucide-react';
 import { useCollectionAIAnalysis } from '@/hooks/useCollectionAIAnalysis';
 import { useCollectionStats } from '@/hooks/useCollectionStats';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const AIInsightsWidget = () => {
   const { data: aiData, isLoading: aiLoading } = useCollectionAIAnalysis();
   const { data: stats, isLoading: statsLoading } = useCollectionStats();
+  const { tr } = useLanguage();
+  const d = tr.dashboardUI;
 
   if (aiLoading || statsLoading) {
     return (
@@ -17,7 +20,7 @@ export const AIInsightsWidget = () => {
         <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Brain className="w-5 h-5 text-vinyl-purple" />
-          🧠 Muziek Inzichten
+          {d.musicInsights}
         </CardTitle>
         </CardHeader>
         <CardContent>
@@ -37,7 +40,6 @@ export const AIInsightsWidget = () => {
   const uniqueGenres = stats?.genres?.length || 0;
   const uniqueArtists = stats?.artists?.length || 0;
   
-  // Calculate time span
   let timeSpan = 0;
   if (stats?.years && stats.years.length > 0) {
     const years = stats.years.map(y => y.year).filter(y => y > 0);
@@ -51,58 +53,55 @@ export const AIInsightsWidget = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Brain className="w-5 h-5 text-vinyl-purple animate-pulse" />
-          🧠 Muziek Inzichten
+          {d.musicInsights}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center p-3 bg-vinyl-purple/10 rounded-lg">
             <div className="text-2xl font-bold text-vinyl-purple">{uniqueGenres}</div>
-            <div className="text-xs text-muted-foreground">Genres ontdekt</div>
+            <div className="text-xs text-muted-foreground">{d.genresDiscovered}</div>
           </div>
           <div className="text-center p-3 bg-vinyl-gold/10 rounded-lg">
             <div className="text-2xl font-bold text-vinyl-gold">{uniqueArtists}</div>
-            <div className="text-xs text-muted-foreground">Artiesten</div>
+            <div className="text-xs text-muted-foreground">{d.artists}</div>
           </div>
         </div>
 
-        {/* Quick Insights */}
         {totalItems > 0 && (
           <div className="space-y-2">
             {topGenre && (
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-vinyl-purple">🎨</span>
-                <span>Top genre: <strong>{topGenre.genre}</strong> ({topGenre.count} albums)</span>
+                <span>{d.topGenreLabel} <strong>{topGenre.genre}</strong> ({topGenre.count} {d.albumsCount})</span>
               </div>
             )}
             {topArtist && (
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-vinyl-gold">🎤</span>
-                <span>Top artiest: <strong>{topArtist.artist}</strong> ({topArtist.count} albums)</span>
+                <span>{d.topArtistLabel} <strong>{topArtist.artist}</strong> ({topArtist.count} {d.albumsCount})</span>
               </div>
             )}
             {timeSpan && timeSpan > 0 && (
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-accent">⏰</span>
-                <span>Tijdspan: <strong>{timeSpan} jaar</strong> muziekgeschiedenis</span>
+                <span>{d.timeSpanLabel} <strong>{timeSpan} {d.yearsOfMusicHistory}</strong></span>
               </div>
             )}
           </div>
         )}
 
-        {/* Action Buttons */}
         <div className="flex gap-2">
           <Button asChild size="sm" className="flex-1 bg-gradient-to-r from-vinyl-purple to-vinyl-purple/80">
             <Link to="/collection-overview?tab=dna">
               <Sparkles className="w-4 h-4 mr-2" />
-              Muziek DNA
+              {d.musicDNA}
             </Link>
           </Button>
           <Button asChild size="sm" variant="outline" className="flex-1 hover:bg-vinyl-gold/10">
             <Link to="/quiz">
               <Trophy className="w-4 h-4 mr-2" />
-              Quiz Starten
+              {d.quizStart}
             </Link>
           </Button>
         </div>
@@ -111,12 +110,12 @@ export const AIInsightsWidget = () => {
           <div className="text-center py-4">
             <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-2 opacity-50" />
             <p className="text-sm text-muted-foreground mb-3">
-              Voeg albums toe om inzichten te krijgen!
+              {d.addAlbumsForInsights}
             </p>
             <Button asChild size="sm">
               <Link to="/scanner">
                 <ArrowRight className="w-4 h-4 mr-2" />
-                Start Scannen
+                {d.startScanningShort}
               </Link>
             </Button>
           </div>

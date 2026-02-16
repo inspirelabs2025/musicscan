@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function NewArrivalsSection() {
   const { data: products = [], isLoading } = usePlatformProducts({ 
     limit: 8 
   });
+  const { tr } = useLanguage();
+  const s = tr.shopUI;
 
   if (isLoading) {
     return (
@@ -30,7 +33,7 @@ export function NewArrivalsSection() {
   if (products.length === 0) {
     return (
       <Card className="p-12 text-center">
-        <p className="text-muted-foreground">Binnenkort nieuwe producten!</p>
+        <p className="text-muted-foreground">{s.newProductsSoon}</p>
       </Card>
     );
   }
@@ -49,15 +52,15 @@ export function NewArrivalsSection() {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  Geen afbeelding
+                  {s.noImage}
                 </div>
               )}
               
               {product.is_new && (
-                <Badge className="absolute top-2 left-2 bg-primary">NIEUW</Badge>
+                <Badge className="absolute top-2 left-2 bg-primary">{s.newBadge}</Badge>
               )}
               {product.is_on_sale && (
-                <Badge className="absolute top-2 right-2 bg-destructive">SALE</Badge>
+                <Badge className="absolute top-2 right-2 bg-destructive">{s.saleBadge}</Badge>
               )}
             </div>
             
@@ -83,7 +86,7 @@ export function NewArrivalsSection() {
 
               <Button size="sm" className="w-full" variant="outline">
                 <ShoppingCart className="h-3 w-3 mr-2" />
-                Bekijk
+                {s.viewButton}
               </Button>
             </div>
           </Card>

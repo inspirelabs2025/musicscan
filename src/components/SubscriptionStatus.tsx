@@ -8,6 +8,7 @@ import { useSubscriptionContext } from '@/contexts/SubscriptionContext';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { useCredits } from '@/hooks/useCredits';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SubscriptionStatusProps {
   compact?: boolean;
@@ -17,43 +18,15 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
   const { subscription, openCustomerPortal, loading } = useSubscriptionContext();
   const { usage, aiScansUsed, aiChatUsed, bulkUploadsUsed, getUsagePercentage } = useUsageTracking();
   const { data: userCredits } = useCredits();
+  const { tr } = useLanguage();
+  const s = tr.shopUI;
 
   const planConfig = {
-    free: { 
-      color: 'bg-slate-500', 
-      aiScanLimit: 10, 
-      aiChatLimit: 5, 
-      bulkUploadLimit: 0, 
-      name: 'FREE' 
-    },
-    basic: { 
-      color: 'bg-blue-500', 
-      aiScanLimit: 50, 
-      aiChatLimit: 20, 
-      bulkUploadLimit: 0, 
-      name: 'BASIC' 
-    },
-    plus: { 
-      color: 'bg-purple-500', 
-      aiScanLimit: 200, 
-      aiChatLimit: null, 
-      bulkUploadLimit: 5, 
-      name: 'PLUS' 
-    },
-    pro: { 
-      color: 'bg-gold-500', 
-      aiScanLimit: null, 
-      aiChatLimit: null, 
-      bulkUploadLimit: 50, 
-      name: 'PRO' 
-    },
-    business: { 
-      color: 'bg-emerald-500', 
-      aiScanLimit: null, 
-      aiChatLimit: null, 
-      bulkUploadLimit: null, 
-      name: 'BUSINESS' 
-    }
+    free: { color: 'bg-slate-500', aiScanLimit: 10, aiChatLimit: 5, bulkUploadLimit: 0, name: 'FREE' },
+    basic: { color: 'bg-blue-500', aiScanLimit: 50, aiChatLimit: 20, bulkUploadLimit: 0, name: 'BASIC' },
+    plus: { color: 'bg-purple-500', aiScanLimit: 200, aiChatLimit: null, bulkUploadLimit: 5, name: 'PLUS' },
+    pro: { color: 'bg-gold-500', aiScanLimit: null, aiChatLimit: null, bulkUploadLimit: 50, name: 'PRO' },
+    business: { color: 'bg-emerald-500', aiScanLimit: null, aiChatLimit: null, bulkUploadLimit: null, name: 'BUSINESS' }
   };
 
   const currentPlan = planConfig[subscription?.plan_slug as keyof typeof planConfig] || planConfig.free;
@@ -68,10 +41,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
   if (compact) {
     return (
       <div className="flex items-center gap-3">
-        <Badge 
-          variant="outline" 
-          className={`${currentPlan.color} text-white border-none`}
-        >
+        <Badge variant="outline" className={`${currentPlan.color} text-white border-none`}>
           <Crown className="h-3 w-3 mr-1" />
           {currentPlan.name}
         </Badge>
@@ -81,9 +51,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
             {aiScansUsed}/{currentPlan.aiScanLimit} scans
           </div>
         ) : subscription?.subscribed ? (
-          <div className="text-sm text-muted-foreground">
-            ∞ scans
-          </div>
+          <div className="text-sm text-muted-foreground">∞ scans</div>
         ) : null}
 
         {(userCredits?.balance ?? 0) > 0 && (
@@ -94,12 +62,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
         )}
         
         {subscription?.subscribed && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={openCustomerPortal}
-            disabled={loading}
-          >
+          <Button variant="ghost" size="sm" onClick={openCustomerPortal} disabled={loading}>
             <Settings className="h-4 w-4" />
           </Button>
         )}
@@ -113,18 +76,13 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Crown className="h-5 w-5" />
-            Abonnement Status
+            {s.subscriptionStatus}
           </div>
           
           {subscription?.subscribed && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={openCustomerPortal}
-              disabled={loading}
-            >
+            <Button variant="outline" size="sm" onClick={openCustomerPortal} disabled={loading}>
               <Settings className="h-4 w-4 mr-2" />
-              Beheren
+              {s.manage}
             </Button>
           )}
         </CardTitle>
@@ -133,9 +91,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
       <CardContent className="space-y-6">
         {/* Plan Badge */}
         <div className="flex items-center gap-3">
-          <Badge 
-            className={`${currentPlan.color} text-white px-3 py-1 text-sm font-medium`}
-          >
+          <Badge className={`${currentPlan.color} text-white px-3 py-1 text-sm font-medium`}>
             {subscription?.plan_name || 'FREE - Music Explorer'}
           </Badge>
           
@@ -143,7 +99,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
             <Link to="/pricing">
               <Button variant="outline" size="sm">
                 <TrendingUp className="h-4 w-4 mr-2" />
-                Upgrade
+                {s.upgrade}
               </Button>
             </Link>
           )}
@@ -155,22 +111,17 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
             <div className="flex justify-between text-sm">
               <span className="flex items-center gap-2">
                 <Zap className="h-4 w-4" />
-                Smart Scans deze maand
+                {s.smartScansMonth}
               </span>
               <span className={isAiScanNearLimit ? 'text-orange-500 font-medium' : ''}>
                 {aiScansUsed}/{currentPlan.aiScanLimit}
               </span>
             </div>
-            
-            <Progress 
-              value={aiScanPercentage} 
-              className={`h-2 ${isAiScanNearLimit ? '[&>div]:bg-orange-500' : ''}`}
-            />
-            
+            <Progress value={aiScanPercentage} className={`h-2 ${isAiScanNearLimit ? '[&>div]:bg-orange-500' : ''}`} />
             {isAiScanNearLimit && (
               <div className="flex items-center gap-2 text-sm text-orange-600">
                 <AlertCircle className="h-4 w-4" />
-                <span>Smart Scans: Je nadert je maandelijkse limiet</span>
+                <span>Smart Scans: {s.nearLimit}</span>
               </div>
             )}
           </div>
@@ -182,22 +133,17 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
             <div className="flex justify-between text-sm">
               <span className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
-                Chat deze maand
+                {s.chatMonth}
               </span>
               <span className={isAiChatNearLimit ? 'text-orange-500 font-medium' : ''}>
                 {aiChatUsed}/{currentPlan.aiChatLimit}
               </span>
             </div>
-            
-            <Progress 
-              value={aiChatPercentage} 
-              className={`h-2 ${isAiChatNearLimit ? '[&>div]:bg-orange-500' : ''}`}
-            />
-            
+            <Progress value={aiChatPercentage} className={`h-2 ${isAiChatNearLimit ? '[&>div]:bg-orange-500' : ''}`} />
             {isAiChatNearLimit && (
               <div className="flex items-center gap-2 text-sm text-orange-600">
                 <AlertCircle className="h-4 w-4" />
-                <span>Chat: Je nadert je maandelijkse limiet</span>
+                <span>Chat: {s.nearLimit}</span>
               </div>
             )}
           </div>
@@ -209,22 +155,17 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
             <div className="flex justify-between text-sm">
               <span className="flex items-center gap-2">
                 <Upload className="h-4 w-4" />
-                Bulk Uploads deze maand
+                {s.bulkUploadsMonth}
               </span>
               <span className={isBulkUploadNearLimit ? 'text-orange-500 font-medium' : ''}>
                 {bulkUploadsUsed}/{currentPlan.bulkUploadLimit}
               </span>
             </div>
-            
-            <Progress 
-              value={bulkUploadPercentage} 
-              className={`h-2 ${isBulkUploadNearLimit ? '[&>div]:bg-orange-500' : ''}`}
-            />
-            
+            <Progress value={bulkUploadPercentage} className={`h-2 ${isBulkUploadNearLimit ? '[&>div]:bg-orange-500' : ''}`} />
             {isBulkUploadNearLimit && (
               <div className="flex items-center gap-2 text-sm text-orange-600">
                 <AlertCircle className="h-4 w-4" />
-                <span>Bulk Upload: Je nadert je maandelijkse limiet</span>
+                <span>Bulk Upload: {s.nearLimit}</span>
               </div>
             )}
           </div>
@@ -236,19 +177,19 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
             {!currentPlan.aiScanLimit && (
               <div className="flex items-center gap-2 text-green-600">
                 <Crown className="h-4 w-4" />
-                <span className="text-sm font-medium">Onbeperkte smart scans</span>
+                <span className="text-sm font-medium">{s.unlimitedScans}</span>
               </div>
             )}
             {!currentPlan.aiChatLimit && (
               <div className="flex items-center gap-2 text-green-600">
                 <Crown className="h-4 w-4" />
-                <span className="text-sm font-medium">Onbeperkte chat</span>
+                <span className="text-sm font-medium">{s.unlimitedChat}</span>
               </div>
             )}
             {currentPlan.bulkUploadLimit === null && (
               <div className="flex items-center gap-2 text-green-600">
                 <Crown className="h-4 w-4" />
-                <span className="text-sm font-medium">Onbeperkte bulk uploads</span>
+                <span className="text-sm font-medium">{s.unlimitedBulk}</span>
               </div>
             )}
           </div>
@@ -257,7 +198,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
         {/* Subscription End Date */}
         {subscription?.subscription_end && (
           <div className="text-sm text-muted-foreground">
-            Verlengt automatisch op {new Date(subscription.subscription_end).toLocaleDateString('nl-NL')}
+            {s.renewsAuto} {new Date(subscription.subscription_end).toLocaleDateString('nl-NL')}
           </div>
         )}
 
@@ -265,11 +206,11 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
         {!subscription?.subscribed && (
           <div className="pt-2 border-t">
             <p className="text-sm text-muted-foreground mb-2">
-              Upgrade voor meer smart scans, chat queries en bulk upload features
+              {s.upgradeDesc}
             </p>
             <Link to="/pricing">
               <Button className="w-full">
-                Bekijk Abonnementen
+                {s.viewSubscriptions}
               </Button>
             </Link>
           </div>

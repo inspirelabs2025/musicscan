@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Sparkles, ShoppingCart, Pin } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
 import { generateButtonAltTag } from "@/utils/generateAltTag";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ButtonsShop() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -19,38 +20,32 @@ export default function ButtonsShop() {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc" | "popular">("newest");
   const [showFeatured, setShowFeatured] = useState(false);
+  const { tr } = useLanguage();
+  const s = tr.shopUI;
 
   const { data: allProducts, isLoading } = usePlatformProducts({ 
     mediaType: 'merchandise',
     featured: showFeatured || undefined,
   });
 
-  // Filter only BUTTON products
   const buttonProducts = allProducts?.filter(product => 
     product.categories?.includes('buttons') || product.categories?.includes('badges')
   );
 
-  // Filter and sort products
   const filteredProducts = buttonProducts
     ?.filter(product => {
       if (!searchQuery) return true;
-      
       const searchTerms = searchQuery.toLowerCase().split(/\s+/).filter(term => term.length > 0);
       const searchableText = `${product.artist || ''} ${product.title || ''} ${product.tags?.join(' ') || ''}`.toLowerCase();
-      
       return searchTerms.every(term => searchableText.includes(term));
     })
     .sort((a, b) => {
       switch (sortBy) {
-        case "price-asc":
-          return a.price - b.price;
-        case "price-desc":
-          return b.price - a.price;
-        case "popular":
-          return b.view_count - a.view_count;
+        case "price-asc": return a.price - b.price;
+        case "price-desc": return b.price - a.price;
+        case "popular": return b.view_count - a.view_count;
         case "newest":
-        default:
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       }
     });
 
@@ -95,7 +90,7 @@ export default function ButtonsShop() {
             { name: "Buttons Shop", url: "/buttons" }
           ]} />
 
-          {/* Hero Section - hidden on mobile for compact layout */}
+          {/* Hero Section - hidden on mobile */}
           <div className="hidden md:block relative overflow-hidden rounded-2xl p-12 text-white" style={{ background: 'linear-gradient(to right, hsl(220, 80%, 50%), hsl(270, 70%, 50%), hsl(330, 80%, 50%))' }}>
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="relative z-10">
@@ -104,14 +99,14 @@ export default function ButtonsShop() {
                   <h1 className="text-5xl font-bold">Artist Buttons</h1>
                 </div>
                 <p className="text-xl mb-6 text-blue-50">
-                  Speld je favoriete artiesten! Unieke buttons en badges met iconische muzikanten.
+                  {s.pinArtist}
                 </p>
                 <div className="flex flex-wrap gap-4 text-sm">
                   <Badge variant="secondary" className="text-base py-2 px-4">
-                    📌 {buttonProducts?.length || 0} Buttons
+                    📌 {buttonProducts?.length || 0} {s.buttonsCount}
                   </Badge>
                   <Badge variant="secondary" className="text-base py-2 px-4">
-                    💰 Vanaf €4,50
+                    💰 {s.from} €4,50
                   </Badge>
                   <Badge variant="secondary" className="text-base py-2 px-4">
                     📏 3.5cm - 4cm
@@ -123,10 +118,7 @@ export default function ButtonsShop() {
               <div className="relative z-10 flex items-center justify-center gap-8">
                 <div className="text-center">
                   <div className="relative mx-auto mb-3">
-                    <div 
-                      className="w-[140px] h-[140px] rounded-full bg-white/20 backdrop-blur-sm border-4 border-white/40 flex items-center justify-center font-bold text-2xl shadow-2xl"
-                      style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
-                    >
+                    <div className="w-[140px] h-[140px] rounded-full bg-white/20 backdrop-blur-sm border-4 border-white/40 flex items-center justify-center font-bold text-2xl shadow-2xl" style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
                       <div className="w-full h-full rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
                         <Pin className="h-12 w-12 text-white" />
                       </div>
@@ -136,15 +128,12 @@ export default function ButtonsShop() {
                     </div>
                   </div>
                   <p className="text-sm font-semibold text-white/90">3.5cm</p>
-                  <p className="text-xs text-white/70">Compact</p>
+                  <p className="text-xs text-white/70">{s.compact}</p>
                 </div>
                 
                 <div className="text-center">
                   <div className="relative mx-auto mb-3">
-                    <div 
-                      className="w-[160px] h-[160px] rounded-full bg-white/20 backdrop-blur-sm border-4 border-white/40 flex items-center justify-center font-bold text-2xl shadow-2xl"
-                      style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
-                    >
+                    <div className="w-[160px] h-[160px] rounded-full bg-white/20 backdrop-blur-sm border-4 border-white/40 flex items-center justify-center font-bold text-2xl shadow-2xl" style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
                       <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center">
                         <Pin className="h-16 w-16 text-white" />
                       </div>
@@ -154,7 +143,7 @@ export default function ButtonsShop() {
                     </div>
                   </div>
                   <p className="text-sm font-semibold text-white/90">4cm</p>
-                  <p className="text-xs text-white/70">Standaard</p>
+                  <p className="text-xs text-white/70">{s.standard}</p>
                 </div>
               </div>
             </div>
@@ -162,15 +151,15 @@ export default function ButtonsShop() {
             <div className="absolute -left-20 -top-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
           </div>
 
-          {/* Size Info Banner - compact */}
+          {/* Size Info Banner */}
           <div className="grid grid-cols-2 gap-2">
             <div className="flex items-center gap-2 p-2 rounded-lg border bg-card">
               <div className="w-8 h-8 md:w-10 md:h-10 shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs md:text-sm font-bold">
                 3.5
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-xs md:text-sm">3.5cm - Compact</p>
-                <p className="text-[10px] md:text-xs text-muted-foreground truncate">Caps, tassen & hoedjes</p>
+                <p className="font-semibold text-xs md:text-sm">3.5cm - {s.compact}</p>
+                <p className="text-[10px] md:text-xs text-muted-foreground truncate">{s.capsAndBags}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 p-2 rounded-lg border bg-card">
@@ -178,8 +167,8 @@ export default function ButtonsShop() {
                 4
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-xs md:text-sm">4cm - Standaard</p>
-                <p className="text-[10px] md:text-xs text-muted-foreground truncate">Jackets & rugzakken</p>
+                <p className="font-semibold text-xs md:text-sm">4cm - {s.standard}</p>
+                <p className="text-[10px] md:text-xs text-muted-foreground truncate">{s.jacketsAndBackpacks}</p>
               </div>
             </div>
           </div>
@@ -190,7 +179,7 @@ export default function ButtonsShop() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Zoek op artiest, album, genre..."
+                  placeholder={s.searchArtistAlbum}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -213,10 +202,10 @@ export default function ButtonsShop() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="newest">Nieuwste</SelectItem>
-                  <SelectItem value="popular">Populair</SelectItem>
-                  <SelectItem value="price-asc">Prijs: Laag - Hoog</SelectItem>
-                  <SelectItem value="price-desc">Prijs: Hoog - Laag</SelectItem>
+                  <SelectItem value="newest">{s.newest}</SelectItem>
+                  <SelectItem value="popular">{s.popular}</SelectItem>
+                  <SelectItem value="price-asc">{s.priceLowHigh}</SelectItem>
+                  <SelectItem value="price-desc">{s.priceHighLow}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -243,32 +232,22 @@ export default function ButtonsShop() {
                     <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-900 dark:to-gray-800">
                       {product.primary_image ? (
                         <div className="p-6 h-full flex items-center justify-center relative">
-                          {/* Button with realistic shadow and pin */}
                           <div className="relative w-3/4 h-3/4">
                             <div className="relative w-full h-full rounded-full overflow-hidden border-[3px] border-black/20 dark:border-white/10">
                               <img
                                 src={product.primary_image}
-                                alt={generateButtonAltTag(
-                                  product.artist || '',
-                                  product.title,
-                                  product.format || '4cm'
-                                )}
+                                alt={generateButtonAltTag(product.artist || '', product.title, product.format || '4cm')}
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                 loading="lazy"
                               />
-                              {/* Glossy overlay effect */}
                               <div className="absolute inset-0 bg-gradient-to-br from-white/50 via-transparent to-black/40 pointer-events-none" />
-                              {/* Top highlight - more pronounced */}
                               <div className="absolute top-0 left-1/4 right-1/4 h-2/5 bg-gradient-to-b from-white/70 to-transparent blur-md pointer-events-none" />
                             </div>
-                            {/* Enhanced 3D shadow ring with multiple layers */}
                             <div className="absolute inset-0 rounded-full shadow-[0_15px_50px_rgba(0,0,0,0.7),0_5px_15px_rgba(0,0,0,0.5),inset_0_2px_4px_rgba(255,255,255,0.4),inset_0_-3px_6px_rgba(0,0,0,0.3)]" />
-                            {/* Safety pin indicator */}
                             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-lg border-2 border-gray-300 dark:border-gray-600">
                               <Pin className="h-3 w-3 text-gray-600 dark:text-gray-300" />
                             </div>
                           </div>
-                          {/* Size indicator */}
                           {product.format && (
                             <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full font-semibold">
                               {product.format}
@@ -283,7 +262,7 @@ export default function ButtonsShop() {
                       
                       {product.is_new && (
                         <Badge className="absolute top-2 left-2 bg-green-500 text-white">
-                          Nieuw
+                          {s.newLabel}
                         </Badge>
                       )}
                       {product.is_featured && (
@@ -294,7 +273,7 @@ export default function ButtonsShop() {
                       )}
                       {product.stock_quantity <= product.low_stock_threshold && (
                         <Badge variant="destructive" className="absolute bottom-2 left-2">
-                          Beperkte voorraad
+                          {s.limitedStock}
                         </Badge>
                       )}
                     </div>
@@ -323,7 +302,7 @@ export default function ButtonsShop() {
                     <CardFooter className="pt-0">
                       <Button className="w-full gap-2" variant="outline">
                         <ShoppingCart className="h-4 w-4" />
-                        In Winkelwagen
+                        {s.addToCart}
                       </Button>
                     </CardFooter>
                   </Card>
@@ -333,9 +312,9 @@ export default function ButtonsShop() {
           ) : (
             <Card className="p-12 text-center">
               <Pin className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-bold mb-2">Geen buttons gevonden</h3>
+              <h3 className="text-xl font-bold mb-2">{s.noButtonsFound}</h3>
               <p className="text-muted-foreground">
-                Probeer een andere zoekopdracht of filter.
+                {s.tryOtherFilter}
               </p>
             </Card>
           )}
@@ -345,12 +324,12 @@ export default function ButtonsShop() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  📌 Hoogwaardige Kwaliteit
+                  {s.highQuality}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Duurzaam materiaal met scherpe prints. Veiligheidsspeld of vlindersluiting.
+                  {s.highQualityDesc}
                 </p>
               </CardContent>
             </Card>
@@ -358,12 +337,12 @@ export default function ButtonsShop() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  🎨 Unieke Designs
+                  {s.uniqueDesigns}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Exclusieve artist buttons die je nergens anders vindt. Limited editions beschikbaar.
+                  {s.uniqueDesignsDesc}
                 </p>
               </CardContent>
             </Card>
@@ -371,12 +350,12 @@ export default function ButtonsShop() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  🚀 Snelle Levering
+                  {s.fastDelivery}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Gratis verzending bij 5+ buttons. Thuisbezorgd binnen 2-4 werkdagen.
+                  {s.fastDeliveryDesc}
                 </p>
               </CardContent>
             </Card>

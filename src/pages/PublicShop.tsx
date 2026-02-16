@@ -11,6 +11,7 @@ import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
 import { ShopItemCard } from "@/components/ShopItemCard";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PublicShop() {
   const { shopSlug } = useParams<{ shopSlug: string }>();
@@ -19,6 +20,8 @@ export default function PublicShop() {
   const [searchTerm, setSearchTerm] = useState("");
   const [formatFilter, setFormatFilter] = useState<string>("all");
   const navigate = useNavigate();
+  const { tr } = useLanguage();
+  const s = tr.shopUI;
 
   // Increment view count when shop loads
   useEffect(() => {
@@ -41,7 +44,6 @@ export default function PublicShop() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-card to-accent/5 relative overflow-hidden">
-        {/* Loading Background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-4 -left-4 text-6xl opacity-10 animate-pulse">🎵</div>
           <div className="absolute top-20 right-10 text-4xl opacity-10 animate-bounce delay-300">🎶</div>
@@ -61,16 +63,16 @@ export default function PublicShop() {
     return (
       <>
         <Helmet>
-          <title>Winkel niet gevonden | MusicScan</title>
+          <title>{s.shopNotFoundTitle}</title>
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>
         <div className="min-h-screen bg-gradient-to-br from-background via-card to-accent/5 relative overflow-hidden">
           <div className="container mx-auto p-6 space-y-6 relative z-10">
             <Card className="p-12 text-center bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg">
               <Store className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Winkel niet gevonden</h3>
+              <h3 className="text-lg font-semibold mb-2">{s.shopNotFound}</h3>
               <p className="text-muted-foreground">
-                De winkel die je zoekt bestaat niet of is niet publiek zichtbaar.
+                {s.shopNotFoundDesc}
               </p>
             </Card>
           </div>
@@ -81,7 +83,6 @@ export default function PublicShop() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-card to-accent/5 relative overflow-hidden">
-      {/* Breadcrumb Navigation */}
       <BreadcrumbNavigation className="max-w-7xl mx-auto px-4 pt-4" />
       
       {/* Animated Musical Background */}
@@ -106,11 +107,11 @@ export default function PublicShop() {
                 className="w-fit bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Terug
+                {s.back}
               </Button>
               <div className="text-center sm:text-left">
                 <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-vinyl-purple to-vinyl-gold bg-clip-text text-transparent animate-fade-in">
-                  🏪 {shop.shop_name || "Muziekwinkel"}
+                  🏪 {shop.shop_name || s.musicShop}
                 </h1>
                 {shop.shop_description && (
                   <p className="text-sm sm:text-base text-muted-foreground animate-fade-in animation-delay-200">
@@ -128,7 +129,7 @@ export default function PublicShop() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xl font-bold text-foreground">{items.length}</p>
-                <p className="text-sm text-muted-foreground">📦 Items te koop</p>
+                <p className="text-sm text-muted-foreground">📦 {s.itemsForSale}</p>
               </div>
               <Package className="h-8 w-8 text-vinyl-purple" />
             </div>
@@ -138,7 +139,7 @@ export default function PublicShop() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xl font-bold text-foreground">{shop.view_count}</p>
-                <p className="text-sm text-muted-foreground">👥 Bezoekers</p>
+                <p className="text-sm text-muted-foreground">👥 {s.visitors}</p>
               </div>
               <Users className="h-8 w-8 text-vinyl-gold" />
             </div>
@@ -168,7 +169,7 @@ export default function PublicShop() {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="🔍 Zoek op artiest, titel, of label..."
+                placeholder={s.searchPlaceholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300"
@@ -185,7 +186,7 @@ export default function PublicShop() {
                   : "bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale"
                 }
               >
-                🎵 Alle ({items.length})
+                🎵 {s.all} ({items.length})
               </Button>
               <Button
                 variant={formatFilter === "cd" ? "default" : "outline"}
@@ -229,12 +230,12 @@ export default function PublicShop() {
           <Card className="p-12 text-center bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg animate-fade-in">
             <Store className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">
-              {items.length === 0 ? "🎵 Geen items te koop" : "🔍 Geen resultaten"}
+              {items.length === 0 ? s.noItemsForSale : s.noResults}
             </h3>
             <p className="text-muted-foreground">
               {items.length === 0 
-                ? "Deze winkel heeft momenteel geen items te koop."
-                : "Probeer een andere zoekopdracht of filter."
+                ? s.noItemsDesc
+                : s.tryOtherSearch
               }
             </p>
           </Card>
@@ -258,7 +259,7 @@ export default function PublicShop() {
               <div className="flex items-center justify-center mb-3">
                 <Mail className="w-5 h-5 text-vinyl-gold mr-2" />
                 <h3 className="text-lg font-semibold bg-gradient-to-r from-vinyl-gold to-yellow-600 bg-clip-text text-transparent">
-                  📧 Contact
+                  {s.contact}
                 </h3>
               </div>
               <p className="text-muted-foreground whitespace-pre-line">

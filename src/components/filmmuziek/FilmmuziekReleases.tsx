@@ -2,16 +2,19 @@ import React from 'react';
 import { Disc3, ExternalLink, Play } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useFilmmuziekReleases } from '@/hooks/useFilmmuziek';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const FilmmuziekReleases = () => {
   const { data: releases, isLoading } = useFilmmuziekReleases(8);
+  const { tr, language } = useLanguage();
+  const fm = tr.filmmuziekUI;
 
   if (isLoading) {
     return (
       <section className="py-16 bg-gradient-to-br from-slate-900/50 to-amber-900/20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-white">Nieuwe Soundtrack Releases</h2>
+            <h2 className="text-3xl font-bold text-white">{fm.newSoundtrackReleases}</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => (
@@ -30,10 +33,10 @@ export const FilmmuziekReleases = () => {
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/20 rounded-full mb-4">
               <Disc3 className="w-4 h-4 text-amber-400" />
-              <span className="text-amber-400 text-sm">Nieuwe Releases</span>
+              <span className="text-amber-400 text-sm">{fm.newReleases}</span>
             </div>
-            <h2 className="text-3xl font-bold text-white">Nieuwe Soundtrack Releases</h2>
-            <p className="text-white/60 mt-2">Binnenkort nieuwe soundtrack releases</p>
+            <h2 className="text-3xl font-bold text-white">{fm.newSoundtrackReleases}</h2>
+            <p className="text-white/60 mt-2">{fm.releasesComingSoon}</p>
           </div>
         </div>
       </section>
@@ -46,29 +49,19 @@ export const FilmmuziekReleases = () => {
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/20 rounded-full mb-4">
             <Disc3 className="w-4 h-4 text-amber-400" />
-            <span className="text-amber-400 text-sm">Nieuwe Releases</span>
+            <span className="text-amber-400 text-sm">{fm.newReleases}</span>
           </div>
-          <h2 className="text-3xl font-bold text-white">Nieuwe Soundtrack Releases</h2>
-          <p className="text-white/60 mt-2">De nieuwste soundtrack releases op Spotify</p>
+          <h2 className="text-3xl font-bold text-white">{fm.newSoundtrackReleases}</h2>
+          <p className="text-white/60 mt-2">{fm.latestOnSpotify}</p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {releases.map((release) => (
-            <a
-              key={release.id}
-              href={release.spotify_url || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group"
-            >
+            <a key={release.id} href={release.spotify_url || '#'} target="_blank" rel="noopener noreferrer" className="group">
               <Card className="overflow-hidden border-transparent hover:border-amber-500/30 transition-all bg-white/5 backdrop-blur">
                 <div className="aspect-square relative overflow-hidden">
                   {release.image_url ? (
-                    <img
-                      src={release.image_url}
-                      alt={release.album_name || release.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    />
+                    <img src={release.image_url} alt={release.album_name || release.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-amber-900/50 to-slate-900/80 flex items-center justify-center">
                       <Disc3 className="w-12 h-12 text-amber-400/30" />
@@ -81,13 +74,11 @@ export const FilmmuziekReleases = () => {
                   </div>
                 </div>
                 <CardContent className="p-3">
-                  <h3 className="font-semibold text-white text-sm line-clamp-1 group-hover:text-amber-400 transition-colors">
-                    {release.album_name || release.title}
-                  </h3>
+                  <h3 className="font-semibold text-white text-sm line-clamp-1 group-hover:text-amber-400 transition-colors">{release.album_name || release.title}</h3>
                   <p className="text-white/60 text-xs mt-1 line-clamp-1">{release.artist}</p>
                   {release.release_date && (
                     <p className="text-white/40 text-xs mt-1">
-                      {new Date(release.release_date).toLocaleDateString('nl-NL')}
+                      {new Date(release.release_date).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US')}
                     </p>
                   )}
                 </CardContent>
@@ -97,13 +88,8 @@ export const FilmmuziekReleases = () => {
         </div>
 
         <div className="text-center mt-8">
-          <a
-            href="https://open.spotify.com/search/soundtrack"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors"
-          >
-            Meer op Spotify
+          <a href="https://open.spotify.com/search/soundtrack" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors">
+            {fm.moreOnSpotify}
             <ExternalLink className="w-4 h-4" />
           </a>
         </div>

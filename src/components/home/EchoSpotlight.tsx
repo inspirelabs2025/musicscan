@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Music2, Sparkles, BookOpen, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
-import echoAvatar from '@/assets/magic-mike-logo.png';
+const echoAvatar = '/magic-mike-logo.png';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function EchoSpotlight() {

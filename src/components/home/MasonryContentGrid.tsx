@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Play, ExternalLink, MessageCircle, Calendar, Newspaper, Music, Mic, Radio, User, Disc, ShoppingBag, Shirt, Gamepad2, Camera, Bot, Snowflake, Flag, Headphones, Film, Star, Building2 } from 'lucide-react';
 import { NewsItem } from '@/hooks/useUnifiedNewsFeed';
 import promoScanBg from '@/assets/promo-scan-bg.jpg';
-import echoAvatar from '@/assets/magic-mike-logo.png';
+const echoAvatar = '/magic-mike-logo.png';
 import blogPlaceholder1 from '@/assets/blog-placeholder-1.jpg';
 import blogPlaceholder2 from '@/assets/blog-placeholder-2.jpg';
 import blogPlaceholder3 from '@/assets/blog-placeholder-3.jpg';

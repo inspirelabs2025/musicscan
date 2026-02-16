@@ -2,12 +2,16 @@ import { TimeMachineEvent } from '@/hooks/useTimeMachineEvents';
 import { Card, CardContent } from '@/components/ui/card';
 import { Quote } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface StoryContentProps {
   event: TimeMachineEvent;
 }
 
 export function StoryContent({ event }: StoryContentProps) {
+  const { tr } = useLanguage();
+  const c = tr.contentUI;
+
   return (
     <div className="space-y-8">
       {/* Historical Context */}
@@ -15,7 +19,7 @@ export function StoryContent({ event }: StoryContentProps) {
         <Card className="border-primary/20">
           <CardContent className="pt-6">
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <span className="text-primary">📜</span> Historische Context
+              <span className="text-primary">📜</span> {c.historicalContext}
             </h2>
             <div className="prose prose-invert max-w-none">
               <ReactMarkdown>{event.historical_context}</ReactMarkdown>
@@ -27,7 +31,7 @@ export function StoryContent({ event }: StoryContentProps) {
       {/* Main Story */}
       <Card>
         <CardContent className="pt-6">
-          <h2 className="text-2xl font-bold mb-4">Het Verhaal van die Nacht</h2>
+          <h2 className="text-2xl font-bold mb-4">{c.storyOfTheNight}</h2>
           <div className="prose prose-invert max-w-none">
             <ReactMarkdown>{event.story_content}</ReactMarkdown>
           </div>
@@ -39,7 +43,7 @@ export function StoryContent({ event }: StoryContentProps) {
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="pt-6">
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <span className="text-primary">✨</span> Culturele Betekenis
+              <span className="text-primary">✨</span> {c.culturalSignificance}
             </h2>
             <div className="prose prose-invert max-w-none">
               <ReactMarkdown>{event.cultural_significance}</ReactMarkdown>
@@ -58,7 +62,7 @@ export function StoryContent({ event }: StoryContentProps) {
                 <p className="text-foreground/90 italic mb-3">"{quote.quote}"</p>
                 <p className="text-sm text-muted-foreground">
                   — {quote.author}
-                  {quote.was_present && <span className="ml-2 text-primary">✓ Was erbij</span>}
+                  {quote.was_present && <span className="ml-2 text-primary">✓ {c.wasPresent}</span>}
                 </p>
               </CardContent>
             </Card>

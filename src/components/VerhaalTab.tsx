@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   RefreshCw, 
   Search, 
@@ -41,6 +42,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const VerhaalTab: React.FC = () => {
   const navigate = useNavigate();
+  const { tr } = useLanguage();
+  const ct = tr.contentUI;
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showSearchSection, setShowSearchSection] = useState(false);
   const [activeTab, setActiveTab] = useState<'albums' | 'singles'>('albums');
@@ -180,9 +183,9 @@ export const VerhaalTab: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold mb-2">📚 Muziekverhalen</h2>
+          <h2 className="text-2xl font-semibold mb-2">📚 {ct.musicStories}</h2>
           <p className="text-muted-foreground">
-            Ontdek verhalen over albums en singles
+            {ct.discoverStories}
           </p>
           {countryFilter && (
             <Badge variant="secondary" className="mt-2 text-sm">
@@ -208,7 +211,7 @@ export const VerhaalTab: React.FC = () => {
           ) : (
             <RefreshCw className="w-4 h-4" />
           )}
-          Vernieuwen
+          {ct.refresh}
         </Button>
       </div>
 
@@ -231,7 +234,7 @@ export const VerhaalTab: React.FC = () => {
           <Button variant="outline" className="w-full justify-between mb-2">
             <div className="flex items-center gap-2">
               <Search className="w-4 h-4" />
-              Zoeken & Filters
+              {ct.searchAndFilters}
             </div>
             <ChevronDown className={`w-4 h-4 transition-transform ${showSearchSection ? 'rotate-180' : ''}`} />
           </Button>
@@ -247,7 +250,7 @@ export const VerhaalTab: React.FC = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 )}
                 <Input 
-                  placeholder="Zoek in verhalen..." 
+                  placeholder={ct.searchInStories}
                   value={searchInput} 
                   onChange={e => setSearchInput(e.target.value)} 
                   onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
@@ -255,7 +258,7 @@ export const VerhaalTab: React.FC = () => {
                 />
                 {searchInput && searchInput !== debouncedSearch && (
                   <Badge variant="outline" className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs">
-                    Zoeken...
+                    {ct.searching}
                   </Badge>
                 )}
               </div>
@@ -263,12 +266,12 @@ export const VerhaalTab: React.FC = () => {
               {/* Sort */}
               <Select value={filters.sortBy || 'created_at'} onValueChange={value => updateFilter('sortBy', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sorteren" />
+                  <SelectValue placeholder={ct.sortBy} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="created_at">Nieuwste eerst</SelectItem>
-                  <SelectItem value="views_count">Meest bekeken</SelectItem>
-                  <SelectItem value="updated_at">Laatst bewerkt</SelectItem>
+                  <SelectItem value="created_at">{ct.newestFirst}</SelectItem>
+                  <SelectItem value="views_count">{ct.mostViewed}</SelectItem>
+                  <SelectItem value="updated_at">{ct.lastEdited}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -278,7 +281,7 @@ export const VerhaalTab: React.FC = () => {
                   <Button variant="outline" className="w-full justify-between">
                     <div className="flex items-center gap-2">
                       <Filter className="w-4 h-4" />
-                      Filters
+                      {ct.filters}
                     </div>
                     <ChevronDown className="w-4 h-4" />
                   </Button>
@@ -313,18 +316,18 @@ export const VerhaalTab: React.FC = () => {
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Alle statussen</SelectItem>
-                      <SelectItem value="published">Gepubliceerd</SelectItem>
-                      <SelectItem value="draft">Concepten</SelectItem>
+                      <SelectItem value="all">{ct.allStatuses}</SelectItem>
+                      <SelectItem value="published">{ct.published}</SelectItem>
+                      <SelectItem value="draft">{ct.drafts}</SelectItem>
                     </SelectContent>
                   </Select>
 
                   <Select value={filters.albumType || 'all'} onValueChange={value => updateFilter('albumType', value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Album Type" />
+                      <SelectValue placeholder={ct.allTypes} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Alle types</SelectItem>
+                      <SelectItem value="all">{ct.allTypes}</SelectItem>
                       <SelectItem value="cd">CD</SelectItem>
                       <SelectItem value="vinyl">Vinyl</SelectItem>
                       <SelectItem value="ai">Smart Scan</SelectItem>
@@ -334,13 +337,13 @@ export const VerhaalTab: React.FC = () => {
 
                   <Select value={filters.dateRange || 'all'} onValueChange={value => updateFilter('dateRange', value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Periode" />
+                      <SelectValue placeholder={ct.period} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Alle periodes</SelectItem>
-                      <SelectItem value="week">Afgelopen week</SelectItem>
-                      <SelectItem value="month">Afgelopen maand</SelectItem>
-                      <SelectItem value="year">Afgelopen jaar</SelectItem>
+                      <SelectItem value="all">{ct.allPeriods}</SelectItem>
+                      <SelectItem value="week">{ct.lastWeek}</SelectItem>
+                      <SelectItem value="month">{ct.lastMonth}</SelectItem>
+                      <SelectItem value="year">{ct.lastYear}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -348,15 +351,15 @@ export const VerhaalTab: React.FC = () => {
                 <div className="flex flex-wrap gap-2 pt-2">
                   <Button variant="outline" size="sm" onClick={() => { updateFilter('status', 'published'); updateFilter('sortBy', 'views_count'); }}>
                     <TrendingUp className="w-3 h-3 mr-1" />
-                    Populair
+                    {ct.popular}
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => { updateFilter('dateRange', 'week'); updateFilter('sortBy', 'created_at'); }}>
                     <Calendar className="w-3 h-3 mr-1" />
-                    Recent
+                    {ct.recent}
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => { updateFilter('status', 'draft'); updateFilter('sortBy', 'created_at'); }}>
                     <Clock className="w-3 h-3 mr-1" />
-                    Drafts
+                    {ct.drafts}
                   </Button>
                   <Button variant="outline" size="sm" onClick={handleReset}>
                     <RotateCcw className="w-3 h-3 mr-1" />
@@ -374,12 +377,12 @@ export const VerhaalTab: React.FC = () => {
           <div className="flex items-center gap-4">
             <Badge variant="secondary" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
-              {blogs.length} album verhalen {totalCount > 0 && `(${totalCount} totaal)`}
+              {blogs.length} {ct.albumStories} {totalCount > 0 && `(${totalCount} ${ct.total})`}
             </Badge>
             {isFetchingBlogs && !isLoadingBlogs && (
               <Badge variant="outline" className="flex items-center gap-2">
                 <Loader2 className="w-3 h-3 animate-spin" />
-                Laden...
+                {ct.loading}
               </Badge>
             )}
           </div>
@@ -437,12 +440,12 @@ export const VerhaalTab: React.FC = () => {
               {isFetchingNextPage ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Laden...
+                  {ct.loading}
                 </>
               ) : (
                 <>
                   <Eye className="w-4 h-4" />
-                  Meer verhalen laden
+                  {ct.loadMoreStories}
                 </>
               )}
             </Button>
@@ -453,11 +456,11 @@ export const VerhaalTab: React.FC = () => {
           <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <FileText className="w-12 h-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                Nog geen album verhalen gevonden
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                {ct.noAlbumStories}
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">
-                Het lijkt erop dat je nog geen album verhalen hebt gegenereerd. Scan een paar albums om te beginnen!
+              <p className="text-muted-foreground mb-6 max-w-md">
+                {ct.noAlbumStoriesDesc}
               </p>
             </CardContent>
           </Card>
@@ -469,12 +472,12 @@ export const VerhaalTab: React.FC = () => {
           <div className="flex items-center gap-4">
             <Badge variant="secondary" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
-              {musicStories.length} single verhalen
+              {musicStories.length} {ct.singleStories}
             </Badge>
             {isLoadingStories && (
               <Badge variant="outline" className="flex items-center gap-2">
                 <Loader2 className="w-3 h-3 animate-spin" />
-                Laden...
+                {ct.loading}
               </Badge>
             )}
           </div>
@@ -554,11 +557,11 @@ export const VerhaalTab: React.FC = () => {
           <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <FileText className="w-12 h-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                Nog geen single verhalen gevonden
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                {ct.noSingleStories}
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">
-                Het lijkt erop dat je nog geen single verhalen hebt gegenereerd. Ga naar het dashboard om je eerste verhaal te maken!
+              <p className="text-muted-foreground mb-6 max-w-md">
+                {ct.noSingleStoriesDesc}
               </p>
             </CardContent>
           </Card>

@@ -178,10 +178,6 @@ const Dashboard = () => {
             </div>
           </section>
 
-          {/* Next Goal Widget */}
-          <section className="mb-12 animate-fade-in delay-450">
-            <NextGoalWidget totalItems={collectionStats?.totalItems || 0} totalValue={collectionStats?.totalValue || 0} totalScans={scanStats?.totalScans || 0} />
-          </section>
 
           {/* Fun & Interactive Section */}
           <section className="mb-12 animate-fade-in delay-500">

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Carousel,
   CarouselContent,
@@ -18,6 +19,8 @@ export function FeaturedProductsCarousel() {
     featured: true,
     limit: 8 
   });
+  const { tr } = useLanguage();
+  const s = tr.shopUI;
 
   if (isLoading) {
     return (
@@ -62,23 +65,22 @@ export function FeaturedProductsCarousel() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                        Geen afbeelding
+                        {s.noImage}
                       </div>
                     )}
                     
-                    {/* Badges */}
                     <div className="absolute top-1 left-1 md:top-2 md:left-2 flex flex-col gap-1">
                       {product.is_new && (
-                        <Badge className="bg-primary text-xs">NIEUW</Badge>
+                        <Badge className="bg-primary text-xs">{s.newBadge}</Badge>
                       )}
                       {product.is_on_sale && (
-                        <Badge className="bg-destructive text-xs">SALE</Badge>
+                        <Badge className="bg-destructive text-xs">{s.saleBadge}</Badge>
                       )}
                     </div>
 
                     {product.stock_quantity <= 3 && (
                       <Badge className="absolute bottom-1 left-1 md:bottom-2 md:left-2 bg-orange-500 text-xs">
-                        Laatste {product.stock_quantity}!
+                        {s.lastItems} {product.stock_quantity}!
                       </Badge>
                     )}
                   </div>
@@ -104,7 +106,7 @@ export function FeaturedProductsCarousel() {
 
                     <Button size="sm" className="w-full text-xs" variant="outline">
                       <ShoppingCart className="h-3 w-3 mr-1" />
-                      Bekijk
+                      {s.viewButton}
                     </Button>
                   </div>
                 </Card>

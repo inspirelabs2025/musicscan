@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { useAlbumBlogPost } from '@/hooks/useAlbumBlogPost';
 import { SpotifyAlbumLink } from '@/components/SpotifyAlbumLink';
 import { UnifiedAlbum } from '@/hooks/useUnifiedAlbums';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AlbumOfTheDayProps {
   albums: UnifiedAlbum[];
@@ -16,10 +17,11 @@ interface AlbumOfTheDayProps {
 export const AlbumOfTheDay = ({ albums }: AlbumOfTheDayProps) => {
   const [dailyAlbum, setDailyAlbum] = useState<UnifiedAlbum | null>(null);
   const [funFacts, setFunFacts] = useState<string[]>([]);
+  const { tr } = useLanguage();
+  const d = tr.dashboardUI;
   
   const { data: blogPost, isLoading: blogLoading } = useAlbumBlogPost(dailyAlbum?.id || null);
 
-  // Generate deterministic "random" album based on today's date
   useEffect(() => {
     if (!albums || albums.length === 0) return;
 
@@ -32,69 +34,56 @@ export const AlbumOfTheDay = ({ albums }: AlbumOfTheDayProps) => {
     const albumIndex = Math.abs(hash) % albums.length;
     const selectedAlbum = albums[albumIndex];
     setDailyAlbum(selectedAlbum);
-
-    // Generate fun facts about the album
     generateFunFacts(selectedAlbum);
   }, [albums]);
 
   const generateFunFacts = (album: UnifiedAlbum) => {
     const facts: string[] = [];
     
-    // Source-specific facts
     if (album.source === 'spotify') {
-      facts.push(`🎧 Uit je Spotify collectie`);
+      facts.push(`🎧 ${d.fromSpotify}`);
     } else {
-      facts.push(`📀 Uit je gescande collectie`);
+      facts.push(`📀 ${d.fromScanned}`);
     }
     
     if (album.year) {
       const age = new Date().getFullYear() - album.year;
-      facts.push(`🕰️ Dit album is ${age} jaar oud`);
+      facts.push(`🕰️ ${d.albumAge.replace('{age}', String(age))}`);
       
       if (age >= 50) {
-        facts.push(`🏆 Een echte vintage klassieker!`);
+        facts.push(`🏆 ${d.vintageClassic}`);
       } else if (age >= 30) {
-        facts.push(`📻 Uit de gouden tijd van de muziek`);
+        facts.push(`📻 ${d.goldenEra}`);
       } else if (age >= 10) {
-        facts.push(`💿 Een moderne klassieker`);
+        facts.push(`💿 ${d.modernClassic}`);
       }
     }
 
     if (album.genre) {
-      facts.push(`🎵 Genre: ${album.genre}`);
+      facts.push(`🎵 ${d.genre}: ${album.genre}`);
     }
 
     if (album.condition_grade) {
-      facts.push(`💎 Conditie: ${album.condition_grade}`);
+      facts.push(`💎 ${d.condition}: ${album.condition_grade}`);
     }
 
     if (album.estimated_value) {
       if (album.estimated_value > 100) {
-        facts.push(`💰 Waardevolle vondst! (€${album.estimated_value})`);
+        facts.push(`💰 ${d.valuableFind} (€${album.estimated_value})`);
       } else if (album.estimated_value > 50) {
-        facts.push(`💵 Degelijke waarde (€${album.estimated_value})`);
+        facts.push(`💵 ${d.solidValue} (€${album.estimated_value})`);
       }
     }
 
-    // Add some general fun facts
     const dayOfWeek = new Date().getDay();
-    const weekdayFacts = [
-      "🌟 Perfect om je week mee te beginnen!",
-      "🎯 Ideaal voor een dinsdagse muziekervaring",
-      "⚡ Midden in de week, midden in je hart",
-      "🌈 Donderdag vibes met dit album",
-      "🎉 Vrijdag feeling komt eraan!",
-      "🛋️ Weekend luistergenot",
-      "😌 Zondag ontspanning gegarandeerd"
-    ];
-    facts.push(weekdayFacts[dayOfWeek]);
+    const weekdayFacts = d.weekdayFacts;
+    facts.push(`🌟 ${weekdayFacts[dayOfWeek]}`);
 
-    setFunFacts(facts.slice(0, 4)); // Keep max 4 facts for unified data
+    setFunFacts(facts.slice(0, 4));
   };
 
   const shuffleAlbum = () => {
     if (!albums || albums.length === 0) return;
-    
     const randomIndex = Math.floor(Math.random() * albums.length);
     const newAlbum = albums[randomIndex];
     setDailyAlbum(newAlbum);
@@ -107,18 +96,16 @@ export const AlbumOfTheDay = ({ albums }: AlbumOfTheDayProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-vinyl-gold" />
-            🌟 Album van de Dag
+            🌟 {d.albumOfTheDay}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center py-8">
           <Disc className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">
-            Voeg albums toe aan je collectie om je dagelijkse aanbeveling te zien!
-          </p>
+          <p className="text-muted-foreground">{d.addAlbumsPrompt}</p>
           <Button asChild className="mt-3">
             <Link to="/scanner">
               <Star className="w-4 h-4 mr-2" />
-              Start Scannen
+              {d.startScanning}
             </Link>
           </Button>
         </CardContent>
@@ -132,29 +119,19 @@ export const AlbumOfTheDay = ({ albums }: AlbumOfTheDayProps) => {
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-vinyl-gold" />
-            🌟 Album van de Dag
+            🌟 {d.albumOfTheDay}
           </div>
-          <Button
-            onClick={shuffleAlbum}
-            size="sm"
-            variant="outline"
-            className="flex items-center gap-1"
-          >
+          <Button onClick={shuffleAlbum} size="sm" variant="outline" className="flex items-center gap-1">
             <Shuffle className="w-3 h-3" />
-            Shuffle
+            {d.shuffle}
           </Button>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Album Info */}
         <div className="text-center space-y-2">
           {dailyAlbum.image_url ? (
             <div className="w-20 h-20 mx-auto rounded-lg overflow-hidden shadow-md">
-              <img 
-                src={dailyAlbum.image_url} 
-                alt={`${dailyAlbum.title} cover`}
-                className="w-full h-full object-cover"
-              />
+              <img src={dailyAlbum.image_url} alt={`${dailyAlbum.title} cover`} className="w-full h-full object-cover" />
             </div>
           ) : (
             <div className="w-20 h-20 bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/20 rounded-full flex items-center justify-center mx-auto">
@@ -164,89 +141,66 @@ export const AlbumOfTheDay = ({ albums }: AlbumOfTheDayProps) => {
           
           <div>
             <div className="flex items-center justify-center gap-2 mb-1">
-              <h3 className="font-bold text-lg text-foreground">
-                {dailyAlbum.title}
-              </h3>
+              <h3 className="font-bold text-lg text-foreground">{dailyAlbum.title}</h3>
               <Badge variant={dailyAlbum.source === 'spotify' ? 'default' : 'secondary'} className="text-xs">
                 {dailyAlbum.source === 'spotify' ? (
                   <><Music className="w-3 h-3 mr-1" />Spotify</>
                 ) : (
-                  <><Disc className="w-3 h-3 mr-1" />Gescand</>
+                  <><Disc className="w-3 h-3 mr-1" />{d.scanned}</>
                 )}
               </Badge>
             </div>
-            <p className="text-vinyl-purple font-medium">
-              {dailyAlbum.artist}
-            </p>
-            {dailyAlbum.year && (
-              <Badge variant="secondary" className="mt-1">
-                {dailyAlbum.year}
-              </Badge>
-            )}
+            <p className="text-vinyl-purple font-medium">{dailyAlbum.artist}</p>
+            {dailyAlbum.year && <Badge variant="secondary" className="mt-1">{dailyAlbum.year}</Badge>}
           </div>
         </div>
 
-        {/* Content Tabs */}
         <div className="space-y-2">
           <Tabs defaultValue={blogPost ? "verhaal" : "facts"} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-3">
               <TabsTrigger value="verhaal" disabled={!blogPost} className="flex items-center gap-1">
                 <BookOpen className="w-3 h-3" />
-                Verhaal
+                {d.story}
               </TabsTrigger>
               <TabsTrigger value="facts" className="flex items-center gap-1">
                 <Star className="w-3 h-3" />
-                Fun Facts
+                {d.funFacts}
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="verhaal" className="space-y-2 mt-0">
               {blogLoading ? (
-                <div className="text-xs text-muted-foreground text-center py-4">
-                  Verhaal laden...
-                </div>
+                <div className="text-xs text-muted-foreground text-center py-4">{d.loadingStory}</div>
               ) : blogPost ? (
                 <div className="space-y-2">
                   <div className="text-xs bg-gradient-to-r from-vinyl-purple/10 to-vinyl-gold/10 rounded-lg px-3 py-2">
-                    <p className="line-clamp-3">
-                      {blogPost.markdown_content.replace(/[#*_`]/g, '').substring(0, 200)}...
-                    </p>
+                    <p className="line-clamp-3">{blogPost.markdown_content.replace(/[#*_`]/g, '').substring(0, 200)}...</p>
                   </div>
                   <Button asChild size="sm" variant="outline" className="w-full">
                     <Link to={`/plaat-verhaal/${blogPost.slug}`}>
                       <BookOpen className="w-3 h-3 mr-1" />
-                      Lees volledig verhaal
+                      {d.readFullStory}
                     </Link>
                   </Button>
                 </div>
               ) : (
-                <div className="text-xs text-muted-foreground text-center py-4">
-                  Geen verhaal beschikbaar voor dit album
-                </div>
+                <div className="text-xs text-muted-foreground text-center py-4">{d.noStoryAvailable}</div>
               )}
             </TabsContent>
             
             <TabsContent value="facts" className="space-y-1 mt-0">
               {funFacts.map((fact, index) => (
-                <p key={index} className="text-xs bg-accent/10 rounded-lg px-3 py-2">
-                  {fact}
-                </p>
+                <p key={index} className="text-xs bg-accent/10 rounded-lg px-3 py-2">{fact}</p>
               ))}
             </TabsContent>
           </Tabs>
         </div>
 
-        {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-2 pt-2">
-          <Button
-            asChild
-            size="sm"
-            variant="outline"
-            className="flex items-center gap-1"
-          >
+          <Button asChild size="sm" variant="outline" className="flex items-center gap-1">
             <Link to={`/my-collection`}>
               <Star className="w-3 h-3" />
-              Bekijk in Collectie
+              {d.viewInCollection}
             </Link>
           </Button>
           
@@ -260,17 +214,8 @@ export const AlbumOfTheDay = ({ albums }: AlbumOfTheDayProps) => {
               className="w-full"
             />
           ) : dailyAlbum.discogs_id ? (
-            <Button
-              asChild
-              size="sm"
-              variant="outline"
-              className="flex items-center gap-1"
-            >
-              <a 
-                href={`https://www.discogs.com/release/${dailyAlbum.discogs_id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+            <Button asChild size="sm" variant="outline" className="flex items-center gap-1">
+              <a href={`https://www.discogs.com/release/${dailyAlbum.discogs_id}`} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="w-3 h-3" />
                 Discogs
               </a>
@@ -278,11 +223,8 @@ export const AlbumOfTheDay = ({ albums }: AlbumOfTheDayProps) => {
           ) : null}
         </div>
 
-        {/* Inspirational Quote */}
         <div className="text-center pt-2 border-t border-accent/20">
-          <p className="text-xs text-muted-foreground italic">
-            "Elke dag een nieuwe muzikale ontdekking in je eigen collectie"
-          </p>
+          <p className="text-xs text-muted-foreground italic">"{d.dailyQuote}"</p>
         </div>
       </CardContent>
     </Card>

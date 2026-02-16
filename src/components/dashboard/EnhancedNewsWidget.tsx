@@ -8,6 +8,7 @@ import { Newspaper, BookOpen, ArrowRight, Clock, Music } from 'lucide-react';
 import { useSpotifyNewReleases } from '@/hooks/useSpotifyNewReleases';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BlogPost {
   id: string;
@@ -51,15 +52,6 @@ const useLatestContent = () => {
   });
 };
 
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
-};
-
-const getAlbumTitle = (yamlFrontmatter: any) => {
-  if (!yamlFrontmatter) return 'Onbekend Album';
-  return `${yamlFrontmatter.artist || 'Onbekende Artiest'} - ${yamlFrontmatter.title || 'Onbekende Titel'}`;
-};
-
 const LoadingSkeleton = ({ count = 3 }: { count?: number }) => (
   <div className="space-y-3">
     {Array.from({ length: count }).map((_, i) => (
@@ -77,13 +69,24 @@ const LoadingSkeleton = ({ count = 3 }: { count?: number }) => (
 export const EnhancedNewsWidget = () => {
   const { data: spotifyReleases = [], isLoading: isLoadingReleases } = useSpotifyNewReleases();
   const { data: latestContent, isLoading: isLoadingContent } = useLatestContent();
+  const { tr, language } = useLanguage();
+  const d = tr.dashboardUI;
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US', { day: 'numeric', month: 'short' });
+  };
+
+  const getAlbumTitle = (yamlFrontmatter: any) => {
+    if (!yamlFrontmatter) return d.unknownAlbum;
+    return `${yamlFrontmatter.artist || d.unknownArtist} - ${yamlFrontmatter.title || d.unknownTitle}`;
+  };
 
   return (
     <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Music className="w-5 h-5 text-primary animate-pulse" />
-          🎵 Muziek Ontdekkingen
+          🎵 {d.musicDiscoveries}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -91,15 +94,15 @@ export const EnhancedNewsWidget = () => {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="releases" className="flex items-center gap-2">
               <Music className="w-4 h-4" />
-              <span className="hidden sm:inline">Releases</span>
+              <span className="hidden sm:inline">{d.releases}</span>
             </TabsTrigger>
             <TabsTrigger value="news" className="flex items-center gap-2">
               <Newspaper className="w-4 h-4" />
-              <span className="hidden sm:inline">Nieuws</span>
+              <span className="hidden sm:inline">{d.news}</span>
             </TabsTrigger>
             <TabsTrigger value="stories" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Verhalen</span>
+              <span className="hidden sm:inline">{d.stories}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -125,11 +128,11 @@ export const EnhancedNewsWidget = () => {
                   </a>
                 ))}
                 <Button asChild size="sm" variant="outline" className="w-full hover:bg-green-500/10">
-                  <Link to="/releases"><Music className="w-4 h-4 mr-2" />Alle Releases<ArrowRight className="w-4 h-4 ml-2" /></Link>
+                  <Link to="/releases"><Music className="w-4 h-4 mr-2" />{d.allReleases}<ArrowRight className="w-4 h-4 ml-2" /></Link>
                 </Button>
               </div>
             ) : (
-              <div className="text-center py-6"><Music className="w-12 h-12 text-muted-foreground mx-auto mb-2 opacity-50" /><p className="text-sm text-muted-foreground">Geen releases beschikbaar</p></div>
+              <div className="text-center py-6"><Music className="w-12 h-12 text-muted-foreground mx-auto mb-2 opacity-50" /><p className="text-sm text-muted-foreground">{d.noReleasesAvailable}</p></div>
             )}
           </TabsContent>
 
@@ -147,9 +150,9 @@ export const EnhancedNewsWidget = () => {
                     </div>
                   </Link>
                 ))}
-                <Button asChild size="sm" variant="outline" className="w-full hover:bg-vinyl-gold/10"><Link to="/nieuws"><Newspaper className="w-4 h-4 mr-2" />Alle Nieuws<ArrowRight className="w-4 h-4 ml-2" /></Link></Button>
+                <Button asChild size="sm" variant="outline" className="w-full hover:bg-vinyl-gold/10"><Link to="/nieuws"><Newspaper className="w-4 h-4 mr-2" />{d.allNews}<ArrowRight className="w-4 h-4 ml-2" /></Link></Button>
               </div>
-            ) : (<div className="text-center py-6"><Newspaper className="w-12 h-12 text-muted-foreground mx-auto mb-2 opacity-50" /><p className="text-sm text-muted-foreground">Geen nieuws beschikbaar</p></div>)}
+            ) : (<div className="text-center py-6"><Newspaper className="w-12 h-12 text-muted-foreground mx-auto mb-2 opacity-50" /><p className="text-sm text-muted-foreground">{d.noNewsAvailable}</p></div>)}
           </TabsContent>
 
           <TabsContent value="stories" className="mt-4">
@@ -164,9 +167,9 @@ export const EnhancedNewsWidget = () => {
                     </div>
                   </Link>
                 ))}
-                <Button asChild size="sm" variant="outline" className="w-full hover:bg-primary/10"><Link to="/verhalen"><BookOpen className="w-4 h-4 mr-2" />Alle Verhalen<ArrowRight className="w-4 h-4 ml-2" /></Link></Button>
+                <Button asChild size="sm" variant="outline" className="w-full hover:bg-primary/10"><Link to="/verhalen"><BookOpen className="w-4 h-4 mr-2" />{d.allStoriesLink}<ArrowRight className="w-4 h-4 ml-2" /></Link></Button>
               </div>
-            ) : (<div className="text-center py-6"><BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-2 opacity-50" /><p className="text-sm text-muted-foreground">Geen verhalen beschikbaar</p></div>)}
+            ) : (<div className="text-center py-6"><BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-2 opacity-50" /><p className="text-sm text-muted-foreground">{d.noStoriesAvailableShort}</p></div>)}
           </TabsContent>
         </Tabs>
       </CardContent>

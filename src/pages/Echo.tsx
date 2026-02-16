@@ -130,7 +130,7 @@ export default function Echo() {
               />
             </div>
             <h1 className="text-3xl font-bold text-white font-serif">{e.title}</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">{e.subtitle}</p>
+            <p className="text-sm text-white/80 mt-0.5">{e.subtitle}</p>
           </div>
         </div>
       </div>

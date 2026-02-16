@@ -119,7 +119,7 @@ export default function Echo() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-echo-violet via-background to-background">
-      <div className="relative overflow-hidden py-8 px-4 bg-gradient-to-b from-[hsl(270,60%,25%)] to-[hsl(270,40%,15%)]">
+      <div className="relative overflow-hidden py-8 px-4 bg-gradient-to-br from-[hsl(270,60%,20%)] via-[hsl(270,50%,18%)] to-[hsl(270,55%,12%)]">
         <div className="container mx-auto max-w-5xl relative z-10">
           <div className="text-center space-y-4 animate-fade-in">
             <div className="flex justify-center mb-4">

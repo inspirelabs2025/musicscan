@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuizLeaderboard } from '@/hooks/useQuizLeaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface QuizLeaderboardProps {
   limit?: number;
@@ -12,6 +13,8 @@ interface QuizLeaderboardProps {
 
 export function QuizLeaderboard({ limit = 10, showTitle = false }: QuizLeaderboardProps) {
   const { leaderboard, isLoading } = useQuizLeaderboard(limit);
+  const { tr } = useLanguage();
+  const q = tr.quizGameUI;
 
   if (isLoading) {
     return (
@@ -55,47 +58,29 @@ export function QuizLeaderboard({ limit = 10, showTitle = false }: QuizLeaderboa
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-yellow-500" />
-            Leaderboard
+            {q.leaderboard}
           </CardTitle>
         </CardHeader>
       )}
       <CardContent className={showTitle ? 'pt-0' : 'p-6'}>
         {leaderboard.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">
-            Nog geen scores. Wees de eerste!
-          </p>
+          <p className="text-center text-muted-foreground py-8">{q.noScoresYet}</p>
         ) : (
           <div className="space-y-2">
             {leaderboard.map((player, index) => (
-              <div 
-                key={player.user_id}
-                className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${getRankStyle(index + 1)}`}
-              >
-                <div className="flex items-center justify-center w-8">
-                  {getRankIcon(index + 1)}
-                </div>
-                
+              <div key={player.user_id} className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${getRankStyle(index + 1)}`}>
+                <div className="flex items-center justify-center w-8">{getRankIcon(index + 1)}</div>
                 <Avatar className="w-10 h-10">
                   <AvatarImage src={player.avatar_url} />
-                  <AvatarFallback>
-                    {player.display_name?.charAt(0)?.toUpperCase() || '?'}
-                  </AvatarFallback>
+                  <AvatarFallback>{player.display_name?.charAt(0)?.toUpperCase() || '?'}</AvatarFallback>
                 </Avatar>
-                
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">
-                    {player.display_name || 'Anoniem'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {player.total_quizzes} quizzen • {player.average_score?.toFixed(0)}% gem.
-                  </p>
+                  <p className="font-medium truncate">{player.display_name || q.anonymous}</p>
+                  <p className="text-xs text-muted-foreground">{player.total_quizzes} {q.quizzesPlayed} • {player.average_score?.toFixed(0)}% {q.avg}</p>
                 </div>
-                
                 <div className="text-right">
-                  <p className="font-bold text-primary">
-                    {(player.total_points || 0).toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground">punten</p>
+                  <p className="font-bold text-primary">{(player.total_points || 0).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">{q.points}</p>
                 </div>
               </div>
             ))}

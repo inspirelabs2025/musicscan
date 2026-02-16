@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Camera, Heart, Eye, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FanWallProfileStatsProps {
   userId: string;
@@ -17,6 +18,9 @@ interface Stats {
 }
 
 export const FanWallProfileStats: React.FC<FanWallProfileStatsProps> = ({ userId }) => {
+  const { tr } = useLanguage();
+  const p = tr.profile;
+
   const { data: stats, isLoading } = useQuery({
     queryKey: ["fanwall-user-stats", userId],
     queryFn: async () => {
@@ -45,7 +49,7 @@ export const FanWallProfileStats: React.FC<FanWallProfileStatsProps> = ({ userId
   if (isLoading) {
     return (
       <Card className="p-6">
-        <h3 className="text-xl font-semibold mb-4">FanWall Statistieken</h3>
+        <h3 className="text-xl font-semibold mb-4">{p.fanwallStats}</h3>
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-16 w-full" />
@@ -56,35 +60,15 @@ export const FanWallProfileStats: React.FC<FanWallProfileStatsProps> = ({ userId
   }
 
   const statItems = [
-    {
-      label: "Foto's",
-      value: stats?.total_photos || 0,
-      icon: Camera,
-      color: "text-blue-500",
-    },
-    {
-      label: "Likes",
-      value: stats?.total_likes || 0,
-      icon: Heart,
-      color: "text-red-500",
-    },
-    {
-      label: "Weergaven",
-      value: stats?.total_views || 0,
-      icon: Eye,
-      color: "text-green-500",
-    },
-    {
-      label: "Engagement",
-      value: ((stats?.total_likes || 0) + (stats?.total_comments || 0)),
-      icon: TrendingUp,
-      color: "text-purple-500",
-    },
+    { label: p.photos, value: stats?.total_photos || 0, icon: Camera, color: "text-blue-500" },
+    { label: p.likes, value: stats?.total_likes || 0, icon: Heart, color: "text-red-500" },
+    { label: p.views, value: stats?.total_views || 0, icon: Eye, color: "text-green-500" },
+    { label: p.engagement, value: ((stats?.total_likes || 0) + (stats?.total_comments || 0)), icon: TrendingUp, color: "text-purple-500" },
   ];
 
   return (
     <Card className="p-6">
-      <h3 className="text-xl font-semibold mb-4">FanWall Statistieken</h3>
+      <h3 className="text-xl font-semibold mb-4">{p.fanwallStats}</h3>
       
       <div className="space-y-4">
         {statItems.map((item) => (
@@ -104,7 +88,7 @@ export const FanWallProfileStats: React.FC<FanWallProfileStatsProps> = ({ userId
         <div className="mt-6 pt-4 border-t">
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
-              Gemiddeld {Math.round((stats.total_views || 0) / stats.total_photos)} weergaven per foto
+              {p.avgViewsPerPhoto.replace('{count}', String(Math.round((stats.total_views || 0) / stats.total_photos)))}
             </p>
           </div>
         </div>

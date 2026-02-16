@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Sparkles, Eye, Shirt } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
-
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SocksShop() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -20,6 +20,8 @@ export default function SocksShop() {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc" | "popular">("newest");
   const [showFeatured, setShowFeatured] = useState(false);
+  const { tr } = useLanguage();
+  const sp = tr.shopPageUI;
 
   // Alleen Elvis Presley en Mariah Carey sokken tonen
   const { data: christmasSocks, isLoading } = useQuery({
@@ -77,7 +79,6 @@ export default function SocksShop() {
     });
 
   const featuredCount = sockProducts?.filter(p => p.is_featured).length || 0;
-  const premiumCount = sockProducts?.filter(p => p.categories?.includes('premium')).length || 0;
   const avgPrice = sockProducts?.length 
     ? Math.round(sockProducts.reduce((sum, p) => sum + p.price, 0) / sockProducts.length) 
     : 0;
@@ -123,21 +124,21 @@ export default function SocksShop() {
                 <span className="text-sm font-semibold uppercase tracking-wide">Music Fashion</span>
               </div>
               <h1 className="text-4xl md:text-5xl font-bold">
-                🧦 Socks of Sound
+                {sp.socksHeroTitle}
               </h1>
               <p className="text-xl text-white/90 max-w-2xl">
-                Draag je favoriete muziek aan je voeten. Premium merino wool sokken geïnspireerd op iconische albums.
+                {sp.socksHeroSubtitle}
               </p>
               
               {/* Stats Row */}
               <div className="flex flex-wrap gap-6 pt-4">
                 <div className="space-y-1">
                   <div className="text-3xl font-bold">{sockProducts?.length || 0}</div>
-                  <div className="text-sm text-white/80">Designs</div>
+                  <div className="text-sm text-white/80">{sp.designs}</div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-3xl font-bold">€{avgPrice}</div>
-                  <div className="text-sm text-white/80">Gem. Prijs</div>
+                  <div className="text-sm text-white/80">{sp.avgPrice}</div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-3xl font-bold">Premium</div>
@@ -146,7 +147,7 @@ export default function SocksShop() {
                 {featuredCount > 0 && (
                   <div className="space-y-1">
                     <div className="text-3xl font-bold">{featuredCount}</div>
-                    <div className="text-sm text-white/80">Featured</div>
+                    <div className="text-sm text-white/80">{sp.featured}</div>
                   </div>
                 )}
               </div>
@@ -159,14 +160,11 @@ export default function SocksShop() {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2">✨ Premium Merino Wool Socks</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Alle sokken zijn gemaakt van premium merino wool blend voor optimaal comfort en duurzaamheid.
-                    70% merino, 25% polyamide, 5% elastaan - Temperatuurregelerend en extra versterkte hiel en teen.
-                  </p>
+                  <h3 className="font-bold text-lg mb-2">{sp.socksInfoTitle}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">{sp.socksInfoDesc}</p>
                   <div className="flex items-baseline gap-2">
                     <p className="text-3xl font-bold text-primary">€24,95</p>
-                    <span className="text-sm text-muted-foreground">per paar</span>
+                    <span className="text-sm text-muted-foreground">{sp.perPair}</span>
                   </div>
                 </div>
               </div>
@@ -181,7 +179,7 @@ export default function SocksShop() {
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Zoek op artiest of album..."
+                    placeholder={sp.searchArtistAlbum}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -191,13 +189,13 @@ export default function SocksShop() {
                 {/* Sort */}
                 <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                   <SelectTrigger className="w-full lg:w-[200px]">
-                    <SelectValue placeholder="Sorteer op..." />
+                    <SelectValue placeholder={sp.sortPlaceholder} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="newest">Nieuwste eerst</SelectItem>
-                    <SelectItem value="price-asc">Prijs: Laag - Hoog</SelectItem>
-                    <SelectItem value="price-desc">Prijs: Hoog - Laag</SelectItem>
-                    <SelectItem value="popular">Meest populair</SelectItem>
+                    <SelectItem value="newest">{sp.newestFirst}</SelectItem>
+                    <SelectItem value="price-asc">{sp.priceLowHigh}</SelectItem>
+                    <SelectItem value="price-desc">{sp.priceHighLow}</SelectItem>
+                    <SelectItem value="popular">{sp.mostPopular}</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -209,7 +207,7 @@ export default function SocksShop() {
                     onClick={() => setShowFeatured(!showFeatured)}
                   >
                     <Sparkles className="h-4 w-4 mr-2" />
-                    Featured
+                    {sp.featured}
                   </Button>
                 </div>
               </div>
@@ -244,7 +242,7 @@ export default function SocksShop() {
                               {product.primary_image ? (
                                 <img
                                   src={product.primary_image}
-                                  alt={`${product.artist || 'Various Artists'} - ${product.title} sokken`}
+                                  alt={`${product.artist || 'Various Artists'} - ${product.title}`}
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                   loading="lazy"
                                   decoding="async"
@@ -259,12 +257,12 @@ export default function SocksShop() {
                           {/* Badges Overlay */}
                           <div className="absolute top-3 left-3 flex flex-col gap-2">
                             <Badge className="bg-purple-600 text-white font-bold">
-                              ✨ Premium Merino
+                              {sp.premiumMerino}
                             </Badge>
                             {product.is_featured && (
                               <Badge className="bg-vinyl-gold text-black font-bold">
                                 <Sparkles className="h-3 w-3 mr-1" />
-                                Featured
+                                {sp.featured}
                               </Badge>
                             )}
                           </div>
@@ -288,7 +286,7 @@ export default function SocksShop() {
                           <div className="flex items-center justify-between pt-2">
                             <p className="text-lg font-bold text-primary">€{product.price.toFixed(2)}</p>
                             <Button variant="outline" size="sm">
-                              Bekijk
+                              {sp.view}
                             </Button>
                           </div>
                         </CardContent>
@@ -301,15 +299,15 @@ export default function SocksShop() {
             <Card className="p-12 text-center">
               <div className="space-y-4">
                 <div className="text-4xl">🧦</div>
-                <h3 className="text-xl font-bold">Geen sokken gevonden</h3>
+                <h3 className="text-xl font-bold">{sp.noSocksFound}</h3>
                 <p className="text-muted-foreground">
                   {searchQuery 
-                    ? `Geen resultaten voor "${searchQuery}". Probeer een andere zoekopdracht.`
-                    : "Er zijn momenteel geen sokken beschikbaar."}
+                    ? sp.noResultsFor.replace('{query}', searchQuery)
+                    : sp.noSocksAvailable}
                 </p>
                 {searchQuery && (
                   <Button onClick={() => setSearchQuery("")} variant="outline">
-                    Wis filters
+                    {sp.clearFilters}
                   </Button>
                 )}
               </div>

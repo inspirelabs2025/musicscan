@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Search, SlidersHorizontal, TrendingUp, Eye, Sparkles } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
 import { CategoryNavigation } from "@/components/CategoryNavigation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ArtShop() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -21,6 +22,8 @@ export default function ArtShop() {
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc" | "popular">("newest");
   const [showFeatured, setShowFeatured] = useState(false);
   const [showOnSale, setShowOnSale] = useState(false);
+  const { tr } = useLanguage();
+  const sp = tr.shopPageUI;
 
   const { data: allProducts, isLoading } = usePlatformProducts({ 
     mediaType: 'art',
@@ -111,34 +114,29 @@ export default function ArtShop() {
             <div className="relative z-10 space-y-4">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-6 w-6" />
-                <span className="text-sm font-semibold uppercase tracking-wide">Premium Art Collection</span>
+                <span className="text-sm font-semibold uppercase tracking-wide">{sp.metalPrintsCollection}</span>
               </div>
-              <h1 className="text-5xl font-bold">
-                Metaalprints van Albumcovers
-              </h1>
-              <p className="text-xl text-white/90 max-w-2xl">
-                Museum-kwaliteit prints van iconische albumcovers op premium aluminium. 
-                Elke print is een kunstwerk voor aan de muur.
-              </p>
+              <h1 className="text-5xl font-bold">{sp.metalPrintsTitle}</h1>
+              <p className="text-xl text-white/90 max-w-2xl">{sp.metalPrintsSubtitle}</p>
               
               {/* Stats Row */}
               <div className="flex flex-wrap gap-6 pt-4">
                 <div className="space-y-1">
                   <div className="text-3xl font-bold">{productCounts?.metalPrintsCount || 0}</div>
-                  <div className="text-sm text-white/80">Kunstwerken</div>
+                  <div className="text-sm text-white/80">{sp.artworks}</div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-3xl font-bold">€{avgPrice}</div>
-                  <div className="text-sm text-white/80">Gem. Prijs</div>
+                  <div className="text-sm text-white/80">{sp.avgPrice}</div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-3xl font-bold">{featuredCount}</div>
-                  <div className="text-sm text-white/80">Featured</div>
+                  <div className="text-sm text-white/80">{sp.featured}</div>
                 </div>
                 {onSaleCount > 0 && (
                   <div className="space-y-1">
                     <div className="text-3xl font-bold">{onSaleCount}</div>
-                    <div className="text-sm text-white/80">In Aanbieding</div>
+                    <div className="text-sm text-white/80">{sp.onSale}</div>
                   </div>
                 )}
               </div>
@@ -154,7 +152,7 @@ export default function ArtShop() {
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Zoek op artiest of album..."
+                    placeholder={sp.searchArtistAlbum}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -164,13 +162,13 @@ export default function ArtShop() {
                 {/* Sort */}
                 <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                   <SelectTrigger className="w-full lg:w-[200px]">
-                    <SelectValue placeholder="Sorteer op..." />
+                    <SelectValue placeholder={sp.sortPlaceholder} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="newest">Nieuwste eerst</SelectItem>
-                    <SelectItem value="price-asc">Prijs: Laag - Hoog</SelectItem>
-                    <SelectItem value="price-desc">Prijs: Hoog - Laag</SelectItem>
-                    <SelectItem value="popular">Meest populair</SelectItem>
+                    <SelectItem value="newest">{sp.newestFirst}</SelectItem>
+                    <SelectItem value="price-asc">{sp.priceLowHigh}</SelectItem>
+                    <SelectItem value="price-desc">{sp.priceHighLow}</SelectItem>
+                    <SelectItem value="popular">{sp.mostPopular}</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -182,7 +180,7 @@ export default function ArtShop() {
                     onClick={() => setShowFeatured(!showFeatured)}
                   >
                     <Sparkles className="h-4 w-4 mr-2" />
-                    Featured
+                    {sp.featured}
                   </Button>
                   <Button
                     variant={showOnSale ? "default" : "outline"}
@@ -190,7 +188,7 @@ export default function ArtShop() {
                     onClick={() => setShowOnSale(!showOnSale)}
                   >
                     <TrendingUp className="h-4 w-4 mr-2" />
-                    Sale
+                    {sp.sale}
                   </Button>
                 </div>
               </div>
@@ -229,17 +227,17 @@ export default function ArtShop() {
                         {product.is_featured && (
                           <Badge className="bg-vinyl-gold text-black font-bold">
                             <Sparkles className="h-3 w-3 mr-1" />
-                            Featured
+                            {sp.featured}
                           </Badge>
                         )}
                         {product.is_on_sale && (
                           <Badge variant="destructive" className="font-bold">
-                            Sale
+                            {sp.sale}
                           </Badge>
                         )}
                         {product.is_new && (
                           <Badge variant="secondary" className="font-bold">
-                            Nieuw
+                            {sp.newBadge}
                           </Badge>
                         )}
                       </div>
@@ -284,7 +282,7 @@ export default function ArtShop() {
                         </p>
                       </div>
                       <Button variant="outline" size="sm">
-                        Bekijk
+                        {sp.view}
                       </Button>
                     </CardFooter>
                   </Card>
@@ -295,15 +293,15 @@ export default function ArtShop() {
             <Card className="p-12 text-center">
               <div className="space-y-4">
                 <div className="text-4xl">🎨</div>
-                <h3 className="text-xl font-bold">Geen kunstwerken gevonden</h3>
+                <h3 className="text-xl font-bold">{sp.noArtFound}</h3>
                 <p className="text-muted-foreground">
                   {searchQuery 
-                    ? `Geen resultaten voor "${searchQuery}". Probeer een andere zoekopdracht.`
-                    : "Er zijn momenteel geen art prints beschikbaar."}
+                    ? sp.noResultsFor.replace('{query}', searchQuery)
+                    : sp.noArtAvailable}
                 </p>
                 {searchQuery && (
                   <Button onClick={() => setSearchQuery("")} variant="outline">
-                    Wis filters
+                    {sp.clearFilters}
                   </Button>
                 )}
               </div>

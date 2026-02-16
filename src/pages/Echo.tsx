@@ -163,11 +163,11 @@ export default function Echo() {
           <CardContent className="space-y-6">
             <ScrollArea className="h-[500px] pr-4">
               {messages.length === 0 && (
-                <div className="text-center py-12 space-y-6">
-                  <Music2 className="w-16 h-16 mx-auto text-echo-lavender animate-echo-pulse" />
+                <div className="text-center py-4 space-y-3">
+                  <Music2 className="w-10 h-10 mx-auto text-echo-lavender" />
                   <div>
-                    <h3 className="text-xl font-semibold mb-2 font-serif">{e.welcome}</h3>
-                    <p className="text-muted-foreground mb-6">{e.askQuestion}</p>
+                    <h3 className="text-lg font-semibold mb-1 font-serif">{e.welcome}</h3>
+                    <p className="text-sm text-muted-foreground mb-3">{e.askQuestion}</p>
                   </div>
 
                   <div className="space-y-3">

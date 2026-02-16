@@ -81,7 +81,15 @@ export default function Echo() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Echo chat error:', error);
+        throw new Error(typeof error === 'object' && error?.message ? error.message : 'Chat is tijdelijk niet beschikbaar');
+      }
+      
+      if (data?.error) {
+        throw new Error(data.error.includes('429') ? 'Even te druk, probeer het zo opnieuw' : data.error);
+      }
+      
       await loadMessages();
     } catch (error) {
       console.error('Echo error:', error);

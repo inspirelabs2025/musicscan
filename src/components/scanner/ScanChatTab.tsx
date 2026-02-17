@@ -812,24 +812,34 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
 
       const activeUrls = urls || photoUrls;
 
-      const response = await supabase.functions.invoke('scan-chat', {
-        body: {
+      // Use fetch directly for SSE streaming (supabase.functions.invoke doesn't support streaming)
+      const { data: { session } } = await supabase.auth.getSession();
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const authToken = session?.access_token || SUPABASE_ANON_KEY;
+
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/scan-chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+          apikey: SUPABASE_ANON_KEY,
+          'x-device-fingerprint': getDeviceFingerprint(),
+        },
+        body: JSON.stringify({
           messages: enrichedMessages,
           photoUrls: activeUrls.length > 0 ? activeUrls : undefined,
           mediaType: mediaType || undefined,
-        },
+        }),
       });
 
-      if (response.error) throw response.error;
-
-      const reader = response.data?.getReader?.();
-      if (!reader) {
-        const text = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
-        upsertAssistant(text);
-        setIsStreaming(false);
-        return;
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({ error: 'Onbekende fout' }));
+        throw new Error(errData.error || `HTTP ${resp.status}`);
       }
+      if (!resp.body) throw new Error('Geen stream');
 
+      const reader = resp.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
 
@@ -837,19 +847,22 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
-
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
+        let nl: number;
+        while ((nl = buffer.indexOf('\n')) !== -1) {
+          let line = buffer.slice(0, nl);
+          buffer = buffer.slice(nl + 1);
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '' || !line.startsWith('data: ')) continue;
           const payload = line.slice(6).trim();
-          if (payload === '[DONE]') continue;
+          if (payload === '[DONE]') break;
           try {
             const json = JSON.parse(payload);
             const delta = json.choices?.[0]?.delta?.content;
             if (delta) upsertAssistant(delta);
-          } catch {}
+          } catch {
+            buffer = line + '\n' + buffer;
+            break;
+          }
         }
       }
 

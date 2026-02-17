@@ -4791,33 +4791,42 @@ export type Database = {
       }
       notifications: {
         Row: {
-          actor_id: string
+          actor_id: string | null
           comment_id: string | null
           created_at: string
+          icon: string | null
           id: string
           is_read: boolean
+          link: string | null
+          message: string | null
           photo_id: string | null
           type: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          actor_id: string
+          actor_id?: string | null
           comment_id?: string | null
           created_at?: string
+          icon?: string | null
           id?: string
           is_read?: boolean
+          link?: string | null
+          message?: string | null
           photo_id?: string | null
           type: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          actor_id?: string
+          actor_id?: string | null
           comment_id?: string | null
           created_at?: string
+          icon?: string | null
           id?: string
           is_read?: boolean
+          link?: string | null
+          message?: string | null
           photo_id?: string | null
           type?: string
           updated_at?: string
@@ -10274,6 +10283,16 @@ export type Database = {
       cleanup_stuck_batch_processes: { Args: never; Returns: undefined }
       complete_render_job: {
         Args: { p_job_id: string; p_output_url: string }
+        Returns: undefined
+      }
+      create_system_notification: {
+        Args: {
+          p_icon?: string
+          p_link?: string
+          p_message: string
+          p_type: string
+          p_user_id: string
+        }
         Returns: undefined
       }
       decrement_product_stock: {

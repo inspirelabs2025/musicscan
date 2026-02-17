@@ -93,13 +93,22 @@ export const ChatWidget = () => {
           </div>
         </div>
 
-        <Button asChild className="w-full bg-gradient-to-r from-vinyl-gold to-vinyl-gold/80">
-          <Link to="/collection-chat">
-            <MessageSquare className="w-4 h-4 mr-2" />
-            {d.openChat}
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Link>
-        </Button>
+        <div className="grid grid-cols-2 gap-2">
+          <Button 
+            onClick={() => window.dispatchEvent(new CustomEvent('open-magic-mike'))}
+            className="bg-gradient-to-r from-vinyl-gold to-vinyl-gold/80"
+          >
+            <Bot className="w-4 h-4 mr-2" />
+            Chat met Mike
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/collection-chat">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              {d.openChat}
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

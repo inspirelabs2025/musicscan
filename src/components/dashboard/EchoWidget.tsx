@@ -41,7 +41,7 @@ export function EchoWidget() {
             <span>{tr.echo.musicMemories}</span>
           </div>
         </div>
-        <Button asChild className="w-full bg-gradient-to-r from-echo-turquoise to-echo-copper hover:opacity-90 group-hover:scale-105 transition-transform">
+        <Button asChild className="w-full bg-transparent border border-primary/30 text-foreground hover:bg-[hsl(271,81%,56%)] hover:text-white hover:border-transparent transition-all group-hover:scale-105">
           <Link to="/echo">
             <Music2 className="w-4 h-4 mr-2" />
             {tr.echo.chatWithEcho}

@@ -35,7 +35,7 @@ export const AlbumOfTheDay = ({ albums }: AlbumOfTheDayProps) => {
     const selectedAlbum = albums[albumIndex];
     setDailyAlbum(selectedAlbum);
     generateFunFacts(selectedAlbum);
-  }, [albums]);
+  }, [albums, d]);
 
   const generateFunFacts = (album: UnifiedAlbum) => {
     const facts: string[] = [];

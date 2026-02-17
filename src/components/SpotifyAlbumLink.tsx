@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SpotifyAlbumLinkProps {
   artist: string;
@@ -81,17 +82,20 @@ export const SpotifyAlbumLink: React.FC<SpotifyAlbumLinkProps> = ({
     }
   };
 
+  const { tr } = useLanguage();
+  const d = tr.dashboardUI;
+
   const getButtonText = () => {
-    if (isLoading) return 'Zoeken...';
-    if (linkType === 'album') return 'Spotify';
-    if (linkType === 'artist') return `${artist} op Spotify`;
-    return 'Zoek op Spotify';
+    if (isLoading) return d.spotifySearching;
+    if (linkType === 'album') return d.spotifyOpen;
+    if (linkType === 'artist') return `${artist} ${d.spotifyArtistOn}`;
+    return d.spotifySearch;
   };
 
   const getTooltipText = () => {
-    if (linkType === 'album') return "Open album op Spotify";
-    if (linkType === 'artist') return `Open ${artist} op Spotify`;
-    return "Zoek op Spotify";
+    if (linkType === 'album') return d.spotifyOpenAlbum;
+    if (linkType === 'artist') return `${artist} ${d.spotifyOpenArtist}`;
+    return d.spotifySearchOn;
   };
 
   if (!artist || !album) {

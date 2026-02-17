@@ -1,27 +1,39 @@
 
-# Tijdelijke Hard Refresh Button in Header
+# Recente Activiteit uitbreiden met alle activiteiten
 
-## Wat wordt er gedaan
-Een opvallende "refresh" button toevoegen in de header (Navigation component), naast het logo, die een harde refresh uitvoert om alle gecachte pagina's te vernieuwen.
+## Probleem
+De "Recente Activiteit" sectie op het dashboard toont momenteel alleen scans (CD/vinyl/AI). De gebruiker wil hier alle soorten activiteiten zien die daadwerkelijk zijn uitgevoerd.
 
-## Technisch Detail
+## Oplossing
+De sectie aanpassen zodat naast scans ook quizzen, blog posts, follows en shop orders worden getoond - vergelijkbaar met de bestaande `useUserActivity` hook maar dan op het dashboard.
 
-### Bestand: `src/components/Navigation.tsx`
+## Wat er verandert
 
-- Een `RefreshCw` icon importeren uit `lucide-react`
-- Na het logo (zowel desktop als mobiel) een button toevoegen:
-  - Kleine paarse button met een refresh-icoon
-  - `onClick` handler die `window.location.reload()` aanroept (forceert een volledige herlaadbeurt)
-  - Voorafgaand aan reload worden alle caches gewist via `caches.delete()`
-  - Label: "🔄" of refresh icon, compact
-- Desktop: naast het logo op regel ~150
-- Mobiel: naast het gecentreerde logo op regel ~314
+### 1. Nieuwe hook: `useDashboardActivity`
+Een nieuwe hook die alle activiteitstypen ophaalt voor de ingelogde gebruiker:
+- CD scans ("CD toegevoegd: Artist - Title")
+- Vinyl scans ("Vinyl toegevoegd: Artist - Title")
+- AI scans ("Scan uitgevoerd: Artist - Title")
+- Quiz resultaten ("Quiz voltooid - Score: 85%")
+- Blog posts ("Blog gepubliceerd: Titel")
+- Shop bestellingen ("Bestelling geplaatst: bedrag")
+- Follows ("Begon iemand te volgen")
 
-### Refresh logica
-```text
-1. Wis alle browser caches (via caches API)
-2. Wis sessionStorage reload-key
-3. Forceer window.location.reload()
-```
+Alle items worden gesorteerd op datum, de laatste 10 worden getoond.
 
-Dit is bewust een tijdelijke toevoeging die later weer verwijderd kan worden.
+### 2. Dashboard.tsx aanpassen
+De huidige scan-only weergave vervangen door de nieuwe activiteitenfeed met:
+- Icoontjes per activiteitstype (muzieknoot voor scans, trofee voor quiz, pen voor blog, etc.)
+- Artiest + titel voor scans
+- Score percentage voor quizzen
+- Titel voor blog posts
+- Datum per item
+
+De layout en styling blijven consistent met het huidige design.
+
+## Technische details
+
+- De nieuwe hook hergebruikt het patroon uit `useUserActivity` maar is geoptimaliseerd voor het dashboard (meertalig via `tr` object, minder data per query)
+- Parallel fetching van alle tabellen voor snelheid
+- Query key bevat `tr` voor taalwisseling support
+- Maximaal 10 items, gesorteerd op datum (nieuwste eerst)

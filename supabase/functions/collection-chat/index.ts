@@ -183,13 +183,7 @@ Deno.serve(async (req) => {
       .order('created_at', { ascending: false })
       .limit(100); // Increased from default
 
-    // Get unified scans as alternative view
-    const { data: unifiedScansData, error: unifiedScansError } = await supabase
-      .from('unified_scans')
-      .select('artist, title, genre, year, calculated_advice_price, format, label, country, media_type, source_table, status, ai_description')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(200); // Increased from default
+    // Skip unified_scans (view does not exist)
 
     // Get Spotify data for enhanced context
     const { data: spotifyTracks, error: spotifyTracksError } = await supabase
@@ -227,9 +221,6 @@ Deno.serve(async (req) => {
     if (aiScansError) {
       console.error('Error fetching AI scans data:', aiScansError);
     }
-    if (unifiedScansError) {
-      console.error('Error fetching unified scans data:', unifiedScansError);
-    }
     if (spotifyTracksError) {
       console.error('Error fetching Spotify tracks:', spotifyTracksError);
     }
@@ -243,7 +234,7 @@ Deno.serve(async (req) => {
     // Combine and analyze all music data (physical + AI scans + Spotify)
     const allPhysicalRecords = [...(cdData || []), ...(vinylData || [])];
     const allAiScans = [...(aiScansData || [])];
-    const allUnifiedScans = [...(unifiedScansData || [])];
+    const allUnifiedScans: any[] = [];
     const hasSpotifyData = !!(spotifyTracks && spotifyTracks.length > 0);
     const spotifyConnected = profileData?.spotify_connected || false;
     
@@ -487,14 +478,19 @@ ${recentAiMessages ? `Recente topics: ${recentAiMessages.substring(0, 150)}...` 
 
 **OPDRACHT:** Wees verrassend, specifiek en ontdekkend! Gebruik verschillende albums dan eerder besproken.`;
 
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
+    }
+
+    const openaiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-2025-08-07', // Upgraded to GPT-5 for better performance
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'system',
@@ -511,7 +507,7 @@ ${JSON.stringify(collectionStats.searchResults, null, 2)}` : `
 ${JSON.stringify(collectionStats.sampleItems.slice(0, 20), null, 1)}`}`
           }
         ],
-        max_completion_tokens: 2000 // Updated parameter for GPT-5 (no temperature supported)
+        max_tokens: 2000
       }),
     });
 
@@ -532,7 +528,7 @@ ${JSON.stringify(collectionStats.sampleItems.slice(0, 20), null, 1)}`}`
         sender_type: 'ai',
         session_id,
         user_id: userId,
-        ai_model: 'gpt-5-2025-08-07',
+        ai_model: 'google/gemini-2.5-flash',
         tokens_used: tokensUsed,
         response_time_ms: responseTime,
         format_type: 'markdown',

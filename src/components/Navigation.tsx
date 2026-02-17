@@ -85,7 +85,7 @@ export function Navigation() {
   const scanCollectionMenuItems = [
     { title: t('nav.smartScan'), url: "/ai-scan-v2", icon: Brain },
     { title: t('nav.myCollection'), url: "/my-collection", icon: Music },
-    { title: "Mijn Discogs", url: "/mijn-discogs", icon: Disc3 },
+    { title: t('nav.myDiscogs'), url: "/mijn-discogs", icon: Disc3 },
     { title: t('nav.collectionInsight'), url: "/collection-overview", icon: BarChart3 }
   ];
 

@@ -57,26 +57,41 @@ async function searchCollection(supabase: any, userId: string, searchTerm: strin
 
 // Detect if user input contains search intent
 function detectSearchIntent(message: string): string | null {
-  const lowerMessage = message.toLowerCase();
+  const lowerMessage = message.toLowerCase().trim();
   
-  // Direct search patterns
+  // Skip if message is too long (likely a general question, not a search)
+  if (lowerMessage.length > 80) return null;
+  
+  // Skip general/conversational messages
+  const skipPatterns = [
+    /^(hoi|hey|hallo|hi|dag|goedemorgen|goedemiddag|goedenavond)/,
+    /\b(advies|tips?|suggesties?|aanbeveling|help|uitleg|vertel|wat is|wat zijn|hoe |waarom|kun je|geef me|give me|tell me|how |what |why |can you)\b/,
+    /\b(trends?|analyse|statistiek|waarde van mijn|investment|invest|recommend)\b/,
+    /\b(beste|slechtste|duurste|goedkoopste|oudste|nieuwste|populairste|zeldzaamste)\b/,
+    /\?$/  // Questions are usually not search queries
+  ];
+  
+  for (const pattern of skipPatterns) {
+    if (pattern.test(lowerMessage)) return null;
+  }
+  
+  // Only match explicit search patterns
   const searchPatterns = [
-    /zoek naar (.+)/,
-    /vind (.+)/,
-    /heb ik (.+)/,
-    /waar is (.+)/,
-    /toon me (.+)/,
-    /laat me (.+) zien/,
-    /(.+) in mijn collectie/,
-    /^(.+)$/  // Single word/phrase queries like "tina turner"
+    /zoek(?:\s+naar)?\s+(.+)/,
+    /vind\s+(.+)/,
+    /heb ik\s+(.+)/,
+    /waar is\s+(.+)/,
+    /toon(?:\s+me)?\s+(.+)/,
+    /laat(?:\s+me)?\s+(.+)\s+zien/,
+    /search(?:\s+for)?\s+(.+)/,
+    /find\s+(.+)/
   ];
   
   for (const pattern of searchPatterns) {
     const match = lowerMessage.match(pattern);
     if (match && match[1]) {
       const searchTerm = match[1].trim();
-      // Filter out very generic terms
-      if (searchTerm.length > 2 && !['albums', 'muziek', 'collectie', 'items'].includes(searchTerm)) {
+      if (searchTerm.length > 2 && searchTerm.length < 60) {
         return searchTerm;
       }
     }

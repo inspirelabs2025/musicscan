@@ -21,6 +21,7 @@ import { AIScanV2Results } from '@/components/scanner/AIScanV2Results';
 import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
 import { ScanChatTab, ScanChatTabHandle } from '@/components/scanner/ScanChatTab';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCreditThresholdAlert } from '@/hooks/useCreditThresholdAlert';
 
 // Simple V2 components for media type and condition selection
 
@@ -97,6 +98,7 @@ export default function AIScanV2() {
   const {
     subscription
   } = useSubscriptionContext();
+  const { checkAndAlert: checkCreditThreshold } = useCreditThresholdAlert();
 
   // Discogs search for automatic pricing
   const {
@@ -278,6 +280,8 @@ export default function AIScanV2() {
       if (postCheck.limit_amount !== null && (postCheck.current_usage > postCheck.limit_amount)) {
         await supabase.rpc('deduct_scan_credit', { p_user_id: user?.id });
       }
+      // Check credit thresholds and show warnings at 25%, 10%, 0%
+      await checkCreditThreshold();
       console.log('✅ Analysis completed successfully');
       toast({
         title: `${s.analysisComplete}`,

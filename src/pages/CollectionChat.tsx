@@ -16,6 +16,7 @@ import { toast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { format } from 'date-fns';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ChatMessage {
   id: string;
@@ -45,18 +46,20 @@ const TypingIndicator = () => (
   </div>
 );
 
-// Suggestion categories with icons
-const suggestionCategories = [
-  { label: 'Waarde', icon: TrendingUp, emoji: '💰' },
-  { label: 'Smaak', icon: Disc3, emoji: '🎵' },
-  { label: 'Analyse', icon: BarChart3, emoji: '📊' },
-  { label: 'Spotify', icon: Headphones, emoji: '🎧' },
-  { label: 'Ontdek', icon: Sparkles, emoji: '✨' },
-  { label: 'Collectie', icon: ListMusic, emoji: '📀' },
+// Suggestion category icons (labels come from translations)
+const categoryIcons = [
+  { key: 'catValue', icon: TrendingUp, emoji: '💰' },
+  { key: 'catTaste', icon: Disc3, emoji: '🎵' },
+  { key: 'catAnalysis', icon: BarChart3, emoji: '📊' },
+  { key: 'catSpotify', icon: Headphones, emoji: '🎧' },
+  { key: 'catDiscover', icon: Sparkles, emoji: '✨' },
+  { key: 'catCollection', icon: ListMusic, emoji: '📀' },
 ];
 
 const CollectionChat = () => {
   const navigate = useNavigate();
+  const { tr } = useLanguage();
+  const cc = tr.collectionChatPage as any;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -69,6 +72,12 @@ const CollectionChat = () => {
   const [upgradeReason, setUpgradeReason] = useState<'usage_limit' | 'feature_limit'>('usage_limit');
   const [usageInfo, setUsageInfo] = useState<{current: number, limit: number, plan: string} | undefined>();
   const [spotifyConnected, setSpotifyConnected] = useState(false);
+
+  const suggestionCategories = categoryIcons.map(c => ({
+    label: cc[c.key] || c.key,
+    icon: c.icon,
+    emoji: c.emoji,
+  }));
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -156,7 +165,7 @@ const CollectionChat = () => {
       console.error('Error sending message:', error);
       const errorMessage: ChatMessage = {
         id: crypto.randomUUID(),
-        message: 'Sorry, er ging iets mis bij het verwerken van je bericht.',
+        message: cc.errorMessage,
         sender_type: 'ai',
         created_at: new Date().toISOString()
       };
@@ -176,16 +185,16 @@ const CollectionChat = () => {
   };
 
   const startAnalysis = () => {
-    handleSendQuestion('Geef me een uitgebreide AI analyse van mijn hele muziekcollectie met persoonlijke inzichten, waarde-analyse, en aanbevelingen.');
+    handleSendQuestion(cc.analysisPrompt);
   };
 
   const categorizeQuestion = (question: string): typeof suggestionCategories[0] => {
     const q = question.toLowerCase();
-    if (q.includes('waarde') || q.includes('prijs') || q.includes('investeer') || q.includes('gestegen')) return suggestionCategories[0];
-    if (q.includes('smaak') || q.includes('genre') || q.includes('emotion') || q.includes('mood')) return suggestionCategories[1];
-    if (q.includes('analys') || q.includes('vergelijk') || q.includes('statistiek')) return suggestionCategories[2];
+    if (q.includes('waarde') || q.includes('value') || q.includes('prijs') || q.includes('price') || q.includes('investeer') || q.includes('investment') || q.includes('gestegen') || q.includes('risen')) return suggestionCategories[0];
+    if (q.includes('smaak') || q.includes('taste') || q.includes('genre') || q.includes('emotion') || q.includes('mood')) return suggestionCategories[1];
+    if (q.includes('analys') || q.includes('vergelijk') || q.includes('compare') || q.includes('statistiek') || q.includes('condition')) return suggestionCategories[2];
     if (q.includes('spotify') || q.includes('stream') || q.includes('playlist')) return suggestionCategories[3];
-    if (q.includes('ontbre') || q.includes('sugger') || q.includes('aanbevel') || q.includes('ontdek')) return suggestionCategories[4];
+    if (q.includes('ontbre') || q.includes('missing') || q.includes('sugger') || q.includes('suggest') || q.includes('aanbevel') || q.includes('ontdek') || q.includes('discover') || q.includes('complement')) return suggestionCategories[4];
     return suggestionCategories[5];
   };
 
@@ -199,7 +208,7 @@ const CollectionChat = () => {
         {isUser ? (
           <Avatar className="h-8 w-8 ring-2 ring-primary/30 shadow-md">
             <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-xs font-bold">
-              JIJ
+              {cc.you}
             </AvatarFallback>
           </Avatar>
         ) : (
@@ -238,33 +247,17 @@ const CollectionChat = () => {
 
   const getRandomSuggestedQuestions = () => {
     const physicalQuestions = [
-      "Wat zijn mijn meest waardevolle albums?",
-      "Welke genres domineren mijn collectie?",
-      "Geef me investeeringsadvies voor mijn collectie",
-      "Welke artiesten ontbreken in mijn collectie?",
-      "Analyseer mijn smaak in muziek",
-      "Wat zijn de hidden gems in mijn collectie?",
-      "Welke albums zijn het meest gestegen in waarde?",
-      "Vergelijk mijn collectie met andere verzamelaars",
-      "Wat zijn mijn zeldzaamste releases?",
-      "Welke jaren zijn het best vertegenwoordigd?",
-      "Suggereer albums om mijn collectie aan te vullen",
-      "Wat is de gemiddelde waarde van mijn collectie?",
-      "Welke labels zijn dominant in mijn collectie?",
-      "Analyseer de conditie van mijn collectie",
-      "Welke albums moet ik absoluut houden?",
-      "Wat zijn trends in mijn verzamelgedrag?",
-      "Geef me tips voor het onderhouden van vinyl",
-      "Welke albums hebben het meeste potentieel?",
+      cc.qMostValuable, cc.qGenresDominate, cc.qInvestment,
+      cc.qMissingArtists, cc.qAnalyzeTaste, cc.qHiddenGems,
+      cc.qRisenValue, cc.qCompare, cc.qRarest,
+      cc.qBestYears, cc.qSuggestAlbums, cc.qAverageValue,
+      cc.qDominantLabels, cc.qCondition, cc.qMustKeep,
+      cc.qTrends, cc.qMaintenanceTips, cc.qPotential,
     ];
 
     const spotifyQuestions = [
-      "Vergelijk mijn Spotify top tracks met mijn fysieke collectie",
-      "Welke artiesten luister ik veel op Spotify maar heb ik niet fysiek?",
-      "Analyseer de overlap tussen mijn playlists en vinyl collectie",
-      "Wat zijn de verschillen tussen mijn digitale en fysieke muzieksmaak?",
-      "Welke albums zou ik moeten kopen gebaseerd op mijn Spotify gedrag?",
-      "Toon me mijn meest gespeelde Spotify genres vs mijn collectie",
+      cc.qSpotifyCompare, cc.qSpotifyMissing, cc.qSpotifyOverlap,
+      cc.qSpotifyDiff, cc.qSpotifyBuy, cc.qSpotifyGenres,
     ];
 
     const allQuestions = [...physicalQuestions, ...spotifyQuestions];
@@ -295,7 +288,7 @@ const CollectionChat = () => {
                   </Avatar>
                   <div>
                     <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent text-lg">Magic Mike</span>
-                    <p className="text-xs text-muted-foreground font-normal">Jouw collectie-expert</p>
+                    <p className="text-xs text-muted-foreground font-normal">{cc.yourExpert}</p>
                   </div>
                 </CardTitle>
                 <div className="flex items-center gap-2">
@@ -312,7 +305,7 @@ const CollectionChat = () => {
                     className="bg-gradient-to-r from-primary/10 to-secondary/10 hover:from-primary/20 hover:to-secondary/20 border-primary/30"
                   >
                     <Brain className="w-4 h-4 mr-1" />
-                    Analyse 🚀
+                    {cc.analysis}
                   </Button>
                 </div>
               </div>
@@ -331,7 +324,7 @@ const CollectionChat = () => {
                         Hey! 👋
                       </h2>
                       <p className="text-muted-foreground text-sm">
-                        Ik ben Magic Mike, je persoonlijke collectie-expert. Stel me een vraag of kies een suggestie!
+                        {cc.welcome}
                       </p>
                     </div>
 
@@ -367,7 +360,7 @@ const CollectionChat = () => {
                     {/* Suggested questions after conversation */}
                     {messages.length > 0 && !isLoading && (
                       <div className="mt-6 pt-4 border-t border-primary/10">
-                        <p className="text-xs text-muted-foreground mb-3 font-medium">💡 Stel een vervolg vraag:</p>
+                        <p className="text-xs text-muted-foreground mb-3 font-medium">{cc.followUp}</p>
                         <div className="flex flex-wrap gap-2">
                           {suggestedQuestions.slice(0, 3).map((question, index) => (
                             <button
@@ -396,7 +389,7 @@ const CollectionChat = () => {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder="Stel een vraag over je collectie..."
+                      placeholder={cc.placeholder}
                       disabled={isLoading}
                       rows={1}
                       className="w-full resize-none rounded-2xl border border-primary/20 bg-background/80 px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/40 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px] max-h-32"

@@ -5,19 +5,19 @@ import { useEffect } from "react";
 
 export interface Notification {
   id: string;
+  user_id: string;
   type: string;
   photo_id?: string;
   comment_id?: string;
+  message?: string;
+  link?: string;
+  icon?: string;
   is_read: boolean;
   created_at: string;
   actor: {
     user_id: string;
     first_name: string;
     avatar_url: string | null;
-  } | null;
-  photo?: {
-    id: string;
-    image_url: string;
   } | null;
 }
 

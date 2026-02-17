@@ -1602,6 +1602,14 @@ const translations = {
         "Weekend luistergenot",
         "Zondag ontspanning gegarandeerd"
       ],
+      // SpotifyAlbumLink
+      spotifySearching: "Zoeken...",
+      spotifyOpen: "Spotify",
+      spotifyArtistOn: "op Spotify",
+      spotifySearch: "Zoek op Spotify",
+      spotifyOpenAlbum: "Open album op Spotify",
+      spotifyOpenArtist: "op Spotify",
+      spotifySearchOn: "Zoek op Spotify",
       // CollectionPersonality
       collectionPersonality: "Je Collectie Persoonlijkheid",
       addMoreAlbums: "Voeg meer albums toe om je unieke collectie persoonlijkheid te ontdekken!",
@@ -4398,6 +4406,14 @@ const translations = {
       recentReleases: "You love recent releases",
       dedicatedCollector: "Dedicated Collector",
       impressiveCollection: "You have an impressive collection",
+      // SpotifyAlbumLink
+      spotifySearching: "Searching...",
+      spotifyOpen: "Spotify",
+      spotifyArtistOn: "on Spotify",
+      spotifySearch: "Search on Spotify",
+      spotifyOpenAlbum: "Open album on Spotify",
+      spotifyOpenArtist: "on Spotify",
+      spotifySearchOn: "Search on Spotify",
       unknown: "Unknown",
       latestStories: "Latest Stories",
       latestStoriesNews: "Latest Stories & News",

@@ -35,6 +35,7 @@ import { SubscriptionStatus } from '@/components/SubscriptionStatus';
 import { NextGoalWidget } from '@/components/dashboard/NextGoalWidget';
 import { MusicStoryWidget } from '@/components/dashboard/MusicStoryWidget';
 import { CreditsDisplay } from '@/components/credits/CreditsDisplay';
+import { useDashboardActivity } from '@/hooks/useDashboardActivity';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -47,6 +48,7 @@ const Dashboard = () => {
   const { data: scanStats, isLoading: statsLoading } = useUnifiedScansStats();
   const { data: userStats, isLoading: userStatsLoading } = useUserStats();
   const subscription = useSubscriptionContext();
+  const { data: dashboardActivities, isLoading: activitiesLoading } = useDashboardActivity();
   const { 
     isOnboardingOpen, setIsOnboardingOpen, shouldShowOnboarding, 
     currentStepIndex, currentStepData, totalSteps, nextStep, previousStep,
@@ -208,7 +210,7 @@ const Dashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {scansLoading ? (
+                  {activitiesLoading ? (
                     <div className="space-y-4">
                       {[...Array(3)].map((_, i) => (
                         <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 animate-pulse">
@@ -220,17 +222,17 @@ const Dashboard = () => {
                         </div>
                       ))}
                     </div>
-                  ) : latestScans.length > 0 ? (
+                  ) : dashboardActivities && dashboardActivities.length > 0 ? (
                     <div className="space-y-4">
-                      {latestScans.map((scan) => (
-                        <div key={scan.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent/10 transition-colors">
-                          <div className="w-12 h-12 bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/20 rounded-lg flex items-center justify-center">
-                            {scan.media_type === 'vinyl' ? <Disc className="w-6 h-6 text-vinyl-purple" /> : <Music className="w-6 h-6 text-vinyl-gold" />}
+                      {dashboardActivities.map((activity) => (
+                        <div key={`${activity.type}-${activity.id}`} className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent/10 transition-colors">
+                          <div className="w-12 h-12 bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/20 rounded-lg flex items-center justify-center text-xl">
+                            {activity.icon}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{scan.artist}</p>
-                            <p className="text-sm text-muted-foreground truncate">{scan.title}</p>
-                            <p className="text-xs text-muted-foreground">{new Date(scan.created_at).toLocaleDateString(t.common?.locale === 'en' ? 'en-US' : 'nl-NL')}</p>
+                            <p className="font-medium truncate">{activity.description}</p>
+                            {activity.details && <p className="text-sm text-muted-foreground truncate">{activity.details}</p>}
+                            <p className="text-xs text-muted-foreground">{new Date(activity.timestamp).toLocaleDateString(t.common?.locale === 'en' ? 'en-US' : 'nl-NL')}</p>
                           </div>
                         </div>
                       ))}

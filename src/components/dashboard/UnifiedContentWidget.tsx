@@ -48,7 +48,14 @@ export const UnifiedContentWidget = () => {
     const items: UnifiedContentItem[] = [];
     spotifyReleases.slice(0, 3).forEach((r) => items.push({ id: `release-${r.id}`, type: 'release', title: r.name, subtitle: r.artist, date: r.release_date, image: r.image_url, link: r.spotify_url, isExternal: true, badge: { label: d.spotifyLabel, className: 'bg-green-500 text-white' } }));
     newsBlogs.forEach((p: any) => items.push({ id: `news-${p.id}`, type: 'news', title: p.title, subtitle: p.source, date: p.published_at, image: p.image_url, link: `/nieuws/${p.slug}`, badge: { label: d.newsLabel, className: 'bg-blue-500 text-white' } }));
-    userBlogs.forEach((p: any) => items.push({ id: `album-${p.id}`, type: 'album-story', title: `${p.yaml_frontmatter?.artist || d.unknownArtistFallback} - ${p.yaml_frontmatter?.title || d.albumFallback}`, date: p.published_at, link: `/plaat-verhaal/${p.slug}`, badge: { label: d.albumLabel, className: 'bg-purple-500 text-white' } }));
+    userBlogs.forEach((p: any) => {
+      const fm = p.yaml_frontmatter;
+      const artist = fm?.artist || d.unknownArtistFallback;
+      const title = language !== 'nl' 
+        ? (fm?.album || fm?.album_name || d.albumFallback)
+        : (fm?.title || fm?.album || d.albumFallback);
+      items.push({ id: `album-${p.id}`, type: 'album-story', title: `${artist} - ${title}`, date: p.published_at, link: `/plaat-verhaal/${p.slug}`, badge: { label: d.albumLabel, className: 'bg-purple-500 text-white' } });
+    });
     musicStories.forEach((s: any) => items.push({ id: `single-${s.id}`, type: 'single-story', title: s.single_name ? `${s.artist} - ${s.single_name}` : s.title, date: s.created_at, image: s.artwork_url, link: `/muziek-verhaal/${s.slug}`, badge: { label: d.singleLabel, className: 'bg-amber-500 text-white' } }));
     return items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   };

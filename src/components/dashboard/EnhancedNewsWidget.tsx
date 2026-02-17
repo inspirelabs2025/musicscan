@@ -78,7 +78,12 @@ export const EnhancedNewsWidget = () => {
 
   const getAlbumTitle = (yamlFrontmatter: any) => {
     if (!yamlFrontmatter) return d.unknownAlbum;
-    return `${yamlFrontmatter.artist || d.unknownArtist} - ${yamlFrontmatter.title || d.unknownTitle}`;
+    const artist = yamlFrontmatter.artist || d.unknownArtist;
+    if (language !== 'nl') {
+      const album = yamlFrontmatter.album || yamlFrontmatter.album_name || d.unknownTitle;
+      return `${artist} - ${album}`;
+    }
+    return `${artist} - ${yamlFrontmatter.title || yamlFrontmatter.album || d.unknownTitle}`;
   };
 
   return (

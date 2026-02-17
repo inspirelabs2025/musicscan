@@ -293,21 +293,6 @@ const Dashboard = () => {
             </Card>
           </section>
 
-          {/* Community Highlights */}
-          <section className="mb-12 animate-fade-in delay-800">
-            <Card className="border-2 hover:border-accent/50 transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-accent" />
-                  {t.dashboard.musicCommunity}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <NewUsersSection />
-              </CardContent>
-            </Card>
-          </section>
-
           {/* Top Genres/Artists Quick Preview */}
           {collectionStats && !collectionLoading && (
             <section className="mt-12 animate-fade-in delay-900">

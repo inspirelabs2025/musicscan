@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageCircle, Send, Brain, Music, TrendingUp, Headphones, Sparkles, Disc3, BarChart3, ListMusic } from 'lucide-react';
+import { MessageCircle, Send, Brain, Music, TrendingUp, Headphones, Sparkles, Disc3, BarChart3, ListMusic, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useCollectionAIAnalysis } from '@/hooks/useCollectionAIAnalysis';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigation } from '@/components/Navigation';
@@ -55,6 +56,7 @@ const suggestionCategories = [
 ];
 
 const CollectionChat = () => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -283,6 +285,9 @@ const CollectionChat = () => {
             <CardHeader className="pb-3 bg-gradient-to-r from-primary/5 to-secondary/5 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-3">
+                  <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-8 w-8">
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
                   <Avatar className="h-9 w-9 ring-2 ring-amber-400/50">
                     <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white">
                       <Brain className="h-4 w-4" />

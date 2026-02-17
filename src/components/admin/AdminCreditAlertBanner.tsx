@@ -9,14 +9,16 @@ export function AdminCreditAlertBanner() {
   const latestAlert = alerts[0];
   const isCritical = latestAlert.alert_type === 'credit_depleted';
   const isAbuse = latestAlert.alert_type === 'abuse_detected';
+  const isLow = latestAlert.alert_type === 'credit_low';
 
   const getMessage = () => {
     if (isCritical) return 'AI credits zijn op!';
     if (isAbuse) return 'Misbruik gedetecteerd!';
+    if (isLow) return 'Credits bijna op!';
     return 'Rate limit bereikt';
   };
 
-  const colorClass = isCritical || isAbuse ? 'text-destructive' : 'text-amber-500';
+  const colorClass = isCritical || isAbuse ? 'text-destructive' : isLow ? 'text-amber-500' : 'text-muted-foreground';
 
   return (
     <p className={`text-xs flex items-center gap-1.5 ${colorClass}`}>

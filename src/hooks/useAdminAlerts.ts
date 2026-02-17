@@ -51,7 +51,7 @@ export function useAdminAlerts() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-alerts-unread'] }),
   });
 
-  const creditAlerts = alerts.filter(a => a.alert_type === 'credit_depleted');
+  const creditAlerts = alerts.filter(a => ['credit_depleted', 'credit_low'].includes(a.alert_type));
 
   return { alerts, creditAlerts, isLoading, markAsRead, markAllAsRead };
 }

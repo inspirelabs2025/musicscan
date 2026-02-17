@@ -104,26 +104,10 @@ export default function Echo() {
   };
 
   const suggestedQuestions = {
-    general: [
-      "Vertel me over de geschiedenis van jazz 🎷",
-      "Wat is het verhaal achter punk rock? 🎸",
-      "Waarom is Fleetwood Mac - Rumours zo iconisch? 💿"
-    ],
-    album_story: [
-      "Vertel het verhaal van Pink Floyd - Dark Side of the Moon 🌙",
-      "Wat maakt The Beatles - Abbey Road zo bijzonder? 🚶‍♂️",
-      "Vertel over de impact van Nirvana - Nevermind 🎤"
-    ],
-    lyric_analysis: [
-      "Analyseer de lyrics van Bohemian Rhapsody 👑",
-      "Wat betekenen de teksten van Leonard Cohen - Hallelujah? 🕊️",
-      "Leg de poëzie uit in Bob Dylan - Like a Rolling Stone 🎲"
-    ],
-    memory: [
-      "Welke muziek herinnert jou aan je jeugd? 🌟",
-      "Vertel over je eerste concert ervaring 🎪",
-      "Welk album heeft jouw leven veranderd? 💫"
-    ]
+    general: [e.qGeneral1, e.qGeneral2, e.qGeneral3],
+    album_story: [e.qAlbum1, e.qAlbum2, e.qAlbum3],
+    lyric_analysis: [e.qLyric1, e.qLyric2, e.qLyric3],
+    memory: [e.qMemory1, e.qMemory2, e.qMemory3]
   };
 
   return (

@@ -68,10 +68,12 @@ export const useDashboardActivity = () => {
           .limit(10),
       ]);
 
+      const d = tr.dashboard as any;
+
       if (cdScans.data) {
         cdScans.data.forEach(s => activities.push({
           id: s.id, type: 'cd_scan', icon: '💿',
-          description: 'CD toegevoegd',
+          description: d.activityCdAdded || 'CD toegevoegd',
           details: `${s.artist} - ${s.title}`,
           timestamp: s.created_at,
         }));
@@ -80,7 +82,7 @@ export const useDashboardActivity = () => {
       if (vinylScans.data) {
         vinylScans.data.forEach(s => activities.push({
           id: s.id, type: 'vinyl_scan', icon: '🎵',
-          description: 'Vinyl toegevoegd',
+          description: d.activityVinylAdded || 'Vinyl toegevoegd',
           details: `${s.artist} - ${s.title}`,
           timestamp: s.created_at,
         }));
@@ -89,7 +91,7 @@ export const useDashboardActivity = () => {
       if (aiScans.data) {
         aiScans.data.forEach(s => activities.push({
           id: s.id, type: 'ai_scan', icon: '📸',
-          description: 'Scan uitgevoerd',
+          description: d.activityScanDone || 'Scan uitgevoerd',
           details: s.artist && s.title ? `${s.artist} - ${s.title}` : undefined,
           timestamp: s.created_at,
         }));
@@ -98,7 +100,7 @@ export const useDashboardActivity = () => {
       if (quizResults.data) {
         quizResults.data.forEach(r => activities.push({
           id: r.id, type: 'quiz', icon: '🏆',
-          description: 'Quiz voltooid',
+          description: d.activityQuizDone || 'Quiz voltooid',
           details: `Score: ${Math.round(r.score_percentage)}%`,
           timestamp: r.created_at,
         }));
@@ -109,7 +111,7 @@ export const useDashboardActivity = () => {
           const fm = p.yaml_frontmatter as any;
           activities.push({
             id: p.id, type: 'blog', icon: '✍️',
-            description: 'Blog gepubliceerd',
+            description: d.activityBlogPublished || 'Blog gepubliceerd',
             details: fm?.title || undefined,
             timestamp: p.created_at,
           });
@@ -119,7 +121,7 @@ export const useDashboardActivity = () => {
       if (shopOrders.data) {
         shopOrders.data.forEach(o => activities.push({
           id: o.id, type: 'order', icon: '🛒',
-          description: 'Bestelling geplaatst',
+          description: d.activityOrderPlaced || 'Bestelling geplaatst',
           details: `€${o.total_amount?.toFixed(2)}`,
           timestamp: o.created_at,
         }));
@@ -128,7 +130,7 @@ export const useDashboardActivity = () => {
       if (follows.data) {
         follows.data.forEach(f => activities.push({
           id: f.id, type: 'follow', icon: '👥',
-          description: 'Begon iemand te volgen',
+          description: d.activityStartedFollowing || 'Begon iemand te volgen',
           timestamp: f.created_at,
         }));
       }

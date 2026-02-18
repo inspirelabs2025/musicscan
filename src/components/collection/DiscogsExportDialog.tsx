@@ -74,7 +74,7 @@ export const DiscogsExportDialog = ({ open, onOpenChange, discogsIds, itemCount,
         <div className="flex-1 overflow-y-auto min-h-0">
         {!exportResult ? (
           <>
-            <div className="space-y-4">
+            <div className="space-y-4 pb-4">
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">{sc.chooseTarget}</p>
                 <div className="flex gap-2">
@@ -124,7 +124,7 @@ export const DiscogsExportDialog = ({ open, onOpenChange, discogsIds, itemCount,
               </div>
             )}
 
-            <DialogFooter>
+            <DialogFooter className="gap-2 pt-2">
               <Button variant="outline" onClick={handleClose} disabled={isExporting}>{sc.cancel}</Button>
               <Button onClick={handleExport} disabled={isExporting || !canSubmitForSale}>
                 {isExporting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}

@@ -211,9 +211,9 @@ const DiscogsMessages = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Orders list */}
-        <div className="lg:col-span-1 space-y-3">
+      <div className="grid grid-cols-1 gap-6">
+        {/* Orders list - hidden when an order is selected on mobile */}
+        <div className={`space-y-3 ${selectedOrder ? "hidden lg:block" : ""}`}>
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-lg">Orders</h2>
             <span className="text-xs text-muted-foreground">{orders.length} orders</span>
@@ -303,23 +303,20 @@ const DiscogsMessages = () => {
           )}
         </div>
 
-        {/* Messages panel */}
-        <div className="lg:col-span-2">
-          {!selectedOrder ? (
-            <Card className="h-[calc(100vh-280px)] flex items-center justify-center">
-              <div className="text-center text-muted-foreground space-y-2">
-                <MessageSquare className="w-12 h-12 mx-auto opacity-30" />
-                <p className="text-lg font-medium">Selecteer een order</p>
-                <p className="text-sm">Klik op een order om de berichten te bekijken</p>
-              </div>
-            </Card>
-          ) : (
+        {/* Messages panel - shown when order is selected */}
+        {selectedOrder && (
+          <div>
             <Card className="flex flex-col h-[calc(100vh-280px)]">
-              <CardHeader className="pb-3 border-b">
+               <CardHeader className="pb-3 border-b">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">
-                    Order #{selectedOrder.id}
-                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedOrder(null)}>
+                      <ArrowLeft className="w-4 h-4" />
+                    </Button>
+                    <CardTitle className="text-base">
+                      Order #{selectedOrder.id}
+                    </CardTitle>
+                  </div>
                   <Badge variant="outline" className={statusColor(selectedOrder.status)}>
                     {selectedOrder.status}
                   </Badge>
@@ -419,8 +416,8 @@ const DiscogsMessages = () => {
                 </div>
               </div>
             </Card>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

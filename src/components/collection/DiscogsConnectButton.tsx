@@ -35,7 +35,7 @@ export const DiscogsConnectButton = () => {
             rel="noopener noreferrer"
           >
             <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
-            {connection.discogs_username}
+            Discogs account: {connection.discogs_username}
           </a>
         </Button>
         <Button

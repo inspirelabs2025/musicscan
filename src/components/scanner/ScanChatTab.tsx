@@ -333,7 +333,7 @@ interface ScanChatTabProps {
 
 export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>(function ScanChatTab({ autoStartListening = 0 }, ref) {
   const { user } = useAuth();
-  const { tr } = useLanguage();
+  const { tr, language } = useLanguage();
   const sc = tr.scanChatUI;
   const lastListenTrigger = useRef(0);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -830,6 +830,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
           messages: enrichedMessages,
           photoUrls: activeUrls.length > 0 ? activeUrls : undefined,
           mediaType: mediaType || undefined,
+          language,
         }),
       });
 

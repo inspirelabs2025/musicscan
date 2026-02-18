@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import magicMikeAvatar from '@/assets/magic-mike-avatar.png';
 import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const SUPABASE_URL = "https://ssxbpyqnjfiyubsuonar.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeGJweXFuamZpeXVic3VvbmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMDgyNTMsImV4cCI6MjA2MTY4NDI1M30.UFZKmrN-gz4VUUlKmVfwocS5OQuxGm4ATYltBJn3Kq4";
@@ -128,6 +129,7 @@ async function clearHistory(userId: string, sessionId: string) {
 
 export function FloatingMikeChat() {
   const { user } = useAuth();
+  const { language } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -306,6 +308,7 @@ ${recentItems}
         },
         body: JSON.stringify({
           messages: allMessages.map(m => ({ role: m.role, content: m.content })),
+          language,
         }),
       });
 

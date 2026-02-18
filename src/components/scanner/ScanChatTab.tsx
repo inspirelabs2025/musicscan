@@ -301,6 +301,17 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
           {sc.saveToCatalog}
         </Button>
       )}
+      {verifiedResult?.discogs_id && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 text-xs gap-2 rounded-full border-border/50 bg-card/80 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/30 hover:shadow-sm transition-all"
+          onClick={() => onSend(sc.scanAnother)}
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          {sc.newScanLabel}
+        </Button>
+      )}
       {suggestions.map((sug, i) => {
         const displayText = sug.text === sc.scanAnother && !verifiedResult?.discogs_id
           ? sc.scanOne

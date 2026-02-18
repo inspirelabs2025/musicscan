@@ -33,9 +33,9 @@ const CollectionCard = ({ item, onExportSingle, onClick, t }: { item: Collection
         </Badge>
         
         {item.discogs_id && item.discogs_id > 0 && onExportSingle && (
-          <Button variant="secondary" size="sm" className="absolute top-2 left-2 h-7 px-1.5 sm:px-2 text-xs backdrop-blur-sm bg-background/70"
+          <Button variant="secondary" size="sm" className="absolute top-2 left-2 h-7 px-2 text-xs backdrop-blur-sm bg-background/70"
             onClick={(e) => { e.stopPropagation(); onExportSingle(item.discogs_id!); }}>
-            <Upload className="w-3 h-3 sm:mr-1" /><span className="hidden sm:inline">{t.export}</span>
+            <Upload className="w-3 h-3 mr-1" />Discogs
           </Button>
         )}
         

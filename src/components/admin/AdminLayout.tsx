@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 
 interface AdminLayoutProps {
@@ -11,11 +11,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen w-full">
         <AdminSidebar />
-      <main className="flex-1 overflow-auto w-full">
-        <div className="w-full max-w-none">
-          {children}
+        <div className="flex-1 flex flex-col overflow-auto w-full">
+          <div className="h-10 flex items-center border-b px-2 shrink-0">
+            <SidebarTrigger />
+          </div>
+          <main className="flex-1 w-full max-w-none">
+            {children}
+          </main>
         </div>
-      </main>
       </div>
     </SidebarProvider>
   );

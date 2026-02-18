@@ -195,9 +195,8 @@ export function AdminSidebar() {
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-64"}>
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center justify-center p-4 border-b">
         {!collapsed && <h2 className="text-lg font-semibold">Admin</h2>}
-        <SidebarTrigger />
       </div>
 
       {!collapsed && (

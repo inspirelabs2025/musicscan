@@ -196,15 +196,15 @@ export function AdminSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="offcanvas">
       <div className="flex items-center justify-between p-3 border-b">
-        {!collapsed && <h2 className="text-lg font-semibold">Admin</h2>}
+        <h2 className="text-lg font-semibold">Admin</h2>
         <button
           onClick={toggleSidebar}
           className="p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors"
-          title={collapsed ? "Sidebar openen" : "Sidebar inklappen"}
+          title="Sidebar inklappen"
         >
-          {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+          <PanelLeftClose className="h-5 w-5" />
         </button>
       </div>
 

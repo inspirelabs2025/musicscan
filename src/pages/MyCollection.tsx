@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music, Search, X, Disc3, Disc, Euro, ShoppingCart, ScanLine, TrendingUp, Eye, EyeOff, Package, BarChart3, Upload } from "lucide-react";
+import { Music, Search, X, Disc3, Disc, Euro, ShoppingCart, ScanLine, TrendingUp, Eye, EyeOff, Package, BarChart3, Upload, ExternalLink } from "lucide-react";
 import { useMyCollection, CollectionItem } from "@/hooks/useMyCollection";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
@@ -68,6 +68,11 @@ const CollectionCard = ({ item, onExportSingle, onClick, t }: { item: Collection
             <span>{item.lowest_price ? `€${item.lowest_price.toFixed(2)}` : '?'} – {item.highest_price ? `€${item.highest_price.toFixed(2)}` : '?'}</span>
           </div>
         )}
+        
+        <Button variant="outline" size="sm" className="w-full mt-2 text-xs h-7" onClick={(e) => { e.stopPropagation(); onClick(); }}>
+          <ExternalLink className="w-3 h-3 mr-1" />
+          Open
+        </Button>
       </div>
     </Card>
   );

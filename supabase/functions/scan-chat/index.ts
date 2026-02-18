@@ -9,8 +9,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-device-fingerprint, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Fallback system prompt (used if DB fetch fails)
-const FALLBACK_SYSTEM_PROMPT = `Je bent Magic Mike 🎩 — de ultieme muziek-detective van MusicScan. Antwoord altijd in het Nederlands.`;
+// Fallback system prompts per language
+const FALLBACK_SYSTEM_PROMPT_NL = `Je bent Magic Mike 🎩 — de ultieme muziek-detective van MusicScan. Antwoord altijd in het Nederlands.`;
+const FALLBACK_SYSTEM_PROMPT_EN = `You are Magic Mike 🎩 — the ultimate music detective of MusicScan. Always respond in English.`;
 
 // Conversational engagement instructions - always appended to any system prompt
 const CONVERSATIONAL_INSTRUCTIONS = `
@@ -41,13 +42,15 @@ Je bent niet alleen een scanner, je bent een muziek-detective die ACTIEF het ges
 8. **Collectie-context**: Als er een [COLLECTIE_CONTEXT] blok in een gebruikersbericht staat, gebruik deze data dan actief om vragen over hun collectie te beantwoorden. Je kent hun totaal aantal items, waarde, top artiesten, genres en recente aanwinsten. Gebruik dit om persoonlijk en relevant advies te geven. Noem specifieke artiesten en albums uit hun collectie wanneer relevant. Zeg NIET "ik kan je collectie niet zien" als de context aanwezig is.`;
 
 
-async function loadAgentPrompt(): Promise<string> {
+async function loadAgentPrompt(language: string = 'nl'): Promise<string> {
+  const isEnglish = language === 'en';
+  const fallback = isEnglish ? FALLBACK_SYSTEM_PROMPT_EN : FALLBACK_SYSTEM_PROMPT_NL;
+  
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Load profile first to get agent_id
     const profileRes = await supabase
       .from("ai_agent_profiles")
       .select("id, system_prompt")
@@ -57,10 +60,15 @@ async function loadAgentPrompt(): Promise<string> {
 
     if (profileRes.error || !profileRes.data) {
       console.warn("[scan-chat] Could not load agent profile, using fallback:", profileRes.error?.message);
-      return FALLBACK_SYSTEM_PROMPT;
+      return fallback;
     }
 
     let prompt = profileRes.data.system_prompt;
+
+    // For English users, add a strong language instruction
+    if (isEnglish) {
+      prompt += "\n\n## LANGUAGE INSTRUCTION\nIMPORTANT: The user's interface language is set to English. You MUST respond entirely in English. Do NOT mix in Dutch words or phrases. Translate any Dutch-only content you reference into English.";
+    }
 
     // Load knowledge sources for this agent
     const knowledgeRes = await supabase
@@ -81,11 +89,11 @@ async function loadAgentPrompt(): Promise<string> {
     // Always append conversational engagement instructions
     prompt += CONVERSATIONAL_INSTRUCTIONS;
 
-    console.log(`[scan-chat] Loaded agent prompt (${prompt.length} chars) with ${agentKnowledge.length} knowledge sources`);
+    console.log(`[scan-chat] Loaded agent prompt (${prompt.length} chars) with ${agentKnowledge.length} knowledge sources, lang=${language}`);
     return prompt;
   } catch (e) {
     console.error("[scan-chat] Error loading agent prompt:", e);
-    return FALLBACK_SYSTEM_PROMPT + CONVERSATIONAL_INSTRUCTIONS;
+    return fallback + CONVERSATIONAL_INSTRUCTIONS;
   }
 }
 
@@ -100,7 +108,7 @@ serve(async (req) => {
     // Rate tracking (non-blocking, alert-only)
     await checkScanRate(req, undefined, "chat");
 
-    const { messages, photoUrls, mediaType } = await req.json();
+    const { messages, photoUrls, mediaType, language } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -108,7 +116,7 @@ serve(async (req) => {
     }
 
     // Load system prompt from database (with knowledge sources)
-    const systemPrompt = await loadAgentPrompt();
+    const systemPrompt = await loadAgentPrompt(language || 'nl');
 
     // Build messages array for the AI
     const aiMessages: any[] = [

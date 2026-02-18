@@ -43,7 +43,9 @@ import {
   ListMusic,
   Crown,
   Bot,
-  Cpu
+  Cpu,
+  PanelLeftClose,
+  PanelLeftOpen
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -179,7 +181,7 @@ const menuItems = [
 ];
 
 export function AdminSidebar() {
-  const { state } = useSidebar();
+  const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const currentPath = location.pathname;
@@ -195,8 +197,15 @@ export function AdminSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <div className="flex items-center justify-center p-4 border-b">
+      <div className="flex items-center justify-between p-3 border-b">
         {!collapsed && <h2 className="text-lg font-semibold">Admin</h2>}
+        <button
+          onClick={toggleSidebar}
+          className="p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors"
+          title={collapsed ? "Sidebar openen" : "Sidebar inklappen"}
+        >
+          {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+        </button>
       </div>
 
       {!collapsed && (

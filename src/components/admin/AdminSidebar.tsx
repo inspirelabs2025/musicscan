@@ -55,6 +55,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -197,7 +198,7 @@ export function AdminSidebar() {
 
   return (
     <Sidebar collapsible="offcanvas">
-      <div className="flex items-center justify-between p-3 border-b">
+      <SidebarHeader className="flex flex-row items-center justify-between p-3 border-b">
         <h2 className="text-lg font-semibold">Admin</h2>
         <button
           onClick={toggleSidebar}
@@ -206,7 +207,7 @@ export function AdminSidebar() {
         >
           <PanelLeftClose className="h-5 w-5" />
         </button>
-      </div>
+      </SidebarHeader>
 
       {!collapsed && (
         <div className="px-3 pt-3">

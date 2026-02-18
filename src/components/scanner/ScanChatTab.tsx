@@ -1217,7 +1217,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         country: verifiedResult.country,
         format: verifiedResult.format,
         genre: verifiedResult.genre,
-        barcode_number: verifiedResult.barcode,
+        ...(mediaType === 'cd' ? { barcode_number: verifiedResult.barcode } : {}),
         matrix_number: verifiedResult.matrix_number,
         condition_grade: conditionMedia || 'Not Graded',
         is_public: false,

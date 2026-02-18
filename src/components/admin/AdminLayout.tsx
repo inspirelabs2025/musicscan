@@ -8,7 +8,7 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <SidebarProvider defaultOpen>
+    <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full">
         <AdminSidebar />
         <div className="flex-1 flex flex-col overflow-auto w-full">

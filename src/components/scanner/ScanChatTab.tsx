@@ -343,6 +343,16 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
     },
   ]);
   const [showWelcomeActions, setShowWelcomeActions] = useState(true);
+
+  // Update welcome message when language changes
+  useEffect(() => {
+    setMessages(prev => {
+      if (prev.length === 1 && prev[0].role === 'assistant') {
+        return [{ role: 'assistant', content: sc.welcomeMessage }];
+      }
+      return prev;
+    });
+  }, [language]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isRunningV2, setIsRunningV2] = useState(false);

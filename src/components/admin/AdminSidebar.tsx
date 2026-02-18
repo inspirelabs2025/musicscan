@@ -198,15 +198,17 @@ export function AdminSidebar() {
 
   return (
     <Sidebar collapsible="offcanvas">
-      <SidebarHeader className="flex flex-row items-center justify-between p-3 border-b">
-        <h2 className="text-lg font-semibold">Admin</h2>
-        <button
-          onClick={toggleSidebar}
-          className="p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors"
-          title="Sidebar inklappen"
-        >
-          <PanelLeftClose className="h-5 w-5" />
-        </button>
+      <SidebarHeader>
+        <div className="flex items-center justify-between w-full px-3 py-3 border-b">
+          <h2 className="text-lg font-semibold">Admin</h2>
+          <button
+            onClick={toggleSidebar}
+            className="p-2 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors"
+            title="Sidebar inklappen"
+          >
+            <PanelLeftClose className="h-5 w-5" />
+          </button>
+        </div>
       </SidebarHeader>
 
       {!collapsed && (

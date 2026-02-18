@@ -130,6 +130,7 @@ const PublicShopsOverview = lazy(() => import("./pages/PublicShopsOverview"));
 const MyShop = lazy(() => import("./pages/MyShop"));
 const PublicShop = lazy(() => import("./pages/PublicShop"));
 const MijnDiscogs = lazy(() => import("./pages/MijnDiscogs"));
+const DiscogsMessages = lazy(() => import("./pages/DiscogsMessages"));
 
 // AI/Scan pages
 const AIAnalysis = lazy(() => import("./pages/AIAnalysis"));
@@ -351,6 +352,7 @@ const AppContent = () => {
         <Route path="/user-scans" element={<ProtectedRoute><LazyRoute><UserScans /></LazyRoute></ProtectedRoute>} />
         <Route path="/ai-analysis" element={<ProtectedRoute><LazyRoute><AIAnalysis /></LazyRoute></ProtectedRoute>} />
         <Route path="/mijn-discogs" element={<ProtectedRoute><LazyRoute><MijnDiscogs /></LazyRoute></ProtectedRoute>} />
+        <Route path="/discogs-messages" element={<ProtectedRoute><LazyRoute><DiscogsMessages /></LazyRoute></ProtectedRoute>} />
         
         {/* Public collection/shop */}
         <Route path="/shop/:identifier" element={<LazyRoute><ShopOrProductRouter /></LazyRoute>} />

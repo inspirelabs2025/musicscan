@@ -2808,6 +2808,14 @@ const translations = {
       qSpotifyBuy: "Welke albums zou ik moeten kopen gebaseerd op mijn Spotify gedrag?",
       qSpotifyGenres: "Toon me mijn meest gespeelde Spotify genres vs mijn collectie",
     },
+    floatingMike: {
+      welcomeBack: '🎩 **Welkom terug!** Ik heb ons vorige gesprek nog paraat. Waar waren we gebleven, of heb je een nieuwe vraag?',
+      welcomeCollection: '🎩 **Hey!** Ik ben Magic Mike. Ik zie dat je je collectie bekijkt — wil je weten wat je verzameling waard is, of heb je een vraag over een specifiek album?',
+      welcomeDashboard: '🎩 **Welkom terug!** Ik ben Magic Mike. Heb je een vraag over je collectie of wil je muziekadvies?',
+      welcomeShop: '🎩 **Hey!** Magic Mike hier. Kan ik je helpen met een product, of wil je meer weten over een artiest?',
+      welcomeArtists: '🎩 **Hey!** Ik ben Magic Mike. Wil je meer weten over een artiest? Vraag maar raak!',
+      welcomeDefault: '🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective. Vraag me alles over muziek, artiesten, albums of je collectie!',
+    },
   },
   en: {
     nav: {
@@ -5571,6 +5579,14 @@ const translations = {
       qSpotifyDiff: "What are the differences between my digital and physical music taste?",
       qSpotifyBuy: "Which albums should I buy based on my Spotify behavior?",
       qSpotifyGenres: "Show me my most played Spotify genres vs my collection",
+    },
+    floatingMike: {
+      welcomeBack: '🎩 **Welcome back!** I still have our previous conversation ready. Where were we, or do you have a new question?',
+      welcomeCollection: '🎩 **Hey!** I\'m Magic Mike. I see you\'re viewing your collection — want to know what it\'s worth, or do you have a question about a specific album?',
+      welcomeDashboard: '🎩 **Welcome back!** I\'m Magic Mike. Got a question about your collection or want some music advice?',
+      welcomeShop: '🎩 **Hey!** Magic Mike here. Can I help you with a product, or would you like to know more about an artist?',
+      welcomeArtists: '🎩 **Hey!** I\'m Magic Mike. Want to know more about an artist? Just ask!',
+      welcomeDefault: '🎩 **Hey, I\'m Magic Mike!** Your personal music detective. Ask me anything about music, artists, albums or your collection!',
     },
   },
 } as const;

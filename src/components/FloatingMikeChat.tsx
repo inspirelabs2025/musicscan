@@ -54,19 +54,13 @@ const getPageContext = (pathname: string): string => {
   return '';
 };
 
-const getWelcomeMessage = (pathname: string, hasHistory: boolean): string => {
-  if (hasHistory) {
-    return '🎩 **Welkom terug!** Ik heb ons vorige gesprek nog paraat. Waar waren we gebleven, of heb je een nieuwe vraag?';
-  }
-  if (pathname.startsWith('/collection-overview')) 
-    return '🎩 **Hey!** Ik ben Magic Mike. Ik zie dat je je collectie bekijkt — wil je weten wat je verzameling waard is, of heb je een vraag over een specifiek album?';
-  if (pathname.startsWith('/dashboard'))
-    return '🎩 **Welkom terug!** Ik ben Magic Mike. Heb je een vraag over je collectie of wil je muziekadvies?';
-  if (pathname.startsWith('/shop') || pathname.startsWith('/product'))
-    return '🎩 **Hey!** Magic Mike hier. Kan ik je helpen met een product, of wil je meer weten over een artiest?';
-  if (pathname.startsWith('/artists'))
-    return '🎩 **Hey!** Ik ben Magic Mike. Wil je meer weten over een artiest? Vraag maar raak!';
-  return '🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective. Vraag me alles over muziek, artiesten, albums of je collectie!';
+const getWelcomeMessage = (pathname: string, hasHistory: boolean, fm: any): string => {
+  if (hasHistory) return fm.welcomeBack;
+  if (pathname.startsWith('/collection-overview')) return fm.welcomeCollection;
+  if (pathname.startsWith('/dashboard')) return fm.welcomeDashboard;
+  if (pathname.startsWith('/shop') || pathname.startsWith('/product')) return fm.welcomeShop;
+  if (pathname.startsWith('/artists')) return fm.welcomeArtists;
+  return fm.welcomeDefault;
 };
 
 // Hidden routes where the floating chat should not appear
@@ -129,7 +123,8 @@ async function clearHistory(userId: string, sessionId: string) {
 
 export function FloatingMikeChat() {
   const { user } = useAuth();
-  const { language } = useLanguage();
+  const { language, tr } = useLanguage();
+  const fm = tr.floatingMike;
   const location = useLocation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -163,7 +158,7 @@ export function FloatingMikeChat() {
     setHasInitialized(true);
 
     if (!user?.id) {
-      setMessages([{ role: 'assistant', content: getWelcomeMessage(location.pathname, false) }]);
+      setMessages([{ role: 'assistant', content: getWelcomeMessage(location.pathname, false, fm) }]);
       return;
     }
 
@@ -173,18 +168,18 @@ export function FloatingMikeChat() {
       if (history.length > 0) {
         // Prepend a welcome-back message + loaded history
         setMessages([
-          { role: 'assistant', content: getWelcomeMessage(location.pathname, true) },
+          { role: 'assistant', content: getWelcomeMessage(location.pathname, true, fm) },
           ...history,
         ]);
       } else {
-        setMessages([{ role: 'assistant', content: getWelcomeMessage(location.pathname, false) }]);
+        setMessages([{ role: 'assistant', content: getWelcomeMessage(location.pathname, false, fm) }]);
       }
     } catch {
-      setMessages([{ role: 'assistant', content: getWelcomeMessage(location.pathname, false) }]);
+      setMessages([{ role: 'assistant', content: getWelcomeMessage(location.pathname, false, fm) }]);
     } finally {
       setIsLoading(false);
     }
-  }, [hasInitialized, user?.id, location.pathname]);
+  }, [hasInitialized, user?.id, location.pathname, fm]);
 
   // Listen for external open requests (e.g. from Quick Actions Chat button)
   useEffect(() => {

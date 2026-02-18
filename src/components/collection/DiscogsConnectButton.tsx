@@ -38,18 +38,6 @@ export const DiscogsConnectButton = () => {
             Discogs account: {connection.discogs_username}
           </a>
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => disconnect()}
-          disabled={isDisconnecting}
-        >
-          {isDisconnecting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Link2Off className="w-4 h-4" />
-          )}
-        </Button>
       </div>
     );
   }

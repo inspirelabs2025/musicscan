@@ -2494,6 +2494,126 @@ export type Database = {
         }
         Relationships: []
       }
+      discogs_order_messages: {
+        Row: {
+          created_at: string
+          discogs_order_id: string
+          id: string
+          message: string | null
+          message_timestamp: string | null
+          original: string | null
+          sender_username: string | null
+          status_id: number | null
+          subject: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          discogs_order_id: string
+          id?: string
+          message?: string | null
+          message_timestamp?: string | null
+          original?: string | null
+          sender_username?: string | null
+          status_id?: number | null
+          subject?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          discogs_order_id?: string
+          id?: string
+          message?: string | null
+          message_timestamp?: string | null
+          original?: string | null
+          sender_username?: string | null
+          status_id?: number | null
+          subject?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      discogs_orders: {
+        Row: {
+          additional_instructions: string | null
+          archived: boolean | null
+          buyer_email: string | null
+          buyer_username: string | null
+          created_at: string
+          discogs_created_at: string | null
+          discogs_order_id: string
+          fee_currency: string | null
+          fee_value: number | null
+          id: string
+          items: Json | null
+          last_activity_at: string | null
+          seller_username: string | null
+          shipping_address: string | null
+          shipping_method: string | null
+          shipping_value: number | null
+          status: string | null
+          total_currency: string | null
+          total_value: number | null
+          tracking_carrier: string | null
+          tracking_number: string | null
+          tracking_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          additional_instructions?: string | null
+          archived?: boolean | null
+          buyer_email?: string | null
+          buyer_username?: string | null
+          created_at?: string
+          discogs_created_at?: string | null
+          discogs_order_id: string
+          fee_currency?: string | null
+          fee_value?: number | null
+          id: string
+          items?: Json | null
+          last_activity_at?: string | null
+          seller_username?: string | null
+          shipping_address?: string | null
+          shipping_method?: string | null
+          shipping_value?: number | null
+          status?: string | null
+          total_currency?: string | null
+          total_value?: number | null
+          tracking_carrier?: string | null
+          tracking_number?: string | null
+          tracking_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          additional_instructions?: string | null
+          archived?: boolean | null
+          buyer_email?: string | null
+          buyer_username?: string | null
+          created_at?: string
+          discogs_created_at?: string | null
+          discogs_order_id?: string
+          fee_currency?: string | null
+          fee_value?: number | null
+          id?: string
+          items?: Json | null
+          last_activity_at?: string | null
+          seller_username?: string | null
+          shipping_address?: string | null
+          shipping_method?: string | null
+          shipping_value?: number | null
+          status?: string | null
+          total_currency?: string | null
+          total_value?: number | null
+          tracking_carrier?: string | null
+          tracking_number?: string | null
+          tracking_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       discogs_price_listings: {
         Row: {
           condition: string

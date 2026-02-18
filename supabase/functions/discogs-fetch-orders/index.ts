@@ -1,5 +1,43 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// Helper to save orders to database
+async function saveOrdersToDb(serviceClient: any, userId: string, orders: any[]) {
+  if (!orders?.length) return;
+  
+  const rows = orders.map((o: any) => ({
+    id: `${userId}_${o.id}`,
+    user_id: userId,
+    discogs_order_id: o.id,
+    buyer_username: o.buyer?.username || null,
+    buyer_email: o.buyer?.email || null,
+    seller_username: o.seller?.username || null,
+    status: o.status || null,
+    total_value: o.total?.value || null,
+    total_currency: o.total?.currency || 'EUR',
+    shipping_value: o.shipping?.value || null,
+    shipping_method: o.shipping?.method || null,
+    shipping_address: o.shipping_address || null,
+    fee_value: o.fee?.value || null,
+    fee_currency: o.fee?.currency || null,
+    tracking_number: o.tracking?.number || null,
+    tracking_url: o.tracking?.url || null,
+    tracking_carrier: o.tracking?.carrier || null,
+    items: o.items || null,
+    additional_instructions: o.additional_instructions || null,
+    archived: o.archived || false,
+    discogs_created_at: o.created || null,
+    last_activity_at: o.last_activity || null,
+    updated_at: new Date().toISOString(),
+  }));
+
+  const { error } = await serviceClient
+    .from('discogs_orders')
+    .upsert(rows, { onConflict: 'user_id,discogs_order_id' });
+  
+  if (error) console.error('Error saving orders:', error.message);
+  else console.log(`Saved ${rows.length} orders to database`);
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -141,6 +179,11 @@ Deno.serve(async (req) => {
 
     const data = await res.json()
     
+    // Save orders to database in background
+    saveOrdersToDb(serviceClient, user.id, data.orders || []).catch(e => 
+      console.error('Background save error:', e.message)
+    );
+
     return new Response(JSON.stringify({
       orders: data.orders || [],
       pagination: data.pagination || { page: 1, pages: 1, items: 0 },

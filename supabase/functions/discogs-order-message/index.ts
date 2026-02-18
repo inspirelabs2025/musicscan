@@ -148,6 +148,29 @@ Deno.serve(async (req) => {
       }
 
       const data = await res.json()
+      
+      // Save messages to database
+      const msgs = data.messages || [];
+      if (msgs.length > 0) {
+        const rows = msgs.map((m: any) => ({
+          user_id: user.id,
+          discogs_order_id: order_id,
+          sender_username: m.from?.username || m.actor?.username || null,
+          message: m.message || null,
+          subject: m.subject || null,
+          original: m.original || null,
+          status_id: m.status_id || null,
+          message_timestamp: m.timestamp || null,
+        }));
+        
+        const { error: saveErr } = await serviceClient
+          .from('discogs_order_messages')
+          .upsert(rows, { onConflict: 'discogs_order_id,sender_username,message_timestamp' });
+        
+        if (saveErr) console.error('Error saving messages:', saveErr.message);
+        else console.log(`Saved ${rows.length} messages for order ${order_id}`);
+      }
+
       return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })

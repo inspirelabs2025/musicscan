@@ -303,9 +303,9 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
       )}
       {verifiedResult?.discogs_id && (
         <Button
-          variant="outline"
+          variant="default"
           size="sm"
-          className="h-9 text-xs gap-2 rounded-full border-border/50 bg-card/80 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/30 hover:shadow-sm transition-all"
+          className="h-9 text-xs gap-2 rounded-full shadow-sm hover:shadow-md transition-all"
           onClick={() => onSend(sc.scanAnother)}
         >
           <RotateCcw className="h-3.5 w-3.5" />

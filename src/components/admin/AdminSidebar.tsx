@@ -182,7 +182,7 @@ const menuItems = [
 ];
 
 export function AdminSidebar() {
-  const { state, toggleSidebar } = useSidebar();
+  const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const currentPath = location.pathname;
@@ -198,16 +198,9 @@ export function AdminSidebar() {
 
   return (
     <Sidebar collapsible="offcanvas">
-      <div className="flex items-center justify-between px-3 py-3 border-b shrink-0">
+      <div className="sticky top-0 z-10 flex items-center justify-between px-3 py-3 border-b bg-sidebar shrink-0">
         <h2 className="text-lg font-semibold">Admin</h2>
-        <button
-          onClick={toggleSidebar}
-          className="p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          title="Sidebar inklappen"
-          type="button"
-        >
-          <PanelLeftClose className="h-5 w-5" />
-        </button>
+        <SidebarTrigger className="p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" />
       </div>
 
       {!collapsed && (

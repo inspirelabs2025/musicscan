@@ -370,6 +370,7 @@ const Scanner = () => {
         genre: analysisResult?.analysis?.genre || searchResults[0]?.genre || null,
         country: analysisResult?.analysis?.country || searchResults[0]?.country || null,
         condition_grade: condition,
+        marketplace_sleeve_condition: state.selectedSleeveCondition || null,
         calculated_advice_price: advicePrice,
         discogs_id: searchResults[0]?.discogs_id || searchResults[0]?.id || extractDiscogsIdFromUrl(searchResults[0]?.discogs_url) || null,
         discogs_url: searchResults[0]?.discogs_url || null,
@@ -392,6 +393,7 @@ const Scanner = () => {
         genre: analysisResult?.analysis?.genre || searchResults[0]?.genre || null,
         country: analysisResult?.analysis?.country || searchResults[0]?.country || null,
         condition_grade: condition,
+        marketplace_sleeve_condition: state.selectedSleeveCondition || null,
         calculated_advice_price: advicePrice,
         discogs_id: searchResults[0]?.discogs_id || searchResults[0]?.id || extractDiscogsIdFromUrl(searchResults[0]?.discogs_url) || null,
         discogs_url: searchResults[0]?.discogs_url || null,
@@ -729,6 +731,7 @@ const Scanner = () => {
             <ConditionSelector
               mediaType={state.mediaType}
               selectedCondition={state.selectedCondition}
+              selectedSleeveCondition={state.selectedSleeveCondition}
               lowestPrice={searchResults[0]?.pricing_stats?.lowest_price || null}
               medianPrice={searchResults[0]?.pricing_stats?.median_price || null}
               highestPrice={searchResults[0]?.pricing_stats?.highest_price || null}
@@ -737,6 +740,7 @@ const Scanner = () => {
               useManualAdvicePrice={state.useManualAdvicePrice}
               isSaving={state.isSavingCondition}
               onConditionChange={handleConditionChange}
+              onSleeveConditionChange={(condition) => dispatch({ type: 'SET_SELECTED_SLEEVE_CONDITION', payload: condition })}
               onManualAdvicePriceChange={handleManualAdvicePriceChange}
               onToggleManualAdvicePrice={handleToggleManualAdvicePrice}
               onSave={handleSave}

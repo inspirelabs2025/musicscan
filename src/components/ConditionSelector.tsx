@@ -13,6 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 interface ConditionSelectorProps {
   mediaType: 'vinyl' | 'cd';
   selectedCondition: string;
+  selectedSleeveCondition?: string;
   lowestPrice: string | null;
   medianPrice?: string | null;
   highestPrice?: string | null;
@@ -21,15 +22,16 @@ interface ConditionSelectorProps {
   useManualAdvicePrice: boolean;
   isSaving: boolean;
   onConditionChange: (condition: string) => void;
+  onSleeveConditionChange?: (condition: string) => void;
   onManualAdvicePriceChange: (price: number | null) => void;
   onToggleManualAdvicePrice: (useManual: boolean) => void;
   onSave: () => void;
 }
 
 export const ConditionSelector = React.memo(({ 
-  mediaType, selectedCondition, lowestPrice, medianPrice, highestPrice,
+  mediaType, selectedCondition, selectedSleeveCondition = '', lowestPrice, medianPrice, highestPrice,
   calculatedAdvicePrice, manualAdvicePrice, useManualAdvicePrice, isSaving,
-  onConditionChange, onManualAdvicePriceChange, onToggleManualAdvicePrice, onSave
+  onConditionChange, onSleeveConditionChange, onManualAdvicePriceChange, onToggleManualAdvicePrice, onSave
 }: ConditionSelectorProps) => {
   const { tr } = useLanguage();
   const sc = tr.scanCollectionUI;
@@ -80,9 +82,23 @@ export const ConditionSelector = React.memo(({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <label className="text-sm font-medium">{sc.selectState}</label>
+          <label className="text-sm font-medium">{mediaType === 'vinyl' ? 'Staat plaat (Media)' : 'Staat disc (Media)'}</label>
           <Select value={selectedCondition} onValueChange={(value) => { console.log('🔄 ConditionSelector value changed to:', value); onConditionChange(value); }}>
             <SelectTrigger><SelectValue placeholder={sc.chooseState} /></SelectTrigger>
+            <SelectContent>
+              {conditionOptions.map((condition) => (
+                <SelectItem key={condition} value={condition}>
+                  <div className="flex flex-col"><span>{condition}</span><span className="text-xs text-muted-foreground">{getConditionDescription(condition)}</span></div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{mediaType === 'vinyl' ? 'Staat hoes (Sleeve)' : 'Staat hoes / doosje (Sleeve)'}</label>
+          <Select value={selectedSleeveCondition} onValueChange={(value) => { onSleeveConditionChange?.(value); }}>
+            <SelectTrigger><SelectValue placeholder="Kies staat hoes" /></SelectTrigger>
             <SelectContent>
               {conditionOptions.map((condition) => (
                 <SelectItem key={condition} value={condition}>

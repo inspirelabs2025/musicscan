@@ -52,7 +52,14 @@ const CollectionCard = ({ item, onExportSingle, onClick, t }: { item: Collection
         
         <div className="flex items-center gap-1.5 flex-wrap">
           {item.condition_grade && item.condition_grade !== 'Not Graded' && (
-            <Badge variant="outline" className="text-xs px-1.5 py-0">{item.condition_grade}</Badge>
+            <Badge variant="outline" className="text-xs px-1.5 py-0">
+              {item.media_type === 'vinyl' ? '💿' : '📀'} {item.condition_grade}
+            </Badge>
+          )}
+          {item.marketplace_sleeve_condition && (
+            <Badge variant="outline" className="text-xs px-1.5 py-0">
+              📦 {item.marketplace_sleeve_condition}
+            </Badge>
           )}
           {item.is_for_sale && (
             <Badge className="text-xs px-1.5 py-0 bg-green-600 hover:bg-green-700">

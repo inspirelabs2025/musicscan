@@ -3,6 +3,7 @@ export interface ScanState {
   currentStep: number;
   uploadedFiles: string[];
   selectedCondition: string;
+  selectedSleeveCondition: string;
   calculatedAdvicePrice: number | null;
   manualAdvicePrice: number | null;
   useManualAdvicePrice: boolean;
@@ -20,6 +21,7 @@ export type ScanAction =
   | { type: 'SET_CURRENT_STEP'; payload: number }
   | { type: 'SET_UPLOADED_FILES'; payload: string[] }
   | { type: 'SET_SELECTED_CONDITION'; payload: string }
+  | { type: 'SET_SELECTED_SLEEVE_CONDITION'; payload: string }
   | { type: 'SET_CALCULATED_ADVICE_PRICE'; payload: number | null }
   | { type: 'SET_MANUAL_ADVICE_PRICE'; payload: number | null }
   | { type: 'SET_USE_MANUAL_ADVICE_PRICE'; payload: boolean }
@@ -37,6 +39,7 @@ export const initialScanState: ScanState = {
   currentStep: 0,
   uploadedFiles: [],
   selectedCondition: '',
+  selectedSleeveCondition: '',
   calculatedAdvicePrice: null,
   manualAdvicePrice: null,
   useManualAdvicePrice: false,
@@ -59,6 +62,8 @@ export function scanReducer(state: ScanState, action: ScanAction): ScanState {
       return { ...state, uploadedFiles: action.payload };
     case 'SET_SELECTED_CONDITION':
       return { ...state, selectedCondition: action.payload };
+    case 'SET_SELECTED_SLEEVE_CONDITION':
+      return { ...state, selectedSleeveCondition: action.payload };
     case 'SET_CALCULATED_ADVICE_PRICE':
       return { ...state, calculatedAdvicePrice: action.payload };
     case 'SET_MANUAL_ADVICE_PRICE':

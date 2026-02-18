@@ -155,7 +155,7 @@ export default function MyCollection() {
               <DiscogsConnectButton />
               {isConnected && discogsEligibleIds.length > 0 && (
                 <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)}>
-                  <Upload className="w-4 h-4 mr-1" /><span className="hidden sm:inline">{t.export}</span> ({discogsEligibleIds.length})
+                  <Upload className="w-4 h-4 mr-1" />{t.export} ({discogsEligibleIds.length})
                 </Button>
               )}
               <Button asChild size="sm">

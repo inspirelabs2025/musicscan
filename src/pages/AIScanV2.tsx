@@ -343,14 +343,10 @@ export default function AIScanV2() {
               <div className="h-6 w-px bg-border hidden md:block" />
               <button
                 onClick={() => setShowSoundScanPrompt(prev => !prev)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-full font-bold text-sm md:text-lg transition-all border ${
-                  showSoundScanPrompt
-                    ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/30'
-                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20 hover:shadow-lg hover:shadow-amber-500/20'
-                }`}
+                className="flex items-center gap-2 bg-transparent border-none p-0 hover:opacity-80 transition-opacity"
               >
-                <img src="/soundscan-logo.jpeg" alt="SoundScan" className="h-5 w-5 md:h-6 md:w-6 rounded-full object-cover" />
-                SoundScan
+                <img src="/soundscan-logo.jpeg" alt="SoundScan" className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover" />
+                <span className="font-bold text-sm md:text-base bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">SoundScan</span>
               </button>
             </div>
           </div>

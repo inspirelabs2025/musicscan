@@ -2,16 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ArrowLeft, Send, MessageSquare, Package, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useDiscogsConnection } from "@/hooks/useDiscogsConnection";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 
 interface DiscogsOrder {
   id: string;
@@ -37,6 +34,8 @@ interface DiscogsMessage {
   actor?: { username: string };
 }
 
+const SUPABASE_URL = "https://ssxbpyqnjfiyubsuonar.supabase.co";
+
 const DiscogsMessages = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -52,24 +51,24 @@ const DiscogsMessages = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch orders
+  const getSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error("Niet ingelogd");
+    return session;
+  };
+
   const fetchOrders = async (p = 1) => {
     setLoadingOrders(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Niet ingelogd");
-
-      const res = await fetch(
-        `https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/discogs-fetch-orders`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ page: p, per_page: 25 }),
-        }
-      );
+      const session = await getSession();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/discogs-fetch-orders`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ page: p, per_page: 25 }),
+      });
 
       if (!res.ok) {
         const err = await res.json();
@@ -87,54 +86,47 @@ const DiscogsMessages = () => {
     }
   };
 
-  // Fetch messages for an order
   const fetchMessages = async (orderId: string) => {
     setLoadingMessages(true);
+    setMessages([]);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Niet ingelogd");
+      const session = await getSession();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/discogs-order-message`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ order_id: orderId, mode: "list" }),
+      });
 
-      const res = await fetch(
-        `https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/discogs-order-message`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ order_id: orderId, mode: "list" }),
-        }
-      );
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        throw new Error(errData.error || "Berichten ophalen mislukt");
+      }
 
-      if (!res.ok) throw new Error("Berichten ophalen mislukt");
       const data = await res.json();
       setMessages(data.messages || []);
     } catch (error: any) {
-      toast({ title: "Fout", description: error.message, variant: "destructive" });
+      toast({ title: "Fout bij laden berichten", description: error.message, variant: "destructive" });
     } finally {
       setLoadingMessages(false);
     }
   };
 
-  // Send message
   const sendMessage = async () => {
     if (!selectedOrder || !newMessage.trim()) return;
     setSending(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Niet ingelogd");
-
-      const res = await fetch(
-        `https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/discogs-order-message`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ order_id: selectedOrder.id, message: newMessage }),
-        }
-      );
+      const session = await getSession();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/discogs-order-message`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ order_id: selectedOrder.id, message: newMessage }),
+      });
 
       if (!res.ok) throw new Error("Bericht versturen mislukt");
 
@@ -190,7 +182,7 @@ const DiscogsMessages = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-6xl">
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -211,12 +203,13 @@ const DiscogsMessages = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
-        {/* Orders list - hidden when an order is selected on mobile */}
-        <div className={`space-y-3 ${selectedOrder ? "hidden lg:block" : ""}`}>
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-lg">Orders</h2>
-            <span className="text-xs text-muted-foreground">{orders.length} orders</span>
+      {/* Split layout: always 2 columns on desktop, stacked on mobile */}
+      <div className="flex gap-4 h-[calc(100vh-220px)]">
+
+        {/* LEFT: Orders list — hidden on mobile when order selected */}
+        <div className={`flex flex-col w-full lg:w-80 xl:w-96 shrink-0 ${selectedOrder ? "hidden lg:flex" : "flex"}`}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold">Orders <span className="text-xs text-muted-foreground">({orders.length})</span></h2>
           </div>
 
           {loadingOrders ? (
@@ -231,8 +224,8 @@ const DiscogsMessages = () => {
               </CardContent>
             </Card>
           ) : (
-            <>
-              <ScrollArea className="h-[calc(100vh-280px)]">
+            <div className="flex flex-col flex-1 min-h-0">
+              <ScrollArea className="flex-1">
                 <div className="space-y-2 pr-2">
                   {orders.map((order) => (
                     <Card
@@ -256,7 +249,7 @@ const DiscogsMessages = () => {
                         </p>
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">
-                            {new Date(order.created).toLocaleDateString("nl-NL")}
+                            {order.created ? new Date(order.created).toLocaleDateString("nl-NL") : "—"}
                           </span>
                           <span className="font-semibold">
                             {order.total?.currency} {order.total?.value?.toFixed(2)}
@@ -273,25 +266,18 @@ const DiscogsMessages = () => {
                 </div>
               </ScrollArea>
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 pt-2">
                   <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
+                    variant="outline" size="icon" className="h-8 w-8"
                     onClick={() => fetchOrders(page - 1)}
                     disabled={page <= 1 || loadingOrders}
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
-                  <span className="text-sm text-muted-foreground">
-                    {page} / {totalPages}
-                  </span>
+                  <span className="text-sm text-muted-foreground">{page} / {totalPages}</span>
                   <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
+                    variant="outline" size="icon" className="h-8 w-8"
                     onClick={() => fetchOrders(page + 1)}
                     disabled={page >= totalPages || loadingOrders}
                   >
@@ -299,35 +285,47 @@ const DiscogsMessages = () => {
                   </Button>
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
 
-        {/* Messages panel - shown when order is selected */}
-        {selectedOrder && (
-          <div>
-            <Card className="flex flex-col h-[calc(100vh-280px)]">
-               <CardHeader className="pb-3 border-b">
+        {/* RIGHT: Messages panel */}
+        <div className={`flex-1 min-w-0 ${selectedOrder ? "flex" : "hidden lg:flex"} flex-col`}>
+          {!selectedOrder ? (
+            <Card className="flex-1 flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p className="font-medium">Selecteer een order</p>
+                <p className="text-sm">Klik op een order om de berichten te bekijken</p>
+              </div>
+            </Card>
+          ) : (
+            <Card className="flex-1 flex flex-col min-h-0">
+              {/* Header */}
+              <CardHeader className="pb-3 border-b shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedOrder(null)}>
+                    <Button
+                      variant="ghost" size="icon" className="h-8 w-8 lg:hidden"
+                      onClick={() => setSelectedOrder(null)}
+                    >
                       <ArrowLeft className="w-4 h-4" />
                     </Button>
-                    <CardTitle className="text-base">
-                      Order #{selectedOrder.id}
-                    </CardTitle>
+                    <CardTitle className="text-base">Order #{selectedOrder.id}</CardTitle>
                   </div>
                   <Badge variant="outline" className={statusColor(selectedOrder.status)}>
                     {selectedOrder.status}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                   <span>Koper: <strong>{selectedOrder.buyer?.username}</strong></span>
                   <span>{selectedOrder.total?.currency} {selectedOrder.total?.value?.toFixed(2)}</span>
-                  <span>{new Date(selectedOrder.created).toLocaleDateString("nl-NL")}</span>
+                  {selectedOrder.created && (
+                    <span>{new Date(selectedOrder.created).toLocaleDateString("nl-NL")}</span>
+                  )}
                 </div>
                 {selectedOrder.items?.[0] && (
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground">
                     📦 {selectedOrder.items[0].release?.description}
                   </p>
                 )}
@@ -341,26 +339,26 @@ const DiscogsMessages = () => {
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="text-center text-muted-foreground py-8">
-                    <p>Nog geen berichten</p>
+                    <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                    <p>Nog geen berichten in deze order</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {messages.map((msg, i) => {
-                      const isMe = msg.from?.username === connection?.discogs_username ||
-                                   msg.actor?.username === connection?.discogs_username;
+                      const isMe =
+                        msg.from?.username === connection?.discogs_username ||
+                        msg.actor?.username === connection?.discogs_username;
+                      const senderName = msg.from?.username || msg.actor?.username || "Systeem";
+                      const content = msg.message || msg.original || "";
                       return (
                         <div key={i} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                           <div
                             className={`max-w-[80%] rounded-xl px-4 py-2.5 ${
-                              isMe
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted"
+                              isMe ? "bg-primary text-primary-foreground" : "bg-muted"
                             }`}
                           >
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[11px] font-semibold opacity-80">
-                                {msg.from?.username || msg.actor?.username || "Systeem"}
-                              </span>
+                              <span className="text-[11px] font-semibold opacity-80">{senderName}</span>
                               {msg.timestamp && (
                                 <span className="text-[10px] opacity-60">
                                   {new Date(msg.timestamp).toLocaleString("nl-NL", {
@@ -372,10 +370,7 @@ const DiscogsMessages = () => {
                                 </span>
                               )}
                             </div>
-                            {msg.message && <p className="text-sm whitespace-pre-wrap">{msg.message}</p>}
-                            {msg.original && !msg.message && (
-                              <p className="text-sm whitespace-pre-wrap">{msg.original}</p>
-                            )}
+                            {content && <p className="text-sm whitespace-pre-wrap">{content}</p>}
                             {msg.subject && (
                               <p className="text-[11px] opacity-60 mt-1 italic">{msg.subject}</p>
                             )}
@@ -388,7 +383,7 @@ const DiscogsMessages = () => {
               </ScrollArea>
 
               {/* Compose */}
-              <div className="p-3 border-t">
+              <div className="p-3 border-t shrink-0">
                 <div className="flex gap-2">
                   <Textarea
                     placeholder="Typ je bericht..."
@@ -407,17 +402,13 @@ const DiscogsMessages = () => {
                     disabled={sending || !newMessage.trim()}
                     className="self-end"
                   >
-                    {sending ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
+                    {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   </Button>
                 </div>
               </div>
             </Card>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

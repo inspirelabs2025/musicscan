@@ -262,12 +262,20 @@ export default function CollectionItemPage() {
                 <ShoppingCart className="w-5 h-5 text-primary" />
                 Marketplace informatie
               </h2>
-              {item.marketplace_sleeve_condition && (
-                <div className="text-sm">
-                  <span className="text-muted-foreground">Hoes conditie: </span>
-                  <span className="font-medium">{item.marketplace_sleeve_condition}</span>
-                </div>
-              )}
+              <div className="flex flex-col gap-2">
+                {item.condition_grade && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">💿 {item.media_type === 'cd' ? 'CD' : 'LP'} conditie: </span>
+                    <span className="font-medium">{item.condition_grade}</span>
+                  </div>
+                )}
+                {item.marketplace_sleeve_condition && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">📦 Hoes conditie: </span>
+                    <span className="font-medium">{item.marketplace_sleeve_condition}</span>
+                  </div>
+                )}
+              </div>
               {item.shop_description && (
                 <div className="text-sm">
                   <span className="text-muted-foreground text-xs block mb-1">Beschrijving</span>

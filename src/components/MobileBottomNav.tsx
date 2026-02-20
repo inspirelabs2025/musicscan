@@ -85,7 +85,7 @@ export function MobileBottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur border-t supports-[backdrop-filter]:bg-background/60">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur border-t supports-[backdrop-filter]:bg-background/60" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="flex items-center justify-around h-14">
           {filteredNavItems.map((item) => {
             const isActive = item.url === "/" ? currentPath === "/" : currentPath.startsWith(item.url);

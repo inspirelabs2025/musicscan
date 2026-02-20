@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useIsIOS } from '@/hooks/useIsIOS';
 import { Helmet } from 'react-helmet';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,7 @@ const Pricing = () => {
   const { aiScansUsed, aiChatUsed, bulkUploadsUsed } = useUsageTracking();
   const { tr } = useLanguage();
   const p = tr.pricing;
+  const isIOS = useIsIOS();
 
   useEffect(() => {
     const creditsPurchased = searchParams.get('credits_purchased');
@@ -310,18 +312,34 @@ const Pricing = () => {
                       <div>
                         <span className="text-3xl font-bold">{pkg.price}</span>
                       </div>
-                      <Button
-                        className="w-full"
-                        variant={pkg.popular || pkg.best ? 'default' : 'outline'}
-                        onClick={() => handleBuyCredits(pkg.priceId)}
-                        disabled={buyingPriceId === pkg.priceId}
-                      >
-                        {buyingPriceId === pkg.priceId ? (
-                          <><Loader2 className="h-4 w-4 animate-spin mr-2" />{p.patience}</>
-                        ) : (
-                          p.buy
-                        )}
-                      </Button>
+                      {isIOS ? (
+                        <div className="text-center space-y-2">
+                          <p className="text-xs text-muted-foreground">
+                            🍎 Koop credits via onze website
+                          </p>
+                          <a
+                            href="https://musicscan.lovable.app/pricing"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-2"
+                          >
+                            musicscan.lovable.app/pricing
+                          </a>
+                        </div>
+                      ) : (
+                        <Button
+                          className="w-full"
+                          variant={pkg.popular || pkg.best ? 'default' : 'outline'}
+                          onClick={() => handleBuyCredits(pkg.priceId)}
+                          disabled={buyingPriceId === pkg.priceId}
+                        >
+                          {buyingPriceId === pkg.priceId ? (
+                            <><Loader2 className="h-4 w-4 animate-spin mr-2" />{p.patience}</>
+                          ) : (
+                            p.buy
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </Card>
                 ))}

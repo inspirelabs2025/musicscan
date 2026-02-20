@@ -114,18 +114,21 @@ const DiscogsMessages = () => {
     }
   };
 
+  const PROMO_BANNER = `\n\n---\n🎵 Sent via MusicScan — The smart platform for music collectors.\nDiscover stories, scan your vinyl & CDs, and manage your collection.\n👉 www.musicscan.app`;
+
   const sendMessage = async () => {
     if (!selectedOrder || !newMessage.trim()) return;
     setSending(true);
     try {
       const session = await getSession();
+      const messageWithPromo = newMessage.trim() + PROMO_BANNER;
       const res = await fetch(`${SUPABASE_URL}/functions/v1/discogs-order-message`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ order_id: selectedOrder.id, message: newMessage }),
+        body: JSON.stringify({ order_id: selectedOrder.id, message: messageWithPromo }),
       });
 
       if (!res.ok) throw new Error("Bericht versturen mislukt");
@@ -383,7 +386,14 @@ const DiscogsMessages = () => {
               </ScrollArea>
 
               {/* Compose */}
-              <div className="p-3 border-t shrink-0">
+              <div className="p-3 border-t shrink-0 space-y-2">
+                {/* Promo banner preview */}
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/8 border border-primary/20 text-[11px] text-muted-foreground">
+                  <span className="text-base">🎵</span>
+                  <span className="flex-1 truncate italic">
+                    Auto-appended: <span className="text-primary/80 font-medium">Sent via MusicScan — www.musicscan.app</span>
+                  </span>
+                </div>
                 <div className="flex gap-2">
                   <Textarea
                     placeholder="Typ je bericht..."

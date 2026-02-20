@@ -15,6 +15,10 @@ export function MobileBottomNav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const m = tr.miscUI;
 
+  // Android system nav bar padding fix
+  const isAndroid = /android/i.test(navigator.userAgent);
+  const bottomPadding = isAndroid ? '48px' : 'max(env(safe-area-inset-bottom), 8px)';
+
   const navItems = [
     { icon: Home, label: t('nav.home'), url: "/" },
     { icon: ScanLine, label: m.scan, url: "/ai-scan-v2", requiresAuth: true },
@@ -85,7 +89,7 @@ export function MobileBottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur border-t supports-[backdrop-filter]:bg-background/60" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}>
+      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur border-t supports-[backdrop-filter]:bg-background/60" style={{ paddingBottom: bottomPadding }}>
         <div className="flex items-center justify-around h-14">
           {filteredNavItems.map((item) => {
             const isActive = item.url === "/" ? currentPath === "/" : currentPath.startsWith(item.url);

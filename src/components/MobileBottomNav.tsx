@@ -31,6 +31,7 @@ export function MobileBottomNav() {
         { icon: Brain, label: t('nav.smartScan'), url: "/ai-scan-v2" },
         { icon: Music, label: t('nav.myCollection'), url: "/my-collection" },
         { icon: Disc3, label: m.myDiscogs, url: "/mijn-discogs" },
+        { icon: MessageCircle, label: "Discogs Berichten", url: "/discogs-messages" },
         { icon: BarChart3, label: t('nav.collectionInsight'), url: "/collection-overview" },
       ],
       requiresAuth: true,

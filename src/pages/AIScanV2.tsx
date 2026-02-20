@@ -349,7 +349,7 @@ export default function AIScanV2() {
                     : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20 hover:shadow-lg hover:shadow-amber-500/20'
                 }`}
               >
-                <Mic className="h-4 w-4 md:h-5 md:w-5" />
+                <img src="/soundscan-logo.jpeg" alt="SoundScan" className="h-5 w-5 md:h-6 md:w-6 rounded-full object-cover" />
                 SoundScan
               </button>
             </div>

@@ -289,10 +289,27 @@ const LazyRoute = ({ children }: { children: React.ReactNode }) => (
 );
 
 // Redirect logged-in users from Home to Dashboard
+// Uses a synchronous localStorage check FIRST to avoid flash of homepage
 const HomeOrDashboard = () => {
   const { user, loading } = useAuth();
+
+  // Fast-path: check if Supabase has a session in localStorage before async auth resolves
+  // This prevents the homepage flash on Android bfcache restore and fast renders
+  const hasLocalSession = (() => {
+    try {
+      const keys = Object.keys(localStorage);
+      return keys.some(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+    } catch {
+      return false;
+    }
+  })();
+
+  // If localStorage says logged in, redirect immediately without waiting for async auth
+  if (hasLocalSession || user) return <Navigate to="/dashboard" replace />;
+
+  // Still loading and no local session hint → show loader briefly
   if (loading) return <PageLoader />;
-  if (user) return <Navigate to="/dashboard" replace />;
+
   return <Home />;
 };
 

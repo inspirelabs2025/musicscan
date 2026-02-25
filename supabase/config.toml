@@ -751,3 +751,6 @@ verify_jwt = false
 
 [functions.verify-credit-purchase]
 verify_jwt = false
+
+[functions.send-discount-email]
+verify_jwt = false

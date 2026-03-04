@@ -9,7 +9,8 @@ interface DashboardShellProps extends DashboardHeaderProps {
   className?: string; // Add className prop
 }
 
-export function DashboardShell({\n  title,
+export function DashboardShell({
+  title,
   description,
   children,
   className,

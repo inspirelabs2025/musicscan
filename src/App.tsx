@@ -242,6 +242,7 @@ const PopupManager = lazy(() => import("./pages/admin/PopupManager"));
 const AdminPromoCodes = lazy(() => import("./pages/admin/AdminPromoCodes"));
 const AdminYearOverview = lazy(() => import("./pages/admin/AdminYearOverview"));
 const DiscogsLookup = lazy(() => import("./pages/admin/DiscogsLookup"));
+const AdminDiscogsMessages = lazy(() => import("./pages/admin/AdminDiscogsMessages"));
 const AutoComments = lazy(() => import("./pages/admin/AutoComments"));
 const MagicMikeProfile = lazy(() => import("./pages/admin/MagicMikeProfile"));
 const TestAnecdoteGeneration = lazy(() => import("./pages/admin/TestAnecdoteGeneration"));
@@ -533,6 +534,7 @@ const AppContent = () => {
         <Route path="/admin/curated-artists" element={<ProtectedRoute><LazyRoute><CuratedArtists /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/master-artists" element={<ProtectedRoute><LazyRoute><MasterArtists /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/discogs-lookup" element={<ProtectedRoute><LazyRoute><DiscogsLookup /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/discogs-messages" element={<ProtectedRoute><LazyRoute><AdminDiscogsMessages /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/photo-moderation" element={<ProtectedRoute><LazyRoute><PhotoModeration /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/auto-comments" element={<ProtectedRoute><LazyRoute><AutoComments /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/magic-mike" element={<ProtectedRoute><LazyRoute><MagicMikeProfile /></LazyRoute></ProtectedRoute>} />

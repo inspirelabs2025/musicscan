@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { preprocessImageClient } from '@/utils/clientImagePreprocess';
 import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check, Sparkles, MessageCircle, ScanLine, Search, HelpCircle, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -715,10 +716,29 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
     try {
       const urls: string[] = [];
       for (const file of pendingFiles) {
+        // Client-side preprocessing: resize large mobile photos, fix EXIF orientation, enhance contrast
+        // This is critical for Android devices which produce 12-48MP photos that degrade OCR accuracy
+        let uploadBlob: Blob | File = file;
+        try {
+          console.log(`📸 Preprocessing ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)...`);
+          const preprocessed = await preprocessImageClient(file, {
+            maxDimension: 1600,
+            applyContrast: true,
+            quality: 0.85,
+          });
+          // Convert base64 data URL back to Blob for upload
+          const response = await fetch(preprocessed.processedImage);
+          uploadBlob = await response.blob();
+          console.log(`✅ Preprocessed: ${(file.size / 1024).toFixed(0)}KB → ${(uploadBlob.size / 1024).toFixed(0)}KB (resized: ${preprocessed.stats.wasResized})`);
+        } catch (preprocessErr) {
+          console.warn('⚠️ Preprocessing failed, uploading original:', preprocessErr);
+          // Fallback: upload original file
+        }
+
         const uid = Math.random().toString(36).substring(2, 10);
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const fileName = `scan-chat/${Date.now()}-${uid}-${safeName}`;
-        const { error } = await supabase.storage.from('vinyl_images').upload(fileName, file, { upsert: true });
+        const { error } = await supabase.storage.from('vinyl_images').upload(fileName, uploadBlob, { upsert: true });
         if (error) throw new Error(`Upload failed: ${error.message}`);
         const { data: { publicUrl } } = supabase.storage.from('vinyl_images').getPublicUrl(fileName);
         urls.push(publicUrl);

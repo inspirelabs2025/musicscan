@@ -15,9 +15,9 @@ interface SEOData {
 }
 
 const DEFAULT_SEO: SEOData = {
-  title: 'MusicScan - Hét Muziekplatform | Nieuws, Verhalen, Shop, Quiz & Smart Scanner',
-  description: 'MusicScan is hét complete muziekplatform. Muzieknieuws, verhalen over albums & artiesten, unieke muziekproducten shop, muziek quiz, vandaag in de muziekgeschiedenis, en smart scanner voor vinyl & CD collectie met waardebepaling. Alles voor muziekliefhebbers!',
-  keywords: 'muziekplatform, muzieknieuws, album verhalen, artiesten verhalen, muziek shop, vinyl scanner, CD scanner, muziek quiz, muziek collectie, waardebepaling, muziek blog, muziek merchandise, vandaag in de muziekgeschiedenis',
+  title: 'MusicScan - Hét Muziekplatform | Nieuws, Verhalen, Shop & Quiz',
+  description: 'Ontdek MusicScan: lees de verhalen achter iconische albums, scan je vinyl & CD collectie, shop unieke muziekart en test je kennis met de muziekquiz. Alles voor echte muziekliefhebbers.',
+  keywords: 'muziekplatform, muzieknieuws, album verhalen, artiesten verhalen, muziek shop, vinyl scanner, CD scanner, muziek quiz, muziek collectie, waardebepaling, lp waarde app',
   image: '/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png',
   type: 'website',
   siteName: 'MusicScan',
@@ -118,68 +118,68 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
 // Route-specific SEO configurations
 export const SEO_CONFIGS = {
   '/': {
-    title: 'MusicScan - Hét Muziekplatform | Nieuws, Verhalen, Shop, Quiz & Smart Scanner',
-    description: 'MusicScan is hét complete muziekplatform. Ontdek muzieknieuws, lees verhalen over albums & artiesten, shop unieke muziekproducten, doe de quiz, en scan je vinyl & CD collectie met waardebepaling.',
+    title: 'MusicScan - Hét Muziekplatform | Nieuws, Verhalen, Shop & Quiz',
+    description: 'Ontdek MusicScan: lees de verhalen achter iconische albums, scan je vinyl & CD collectie, shop unieke muziekart en test je kennis met de muziekquiz. Alles voor echte muziekliefhebbers.',
     keywords: 'muziekplatform, muzieknieuws, album verhalen, artiesten, muziek shop, vinyl scanner, muziek quiz, waardebepaling'
   },
   '/verhalen': {
-    title: 'Muziekverhalen - Albums, Artiesten & Singles | MusicScan',
-    description: 'Ontdek de verhalen achter je favoriete albums, artiesten en singles. Achtergrondinformatie, geschiedenis en bijzondere details over muziek.',
-    keywords: 'muziekverhalen, album verhalen, artiest verhalen, singles verhalen, muziek geschiedenis, album achtergrondinformatie'
+    title: 'Muziekverhalen - De Geschiedenis achter Iconische Albums | MusicScan',
+    description: 'Lees de onvertelde verhalen achter legendarische albums en artiesten. Van studiosessies tot doorbraken — ontdek wat je nog niet wist.',
+    keywords: 'muziekverhalen, album verhalen, artiest verhalen, singles verhalen, muziek geschiedenis'
   },
   '/nieuws': {
-    title: 'Muzieknieuws - Het Laatste Nieuws uit de Muziekwereld | MusicScan',
-    description: 'Blijf op de hoogte van het laatste muzieknieuws. Nieuwe releases, concerten, albumreviews en alles wat speelt in de muziekwereld.',
+    title: 'Muzieknieuws - Nieuwe Releases & Actueel | MusicScan',
+    description: 'Het laatste muzieknieuws: nieuwe releases, concerten en albumreviews. Blijf als eerste op de hoogte van alles in de muziekwereld.',
     keywords: 'muzieknieuws, nieuwe releases, concert nieuws, album reviews, muziek actualiteit'
   },
   '/quiz': {
-    title: 'Muziek Quiz - Test Je Kennis | MusicScan',
-    description: 'Test je muziekkennis met onze interactieve quiz. Ontdek hoeveel je weet over albums, artiesten en muziekgeschiedenis.',
+    title: 'Muziek Quiz - Hoe Goed Ken Jij Muziek? | MusicScan',
+    description: 'Test je muziekkennis met onze interactieve quiz! Van klassiekers tot moderne hits — daag jezelf uit en vergelijk je score met anderen.',
     keywords: 'muziek quiz, muziekkennis test, album quiz, artiesten quiz'
   },
   '/vandaag-in-de-muziekgeschiedenis': {
-    title: 'Vandaag in de Muziekgeschiedenis | MusicScan',
-    description: 'Ontdek welke muzikale gebeurtenissen vandaag in de geschiedenis plaatsvonden. Releases, concerten, geboortes en mijlpalen.',
+    title: 'Vandaag in de Muziekgeschiedenis - Wat Gebeurde Er? | MusicScan',
+    description: 'Welke legendarische albums verschenen vandaag? Welke artiesten werden geboren? Ontdek dagelijks bijzondere muzikale mijlpalen.',
     keywords: 'vandaag in de muziekgeschiedenis, muziek kalender, historische muziek gebeurtenissen'
   },
   '/anekdotes': {
-    title: 'Muziek Anekdotes - Bijzondere Verhalen uit de Muziekwereld | MusicScan',
-    description: 'Ontdek fascinerende anekdotes en bijzondere verhalen uit de muziekwereld. Van legendarische concerten tot onbekende weetjes.',
+    title: 'Muziek Anekdotes - Ongelooflijke Verhalen uit de Muziekwereld | MusicScan',
+    description: 'De gekste, grappigste en meest bijzondere anekdotes uit de muziekwereld. Van backstage verhalen tot studio-incidenten.',
     keywords: 'muziek anekdotes, muziek verhalen, muziek weetjes, muziek trivia'
   },
   '/artists': {
-    title: 'Artiesten - Biografieën & Verhalen | MusicScan',
-    description: 'Ontdek de biografieën en verhalen van je favoriete artiesten. Van doorbraak tot nalatenschap.',
+    title: 'Artiesten - Biografieën & Carrièreverhalen | MusicScan',
+    description: 'Ontdek de complete verhalen van je favoriete artiesten. Van eerste demo tot wereldwijde doorbraak — lees hun muzikale reis.',
     keywords: 'artiesten biografieën, artiest verhalen, muzikanten, bandgeschiedenis'
   },
   '/singles': {
-    title: 'Singles - Verhalen achter de Hits | MusicScan',
-    description: 'Ontdek de verhalen achter iconische singles en hits. Van studiosessies tot cultuurimpact.',
+    title: 'Singles - Het Verhaal achter de Grootste Hits | MusicScan',
+    description: 'Ontdek hoe iconische hits zijn ontstaan. Van eerste idee tot nummer 1 — de verhalen achter de muziek die je kent.',
     keywords: 'singles verhalen, hits geschiedenis, muziek singles, iconische nummers'
   },
   '/scanner': {
-    title: 'Smart Scanner - Vinyl & CD Herkenning | MusicScan',
-    description: 'Scan je vinyl platen en CD\'s met slimme herkenning. Krijg direct informatie, prijzen en details over je muziek.',
-    keywords: 'vinyl scanner, CD scanner, muziek herkenning, album identificatie'
+    title: 'Vinyl & CD Scanner - Herken en Waardeer je Muziek | MusicScan',
+    description: 'Scan je vinyl platen en CD\'s: directe herkenning, actuele marktprijzen en gedetailleerde albuminformatie. Ontdek wat jouw collectie waard is.',
+    keywords: 'vinyl scanner, CD scanner, muziek herkenning, album identificatie, lp waarde app, vinyl waarde bepalen'
   },
   '/scan': {
-    title: 'Scan Resultaten - Muziek Herkenning & Waardebepaling | MusicScan',
-    description: 'Bekijk je scan resultaten met slimme herkenning, actuele marktprijzen en gedetailleerde albuminformatie.',
+    title: 'Scan Resultaten - Waarde & Details van je Muziek | MusicScan',
+    description: 'Bekijk je scanresultaten met actuele marktprijzen, conditiebeoordeling en gedetailleerde albuminformatie. Weet precies wat je hebt.',
     keywords: 'scan resultaten, muziek identificatie, vinyl waarde, CD prijzen'
   },
   '/my-collection': {
-    title: 'Mijn Collectie - Digitale Vinyl & CD Bibliotheek | MusicScan',
-    description: 'Beheer je persoonlijke muziekcollectie. Bekijk je vinyl platen, CD\'s en hun actuele marktwaarde.',
-    keywords: 'muziek collectie, vinyl bibliotheek, CD collectie, collectie beheer'
+    title: 'Mijn Collectie - Beheer je Vinyl & CD Bibliotheek | MusicScan',
+    description: 'Je complete muziekcollectie op één plek. Bekijk actuele waarde, sorteer op artiest of genre en houd je verzameling bij.',
+    keywords: 'muziek collectie, vinyl bibliotheek, CD collectie, collectie beheer, lp collectie waarde'
   },
   '/shop': {
-    title: 'Shop - Unieke Muziek Merchandise & Art | MusicScan',
-    description: 'Ontdek unieke muziek merchandise, art prints, t-shirts, sokken en meer. De beste shop voor muziekliefhebbers.',
+    title: 'Muziek Shop - Unieke Art Prints, Shirts & Merchandise | MusicScan',
+    description: 'Shop unieke muziek art prints, t-shirts, canvas doeken en meer. Handgemaakte designs geïnspireerd op iconische albums.',
     keywords: 'muziek merchandise, muziek art, band shirts, muziek posters, muziek shop'
   },
   '/public-catalog': {
-    title: 'Publieke Catalogus - Ontdek Muziek Collecties | MusicScan',
-    description: 'Verken publieke muziekcollecties van de MusicScan community. Ontdek zeldzame vinyl, populaire CD\'s en trends.',
+    title: 'Muziek Catalogus - Ontdek Vinyl & CD Collecties | MusicScan',
+    description: 'Verken duizenden vinyl platen en CD\'s uit de MusicScan community. Ontdek zeldzame releases en populaire albums.',
     keywords: 'publieke catalogus, muziek collecties, vinyl database, CD database'
   }
 };

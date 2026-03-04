@@ -1,16 +1,16 @@
-import { useMemo } from 'react';
+import { useMemo, lazy, Suspense } from 'react';
 import { useSEO } from '@/hooks/useSEO';
 import { useUnifiedNewsFeed } from '@/hooks/useUnifiedNewsFeed';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ScannerHero } from '@/components/home/ScannerHero';
 import { HeroFeature } from '@/components/home/HeroFeature';
-
-import { MasonryContentGrid } from '@/components/home/MasonryContentGrid';
-import { ProductBanner } from '@/components/home/ProductBanner';
-
-import { EchoSpotlight } from '@/components/home/EchoSpotlight';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MobileInstallBanner } from '@/components/MobileInstallBanner';
+
+// Lazy load below-fold components
+const MasonryContentGrid = lazy(() => import('@/components/home/MasonryContentGrid').then(m => ({ default: m.MasonryContentGrid })));
+const ProductBanner = lazy(() => import('@/components/home/ProductBanner').then(m => ({ default: m.ProductBanner })));
+const EchoSpotlight = lazy(() => import('@/components/home/EchoSpotlight').then(m => ({ default: m.EchoSpotlight })));
+const MobileInstallBanner = lazy(() => import('@/components/MobileInstallBanner').then(m => ({ default: m.MobileInstallBanner })));
 
 // Shuffle array helper
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -23,7 +23,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 };
 
 const Home = () => {
-  const { data: newsItems, isLoading } = useUnifiedNewsFeed(200);
+  const { data: newsItems, isLoading } = useUnifiedNewsFeed(80);
   const { tr } = useLanguage();
 
   useSEO({
@@ -105,18 +105,26 @@ const Home = () => {
       )}
 
       {/* 3. ONE Masonry Grid - ALL content types mixed */}
-      {allGridItems.length > 0 && (
-        <MasonryContentGrid items={allGridItems} />
-      )}
+      <Suspense fallback={<div className="py-10"><Skeleton className="h-96 mx-4 rounded-xl" /></div>}>
+        {allGridItems.length > 0 && (
+          <MasonryContentGrid items={allGridItems} />
+        )}
+      </Suspense>
 
       {/* 4. Echo Spotlight - AI Music Expert */}
-      <EchoSpotlight />
+      <Suspense fallback={null}>
+        <EchoSpotlight />
+      </Suspense>
 
       {/* 5. Product Banner */}
-      <ProductBanner />
+      <Suspense fallback={null}>
+        <ProductBanner />
+      </Suspense>
 
       {/* PWA Install Banner (mobile only) */}
-      <MobileInstallBanner />
+      <Suspense fallback={null}>
+        <MobileInstallBanner />
+      </Suspense>
     </div>
   );
 };

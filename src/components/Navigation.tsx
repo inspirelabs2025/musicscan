@@ -148,7 +148,7 @@ export function Navigation() {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6 w-full">
           <Link to="/" className="flex-shrink-0">
-            <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-[58px] cursor-pointer" />
+            <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-[58px] cursor-pointer" width="58" height="58" decoding="async" fetchPriority="high" />
           </Link>
           <Button
             variant="ghost"
@@ -329,7 +329,7 @@ export function Navigation() {
       {/* Mobile: only show logo centered, no hamburger menu */}
       <div className="md:hidden flex items-center justify-center w-full gap-2">
         <Link to="/" className="flex-shrink-0">
-          <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-[58px] cursor-pointer" />
+          <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-[58px] cursor-pointer" width="58" height="58" decoding="async" fetchPriority="high" />
         </Link>
         <Button
           variant="ghost"

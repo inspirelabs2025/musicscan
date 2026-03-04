@@ -57,6 +57,50 @@
       "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/muziek-verhaal/:slug"
     },
     {
+      "source": "/singles/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot|bot|crawler|spider).*"
+        }
+      ],
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/singles/:slug"
+    },
+    {
+      "source": "/artists/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot|bot|crawler|spider).*"
+        }
+      ],
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/artists/:slug"
+    },
+    {
+      "source": "/anekdotes/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot|bot|crawler|spider).*"
+        }
+      ],
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/anekdotes/:slug"
+    },
+    {
+      "source": "/nieuws/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot|bot|crawler|spider).*"
+        }
+      ],
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/nieuws/:slug"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

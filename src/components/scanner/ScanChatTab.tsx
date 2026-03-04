@@ -1618,7 +1618,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
 
       {/* Input bar */}
       {true && (
-        <div className="fixed bottom-14 left-0 right-0 z-40 px-3 pb-2">
+        <div className="fixed left-0 right-0 z-40 px-3 pb-2" style={{ bottom: /android/i.test(navigator.userAgent) ? 'calc(56px + 48px)' : 'calc(56px + max(env(safe-area-inset-bottom), 8px))' }}>
         <div className="max-w-2xl mx-auto flex items-end gap-1.5 p-2 rounded-2xl bg-card/95 backdrop-blur-md border border-border/50 shadow-[0_-2px_15px_rgba(0,0,0,0.1)]">
           <div className="flex items-center gap-0.5 shrink-0">
             <Button

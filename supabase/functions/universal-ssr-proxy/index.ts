@@ -553,7 +553,7 @@ Voor een complete lijst van alle content in machine-readable formaat:
     }
 
     // Validate content type
-    const validContentTypes = ['plaat-verhaal', 'muziek-verhaal', 'product'];
+    const validContentTypes = ['plaat-verhaal', 'muziek-verhaal', 'product', 'singles', 'artists', 'anekdotes', 'nieuws'];
     if (!validContentTypes.includes(contentType)) {
       console.error(`[SSR] Invalid content type: ${contentType}`);
       throw new Error(`Unknown content type: ${contentType}`);
@@ -611,17 +611,256 @@ Voor een complete lijst van alle content in machine-readable formaat:
         break;
       }
 
+      case 'singles': {
+        const { data: single, error } = await supabaseClient
+          .from('music_stories')
+          .select('*')
+          .eq('slug', slug)
+          .eq('is_published', true)
+          .not('single_name', 'is', null)
+          .single();
+
+        if (error || !single) {
+          throw new Error('Single not found');
+        }
+
+        const singleTitle = `${single.artist || ''} - ${single.single_name || single.title}`;
+        const singleDesc = single.meta_description || single.story_content?.replace(/[#*\n]/g, ' ').trim().substring(0, 160) || '';
+        const singleImage = single.artwork_url || `${BASE_URL}/placeholder.svg`;
+        const singleContent = single.story_content?.replace(/<[^>]*>/g, '').replace(/[#*]/g, '').replace(/\n+/g, ' ').trim().substring(0, 500) || '';
+
+        html = `<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${singleTitle}: Het Verhaal achter de Hit | MusicScan</title>
+  <meta name="description" content="${singleDesc}">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+  <meta property="og:type" content="music.song">
+  <meta property="og:title" content="${singleTitle}">
+  <meta property="og:description" content="${singleDesc}">
+  <meta property="og:image" content="${singleImage}">
+  <meta property="og:url" content="${BASE_URL}/singles/${slug}">
+  <meta property="og:site_name" content="MusicScan">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${singleTitle}">
+  <meta name="twitter:description" content="${singleDesc}">
+  <meta name="twitter:image" content="${singleImage}">
+  <link rel="canonical" href="${BASE_URL}/singles/${slug}">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MusicRecording",
+    "name": "${singleTitle}",
+    "description": "${singleDesc}",
+    "image": "${singleImage}",
+    "byArtist": { "@type": "MusicGroup", "name": "${single.artist || ''}" },
+    "url": "${BASE_URL}/singles/${slug}"
+  }
+  </script>
+  <style>body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; } img { max-width: 100%; border-radius: 8px; }</style>
+</head>
+<body>
+  <article>
+    <h1>${singleTitle}</h1>
+    ${singleImage !== `${BASE_URL}/placeholder.svg` ? `<img src="${singleImage}" alt="${singleTitle}" loading="eager">` : ''}
+    ${singleDesc ? `<p><strong>${singleDesc}</strong></p>` : ''}
+    ${singleContent ? `<p>${singleContent}...</p>` : ''}
+  </article>
+</body>
+</html>`;
+        break;
+      }
+
+      case 'artists': {
+        const { data: artist, error } = await supabaseClient
+          .from('artist_stories')
+          .select('*')
+          .eq('slug', slug)
+          .eq('is_published', true)
+          .single();
+
+        if (error || !artist) {
+          throw new Error('Artist not found');
+        }
+
+        const artistDesc = artist.meta_description || artist.biography || artist.story_content?.substring(0, 160) || '';
+        const artistImage = artist.artwork_url || `${BASE_URL}/placeholder.svg`;
+        const artistContent = artist.story_content?.replace(/<[^>]*>/g, '').replace(/[#*]/g, '').replace(/\n+/g, ' ').trim().substring(0, 500) || '';
+        const artistGenres = artist.music_style?.join(', ') || '';
+
+        html = `<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${artist.artist_name}: Biografie, Muziek & Verhaal | MusicScan</title>
+  <meta name="description" content="${artistDesc}">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="${artist.artist_name}: Biografie & Carrièreverhaal">
+  <meta property="og:description" content="${artistDesc}">
+  <meta property="og:image" content="${artistImage}">
+  <meta property="og:url" content="${BASE_URL}/artists/${slug}">
+  <meta property="og:site_name" content="MusicScan">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${artist.artist_name}: Biografie & Carrièreverhaal">
+  <meta name="twitter:description" content="${artistDesc}">
+  <meta name="twitter:image" content="${artistImage}">
+  <link rel="canonical" href="${BASE_URL}/artists/${slug}">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MusicGroup",
+    "name": "${artist.artist_name}",
+    "description": "${artistDesc}",
+    "image": "${artistImage}",
+    ${artistGenres ? `"genre": "${artistGenres}",` : ''}
+    "url": "${BASE_URL}/artists/${slug}"
+  }
+  </script>
+  <style>body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; } img { max-width: 100%; border-radius: 8px; }</style>
+</head>
+<body>
+  <article>
+    <h1>${artist.artist_name}</h1>
+    ${artistImage !== `${BASE_URL}/placeholder.svg` ? `<img src="${artistImage}" alt="${artist.artist_name}" loading="eager">` : ''}
+    ${artist.biography ? `<p><strong>${artist.biography}</strong></p>` : ''}
+    ${artistContent ? `<p>${artistContent}...</p>` : ''}
+  </article>
+</body>
+</html>`;
+        break;
+      }
+
+      case 'anekdotes': {
+        const { data: anecdote, error } = await supabaseClient
+          .from('music_anecdotes')
+          .select('*')
+          .eq('slug', slug)
+          .eq('is_published', true)
+          .single();
+
+        if (error || !anecdote) {
+          throw new Error('Anecdote not found');
+        }
+
+        const anecTitle = anecdote.title || 'Muziek Anekdote';
+        const anecDesc = anecdote.meta_description || anecdote.content?.replace(/[#*\n]/g, ' ').trim().substring(0, 160) || '';
+        const anecImage = anecdote.image_url || `${BASE_URL}/placeholder.svg`;
+        const anecContent = anecdote.content?.replace(/<[^>]*>/g, '').replace(/[#*]/g, '').replace(/\n+/g, ' ').trim().substring(0, 500) || '';
+
+        html = `<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${anecTitle} | Muziek Anekdotes | MusicScan</title>
+  <meta name="description" content="${anecDesc}">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="${anecTitle}">
+  <meta property="og:description" content="${anecDesc}">
+  <meta property="og:image" content="${anecImage}">
+  <meta property="og:url" content="${BASE_URL}/anekdotes/${slug}">
+  <meta property="og:site_name" content="MusicScan">
+  <link rel="canonical" href="${BASE_URL}/anekdotes/${slug}">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "${anecTitle}",
+    "description": "${anecDesc}",
+    "image": "${anecImage}",
+    "author": { "@type": "Organization", "name": "MusicScan" },
+    "publisher": { "@type": "Organization", "name": "MusicScan" },
+    "url": "${BASE_URL}/anekdotes/${slug}"
+  }
+  </script>
+  <style>body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; } img { max-width: 100%; border-radius: 8px; }</style>
+</head>
+<body>
+  <article>
+    <h1>${anecTitle}</h1>
+    ${anecImage !== `${BASE_URL}/placeholder.svg` ? `<img src="${anecImage}" alt="${anecTitle}" loading="eager">` : ''}
+    ${anecDesc ? `<p><strong>${anecDesc}</strong></p>` : ''}
+    ${anecContent ? `<p>${anecContent}...</p>` : ''}
+  </article>
+</body>
+</html>`;
+        break;
+      }
+
+      case 'nieuws': {
+        const { data: news, error } = await supabaseClient
+          .from('news_blog_posts')
+          .select('*')
+          .eq('slug', slug)
+          .eq('is_published', true)
+          .single();
+
+        if (error || !news) {
+          throw new Error('News article not found');
+        }
+
+        const newsTitle = news.title || 'Muzieknieuws';
+        const newsDesc = news.meta_description || news.summary || news.content?.replace(/[#*\n]/g, ' ').trim().substring(0, 160) || '';
+        const newsImage = news.featured_image || `${BASE_URL}/placeholder.svg`;
+        const newsContent = news.content?.replace(/<[^>]*>/g, '').replace(/[#*]/g, '').replace(/\n+/g, ' ').trim().substring(0, 500) || '';
+
+        html = `<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${newsTitle} | Muzieknieuws | MusicScan</title>
+  <meta name="description" content="${newsDesc}">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="${newsTitle}">
+  <meta property="og:description" content="${newsDesc}">
+  <meta property="og:image" content="${newsImage}">
+  <meta property="og:url" content="${BASE_URL}/nieuws/${slug}">
+  <meta property="og:site_name" content="MusicScan">
+  <link rel="canonical" href="${BASE_URL}/nieuws/${slug}">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "headline": "${newsTitle}",
+    "description": "${newsDesc}",
+    "image": "${newsImage}",
+    "author": { "@type": "Organization", "name": "MusicScan" },
+    "publisher": { "@type": "Organization", "name": "MusicScan" },
+    "datePublished": "${news.published_at || news.created_at}",
+    "url": "${BASE_URL}/nieuws/${slug}"
+  }
+  </script>
+  <style>body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; } img { max-width: 100%; border-radius: 8px; }</style>
+</head>
+<body>
+  <article>
+    <h1>${newsTitle}</h1>
+    ${newsImage !== `${BASE_URL}/placeholder.svg` ? `<img src="${newsImage}" alt="${newsTitle}" loading="eager">` : ''}
+    ${newsDesc ? `<p><strong>${newsDesc}</strong></p>` : ''}
+    ${newsContent ? `<p>${newsContent}...</p>` : ''}
+  </article>
+</body>
+</html>`;
+        break;
+      }
+
       default:
         throw new Error(`Unknown content type: ${contentType}`);
     }
 
-    // Return SEO-friendly HTML with noindex for proxy URL (canonical in HTML points to real URL)
+    // Return SEO-friendly HTML (canonical in HTML points to real URL)
     return new Response(html, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'public, max-age=3600, s-maxage=7200, stale-while-revalidate=86400',
-        'X-Robots-Tag': 'noindex, follow'
       }
     });
 

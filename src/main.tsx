@@ -1,156 +1,29 @@
-// Aggressively unregister ALL service workers and nuke ALL caches
-// This runs synchronously before React to prevent stale content
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(registration => {
-      registration.unregister().then(() => {
-        console.log('[MusicScan] Service worker unregistered:', registration.scope);
-      });
-    });
-  });
-  if (navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-  }
-}
-if ('caches' in window) {
-  caches.keys().then(names => {
-    Promise.all(names.map(name => caches.delete(name))).then(() => {
-      if (names.length > 0) {
-        console.log('[MusicScan] Cleared caches:', names);
-      }
-    });
-  });
-}
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext.tsx';
+import { ThemeProvider } from './components/theme-provider.tsx';
+import { Toaster } from './components/ui/sonner.tsx';
+import { GrowthNotificationProvider } from './providers/growth-notification-provider.tsx';
 
-// Clear any stale version tracking on fresh load
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.has('_v')) {
-  // Remove the cache-busting param from URL without reload
-  const cleanUrl = window.location.pathname + window.location.hash;
-  window.history.replaceState(null, '', cleanUrl);
-  // Clear reload tracking since we just did a forced reload
-  sessionStorage.removeItem('musicscan_reload_count');
-}
+const queryClient = new QueryClient();
 
-import React, { Suspense, lazy, useState, useEffect } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-
-// Simple loading component
-const LoadingFallback = () => (
-  <div style={{ 
-    display: 'flex', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    height: '100vh',
-    flexDirection: 'column',
-    gap: '16px',
-    background: '#0a0a0a',
-    color: '#fff',
-    fontFamily: 'system-ui, sans-serif'
-  }}>
-    <div style={{
-      width: '40px',
-      height: '40px',
-      border: '3px solid #333',
-      borderTop: '3px solid #8b5cf6',
-      borderRadius: '50%',
-      animation: 'spin 1s linear infinite'
-    }} />
-    <p>MusicScan laden...</p>
-    <style>{`
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `}</style>
-  </div>
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+          <AuthProvider>
+            <GrowthNotificationProvider>
+              <App />
+              <Toaster />
+            </GrowthNotificationProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  </React.StrictMode>
 );
-
-// Error fallback component
-const ErrorFallback = ({ error }: { error: Error }) => (
-  <div style={{ 
-    display: 'flex', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    height: '100vh',
-    flexDirection: 'column',
-    gap: '16px',
-    background: '#0a0a0a',
-    color: '#fff',
-    fontFamily: 'system-ui, sans-serif',
-    padding: '20px',
-    textAlign: 'center'
-  }}>
-    <h1 style={{ color: '#ef4444' }}>Laad Fout</h1>
-    <p>Probeer de pagina te verversen (Ctrl+Shift+R)</p>
-    <pre style={{ 
-      background: '#1a1a1a', 
-      padding: '16px', 
-      borderRadius: '8px',
-      maxWidth: '80%',
-      overflow: 'auto',
-      fontSize: '12px'
-    }}>
-      {error.message}
-    </pre>
-    <button 
-      onClick={() => window.location.reload()}
-      style={{
-        background: '#8b5cf6',
-        color: '#fff',
-        padding: '12px 24px',
-        borderRadius: '8px',
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: '16px'
-      }}
-    >
-      Pagina Herladen
-    </button>
-  </div>
-);
-
-// Lazy load App with error handling
-const App = lazy(() => import('./App'));
-
-function AppWrapper() {
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      setError(event.error || new Error(event.message));
-    };
-    
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      setError(event.reason instanceof Error ? event.reason : new Error(String(event.reason)));
-    };
-
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
-
-    return () => {
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
-    };
-  }, []);
-
-  if (error) {
-    return <ErrorFallback error={error} />;
-  }
-
-  return (
-    <Suspense fallback={<LoadingFallback />}>
-      <App />
-    </Suspense>
-  );
-}
-
-const container = document.getElementById("root");
-if (container) {
-  createRoot(container).render(
-    <React.StrictMode>
-      <AppWrapper />
-    </React.StrictMode>
-  );
-}

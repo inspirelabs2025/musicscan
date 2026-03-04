@@ -21,6 +21,7 @@ interface DiscogsOrder {
   status: string | null;
   total_value: number | null;
   total_currency: string | null;
+  shipping_address: string | null;
   items: any;
   discogs_created_at: string | null;
 }
@@ -30,16 +31,17 @@ export default function AdminDiscogsMessages() {
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [countryFilter, setCountryFilter] = useState<string>("all");
   const [sending, setSending] = useState(false);
   const [sendResults, setSendResults] = useState<{ sent: number; failed: number; total: number } | null>(null);
   const [sendProgress, setSendProgress] = useState(0);
 
   const { data: orders, isLoading } = useQuery({
-    queryKey: ["admin-discogs-orders", statusFilter],
+    queryKey: ["admin-discogs-orders", statusFilter, countryFilter],
     queryFn: async () => {
       let query = supabase
         .from("discogs_orders")
-        .select("id, discogs_order_id, buyer_username, buyer_email, status, total_value, total_currency, items, discogs_created_at")
+        .select("id, discogs_order_id, buyer_username, buyer_email, status, total_value, total_currency, shipping_address, items, discogs_created_at")
         .order("discogs_created_at", { ascending: false });
 
       if (statusFilter !== "all") {
@@ -48,7 +50,21 @@ export default function AdminDiscogsMessages() {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as DiscogsOrder[];
+      
+      let filtered = data as DiscogsOrder[];
+      if (countryFilter === "nl") {
+        filtered = filtered.filter((o) => 
+          o.shipping_address?.toLowerCase().includes("netherlands") ||
+          o.shipping_address?.toLowerCase().includes("nederland")
+        );
+      } else if (countryFilter === "international") {
+        filtered = filtered.filter((o) => 
+          o.shipping_address && 
+          !o.shipping_address.toLowerCase().includes("netherlands") &&
+          !o.shipping_address.toLowerCase().includes("nederland")
+        );
+      }
+      return filtered;
     },
   });
 
@@ -218,6 +234,18 @@ export default function AdminDiscogsMessages() {
                       {s === "all" ? "Alle statussen" : s}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={countryFilter} onValueChange={setCountryFilter}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Filter op land" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">🌍 Alle landen</SelectItem>
+                  <SelectItem value="nl">🇳🇱 Nederland</SelectItem>
+                  <SelectItem value="international">🌐 Internationaal (Engels)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

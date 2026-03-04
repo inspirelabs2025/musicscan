@@ -667,7 +667,7 @@ const translations = {
     },
     mijnDiscogsPage: {
       title: "Mijn Discogs",
-      collection: "Collectie",
+      collection: "Discogs Collectie",
       wantlist: "Wantlist",
       marketplace: "Marketplace",
       searchPlaceholder: "Zoek op artiest of titel...",
@@ -3483,7 +3483,7 @@ const translations = {
     },
     mijnDiscogsPage: {
       title: "My Discogs",
-      collection: "Collection",
+      collection: "Discogs Collection",
       wantlist: "Wantlist",
       marketplace: "Marketplace",
       searchPlaceholder: "Search by artist or title...",

@@ -60,15 +60,32 @@ export default function SingleDetail() {
 
   const currentUrl = `https://www.musicscan.app/singles/${slug}`;
   const singleImage = single?.artwork_url || 'https://www.musicscan.app/placeholder.svg';
-  const singleDescription = single?.meta_description || single?.story_content?.slice(0, 160).replace(/[#*]/g, '') || dp.discoverStory;
+  
+  // CTR-optimized description with year and genre hooks
+  const singleDescription = single?.meta_description || (() => {
+    const parts: string[] = [];
+    if (single?.artist && single?.single_name) {
+      parts.push(`Ontdek het verhaal achter ${single.artist} - ${single.single_name}.`);
+    }
+    if (single?.year) parts.push(`Uitgebracht in ${single.year}.`);
+    if (single?.genre) parts.push(`Genre: ${single.genre}.`);
+    const snippet = single?.story_content?.slice(0, 100).replace(/[#*\n]/g, ' ').trim();
+    if (snippet) parts.push(snippet + '...');
+    return parts.join(' ').slice(0, 160);
+  })();
 
   const seoKeywords = [
-    single?.artist, single?.single_name, single?.genre, 'single',
+    single?.artist, single?.single_name, 'single', 'verhaal', 'betekenis',
+    single?.genre, single?.year?.toString(),
     ...(single?.tags || [])
   ].filter(Boolean).join(', ');
 
+  // CTR-optimized title: include hook word "Verhaal" or "Betekenis"
+  const seoTitle = single?.meta_title || 
+    `${single?.artist} - ${single?.single_name}: Het Verhaal achter de Hit | MusicScan`;
+
   useSEO({
-    title: single?.meta_title || `${single?.artist} - ${single?.single_name} | MusicScan`,
+    title: seoTitle,
     description: singleDescription,
     keywords: seoKeywords,
     image: singleImage,
@@ -209,7 +226,7 @@ export default function SingleDetail() {
       <Helmet>
         <meta property="og:type" content="music.song" />
         <meta property="og:url" content={currentUrl} />
-        <meta property="og:title" content={single?.meta_title || `${single.artist} - ${single.single_name}`} />
+        <meta property="og:title" content={seoTitle} />
         <meta property="og:description" content={singleDescription} />
         <meta property="og:image" content={singleImage} />
         <meta property="og:image:width" content="1200" />
@@ -218,7 +235,7 @@ export default function SingleDetail() {
         <meta property="music:musician" content={single?.artist} />
         {single?.year && <meta property="music:release_date" content={single.year.toString()} />}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={single?.meta_title || `${single.artist} - ${single.single_name}`} />
+        <meta name="twitter:title" content={seoTitle} />
         <meta name="twitter:description" content={singleDescription} />
         <meta name="twitter:image" content={singleImage} />
         {single?.reading_time && <meta name="twitter:label1" content={dp.readingTime} />}

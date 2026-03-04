@@ -70,7 +70,18 @@ const ArtistDetail = () => {
 
   const currentUrl = `https://www.musicscan.app/artists/${story.slug}`;
   const storyImage = story.artwork_url || 'https://www.musicscan.app/placeholder.svg';
-  const storyDescription = story.biography || story.story_content.substring(0, 160);
+  
+  // CTR-optimized description with genre and notable albums
+  const storyDescription = story.meta_description || (() => {
+    const parts: string[] = [];
+    parts.push(`Lees het complete verhaal van ${story.artist_name}.`);
+    if (story.music_style?.length) parts.push(`Genre: ${story.music_style.join(', ')}.`);
+    if (story.notable_albums?.length) parts.push(`Bekende albums: ${story.notable_albums.slice(0, 3).join(', ')}.`);
+    if (!story.notable_albums?.length && story.biography) {
+      parts.push(story.biography.slice(0, 80).trim() + '...');
+    }
+    return parts.join(' ').slice(0, 160);
+  })();
 
   const normalizeUrl = (url?: string | null) => {
     if (!url) return "";
@@ -114,15 +125,15 @@ const ArtistDetail = () => {
   return (
     <>
       <Helmet>
-        <title>{story.meta_title || `${dp.storyOf} ${story.artist_name} | MusicScan`}</title>
-        <meta name="description" content={story.meta_description || storyDescription} />
-        <meta property="og:title" content={`${dp.storyOf} ${story.artist_name}`} />
+        <title>{story.meta_title || `${story.artist_name}: Biografie, Muziek & Verhaal | MusicScan`}</title>
+        <meta name="description" content={storyDescription} />
+        <meta property="og:title" content={story.meta_title || `${story.artist_name}: Biografie & Carrièreverhaal`} />
         <meta property="og:description" content={storyDescription} />
         <meta property="og:image" content={storyImage} />
         <meta property="og:url" content={currentUrl} />
         <meta property="og:type" content="article" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${dp.storyOf} ${story.artist_name}`} />
+        <meta name="twitter:title" content={story.meta_title || `${story.artist_name}: Biografie & Carrièreverhaal`} />
         <meta name="twitter:description" content={storyDescription} />
         <meta name="twitter:image" content={storyImage} />
         <link rel="canonical" href={currentUrl} />

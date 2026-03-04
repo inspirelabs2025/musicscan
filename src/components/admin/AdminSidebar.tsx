@@ -119,6 +119,7 @@ const menuItems = [
       { title: "RSS News Manager", url: "/admin/news-rss-manager", icon: Newspaper },
       { title: "Curated Artists (LP)", url: "/admin/curated-artists", icon: Music },
       { title: "Discogs Lookup", url: "/admin/discogs-lookup", icon: Database },
+      { title: "Discogs Bulk Berichten", url: "/admin/discogs-messages", icon: MessageSquare },
       { title: "Photo Moderation", url: "/admin/photo-moderation", icon: Image },
       { title: "Auto Comments", url: "/admin/auto-comments", icon: MessageSquare },
       { title: "Magic Mike Profiel", url: "/admin/magic-mike", icon: Bot },

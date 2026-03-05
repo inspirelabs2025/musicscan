@@ -1,55 +1,69 @@
-import { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/context/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import Home from "@/pages/Home";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import NotFound from "@/pages/NotFound";
-import Dashboard from "@/pages/Dashboard";
-import Projects from "@/pages/Projects";
-import Profile from "@/pages/Profile";
-import Settings from "@/pages/Settings";
-import { ChatPrompt } from "@/components/ui/chat-prompt";
-import { checkAndTriggerChatPrompt } from "@/lib/retention-prompts";
-
-const queryClient = new QueryClient();
+import './App.css';
+import { Outlet } from 'react-router-dom';
+import { Toaster } from './components/ui/sonner';
+import { Loader } from './components/shared/loader';
+import { Suspense, useEffect, useState } from 'react';
+import { useAuth } from './hooks/useAuth';
+import { AuthenticatedApp } from './AuthenticatedApp';
+import { UnauthenticatedApp } from './UnauthenticatedApp';
+import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Analytics } from '@vercel/analytics/react';
+import { ThemeProvider } from './components/theme-provider';
+import { PosthogProvider } from './lib/analytics';
+import { supabase } from './lib/supabase';
+import { GrowthBookProvider } from '@growthbook/growthbook-react';
+import { growthbook } from './lib/growthbook';
+import { AINudge } from './components/ui/ai-nudge';
 
 function App() {
-  // This effect would typically run after user authentication/project selection
-  // For demonstration, let's assume a projectId exists after login
+  const { session, isLoading } = useAuth();
+  const [aiUsageCount, setAiUsageCount] = useState(0);
+
   useEffect(() => {
-    const projectId = "demo-project-123"; // Replace with actual project ID from context/store
-    checkAndTriggerChatPrompt(projectId);
-  }, []);
+    // In a real application, you would fetch this from a user profile or analytics backend
+    // For this example, we'll simulate a fetch or use a placeholder.
+    const fetchAiUsage = async () => {
+      // Simulate fetching AI usage count for the current user
+      // Replace with actual data fetching logic from your backend/DB
+      // For now, it's always 0 for demonstration purposes.
+      const count = 0; // This should come from user data or a tracking system
+      setAiUsageCount(count);
+    };
+    fetchAiUsage();
+  }, [session]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <Loader />
+      </div>
+    );
+  }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Router>
-          <AuthProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/" element={<ProtectedRoute element={<Home />} />} />
-              <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
-              <Route path="/projects" element={<ProtectedRoute element={<Projects />} />} />
-              <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
-              <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            {/* Chat Prompt component rendered globally */}
-            <ChatPrompt />
-          </AuthProvider>
-        </Router>
-      </TooltipProvider>
-      <Toaster />
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+    <PosthogProvider>
+      <GrowthBookProvider growthbook={growthbook}>
+        <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+          {session ? (
+            <AuthenticatedApp>
+              <Suspense fallback={<Loader />}>
+                <Outlet />
+                <AINudge aiUsageCount={aiUsageCount} />
+              </Suspense>
+            </AuthenticatedApp>
+          ) : (
+            <UnauthenticatedApp>
+              <Suspense fallback={<Loader />}>
+                <Outlet />
+              </Suspense>
+            </UnauthenticatedApp>
+          )}
+          <Toaster />
+          <Analytics />
+          <SpeedInsights />
+        </ThemeProvider>
+      </GrowthBookProvider>
+    </PosthogProvider>
   );
 }
 

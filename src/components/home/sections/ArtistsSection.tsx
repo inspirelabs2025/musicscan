@@ -37,7 +37,7 @@ export function ArtistsSection() {
             {artists.map((artist, i) => (
               <Link
                 key={artist.id}
-                to={`/artists/${artist.slug}`}
+                to={artist.is_spotlight ? `/artist-spotlight/${artist.slug}` : `/artists/${artist.slug}`}
                 className={`flex-shrink-0 group ${i === 0 ? 'w-56 md:w-64' : 'w-40 md:w-48'}`}
               >
                 <div className={`rounded-xl overflow-hidden bg-muted mb-2 ${i === 0 ? 'aspect-[3/4]' : 'aspect-square'}`}>

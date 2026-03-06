@@ -44,7 +44,30 @@ const ArtistDetail = () => {
     );
   }
 
-  if (!story) {
+  // If no story found in artist_stories (non-spotlight), check if it exists as spotlight and redirect
+  const { data: spotlightCheck } = useQuery({
+    queryKey: ['artist-spotlight-check', slug],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('artist_stories')
+        .select('slug,is_spotlight')
+        .eq('slug', slug || '')
+        .eq('is_published', true)
+        .eq('is_spotlight', true)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !isLoading && !story && !!slug,
+  });
+
+  useEffect(() => {
+    if (spotlightCheck?.slug) {
+      navigate(`/artist-spotlight/${spotlightCheck.slug}`, { replace: true });
+    }
+  }, [spotlightCheck, navigate]);
+
+  if (!story && !spotlightCheck) {
+    if (isLoading) return null;
     return (
       <>
         <Helmet>

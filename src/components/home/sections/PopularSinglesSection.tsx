@@ -12,6 +12,8 @@ export function PopularSinglesSection() {
         'greatest hits', 'best of', 'collection', 'compilation', 'sampler',
         'box set', 'complete', 'bbc recordings', 'up close', 'dvd',
         'anthology', 'remaster', 'deluxe edition', 'live at',
+        'best', 'concert', 'interview', 'garage', 'live', 'e.p.k',
+        'in concert', 'greatest', 'unplugged', 'sessions', 'demo',
       ];
       const { data } = await supabase
         .from('music_stories')
@@ -20,13 +22,15 @@ export function PopularSinglesSection() {
         .not('single_name', 'is', null)
         .not('artwork_url', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(40);
+        .limit(60);
       const filtered = (data || []).filter((s) => {
-        const name = (s.single_name || '').toLowerCase();
-        const title = (s.title || '').toLowerCase();
+        const name = (s.single_name || '').toLowerCase().trim();
+        const title = (s.title || '').toLowerCase().trim();
         const combined = `${name} ${title}`;
         return (
           s.artwork_url &&
+          name.length > 0 &&
+          name.length <= 60 &&
           !EXCLUDE_WORDS.some((w) => combined.includes(w))
         );
       });
@@ -49,7 +53,7 @@ export function PopularSinglesSection() {
 
         <ScrollArea className="w-full">
           <div className="flex gap-4 pb-4">
-            {singles.map((single) => (
+            {singles.map((single, i) => (
               <Link
                 key={single.id}
                 to={`/singles/${single.slug}`}
@@ -59,6 +63,9 @@ export function PopularSinglesSection() {
                   <img
                     src={single.artwork_url!}
                     alt={single.single_name || single.title}
+                    loading={i < 2 ? 'eager' : 'lazy'}
+                    width={192}
+                    height={192}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>

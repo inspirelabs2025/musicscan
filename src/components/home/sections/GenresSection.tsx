@@ -50,6 +50,9 @@ export function GenresSection() {
                   <img
                     src={genre.image}
                     alt={genre.label}
+                    loading="lazy"
+                    width={256}
+                    height={144}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-black/50" />

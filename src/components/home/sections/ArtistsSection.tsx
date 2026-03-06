@@ -44,6 +44,9 @@ export function ArtistsSection() {
                   <img
                     src={artist.artwork_url!}
                     alt={artist.artist_name}
+                    loading="lazy"
+                    width={192}
+                    height={192}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>

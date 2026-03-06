@@ -71,10 +71,24 @@ export const PlaatVerhaal: React.FC = () => {
     return url.startsWith('http://') || url.startsWith('https://');
   };
 
-  // Enhanced SEO setup
-  const seoDescription = blog?.social_post 
-    ? blog.social_post.slice(0, 160)
-    : frontmatter.meta_description || `Ontdek het verhaal achter ${artist} - ${album}. Een diepgaande AI-analyse van dit ${genre || 'muziek'} album uit ${year || 'de muziekgeschiedenis'}. Inclusief prijsanalyse en verzamelwaarde.`;
+  // Enhanced SEO setup - auto-generate description from content
+  const seoDescription = (() => {
+    if (frontmatter.meta_description) return frontmatter.meta_description;
+    if (blog?.social_post && blog.social_post.trim().length > 10) return blog.social_post.slice(0, 155);
+    // Generate from first paragraph of content
+    if (blog?.markdown_content) {
+      const firstPara = blog.markdown_content
+        .replace(/^---[\s\S]*?---\s*/m, '') // strip YAML frontmatter
+        .replace(/[#*>\-\[\]!`]/g, '')
+        .split(/\n\n/)
+        .find(p => p.trim().length > 30);
+      if (firstPara) {
+        const snippet = firstPara.trim().slice(0, 120).trim();
+        return `${artist} - ${album}: ${snippet}... | MusicScan`;
+      }
+    }
+    return `${artist} - ${album}: Ontdek het verhaal, de betekenis en de verzamelwaarde van dit ${genre || 'muziek'} album${year ? ` uit ${year}` : ''}. | MusicScan`;
+  })();
   
   const rawSeoKeywords = [
     artist,

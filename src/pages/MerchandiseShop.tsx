@@ -68,24 +68,40 @@ export default function MerchandiseShop() {
   return (
     <>
       <Helmet>
-        <title>Merchandise - T-Shirts | VinylScout</title>
-        <meta name="description" content="Draag je favoriete muziek met stijl. Premium T-shirts met iconische album artwork. Verkrijgbaar in diverse maten en stijlen." />
-        <meta name="keywords" content="muziek merchandise, band t-shirts, album sokken, muziek kleding, merchandise, music fashion" />
-        <meta property="og:title" content="Merchandise - T-Shirts" />
-        <meta property="og:description" content="Premium T-shirts geïnspireerd op iconische albums." />
+        <title>Merchandise - T-Shirts & Muziekkleding | MusicScan Shop</title>
+        <meta name="description" content="Ontdek unieke muziek T-shirts in de MusicScan Shop. Premium designs geïnspireerd op iconische albums. Verkrijgbaar in diverse maten en stijlen." />
+        <meta name="keywords" content="muziek merchandise, band t-shirts, album shirts, muziek kleding, MusicScan shop" />
+        <meta property="og:title" content="Merchandise - T-Shirts & Muziekkleding | MusicScan Shop" />
+        <meta property="og:description" content="Ontdek unieke muziek T-shirts in de MusicScan Shop. Premium designs geïnspireerd op iconische albums." />
         <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://www.musicscan.app/merchandise" />
         
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
-            "name": "Merchandise Collectie",
-            "description": "T-Shirts geïnspireerd op iconische albums",
+            "name": "MusicScan Merchandise Shop",
+            "description": "Ontdek unieke muziek T-shirts geïnspireerd op iconische albums",
             "url": "https://www.musicscan.app/merchandise",
             "numberOfItems": allProducts?.length || 0,
-            "about": {
-              "@type": "Thing",
-              "name": "Music Merchandise"
+            "mainEntity": {
+              "@type": "ItemList",
+              "numberOfItems": allProducts?.length || 0,
+              "itemListElement": (filteredProducts || []).slice(0, 10).map((p, i) => ({
+                "@type": "ListItem",
+                "position": i + 1,
+                "item": {
+                  "@type": "Product",
+                  "name": `${p.artist} - ${p.title}`,
+                  "image": p.primary_image || p.image_url,
+                  "offers": {
+                    "@type": "Offer",
+                    "price": p.price?.toString(),
+                    "priceCurrency": "EUR",
+                    "availability": "https://schema.org/InStock"
+                  }
+                }
+              }))
             }
           })}
         </script>

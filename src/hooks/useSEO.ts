@@ -132,6 +132,11 @@ export const SEO_CONFIGS = {
     description: 'Het laatste muzieknieuws: nieuwe releases, concerten en albumreviews. Blijf als eerste op de hoogte van alles in de muziekwereld.',
     keywords: 'muzieknieuws, nieuwe releases, concert nieuws, album reviews, muziek actualiteit'
   },
+  '/verhalen': {
+    title: 'Muziekverhalen - De Geschiedenis achter Albums & Artiesten | MusicScan',
+    description: 'Lees de onvertelde verhalen achter legendarische albums en artiesten. Van studiosessies tot doorbraken — ontdek wat je nog niet wist.',
+    keywords: 'muziekverhalen, album verhalen, artiest verhalen, singles verhalen, muziek geschiedenis'
+  },
   '/quiz': {
     title: 'Muziek Quiz - Hoe Goed Ken Jij Muziek? | MusicScan',
     description: 'Test je muziekkennis met onze interactieve quiz! Van klassiekers tot moderne hits — daag jezelf uit en vergelijk je score met anderen.',
@@ -174,7 +179,7 @@ export const SEO_CONFIGS = {
   },
   '/shop': {
     title: 'Muziek Shop - Unieke Art Prints, Shirts & Merchandise | MusicScan',
-    description: 'Shop unieke muziek art prints, t-shirts, canvas doeken en meer. Handgemaakte designs geïnspireerd op iconische albums.',
+    description: 'Ontdek unieke muziekproducten in de MusicScan Shop. Van vinyl art prints tot T-shirts en merchandise - vind het perfecte cadeau voor muziekliefhebbers.',
     keywords: 'muziek merchandise, muziek art, band shirts, muziek posters, muziek shop'
   },
   '/public-catalog': {

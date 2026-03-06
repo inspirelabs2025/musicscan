@@ -1,29 +1,22 @@
-import { useMemo, lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import { useSEO } from '@/hooks/useSEO';
-import { useUnifiedNewsFeed } from '@/hooks/useUnifiedNewsFeed';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ScannerHero } from '@/components/home/ScannerHero';
-import { HeroFeature } from '@/components/home/HeroFeature';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Lazy load below-fold components
-const MasonryContentGrid = lazy(() => import('@/components/home/MasonryContentGrid').then(m => ({ default: m.MasonryContentGrid })));
+// Lazy load sections
+const PopularSinglesSection = lazy(() => import('@/components/home/sections/PopularSinglesSection').then(m => ({ default: m.PopularSinglesSection })));
+const ArtistsSection = lazy(() => import('@/components/home/sections/ArtistsSection').then(m => ({ default: m.ArtistsSection })));
+const StoriesSection = lazy(() => import('@/components/home/sections/StoriesSection').then(m => ({ default: m.StoriesSection })));
+const GenresSection = lazy(() => import('@/components/home/sections/GenresSection').then(m => ({ default: m.GenresSection })));
+const CommunitySection = lazy(() => import('@/components/home/sections/CommunitySection').then(m => ({ default: m.CommunitySection })));
+const MagicMikePodcastSection = lazy(() => import('@/components/home/sections/MagicMikePodcastSection').then(m => ({ default: m.MagicMikePodcastSection })));
 const ProductBanner = lazy(() => import('@/components/home/ProductBanner').then(m => ({ default: m.ProductBanner })));
-const EchoSpotlight = lazy(() => import('@/components/home/EchoSpotlight').then(m => ({ default: m.EchoSpotlight })));
 const MobileInstallBanner = lazy(() => import('@/components/MobileInstallBanner').then(m => ({ default: m.MobileInstallBanner })));
 
-// Shuffle array helper
-const shuffleArray = <T,>(array: T[]): T[] => {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-};
+const SectionFallback = () => <div className="py-10"><Skeleton className="h-48 mx-4 rounded-xl" /></div>;
 
 const Home = () => {
-  const { data: newsItems, isLoading } = useUnifiedNewsFeed(80);
   const { tr } = useLanguage();
 
   useSEO({
@@ -31,97 +24,47 @@ const Home = () => {
     description: tr.home.metaDesc,
   });
 
-  // Hero = most recent item overall
-  const heroItem = newsItems?.[0];
-
-  // Build ONE large masonry grid with ALL content types mixed - RANDOM selection
-  const allGridItems = useMemo(() => {
-    if (!newsItems) return [];
-
-    const excludedId = heroItem?.id;
-
-    // Helper: get random items from ALL items of a type (geen pool limiet meer)
-    // count: how many items to return, requireImage: filter alleen items met afbeelding
-    const getRandomFromType = (type: string, count: number = 1, requireImage = false) => {
-      const allOfType = newsItems
-        .filter(i => i.type === type && i.id !== excludedId && (!requireImage || i.image_url));
-      return shuffleArray(allOfType).slice(0, count);
-    };
-
-    // Random keuze tussen poster of canvas voor ART
-    const artType = Math.random() > 0.5 ? 'poster' : 'canvas';
-
-    // Bouw de grid met echte random items uit ALLE beschikbare content
-    // REMOVED: news, history, quiz
-    const items = shuffleArray([
-      ...getRandomFromType('single', 2, true),     // 2 Singles (met artwork)
-      ...getRandomFromType('artist', 2),           // 2 Artist verhalen
-      ...getRandomFromType('album', 2),            // 2 Album verhalen
-      ...getRandomFromType('release', 2),          // 2 Nieuwe releases
-      ...getRandomFromType('youtube', 2),          // 2 Videos
-      ...getRandomFromType('review', 1),           // 1 Review
-      ...getRandomFromType('spotlight', 1),        // 1 Artiest Spotlight
-      ...getRandomFromType('studio', 1),           // 1 Studio Story
-      ...getRandomFromType('anecdote', 1),         // 1 Anekdote
-      ...getRandomFromType('podcast', 1),          // 1 Podcast
-      ...getRandomFromType('concert', 1),          // 1 Concert/Event
-      ...getRandomFromType('fanwall', 2, true),    // 2 Fanwall (met afbeelding)
-      ...getRandomFromType('product', 1),          // 1 Product
-      ...getRandomFromType('metal_print', 1),      // 1 Metal Print
-      ...getRandomFromType(artType, 1),            // 1 Poster OF Canvas
-    ]).filter(item => item?.id !== heroItem?.id);
-
-    return items;
-  }, [newsItems, heroItem]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="py-10">
-          <div className="container mx-auto px-4">
-            <Skeleton className="h-8 w-48 mb-6" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Skeleton className="aspect-square rounded-xl" />
-              <Skeleton className="aspect-square rounded-xl" />
-              <Skeleton className="aspect-square rounded-xl" />
-              <Skeleton className="aspect-square rounded-xl" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
-      {/* 1. Scanner Hero - Grote CTA bovenaan */}
+      {/* Hero */}
       <ScannerHero />
 
-      {/* 3. Hero - Featured Item */}
-      {heroItem && (
-        <section className="bg-black">
-          <HeroFeature item={heroItem} />
-        </section>
-      )}
-
-      {/* 3. ONE Masonry Grid - ALL content types mixed */}
-      <Suspense fallback={<div className="py-10"><Skeleton className="h-96 mx-4 rounded-xl" /></div>}>
-        {allGridItems.length > 0 && (
-          <MasonryContentGrid items={allGridItems} />
-        )}
+      {/* Sectie 1: Populaire Singles */}
+      <Suspense fallback={<SectionFallback />}>
+        <PopularSinglesSection />
       </Suspense>
 
-      {/* 4. Echo Spotlight - AI Music Expert */}
-      <Suspense fallback={null}>
-        <EchoSpotlight />
+      {/* Sectie 2: Artiesten */}
+      <Suspense fallback={<SectionFallback />}>
+        <ArtistsSection />
       </Suspense>
 
-      {/* 5. Product Banner */}
+      {/* Sectie 3: Album Verhalen & Anekdotes */}
+      <Suspense fallback={<SectionFallback />}>
+        <StoriesSection />
+      </Suspense>
+
+      {/* Sectie 4: Ontdek op Genre */}
+      <Suspense fallback={<SectionFallback />}>
+        <GenresSection />
+      </Suspense>
+
+      {/* Sectie 5: Community */}
+      <Suspense fallback={<SectionFallback />}>
+        <CommunitySection />
+      </Suspense>
+
+      {/* Sectie 6: Magic Mike & Podcasts */}
+      <Suspense fallback={<SectionFallback />}>
+        <MagicMikePodcastSection />
+      </Suspense>
+
+      {/* Sectie 7: Shop */}
       <Suspense fallback={null}>
         <ProductBanner />
       </Suspense>
 
-      {/* PWA Install Banner (mobile only) */}
+      {/* PWA Install */}
       <Suspense fallback={null}>
         <MobileInstallBanner />
       </Suspense>

@@ -123,7 +123,7 @@ export const SEO_CONFIGS = {
     keywords: 'muziekplatform, muzieknieuws, album verhalen, artiesten, muziek shop, vinyl scanner, muziek quiz, waardebepaling'
   },
   '/verhalen': {
-    title: 'Muziekverhalen - De Geschiedenis achter Iconische Albums | MusicScan',
+    title: 'Muziekverhalen - De Geschiedenis achter Albums & Artiesten | MusicScan',
     description: 'Lees de onvertelde verhalen achter legendarische albums en artiesten. Van studiosessies tot doorbraken — ontdek wat je nog niet wist.',
     keywords: 'muziekverhalen, album verhalen, artiest verhalen, singles verhalen, muziek geschiedenis'
   },
@@ -131,11 +131,6 @@ export const SEO_CONFIGS = {
     title: 'Muzieknieuws - Nieuwe Releases & Actueel | MusicScan',
     description: 'Het laatste muzieknieuws: nieuwe releases, concerten en albumreviews. Blijf als eerste op de hoogte van alles in de muziekwereld.',
     keywords: 'muzieknieuws, nieuwe releases, concert nieuws, album reviews, muziek actualiteit'
-  },
-  '/verhalen': {
-    title: 'Muziekverhalen - De Geschiedenis achter Albums & Artiesten | MusicScan',
-    description: 'Lees de onvertelde verhalen achter legendarische albums en artiesten. Van studiosessies tot doorbraken — ontdek wat je nog niet wist.',
-    keywords: 'muziekverhalen, album verhalen, artiest verhalen, singles verhalen, muziek geschiedenis'
   },
   '/quiz': {
     title: 'Muziek Quiz - Hoe Goed Ken Jij Muziek? | MusicScan',

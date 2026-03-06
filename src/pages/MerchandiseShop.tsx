@@ -93,7 +93,7 @@ export default function MerchandiseShop() {
                 "item": {
                   "@type": "Product",
                   "name": `${p.artist} - ${p.title}`,
-                  "image": p.primary_image || p.image_url,
+                  "image": p.primary_image,
                   "offers": {
                     "@type": "Offer",
                     "price": p.price?.toString(),

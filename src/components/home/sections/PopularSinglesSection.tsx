@@ -8,6 +8,11 @@ export function PopularSinglesSection() {
   const { data: singles } = useQuery({
     queryKey: ['homepage-singles'],
     queryFn: async () => {
+      const EXCLUDE_WORDS = [
+        'greatest hits', 'best of', 'collection', 'compilation', 'sampler',
+        'box set', 'complete', 'bbc recordings', 'up close', 'dvd',
+        'anthology', 'remaster', 'deluxe edition', 'live at',
+      ];
       const { data } = await supabase
         .from('music_stories')
         .select('id,slug,title,artist,single_name,artwork_url,created_at')
@@ -15,18 +20,14 @@ export function PopularSinglesSection() {
         .not('single_name', 'is', null)
         .not('artwork_url', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(20);
-      // Filter out box sets, samplers, compilations — keep only real singles
+        .limit(40);
       const filtered = (data || []).filter((s) => {
         const name = (s.single_name || '').toLowerCase();
+        const title = (s.title || '').toLowerCase();
+        const combined = `${name} ${title}`;
         return (
-          !name.includes('box set') &&
-          !name.includes('sampler') &&
-          !name.includes('collection') &&
-          !name.includes('dvd') &&
-          !name.includes('best of') &&
-          !name.includes('compilation') &&
-          s.artwork_url
+          s.artwork_url &&
+          !EXCLUDE_WORDS.some((w) => combined.includes(w))
         );
       });
       return filtered.slice(0, 8);
@@ -37,7 +38,7 @@ export function PopularSinglesSection() {
   if (!singles?.length) return null;
 
   return (
-    <section className="py-10 bg-background">
+    <section className="py-14 bg-background">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-foreground">Populaire Singles</h2>

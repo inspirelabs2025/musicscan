@@ -23,14 +23,17 @@ export function StoriesSection() {
         .select('id,slug,yaml_frontmatter,album_cover_url')
         .eq('is_published', true)
         .order('created_at', { ascending: false })
-        .limit(4);
+        .limit(8);
 
       albums?.forEach(a => {
         const fm = a.yaml_frontmatter as any;
+        const title = fm?.title;
+        // Skip items without a real title
+        if (!title || title === 'Album Verhaal' || title.trim() === '') return;
         items.push({
           id: a.id,
           slug: a.slug,
-          title: fm?.title || 'Album Verhaal',
+          title,
           artist: fm?.artist || '',
           image_url: a.album_cover_url,
           type: 'album',
@@ -64,7 +67,7 @@ export function StoriesSection() {
   if (!stories?.length) return null;
 
   return (
-    <section className="py-10 bg-background">
+    <section className="py-14 bg-background">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-foreground">Album Verhalen & Anekdotes</h2>

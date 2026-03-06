@@ -34,25 +34,35 @@ const Home = () => {
         <PopularSinglesSection />
       </Suspense>
 
+      <div className="py-2" />
+
       {/* Sectie 2: Artiesten */}
       <Suspense fallback={<SectionFallback />}>
         <ArtistsSection />
       </Suspense>
+
+      <div className="py-2" />
 
       {/* Sectie 3: Album Verhalen & Anekdotes */}
       <Suspense fallback={<SectionFallback />}>
         <StoriesSection />
       </Suspense>
 
+      <div className="py-2" />
+
       {/* Sectie 4: Ontdek op Genre */}
       <Suspense fallback={<SectionFallback />}>
         <GenresSection />
       </Suspense>
 
+      <div className="py-2" />
+
       {/* Sectie 5: Community */}
       <Suspense fallback={<SectionFallback />}>
         <CommunitySection />
       </Suspense>
+
+      <div className="py-2" />
 
       {/* Sectie 6: Magic Mike & Podcasts */}
       <Suspense fallback={<SectionFallback />}>

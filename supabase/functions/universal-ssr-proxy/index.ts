@@ -6,330 +6,336 @@ const corsHeaders = {
 };
 
 const BASE_URL = 'https://www.musicscan.app';
+const LOGO_URL = `${BASE_URL}/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png`;
 
-// Normalize URL by removing trailing slashes
-const normalizeSlug = (slug: string): string => {
-  return slug.replace(/\/$/, '').trim();
+// Cache index.html in memory for the lifetime of the edge function instance
+let cachedIndexHtml: string | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 300_000; // 5 minutes
+
+const fetchIndexHtml = async (): Promise<string> => {
+  const now = Date.now();
+  if (cachedIndexHtml && (now - cacheTimestamp) < CACHE_TTL) {
+    return cachedIndexHtml;
+  }
+  console.log('[SSR] Fetching fresh index.html');
+  const resp = await fetch(`${BASE_URL}/index.html`, {
+    headers: { 'User-Agent': 'MusicScan-SSR-Proxy/1.0' }
+  });
+  if (!resp.ok) throw new Error(`Failed to fetch index.html: ${resp.status}`);
+  cachedIndexHtml = await resp.text();
+  cacheTimestamp = now;
+  return cachedIndexHtml;
+};
+
+const normalizeSlug = (slug: string): string => slug.replace(/\/$/, '').trim();
+
+const escapeHtml = (str: string): string =>
+  str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+const stripMarkdown = (text: string): string =>
+  text.replace(/^---[\s\S]*?---\s*/m, '')
+    .replace(/[#*>\-\[\]!`_~]/g, '')
+    .replace(/\n+/g, ' ')
+    .trim();
+
+const makeDescription = (text: string, maxLen = 155): string => {
+  const clean = stripMarkdown(text);
+  if (clean.length <= maxLen) return clean;
+  return clean.substring(0, maxLen - 3) + '...';
 };
 
 // Find canonical slug for blog posts (handles year variants)
-const findCanonicalBlogSlug = async (supabaseClient: any, requestedSlug: string): Promise<string | null> => {
-  // Helper: parse base and year from slug pattern "<base>-<year|unknown>"
-  const parseSlug = (s: string) => {
-    const m = s.match(/^(.*)-((?:\d{4})|unknown)$/);
-    if (m) {
-      return { base: m[1], year: m[2] };
-    }
-    return { base: s, year: null };
-  };
+const findCanonicalBlogSlug = async (sb: any, requestedSlug: string): Promise<string | null> => {
+  const m = requestedSlug.match(/^(.*)-((?:\d{4})|unknown)$/);
+  const base = m ? m[1] : requestedSlug;
 
-  const { base, year: yearPart } = parseSlug(requestedSlug);
+  const { data } = await sb.from('blog_posts').select('slug').eq('slug', requestedSlug).eq('is_published', true).maybeSingle();
+  if (data) return data.slug;
 
-  // 1) Try exact slug first
-  let { data: blogData } = await supabaseClient
-    .from('blog_posts')
-    .select('slug')
-    .eq('slug', requestedSlug)
-    .eq('is_published', true)
-    .maybeSingle();
-
-  if (blogData) return blogData.slug;
-
-  // 2) Try same base with -unknown
-  if (yearPart && yearPart !== 'unknown') {
-    const altUnknown = `${base}-unknown`;
-    const { data: unknownData } = await supabaseClient
-      .from('blog_posts')
-      .select('slug')
-      .eq('slug', altUnknown)
-      .eq('is_published', true)
-      .maybeSingle();
-    if (unknownData) return unknownData.slug;
+  if (m && m[2] !== 'unknown') {
+    const { data: d2 } = await sb.from('blog_posts').select('slug').eq('slug', `${base}-unknown`).eq('is_published', true).maybeSingle();
+    if (d2) return d2.slug;
   }
 
-  // 3) Try any slug with same base prefix
-  const { data: prefixList } = await supabaseClient
-    .from('blog_posts')
-    .select('slug')
-    .ilike('slug', `${base}-%`)
-    .eq('is_published', true)
-    .order('created_at', { ascending: false })
-    .limit(1);
-  if (prefixList && prefixList.length > 0) return prefixList[0].slug;
+  const { data: d3 } = await sb.from('blog_posts').select('slug').ilike('slug', `${base}-%`).eq('is_published', true).order('created_at', { ascending: false }).limit(1);
+  if (d3?.length) return d3[0].slug;
 
-  // 4) Try base without year
-  const { data: baseData } = await supabaseClient
-    .from('blog_posts')
-    .select('slug')
-    .eq('slug', base)
-    .eq('is_published', true)
-    .maybeSingle();
-  if (baseData) return baseData.slug;
+  const { data: d4 } = await sb.from('blog_posts').select('slug').eq('slug', base).eq('is_published', true).maybeSingle();
+  if (d4) return d4.slug;
 
   return null;
 };
 
-// Detect if request is from a crawler
-const isCrawler = (userAgent: string): boolean => {
-  const crawlerPatterns = [
-    'googlebot', 'bingbot', 'slurp', 'duckduckbot', 'baiduspider',
-    'yandexbot', 'facebookexternalhit', 'linkedinbot', 'twitterbot',
-    'whatsapp', 'telegrambot', 'bot', 'crawler', 'spider'
-  ];
-  const ua = userAgent.toLowerCase();
-  return crawlerPatterns.some(pattern => ua.includes(pattern));
-};
+interface MetaData {
+  title: string;
+  description: string;
+  image: string;
+  url: string;
+  type: string;
+  jsonLd?: string;
+}
 
-// Generate blog post HTML
-const generateBlogHTML = (blog: any): string => {
-  const frontmatter = blog.yaml_frontmatter || {};
-  const title = frontmatter.title || blog.title || 'Album Story';
-  const artist = frontmatter.artist || '';
-  const album = frontmatter.album || '';
-  const description = frontmatter.description || blog.excerpt || '';
-  const imageUrl = blog.album_cover_url || frontmatter.image || `${BASE_URL}/placeholder.svg`;
-  const genre = frontmatter.genre || '';
-  const year = frontmatter.year || '';
-  
-  // Generate clean content preview
-  const contentPreview = blog.markdown_content
-    ?.replace(/<[^>]*>/g, '')
-    ?.replace(/\n+/g, ' ')
-    ?.trim()
-    ?.substring(0, 500) || '';
+const injectMetaTags = (html: string, meta: MetaData): string => {
+  let result = html;
 
-  return `<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${artist} - ${album} | ${title} | MusicScan</title>
-  <meta name="description" content="${description}">
-  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
-  
-  <meta property="og:type" content="article">
-  <meta property="og:title" content="${artist} - ${album}">
-  <meta property="og:description" content="${description}">
-  <meta property="og:image" content="${imageUrl}">
-  <meta property="og:url" content="${BASE_URL}/plaat-verhaal/${blog.slug}">
-  <meta property="og:site_name" content="MusicScan">
-  
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${artist} - ${album}">
-  <meta name="twitter:description" content="${description}">
-  <meta name="twitter:image" content="${imageUrl}">
-  
-  <link rel="canonical" href="${BASE_URL}/plaat-verhaal/${blog.slug}">
-  
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": "${title}",
-    "description": "${description}",
-    "image": "${imageUrl}",
-    "author": { "@type": "Organization", "name": "MusicScan" },
-    "publisher": { "@type": "Organization", "name": "MusicScan", "logo": { "@type": "ImageObject", "url": "${BASE_URL}/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" } },
-    "datePublished": "${blog.published_at || blog.created_at}",
-    "dateModified": "${blog.updated_at || blog.published_at || blog.created_at}",
-    "mainEntityOfPage": "${BASE_URL}/plaat-verhaal/${blog.slug}"
+  // Replace <title>
+  result = result.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(meta.title)}</title>`);
+
+  // Replace meta description
+  result = result.replace(
+    /<meta\s+name="description"\s+content="[^"]*"\s*\/?>/,
+    `<meta name="description" content="${escapeHtml(meta.description)}">`
+  );
+
+  // Replace OG tags
+  result = result.replace(/<meta\s+property="og:title"\s+content="[^"]*"\s*\/?>/, `<meta property="og:title" content="${escapeHtml(meta.title)}">`);
+  result = result.replace(/<meta\s+property="og:description"\s+content="[^"]*"\s*\/?>/, `<meta property="og:description" content="${escapeHtml(meta.description)}">`);
+  result = result.replace(/<meta\s+property="og:image"\s+content="[^"]*"\s*\/?>/, `<meta property="og:image" content="${escapeHtml(meta.image)}">`);
+  result = result.replace(/<meta\s+property="og:url"\s+content="[^"]*"\s*\/?>/, `<meta property="og:url" content="${escapeHtml(meta.url)}">`);
+  result = result.replace(/<meta\s+property="og:type"\s+content="[^"]*"\s*\/?>/, `<meta property="og:type" content="${escapeHtml(meta.type)}">`);
+
+  // Replace Twitter tags
+  result = result.replace(/<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?>/, `<meta name="twitter:title" content="${escapeHtml(meta.title)}">`);
+  result = result.replace(/<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?>/, `<meta name="twitter:description" content="${escapeHtml(meta.description)}">`);
+  result = result.replace(/<meta\s+name="twitter:image"\s+content="[^"]*"\s*\/?>/, `<meta name="twitter:image" content="${escapeHtml(meta.image)}">`);
+  result = result.replace(/<meta\s+name="twitter:url"\s+content="[^"]*"\s*\/?>/, `<meta name="twitter:url" content="${escapeHtml(meta.url)}">`);
+
+  // Replace canonical URL
+  result = result.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/, `<link rel="canonical" href="${escapeHtml(meta.url)}">`);
+
+  // Replace hreflang tags
+  result = result.replace(/<link\s+rel="alternate"\s+hreflang="nl"\s+href="[^"]*"\s*\/?>/, `<link rel="alternate" hreflang="nl" href="${escapeHtml(meta.url)}">`);
+  result = result.replace(/<link\s+rel="alternate"\s+hreflang="x-default"\s+href="[^"]*"\s*\/?>/, `<link rel="alternate" hreflang="x-default" href="${escapeHtml(meta.url)}">`);
+
+  // Inject page-specific JSON-LD before closing </head> (keep the existing Organization schema)
+  if (meta.jsonLd) {
+    result = result.replace('</head>', `<script type="application/ld+json">${meta.jsonLd}</script>\n</head>`);
   }
-  </script>
-  
-  <style>
-    body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
-    img { max-width: 100%; height: auto; border-radius: 8px; }
-    .content { margin-top: 2rem; }
-  </style>
-</head>
-<body>
-  <article>
-    <header>
-      <h1>${artist} - ${album}</h1>
-      ${imageUrl && imageUrl !== `${BASE_URL}/placeholder.svg` ? `<img src="${imageUrl}" alt="${album} album cover" loading="eager">` : ''}
-    </header>
-    <div class="content">
-      ${description ? `<p><strong>${description}</strong></p>` : ''}
-      ${contentPreview ? `<p>${contentPreview}...</p>` : ''}
-    </div>
-  </article>
-  
-  <noscript>
-    <p><a href="${BASE_URL}/plaat-verhaal/${blog.slug}">Klik hier voor de volledige ervaring op MusicScan</a></p>
-  </noscript>
-</body>
-</html>`;
+
+  return result;
 };
 
-// Generate music story HTML
-const generateStoryHTML = (story: any): string => {
-  const frontmatter = story.yaml_frontmatter || {};
-  const title = frontmatter.title || story.title || 'Music Story';
-  const artist = frontmatter.artist || '';
-  const description = frontmatter.description || story.excerpt || '';
-  const imageUrl = story.artwork_url || story.cover_image_url || frontmatter.image || `${BASE_URL}/placeholder.svg`;
-  
-  // Generate clean content preview
-  const contentPreview = story.story_content
-    ?.replace(/<[^>]*>/g, '')
-    ?.replace(/\n+/g, ' ')
-    ?.trim()
-    ?.substring(0, 500) || '';
-
-  return `<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} | MusicScan Muziekverhalen</title>
-  <meta name="description" content="${description}">
-  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
-  
-  <meta property="og:type" content="article">
-  <meta property="og:title" content="${title}">
-  <meta property="og:description" content="${description}">
-  <meta property="og:image" content="${imageUrl}">
-  <meta property="og:url" content="${BASE_URL}/muziek-verhaal/${story.slug}">
-  <meta property="og:site_name" content="MusicScan">
-  
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${title}">
-  <meta name="twitter:description" content="${description}">
-  <meta name="twitter:image" content="${imageUrl}">
-  
-  <link rel="canonical" href="${BASE_URL}/muziek-verhaal/${story.slug}">
-  
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": "${title}",
-    "description": "${description}",
-    "image": "${imageUrl}",
-    "author": { "@type": "Organization", "name": "MusicScan" },
-    "publisher": { "@type": "Organization", "name": "MusicScan", "logo": { "@type": "ImageObject", "url": "${BASE_URL}/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" } },
-    "datePublished": "${story.published_at || story.created_at}",
-    "dateModified": "${story.updated_at || story.published_at || story.created_at}",
-    "mainEntityOfPage": "${BASE_URL}/muziek-verhaal/${story.slug}"
-  }
-  </script>
-  
-  <style>
-    body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
-    img { max-width: 100%; height: auto; border-radius: 8px; }
-    .content { margin-top: 2rem; }
-  </style>
-</head>
-<body>
-  <article>
-    <header>
-      <h1>${title}</h1>
-      ${imageUrl && imageUrl !== `${BASE_URL}/placeholder.svg` ? `<img src="${imageUrl}" alt="${title}" loading="eager">` : ''}
-    </header>
-    <div class="content">
-      ${artist ? `<p><strong>Artiest: ${artist}</strong></p>` : ''}
-      ${description ? `<p><strong>${description}</strong></p>` : ''}
-      ${contentPreview ? `<p>${contentPreview}...</p>` : ''}
-    </div>
-  </article>
-  
-  <noscript>
-    <p><a href="${BASE_URL}/muziek-verhaal/${story.slug}">Klik hier voor de volledige ervaring op MusicScan</a></p>
-  </noscript>
-</body>
-</html>`;
-};
-
-// Generate product HTML
-const generateProductHTML = (product: any): string => {
-  const title = product.title || 'Metal Print';
-  const artist = product.artist || '';
-  const description = product.description || '';
-  const imageUrl = product.primary_image || `${BASE_URL}/placeholder.svg`;
-  const price = product.price || 0;
-  
-  // Generate clean content preview
-  const contentPreview = description
-    ?.replace(/<[^>]*>/g, '')
-    ?.replace(/\n+/g, ' ')
-    ?.trim()
-    ?.substring(0, 500) || '';
-
-  return `<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} - Metal Print Album Cover | MusicScan</title>
-  <meta name="description" content="${description || `Bestel ${title} als premium metalen albumcover print. Hoogwaardige kunst voor muziekliefhebbers.`}">
-  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
-  
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="${title}">
-  <meta property="og:description" content="${description}">
-  <meta property="og:image" content="${imageUrl}">
-  <meta property="og:url" content="${BASE_URL}/product/${product.slug}">
-  <meta property="og:site_name" content="MusicScan">
-  
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${title}">
-  <meta name="twitter:description" content="${description}">
-  <meta name="twitter:image" content="${imageUrl}">
-  
-  <link rel="canonical" href="${BASE_URL}/product/${product.slug}">
-  
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": "${title}",
-    "description": "${description}",
-    "image": "${imageUrl}",
-    "sku": "${product.id || product.slug}",
-    "brand": { "@type": "Brand", "name": "${artist || 'MusicScan'}" },
-    "offers": {
-      "@type": "Offer",
-      "url": "${BASE_URL}/product/${product.slug}",
-      "priceCurrency": "EUR",
-      "price": "${price}",
-      "priceValidUntil": "${new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]}",
-      "itemCondition": "https://schema.org/NewCondition",
-      "availability": "${product.stock_quantity > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'}",
-      "seller": { "@type": "Organization", "name": "MusicScan" }
+const getMetaForContent = async (sb: any, contentType: string, slug: string): Promise<MetaData | null> => {
+  switch (contentType) {
+    case 'plaat-verhaal': {
+      const { data: blog } = await sb.from('blog_posts').select('slug, yaml_frontmatter, markdown_content, album_cover_url, published_at, created_at, updated_at').eq('slug', slug).eq('is_published', true).maybeSingle();
+      if (!blog) return null;
+      const fm = blog.yaml_frontmatter || {};
+      const artist = fm.artist || '';
+      const album = fm.album || '';
+      const title = artist && album ? `${artist} - ${album}: Het Verhaal | MusicScan` : (fm.title || 'Album Verhaal | MusicScan');
+      const desc = fm.description || (blog.markdown_content ? makeDescription(blog.markdown_content) : '');
+      const image = blog.album_cover_url || fm.image || LOGO_URL;
+      return {
+        title, description: desc, image: image.startsWith('http') ? image : `${BASE_URL}${image}`,
+        url: `${BASE_URL}/plaat-verhaal/${slug}`, type: 'article',
+        jsonLd: JSON.stringify({
+          "@context": "https://schema.org", "@type": "Article",
+          "headline": title, "description": desc,
+          "image": image.startsWith('http') ? image : `${BASE_URL}${image}`,
+          "author": { "@type": "Organization", "name": "MusicScan" },
+          "publisher": { "@type": "Organization", "name": "MusicScan", "logo": { "@type": "ImageObject", "url": LOGO_URL } },
+          "datePublished": blog.published_at || blog.created_at,
+          "dateModified": blog.updated_at || blog.published_at || blog.created_at,
+          "mainEntityOfPage": `${BASE_URL}/plaat-verhaal/${slug}`
+        })
+      };
     }
+
+    case 'muziek-verhaal': {
+      const { data: story } = await sb.from('music_stories').select('slug, title, story_content, artwork_url, meta_description, meta_title, artist, published_at, created_at, updated_at').eq('slug', slug).eq('is_published', true).is('single_name', null).maybeSingle();
+      if (!story) return null;
+      const title = story.meta_title || story.title || 'Muziekverhaal | MusicScan';
+      const desc = story.meta_description || (story.story_content ? makeDescription(story.story_content) : '');
+      const image = story.artwork_url || LOGO_URL;
+      return {
+        title: `${title} | MusicScan`, description: desc, image, url: `${BASE_URL}/muziek-verhaal/${slug}`, type: 'article',
+        jsonLd: JSON.stringify({
+          "@context": "https://schema.org", "@type": "Article",
+          "headline": title, "description": desc, "image": image,
+          "author": { "@type": "Organization", "name": "MusicScan" },
+          "publisher": { "@type": "Organization", "name": "MusicScan", "logo": { "@type": "ImageObject", "url": LOGO_URL } },
+          "datePublished": story.published_at || story.created_at,
+          "mainEntityOfPage": `${BASE_URL}/muziek-verhaal/${slug}`
+        })
+      };
+    }
+
+    case 'singles': {
+      const { data: single } = await sb.from('music_stories').select('slug, title, single_name, artist, story_content, artwork_url, meta_description, meta_title, year, genre, created_at').eq('slug', slug).eq('is_published', true).not('single_name', 'is', null).maybeSingle();
+      if (!single) return null;
+      const singleTitle = `${single.artist || ''} - ${single.single_name || single.title}`;
+      const desc = single.meta_description || (single.story_content ? makeDescription(single.story_content) : '');
+      const image = single.artwork_url || LOGO_URL;
+      return {
+        title: `${singleTitle}: Het Verhaal achter de Hit | MusicScan`, description: desc, image,
+        url: `${BASE_URL}/singles/${slug}`, type: 'music.song',
+        jsonLd: JSON.stringify({
+          "@context": "https://schema.org", "@type": "MusicRecording",
+          "name": singleTitle, "description": desc, "image": image,
+          "byArtist": { "@type": "MusicGroup", "name": single.artist || '' },
+          "url": `${BASE_URL}/singles/${slug}`
+        })
+      };
+    }
+
+    case 'artists': {
+      const { data: artist } = await sb.from('artist_stories').select('slug, artist_name, biography, story_content, artwork_url, meta_description, meta_title, music_style, created_at').eq('slug', slug).eq('is_published', true).maybeSingle();
+      if (!artist) return null;
+      const desc = artist.meta_description || artist.biography || (artist.story_content ? makeDescription(artist.story_content) : '');
+      const image = artist.artwork_url || LOGO_URL;
+      return {
+        title: `${artist.artist_name}: Biografie, Muziek & Verhaal | MusicScan`, description: desc, image,
+        url: `${BASE_URL}/artists/${slug}`, type: 'article',
+        jsonLd: JSON.stringify({
+          "@context": "https://schema.org", "@type": "MusicGroup",
+          "name": artist.artist_name, "description": desc, "image": image,
+          ...(artist.music_style?.length ? { "genre": artist.music_style.join(', ') } : {}),
+          "url": `${BASE_URL}/artists/${slug}`
+        })
+      };
+    }
+
+    case 'artist-spotlight': {
+      const { data: artist } = await sb.from('artist_stories').select('slug, artist_name, biography, story_content, artwork_url, meta_description, meta_title, music_style, created_at').eq('slug', slug).eq('is_published', true).maybeSingle();
+      if (!artist) return null;
+      const desc = artist.meta_description || artist.biography || (artist.story_content ? makeDescription(artist.story_content) : '');
+      const image = artist.artwork_url || LOGO_URL;
+      return {
+        title: `${artist.artist_name}: Spotlight & Carrièreverhaal | MusicScan`, description: desc, image,
+        url: `${BASE_URL}/artist-spotlight/${slug}`, type: 'article',
+        jsonLd: JSON.stringify({
+          "@context": "https://schema.org", "@type": "MusicGroup",
+          "name": artist.artist_name, "description": desc, "image": image,
+          "url": `${BASE_URL}/artist-spotlight/${slug}`
+        })
+      };
+    }
+
+    case 'product': {
+      const { data: product } = await sb.from('platform_products').select('slug, title, artist, description, primary_image, price, stock_quantity, id, category').eq('slug', slug).eq('status', 'active').maybeSingle();
+      if (!product) return null;
+      const desc = product.description || `Bestel ${product.title} als premium muziekproduct bij MusicScan.`;
+      const image = product.primary_image || LOGO_URL;
+      return {
+        title: `${product.title} | MusicScan Shop`, description: makeDescription(desc), image,
+        url: `${BASE_URL}/product/${slug}`, type: 'product',
+        jsonLd: JSON.stringify({
+          "@context": "https://schema.org", "@type": "Product",
+          "name": product.title, "description": desc, "image": image,
+          "sku": product.id || product.slug,
+          "brand": { "@type": "Brand", "name": product.artist || 'MusicScan' },
+          "offers": {
+            "@type": "Offer", "url": `${BASE_URL}/product/${slug}`,
+            "priceCurrency": "EUR", "price": String(product.price || 0),
+            "itemCondition": "https://schema.org/NewCondition",
+            "availability": (product.stock_quantity ?? 1) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            "seller": { "@type": "Organization", "name": "MusicScan" }
+          }
+        })
+      };
+    }
+
+    case 'anekdotes': {
+      const { data: anec } = await sb.from('music_anecdotes').select('slug, title, content, image_url, meta_description, created_at').eq('slug', slug).eq('is_published', true).maybeSingle();
+      if (!anec) return null;
+      const title = anec.title || 'Muziek Anekdote';
+      const desc = anec.meta_description || (anec.content ? makeDescription(anec.content) : '');
+      const image = anec.image_url || LOGO_URL;
+      return {
+        title: `${title} | Muziek Anekdotes | MusicScan`, description: desc, image,
+        url: `${BASE_URL}/anekdotes/${slug}`, type: 'article',
+        jsonLd: JSON.stringify({
+          "@context": "https://schema.org", "@type": "Article",
+          "headline": title, "description": desc, "image": image,
+          "author": { "@type": "Organization", "name": "MusicScan" },
+          "publisher": { "@type": "Organization", "name": "MusicScan" },
+          "url": `${BASE_URL}/anekdotes/${slug}`
+        })
+      };
+    }
+
+    case 'nieuws': {
+      const { data: news } = await sb.from('news_blog_posts').select('slug, title, summary, content, featured_image, meta_description, published_at, created_at').eq('slug', slug).eq('is_published', true).maybeSingle();
+      if (!news) return null;
+      const title = news.title || 'Muzieknieuws';
+      const desc = news.meta_description || news.summary || (news.content ? makeDescription(news.content) : '');
+      const image = news.featured_image || LOGO_URL;
+      return {
+        title: `${title} | Muzieknieuws | MusicScan`, description: desc, image,
+        url: `${BASE_URL}/nieuws/${slug}`, type: 'article',
+        jsonLd: JSON.stringify({
+          "@context": "https://schema.org", "@type": "NewsArticle",
+          "headline": title, "description": desc, "image": image,
+          "author": { "@type": "Organization", "name": "MusicScan" },
+          "publisher": { "@type": "Organization", "name": "MusicScan" },
+          "datePublished": news.published_at || news.created_at,
+          "url": `${BASE_URL}/nieuws/${slug}`
+        })
+      };
+    }
+
+    case 'new-release': {
+      const { data: release } = await sb.from('spotify_new_releases_processed').select('slug, title, artist_name, description, cover_image_url, created_at').eq('slug', slug).maybeSingle();
+      if (!release) return null;
+      const title = `${release.artist_name || ''} - ${release.title || 'Nieuwe Release'}`;
+      const desc = release.description || `Ontdek ${title} op MusicScan.`;
+      const image = release.cover_image_url || LOGO_URL;
+      return {
+        title: `${title} | Nieuwe Release | MusicScan`, description: makeDescription(desc), image,
+        url: `${BASE_URL}/new-release/${slug}`, type: 'music.album',
+        jsonLd: JSON.stringify({
+          "@context": "https://schema.org", "@type": "MusicAlbum",
+          "name": release.title, "byArtist": { "@type": "MusicGroup", "name": release.artist_name || '' },
+          "image": image, "url": `${BASE_URL}/new-release/${slug}`
+        })
+      };
+    }
+
+    case 'nummer': {
+      // nummer pages use music_stories like singles
+      const { data: single } = await sb.from('music_stories').select('slug, title, single_name, artist, story_content, artwork_url, meta_description').eq('slug', slug).eq('is_published', true).maybeSingle();
+      if (!single) return null;
+      const singleTitle = `${single.artist || ''} - ${single.single_name || single.title || ''}`;
+      const desc = single.meta_description || (single.story_content ? makeDescription(single.story_content) : '');
+      const image = single.artwork_url || LOGO_URL;
+      return {
+        title: `${singleTitle} | MusicScan`, description: desc, image,
+        url: `${BASE_URL}/nummer/${slug}`, type: 'music.song'
+      };
+    }
+
+    default:
+      return null;
   }
-  </script>
-  
-  <style>
-    body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
-    img { max-width: 100%; height: auto; border-radius: 8px; }
-    .content { margin-top: 2rem; }
-    .price { font-size: 1.5rem; font-weight: bold; color: #059669; margin-top: 1rem; }
-  </style>
-</head>
-<body>
-  <article>
-    <header>
-      <h1>${title}</h1>
-      ${imageUrl && imageUrl !== `${BASE_URL}/placeholder.svg` ? `<img src="${imageUrl}" alt="${title}" loading="eager">` : ''}
-    </header>
-    <div class="content">
-      ${artist ? `<p><strong>Artiest: ${artist}</strong></p>` : ''}
-      ${contentPreview ? `<p>${contentPreview}${contentPreview.length < description?.length ? '...' : ''}</p>` : ''}
-      <div class="price">€${price}</div>
-      ${product.stock_quantity > 0 ? '<p><strong>Op voorraad</strong></p>' : '<p><strong>Uitverkocht</strong></p>'}
-    </div>
-  </article>
-  
-  <noscript>
-    <p><a href="${BASE_URL}/product/${product.slug}">Klik hier voor de volledige ervaring op MusicScan</a></p>
-  </noscript>
-</body>
-</html>`;
 };
+
+// ==================== STATIC CONTENT HANDLERS ====================
+
+const LLMS_TXT_CONTENT = `# MusicScan - Het Complete Muziekplatform
+
+> MusicScan is hét Nederlandse muziekplatform voor liefhebbers. Ontdek verhalen achter albums,
+> scan je vinyl & CD collectie, shop unieke muziekproducten en test je kennis met de quiz.
+
+## Content Categorieën
+- /artists - Artiesten biografieën
+- /singles - Singles verhalen
+- /muziek-verhaal - Muziekverhalen
+- /plaat-verhaal - Album verhalen
+- /anekdotes - Muziek anekdotes
+- /nieuws - Muzieknieuws
+- /vandaag-in-de-muziekgeschiedenis - Dagelijkse muziekgeschiedenis
+- /shop - Muziekproducten
+
+## Sitemaps
+- https://www.musicscan.app/sitemap.xml
+- https://www.musicscan.app/sitemap-llm.xml
+
+Last updated: 2026-03
+`;
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -337,544 +343,103 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const userAgent = req.headers.get('user-agent') || '';
-    
-    console.log(`[SSR] Request: ${url.pathname}, UA: ${userAgent}`);
 
-    // Strip all possible SSR proxy prefixes from pathname
-    let cleanPathname = url.pathname
+    // Strip proxy prefixes
+    let cleanPath = url.pathname
       .replace(/^\/functions\/v1\/universal-ssr-proxy/, '')
       .replace(/^\/universal-ssr-proxy/, '');
-    
-    console.log(`[SSR] Original pathname: ${url.pathname}, Cleaned: ${cleanPathname}`);
 
-    // Handle sitemap-llm.xml requests
-    if (cleanPathname === '/sitemap-llm.xml') {
-      console.log('[SSR] Serving LLM sitemap, forwarding to edge function');
-      
-      try {
-        const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/generate-llm-sitemap`, {
-          headers: {
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch LLM sitemap: ${response.status}`);
-        }
-        
-        const sitemapContent = await response.text();
-        
-        return new Response(sitemapContent, {
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/xml; charset=utf-8',
-            'Cache-Control': 'public, max-age=3600',
-          },
-        });
-      } catch (error) {
-        console.error('[SSR] Error fetching LLM sitemap:', error);
-        return new Response('Error generating sitemap', {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
-        });
-      }
+    // Also check query param fallback
+    if ((!cleanPath || cleanPath === '/') && url.searchParams.has('path')) {
+      cleanPath = '/' + url.searchParams.get('path')!;
     }
 
-    // Handle .well-known/llms.txt requests - serve static content
-    if (cleanPathname === '/.well-known/llms.txt' || cleanPathname === '/llms.txt') {
-      console.log('[SSR] Serving llms.txt');
-      
-      // Read the llms.txt file from public directory or return inline content
-      const llmsContent = `# MusicScan - AI-Powered Music Collection Platform
+    console.log(`[SSR] Request: ${url.pathname} -> clean: ${cleanPath}, UA: ${userAgent.substring(0, 80)}`);
 
-> MusicScan is een Nederlands platform voor muziekverzamelaars die hun vinyl platen 
-> en CD's willen digitaliseren, waarderen en beheren met behulp van AI-technologie.
-
-## Site Beschrijving
-
-MusicScan helpt muziekliefhebbers en verzamelaars om:
-- Vinyl platen en CD's te scannen met AI-herkenning
-- Collecties digitaal te beheren en catalogiseren
-- Actuele prijswaarderingen te krijgen via Discogs
-- Muziekgeschiedenis te ontdekken via verhalen en anekdotes
-- Unieke muziek art producten te kopen (posters, metaalprints, sokken, t-shirts)
-
-## Belangrijkste Features
-
-### AI Scanner
-- Automatische herkenning van albums via foto's
-- Directe koppeling met Discogs database
-- Conditie beoordeling en waardering
-
-### Collectie Management
-- Persoonlijke vinyl en CD collecties
-- Publieke en private verzamelingen
-- Gedetailleerde album informatie
-
-### Art Shop
-- Album cover posters (standaard en metaal)
-- Songtekst posters
-- Album t-shirts en sokken
-- Custom designs op basis van albums
-
-### Content Platform
-- Muziekverhalen en geschiedenis
-- Artiesten biografie en verhalen
-- Muziek anekdotes
-- Nieuws en reviews
-
-## Content Categorieën
-
-### Artiesten & Muziek
-- /artists - Database met artiesten
-- /singles - Singles en releases overzicht
-- /muziek-verhaal - Uitgebreide muziekverhalen
-- /plaat-verhaal - Album verhalen en achtergronden
-- /anekdotes - Muziek anekdotes en weetjes
-- /nieuws - Muziek nieuws en updates
-- /vandaag-in-de-muziekgeschiedenis - Dagelijkse muziekgeschiedenis
-
-### Shop & Producten
-- /art-shop - Overzicht van alle art producten
-- /posters - Album cover posters
-- /product/[slug] - Individuele product pagina's
-- /lyric-posters - Songtekst posters
-
-### Tools & Scanner
-- /scanner - AI vinyl en CD scanner
-- /public-catalog - Publieke collecties catalogus
-- /collection/[username] - Persoonlijke collecties
-
-## Primaire Doelgroep
-
-- Vinyl verzamelaars en liefhebbers
-- CD verzamelaars
-- Muziekgeschiedenis enthousiastelingen
-- Muziek art kopers
-- Nederlandse en internationale gebruikers
-
-## Talen
-
-- Nederlands (primair)
-- Engels (secundair)
-
-## Contact & Links
-
-- Website: https://www.musicscan.app
-- Support: info@musicscan.app
-- Sitemaps: https://www.musicscan.app/sitemap.xml
-
-## Technologie
-
-- AI-powered muziekherkenning
-- Discogs integratie voor prijzen en data
-- Real-time collectie synchronisatie
-- E-commerce platform voor art producten
-
-## Best Content voor LLM Indexatie
-
-Prioriteit content voor LLM crawlers:
-1. Artiesten database (/artists/*)
-2. Muziekverhalen (/muziek-verhaal/*)
-3. Album verhalen (/plaat-verhaal/*)
-4. Anekdotes (/anekdotes/*)
-5. Singles database (/singles/*)
-6. Nieuws artikelen (/nieuws/*)
-
----
-
-Last updated: 2025-01
-Version: 1.0
-
-## LLM-Optimized Sitemap
-
-Voor een complete lijst van alle content in machine-readable formaat:
-- Sitemap: https://www.musicscan.app/sitemap-llm.xml
-- Bevat Markdown versies van alle content voor optimale LLM indexatie
-`;
-      
-      return new Response(llmsContent, {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'text/plain; charset=utf-8',
-          'Cache-Control': 'public, max-age=3600',
-        },
+    // Handle static content routes
+    if (cleanPath === '/sitemap-llm.xml') {
+      const resp = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/generate-llm-sitemap`, {
+        headers: { 'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}` }
       });
-    }
-    
-    // If not a crawler, redirect to main app (fallback safety)
-    if (!isCrawler(userAgent)) {
-      console.log('[SSR] Not a crawler, redirecting to app');
-      return new Response(null, {
-        status: 302,
-        headers: {
-          ...corsHeaders,
-          'Location': `${BASE_URL}${cleanPathname}`,
-          'Cache-Control': 'no-cache'
-        }
+      const body = await resp.text();
+      return new Response(body, {
+        headers: { ...corsHeaders, 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
       });
     }
 
-    // Parse the path using cleanPathname (after prefix removal)
-    const pathParts = cleanPathname.split('/').filter(Boolean);
-    console.log(`[SSR] Path parts:`, pathParts);
-    
+    if (cleanPath === '/.well-known/llms.txt' || cleanPath === '/llms.txt') {
+      return new Response(LLMS_TXT_CONTENT, {
+        headers: { ...corsHeaders, 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+      });
+    }
+
+    // Parse content path: /{contentType}/{slug}
+    const pathParts = cleanPath.split('/').filter(Boolean);
     if (pathParts.length < 2) {
-      console.error(`[SSR] Invalid path format: ${cleanPathname}`);
-      throw new Error('Invalid path format');
+      // Not a content page, return index.html as-is
+      const indexHtml = await fetchIndexHtml();
+      return new Response(indexHtml, {
+        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60' }
+      });
     }
 
-    const contentType = pathParts[pathParts.length - 2]; // 'plaat-verhaal', 'muziek-verhaal', 'product'
-    const rawSlug = pathParts[pathParts.length - 1];
-    const slug = normalizeSlug(rawSlug);
-    
+    const contentType = pathParts[0];
+    const slug = normalizeSlug(pathParts.slice(1).join('/'));
+
     console.log(`[SSR] Content type: ${contentType}, slug: ${slug}`);
 
-    // Initialize Supabase client
-    const supabaseClient = createClient(
+    // Initialize Supabase
+    const sb = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    // For blog posts, check if we need to redirect to canonical slug
+    // Handle canonical blog slug redirects
     if (contentType === 'plaat-verhaal') {
-      const canonicalSlug = await findCanonicalBlogSlug(supabaseClient, slug);
+      const canonicalSlug = await findCanonicalBlogSlug(sb, slug);
       if (canonicalSlug && canonicalSlug !== slug) {
-        console.log(`[SSR] Redirecting ${slug} -> ${canonicalSlug}`);
         return new Response(null, {
           status: 301,
-          headers: {
-            ...corsHeaders,
-            'Location': `${BASE_URL}/plaat-verhaal/${canonicalSlug}`,
-            'Cache-Control': 'public, max-age=86400'
-          }
+          headers: { ...corsHeaders, 'Location': `${BASE_URL}/plaat-verhaal/${canonicalSlug}`, 'Cache-Control': 'public, max-age=86400' }
         });
       }
     }
 
-    // Validate content type
-    const validContentTypes = ['plaat-verhaal', 'muziek-verhaal', 'product', 'singles', 'artists', 'anekdotes', 'nieuws'];
-    if (!validContentTypes.includes(contentType)) {
-      console.error(`[SSR] Invalid content type: ${contentType}`);
-      throw new Error(`Unknown content type: ${contentType}`);
+    // Fetch meta data for this content
+    const meta = await getMetaForContent(sb, contentType, slug);
+
+    if (!meta) {
+      console.log(`[SSR] No content found for ${contentType}/${slug}, serving plain index.html`);
+      const indexHtml = await fetchIndexHtml();
+      return new Response(indexHtml, {
+        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60' }
+      });
     }
 
-    let html = '';
+    // Fetch index.html and inject dynamic meta tags
+    const indexHtml = await fetchIndexHtml();
+    const injectedHtml = injectMetaTags(indexHtml, meta);
 
-    // Fetch and generate HTML based on content type
-    switch (contentType) {
-      case 'plaat-verhaal': {
-        const { data: blog, error } = await supabaseClient
-          .from('blog_posts')
-          .select('*')
-          .eq('slug', slug)
-          .eq('is_published', true)
-          .single();
+    console.log(`[SSR] Serving injected HTML for ${contentType}/${slug}: ${meta.title.substring(0, 60)}`);
 
-        if (error || !blog) {
-          throw new Error('Blog post not found');
-        }
-
-        html = generateBlogHTML(blog);
-        break;
-      }
-
-      case 'muziek-verhaal': {
-        const { data: story, error } = await supabaseClient
-          .from('music_stories')
-          .select('*')
-          .eq('slug', slug)
-          .eq('is_published', true)
-          .single();
-
-        if (error || !story) {
-          throw new Error('Music story not found');
-        }
-
-        html = generateStoryHTML(story);
-        break;
-      }
-
-      case 'product': {
-        const { data: product, error } = await supabaseClient
-          .from('platform_products')
-          .select('*')
-          .eq('slug', slug)
-          .eq('status', 'active')
-          .single();
-
-        if (error || !product) {
-          throw new Error('Product not found');
-        }
-
-        html = generateProductHTML(product);
-        break;
-      }
-
-      case 'singles': {
-        const { data: single, error } = await supabaseClient
-          .from('music_stories')
-          .select('*')
-          .eq('slug', slug)
-          .eq('is_published', true)
-          .not('single_name', 'is', null)
-          .single();
-
-        if (error || !single) {
-          throw new Error('Single not found');
-        }
-
-        const singleTitle = `${single.artist || ''} - ${single.single_name || single.title}`;
-        const singleDesc = single.meta_description || single.story_content?.replace(/[#*\n]/g, ' ').trim().substring(0, 160) || '';
-        const singleImage = single.artwork_url || `${BASE_URL}/placeholder.svg`;
-        const singleContent = single.story_content?.replace(/<[^>]*>/g, '').replace(/[#*]/g, '').replace(/\n+/g, ' ').trim().substring(0, 500) || '';
-
-        html = `<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${singleTitle}: Het Verhaal achter de Hit | MusicScan</title>
-  <meta name="description" content="${singleDesc}">
-  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
-  <meta property="og:type" content="music.song">
-  <meta property="og:title" content="${singleTitle}">
-  <meta property="og:description" content="${singleDesc}">
-  <meta property="og:image" content="${singleImage}">
-  <meta property="og:url" content="${BASE_URL}/singles/${slug}">
-  <meta property="og:site_name" content="MusicScan">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${singleTitle}">
-  <meta name="twitter:description" content="${singleDesc}">
-  <meta name="twitter:image" content="${singleImage}">
-  <link rel="canonical" href="${BASE_URL}/singles/${slug}">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "MusicRecording",
-    "name": "${singleTitle}",
-    "description": "${singleDesc}",
-    "image": "${singleImage}",
-    "byArtist": { "@type": "MusicGroup", "name": "${single.artist || ''}" },
-    "url": "${BASE_URL}/singles/${slug}"
-  }
-  </script>
-  <style>body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; } img { max-width: 100%; border-radius: 8px; }</style>
-</head>
-<body>
-  <article>
-    <h1>${singleTitle}</h1>
-    ${singleImage !== `${BASE_URL}/placeholder.svg` ? `<img src="${singleImage}" alt="${singleTitle}" loading="eager">` : ''}
-    ${singleDesc ? `<p><strong>${singleDesc}</strong></p>` : ''}
-    ${singleContent ? `<p>${singleContent}...</p>` : ''}
-  </article>
-</body>
-</html>`;
-        break;
-      }
-
-      case 'artists': {
-        const { data: artist, error } = await supabaseClient
-          .from('artist_stories')
-          .select('*')
-          .eq('slug', slug)
-          .eq('is_published', true)
-          .single();
-
-        if (error || !artist) {
-          throw new Error('Artist not found');
-        }
-
-        const artistDesc = artist.meta_description || artist.biography || artist.story_content?.substring(0, 160) || '';
-        const artistImage = artist.artwork_url || `${BASE_URL}/placeholder.svg`;
-        const artistContent = artist.story_content?.replace(/<[^>]*>/g, '').replace(/[#*]/g, '').replace(/\n+/g, ' ').trim().substring(0, 500) || '';
-        const artistGenres = artist.music_style?.join(', ') || '';
-
-        html = `<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${artist.artist_name}: Biografie, Muziek & Verhaal | MusicScan</title>
-  <meta name="description" content="${artistDesc}">
-  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
-  <meta property="og:type" content="article">
-  <meta property="og:title" content="${artist.artist_name}: Biografie & Carrièreverhaal">
-  <meta property="og:description" content="${artistDesc}">
-  <meta property="og:image" content="${artistImage}">
-  <meta property="og:url" content="${BASE_URL}/artists/${slug}">
-  <meta property="og:site_name" content="MusicScan">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${artist.artist_name}: Biografie & Carrièreverhaal">
-  <meta name="twitter:description" content="${artistDesc}">
-  <meta name="twitter:image" content="${artistImage}">
-  <link rel="canonical" href="${BASE_URL}/artists/${slug}">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "MusicGroup",
-    "name": "${artist.artist_name}",
-    "description": "${artistDesc}",
-    "image": "${artistImage}",
-    ${artistGenres ? `"genre": "${artistGenres}",` : ''}
-    "url": "${BASE_URL}/artists/${slug}"
-  }
-  </script>
-  <style>body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; } img { max-width: 100%; border-radius: 8px; }</style>
-</head>
-<body>
-  <article>
-    <h1>${artist.artist_name}</h1>
-    ${artistImage !== `${BASE_URL}/placeholder.svg` ? `<img src="${artistImage}" alt="${artist.artist_name}" loading="eager">` : ''}
-    ${artist.biography ? `<p><strong>${artist.biography}</strong></p>` : ''}
-    ${artistContent ? `<p>${artistContent}...</p>` : ''}
-  </article>
-</body>
-</html>`;
-        break;
-      }
-
-      case 'anekdotes': {
-        const { data: anecdote, error } = await supabaseClient
-          .from('music_anecdotes')
-          .select('*')
-          .eq('slug', slug)
-          .eq('is_published', true)
-          .single();
-
-        if (error || !anecdote) {
-          throw new Error('Anecdote not found');
-        }
-
-        const anecTitle = anecdote.title || 'Muziek Anekdote';
-        const anecDesc = anecdote.meta_description || anecdote.content?.replace(/[#*\n]/g, ' ').trim().substring(0, 160) || '';
-        const anecImage = anecdote.image_url || `${BASE_URL}/placeholder.svg`;
-        const anecContent = anecdote.content?.replace(/<[^>]*>/g, '').replace(/[#*]/g, '').replace(/\n+/g, ' ').trim().substring(0, 500) || '';
-
-        html = `<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${anecTitle} | Muziek Anekdotes | MusicScan</title>
-  <meta name="description" content="${anecDesc}">
-  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
-  <meta property="og:type" content="article">
-  <meta property="og:title" content="${anecTitle}">
-  <meta property="og:description" content="${anecDesc}">
-  <meta property="og:image" content="${anecImage}">
-  <meta property="og:url" content="${BASE_URL}/anekdotes/${slug}">
-  <meta property="og:site_name" content="MusicScan">
-  <link rel="canonical" href="${BASE_URL}/anekdotes/${slug}">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": "${anecTitle}",
-    "description": "${anecDesc}",
-    "image": "${anecImage}",
-    "author": { "@type": "Organization", "name": "MusicScan" },
-    "publisher": { "@type": "Organization", "name": "MusicScan" },
-    "url": "${BASE_URL}/anekdotes/${slug}"
-  }
-  </script>
-  <style>body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; } img { max-width: 100%; border-radius: 8px; }</style>
-</head>
-<body>
-  <article>
-    <h1>${anecTitle}</h1>
-    ${anecImage !== `${BASE_URL}/placeholder.svg` ? `<img src="${anecImage}" alt="${anecTitle}" loading="eager">` : ''}
-    ${anecDesc ? `<p><strong>${anecDesc}</strong></p>` : ''}
-    ${anecContent ? `<p>${anecContent}...</p>` : ''}
-  </article>
-</body>
-</html>`;
-        break;
-      }
-
-      case 'nieuws': {
-        const { data: news, error } = await supabaseClient
-          .from('news_blog_posts')
-          .select('*')
-          .eq('slug', slug)
-          .eq('is_published', true)
-          .single();
-
-        if (error || !news) {
-          throw new Error('News article not found');
-        }
-
-        const newsTitle = news.title || 'Muzieknieuws';
-        const newsDesc = news.meta_description || news.summary || news.content?.replace(/[#*\n]/g, ' ').trim().substring(0, 160) || '';
-        const newsImage = news.featured_image || `${BASE_URL}/placeholder.svg`;
-        const newsContent = news.content?.replace(/<[^>]*>/g, '').replace(/[#*]/g, '').replace(/\n+/g, ' ').trim().substring(0, 500) || '';
-
-        html = `<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${newsTitle} | Muzieknieuws | MusicScan</title>
-  <meta name="description" content="${newsDesc}">
-  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
-  <meta property="og:type" content="article">
-  <meta property="og:title" content="${newsTitle}">
-  <meta property="og:description" content="${newsDesc}">
-  <meta property="og:image" content="${newsImage}">
-  <meta property="og:url" content="${BASE_URL}/nieuws/${slug}">
-  <meta property="og:site_name" content="MusicScan">
-  <link rel="canonical" href="${BASE_URL}/nieuws/${slug}">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "NewsArticle",
-    "headline": "${newsTitle}",
-    "description": "${newsDesc}",
-    "image": "${newsImage}",
-    "author": { "@type": "Organization", "name": "MusicScan" },
-    "publisher": { "@type": "Organization", "name": "MusicScan" },
-    "datePublished": "${news.published_at || news.created_at}",
-    "url": "${BASE_URL}/nieuws/${slug}"
-  }
-  </script>
-  <style>body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; } img { max-width: 100%; border-radius: 8px; }</style>
-</head>
-<body>
-  <article>
-    <h1>${newsTitle}</h1>
-    ${newsImage !== `${BASE_URL}/placeholder.svg` ? `<img src="${newsImage}" alt="${newsTitle}" loading="eager">` : ''}
-    ${newsDesc ? `<p><strong>${newsDesc}</strong></p>` : ''}
-    ${newsContent ? `<p>${newsContent}...</p>` : ''}
-  </article>
-</body>
-</html>`;
-        break;
-      }
-
-      default:
-        throw new Error(`Unknown content type: ${contentType}`);
-    }
-
-    // Return SEO-friendly HTML (canonical in HTML points to real URL)
-    return new Response(html, {
+    return new Response(injectedHtml, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600, s-maxage=7200, stale-while-revalidate=86400',
+        'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400',
       }
     });
 
   } catch (error) {
     console.error('[SSR] Error:', error);
-    
-    // Fallback to main app on error
-    const url = new URL(req.url);
-    return new Response(null, {
-      status: 302,
-      headers: {
-        ...corsHeaders,
-        'Location': `${BASE_URL}${url.pathname}`
-      }
-    });
+    // On error, try to serve plain index.html
+    try {
+      const indexHtml = await fetchIndexHtml();
+      return new Response(indexHtml, {
+        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' }
+      });
+    } catch {
+      return new Response('Server Error', { status: 500, headers: corsHeaders });
+    }
   }
 });

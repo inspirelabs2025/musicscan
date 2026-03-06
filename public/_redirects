@@ -1,41 +1,25 @@
-# Force www and remove trailing slashes (canonical URL normalization)
-# These run BEFORE other rules
+# =============================================================
+# SSR PROXY REWRITES - Meta tag injection for crawlers & OG tags
+# These MUST be first. 200 = proxy rewrite (not redirect).
+# The proxy returns index.html with injected dynamic meta tags.
+# =============================================================
+
+/plaat-verhaal/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/plaat-verhaal/:splat 200
+/muziek-verhaal/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/muziek-verhaal/:splat 200
+/singles/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/singles/:splat 200
+/artists/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/artists/:splat 200
+/artist-spotlight/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/artist-spotlight/:splat 200
+/product/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/product/:splat 200
+/anekdotes/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/anekdotes/:splat 200
+/nieuws/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/nieuws/:splat 200
+/new-release/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/new-release/:splat 200
+/nummer/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/nummer/:splat 200
 
 # Block direct access to SSR proxy URLs - redirect to clean URL
 /universal-ssr-proxy/plaat-verhaal/:slug /plaat-verhaal/:slug 301
 /universal-ssr-proxy/muziek-verhaal/:slug /muziek-verhaal/:slug 301
 /universal-ssr-proxy/product/:slug /product/:slug 301
 /universal-ssr-proxy/* / 301
-
-# Remove trailing slashes from all URLs (except root)
-/plaat-verhaal/:slug/ /plaat-verhaal/:slug 301
-/muziek-verhaal/:slug/ /muziek-verhaal/:slug 301
-/product/:slug/ /product/:slug 301
-/artists/:slug/ /artists/:slug 301
-/singles/:slug/ /singles/:slug 301
-/anekdotes/:slug/ /anekdotes/:slug 301
-/nieuws/:slug/ /nieuws/:slug 301
-/new-release/:slug/ /new-release/:slug 301
-/nummer/:slug/ /nummer/:slug 301
-/podcast/:slug/ /podcast/:slug 301
-/nl-muziekfeit/:slug/ /nl-muziekfeit/:slug 301
-/shop/:slug/ /shop/:slug 301
-/fanwall/:slug/ /fanwall/:slug 301
-
-# Section-level trailing slash redirects
-/artists/ /artists 301
-/singles/ /singles 301
-/anekdotes/ /anekdotes 301
-/nieuws/ /nieuws 301
-/shop/ /shop 301
-/quizzen/ /quizzen 301
-/verhalen/ /verhalen 301
-/scanner/ /scanner 301
-/new-releases/ /new-releases 301
-/nederland/ /nederland 301
-/frankrijk/ /frankrijk 301
-/dance-house/ /dance-house 301
-/vandaag-in-de-muziekgeschiedenis/ /vandaag-in-de-muziekgeschiedenis 301
 
 # Podcast RSS Feed redirects for SEO-friendly URLs
 /feeds/podcast/:slug.xml https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/feeds-podcast?slug=:slug 200

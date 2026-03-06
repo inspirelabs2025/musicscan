@@ -30,22 +30,6 @@ const ArtistDetail = () => {
     }
   }, [story]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background py-12">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <Skeleton className="w-full h-96 mb-8" />
-            <Skeleton className="h-12 w-3/4 mb-4" />
-            <Skeleton className="h-6 w-full mb-2" />
-            <Skeleton className="h-6 w-full mb-2" />
-            <Skeleton className="h-6 w-2/3" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // If no story found in artist_stories (non-spotlight), check if it exists as spotlight and redirect
   const { data: spotlightCheck } = useQuery({
     queryKey: ['artist-spotlight-check', slug],
@@ -67,6 +51,22 @@ const ArtistDetail = () => {
       navigate(`/artist-spotlight/${spotlightCheck.slug}`, { replace: true });
     }
   }, [spotlightCheck, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background py-12">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <Skeleton className="w-full h-96 mb-8" />
+            <Skeleton className="h-12 w-3/4 mb-4" />
+            <Skeleton className="h-6 w-full mb-2" />
+            <Skeleton className="h-6 w-full mb-2" />
+            <Skeleton className="h-6 w-2/3" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!story && !spotlightCheck) {
     if (isLoading) return null;

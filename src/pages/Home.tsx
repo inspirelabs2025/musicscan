@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import { Helmet } from 'react-helmet';
 import { useSEO } from '@/hooks/useSEO';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ScannerHero } from '@/components/home/ScannerHero';
@@ -24,8 +25,25 @@ const Home = () => {
     description: tr.home.metaDesc,
   });
 
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "MusicScan",
+    "url": "https://www.musicscan.app",
+    "description": "MusicScan is hét complete muziekplatform voor liefhebbers. Muzieknieuws, verhalen, shop, quiz en smart scanner.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://www.musicscan.app/public-catalog?search={search_term_string}",
+      "query-input": "required name=search_term_string"
+    },
+    "inLanguage": "nl"
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(websiteSchema)}</script>
+      </Helmet>
       {/* Hero */}
       <ScannerHero />
 

@@ -1,21 +1,6 @@
-import { env } from '@/env';
-import posthog from 'posthog-js';
-import { PostHogProvider as PHProvider } from 'posthog-js/react';
 import React, { createContext, useContext } from 'react';
 
-// Initialize PostHog
-if (env.VITE_PUBLIC_POSTHOG_KEY && env.VITE_PUBLIC_POSTHOG_HOST) {
-  posthog.init(env.VITE_PUBLIC_POSTHOG_KEY, {
-    api_host: env.VITE_PUBLIC_POSTHOG_HOST,
-    person_profiles: 'identified',
-    loaded: (posthog) => {
-      if (import.meta.env.DEV) posthog.debug();
-    },
-  });
-}
-
-// Define a type for your events, including potential properties
-export type AnalyticsEvent = 
+type AnalyticsEvent = 
   | { name: 'page_view', properties: { url: string, title: string } }
   | { name: 'user_signed_up', properties: { method: string } }
   | { name: 'user_logged_in', properties: { method: string } }
@@ -36,7 +21,7 @@ const AnalyticsContext = createContext<AnalyticsContextType | undefined>(undefin
 export const useAnalytics = () => {
   const context = useContext(AnalyticsContext);
   if (!context) {
-    throw new Error('useAnalytics must be used within an AnalyticsProvider');
+    return { trackEvent: () => {}, identify: () => {}, alias: () => {} };
   }
   return context;
 };
@@ -47,37 +32,21 @@ export const useTrackEvent = () => {
 };
 
 export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const trackEvent = (eventName: AnalyticsEvent['name'], properties?: Record<string, any>) => {
-    if (posthog) {
-      posthog.capture(eventName, properties);
-    }
-  };
-
-  const identify = (userId: string, properties?: Record<string, any>) => {
-    if (posthog) {
-      posthog.identify(userId, properties);
-    }
-  };
-
-  const alias = (newId: string) => {
-    if (posthog) {
-      posthog.alias(newId);
-    }
+  const value: AnalyticsContextType = {
+    trackEvent: () => {},
+    identify: () => {},
+    alias: () => {},
   };
 
   return (
-    <AnalyticsContext.Provider value={{ trackEvent, identify, alias }}>
+    <AnalyticsContext.Provider value={value}>
       {children}
     </AnalyticsContext.Provider>
   );
 };
 
-// We still export PostHogProvider for the root level to ensure context is available
-export const PosthogProvider = PHProvider;
-
-// This is for type safety and to ensure all our events are properly recorded without direct string magic
-export const track = <K extends AnalyticsEvent['name']>(eventName: K, properties: Extract<AnalyticsEvent, { name: K }>['properties']) => {
-  if (posthog) {
-    posthog.capture(eventName, properties);
-  }
+export const PosthogProvider: React.FC<{ children: React.ReactNode; client?: any }> = ({ children }) => {
+  return <>{children}</>;
 };
+
+export const track = (_eventName: string, _properties?: any) => {};

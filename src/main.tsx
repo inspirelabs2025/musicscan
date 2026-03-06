@@ -1,5 +1,4 @@
 // Aggressively unregister ALL service workers and nuke ALL caches
-// This runs synchronously before React to prevent stale content
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(registrations => {
     registrations.forEach(registration => {
@@ -22,97 +21,53 @@ if ('caches' in window) {
   });
 }
 
-// Clear any stale version tracking on fresh load
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.has('_v')) {
-  // Remove the cache-busting param from URL without reload
   const cleanUrl = window.location.pathname + window.location.hash;
   window.history.replaceState(null, '', cleanUrl);
-  // Clear reload tracking since we just did a forced reload
   sessionStorage.removeItem('musicscan_reload_count');
 }
 
-import React, { Suspense, lazy, useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
+import { RouterProvider } from 'react-router-dom'
 import './index.css'
+import { router } from './router'
 
-// Simple loading component
 const LoadingFallback = () => (
   <div style={{ 
-    display: 'flex', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    height: '100vh',
-    flexDirection: 'column',
-    gap: '16px',
-    background: '#0a0a0a',
-    color: '#fff',
-    fontFamily: 'system-ui, sans-serif'
+    display: 'flex', justifyContent: 'center', alignItems: 'center', 
+    height: '100vh', flexDirection: 'column', gap: '16px',
+    background: '#0a0a0a', color: '#fff', fontFamily: 'system-ui, sans-serif'
   }}>
     <div style={{
-      width: '40px',
-      height: '40px',
-      border: '3px solid #333',
-      borderTop: '3px solid #8b5cf6',
-      borderRadius: '50%',
+      width: '40px', height: '40px', border: '3px solid #333',
+      borderTop: '3px solid #8b5cf6', borderRadius: '50%',
       animation: 'spin 1s linear infinite'
     }} />
     <p>MusicScan laden...</p>
-    <style>{`
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `}</style>
+    <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
   </div>
 );
 
-// Error fallback component
 const ErrorFallback = ({ error }: { error: Error }) => (
   <div style={{ 
-    display: 'flex', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    height: '100vh',
-    flexDirection: 'column',
-    gap: '16px',
-    background: '#0a0a0a',
-    color: '#fff',
-    fontFamily: 'system-ui, sans-serif',
-    padding: '20px',
-    textAlign: 'center'
+    display: 'flex', justifyContent: 'center', alignItems: 'center', 
+    height: '100vh', flexDirection: 'column', gap: '16px',
+    background: '#0a0a0a', color: '#fff', fontFamily: 'system-ui, sans-serif',
+    padding: '20px', textAlign: 'center'
   }}>
     <h1 style={{ color: '#ef4444' }}>Laad Fout</h1>
     <p>Probeer de pagina te verversen (Ctrl+Shift+R)</p>
-    <pre style={{ 
-      background: '#1a1a1a', 
-      padding: '16px', 
-      borderRadius: '8px',
-      maxWidth: '80%',
-      overflow: 'auto',
-      fontSize: '12px'
-    }}>
+    <pre style={{ background: '#1a1a1a', padding: '16px', borderRadius: '8px', maxWidth: '80%', overflow: 'auto', fontSize: '12px' }}>
       {error.message}
     </pre>
-    <button 
-      onClick={() => window.location.reload()}
-      style={{
-        background: '#8b5cf6',
-        color: '#fff',
-        padding: '12px 24px',
-        borderRadius: '8px',
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: '16px'
-      }}
-    >
-      Pagina Herladen
-    </button>
+    <button onClick={() => window.location.reload()} style={{
+      background: '#8b5cf6', color: '#fff', padding: '12px 24px',
+      borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '16px'
+    }}>Pagina Herladen</button>
   </div>
 );
-
-// Lazy load App with error handling
-const App = lazy(() => import('./App'));
 
 function AppWrapper() {
   const [error, setError] = useState<Error | null>(null);
@@ -121,14 +76,11 @@ function AppWrapper() {
     const handleError = (event: ErrorEvent) => {
       setError(event.error || new Error(event.message));
     };
-    
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       setError(event.reason instanceof Error ? event.reason : new Error(String(event.reason)));
     };
-
     window.addEventListener('error', handleError);
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
-
     return () => {
       window.removeEventListener('error', handleError);
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
@@ -139,11 +91,7 @@ function AppWrapper() {
     return <ErrorFallback error={error} />;
   }
 
-  return (
-    <Suspense fallback={<LoadingFallback />}>
-      <App />
-    </Suspense>
-  );
+  return <RouterProvider router={router} />;
 }
 
 const container = document.getElementById("root");

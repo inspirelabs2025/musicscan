@@ -1,60 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { BellIcon, LightbulbIcon, XIcon } from 'lucide-react';
+import React from 'react';
+import { X } from 'lucide-react';
 import { Button } from './button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
-import { useTrackEvent } from '@/lib/analytics';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
 
 interface AINudgeProps {
-  aiUsageCount: number;
+  onClose: () => void;
+  onExplore: () => void;
 }
 
-export const AINudge: React.FC<AINudgeProps> = ({ aiUsageCount }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const trackEvent = useTrackEvent();
-
-  useEffect(() => {
-    const hasDismissed = localStorage.getItem('ai_nudge_dismissed');
-    if (aiUsageCount === 0 && !hasDismissed) {
-      setIsVisible(true);
-      trackEvent('ai_nudge_shown');
-    }
-  }, [aiUsageCount, trackEvent]);
-
-  const handleDismiss = () => {
-    setIsVisible(false);
-    localStorage.setItem('ai_nudge_dismissed', 'true');
-    trackEvent('ai_nudge_dismissed');
-  };
-
-  if (!isVisible) return null;
-
+export const AINudge: React.FC<AINudgeProps> = ({ onClose, onExplore }) => {
   return (
-    <div className="fixed bottom-4 right-4 z-50 animate-fade-in">
-      <Card className="w-80 shadow-lg">
-        <CardHeader className="relative pr-8">
-          <CardTitle className="flex items-center text-lg">
-            <LightbulbIcon className="h-5 w-5 mr-2 text-indigo-500" />
-            AI Features Beschikbaar!
-          </CardTitle>
-          <CardDescription className="text-sm text-gray-600">
-            Je hebt de AI features nog maar 0x gebruikt. Ontdek wat AI voor je project kan doen!
-          </CardDescription>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800"
-            onClick={handleDismiss}
-            aria-label="Dismiss AI Nudge"
-          >
-            <XIcon className="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <Button className="w-full" onClick={() => { /* TODO: Link to AI features overview */ }}>
-            Ontdek AI Tools
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+    <Card className="fixed bottom-4 right-4 z-50 max-w-sm shadow-lg overflow-hidden bg-gradient-to-br from-blue-600 to-purple-700 text-white">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-lg font-semibold text-white">🤖 AI features beschikbaar!</CardTitle>
+        <Button variant="ghost" size="icon" onClick={onClose} className="text-white opacity-70 hover:opacity-100">
+          <X className="h-4 w-4" />
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <CardDescription className="text-white opacity-90">
+          Je hebt de AI features nog maar 0x gebruikt. Ontdek wat AI voor je project kan doen!
+        </CardDescription>
+      </CardContent>
+      <CardFooter className="justify-end">
+        <Button onClick={onExplore} className="bg-white text-blue-700 hover:bg-gray-100 transition-colors duration-200">
+          Ontdek AI
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };

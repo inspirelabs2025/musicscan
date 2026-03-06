@@ -45,6 +45,9 @@ export function CommunitySection() {
                         <img
                           src={fw.featured_photo_url}
                           alt={fw.artist_name}
+                          loading="lazy"
+                          width={80}
+                          height={80}
                           className="w-full h-full object-cover hover:scale-105 transition-transform"
                         />
                       ) : (

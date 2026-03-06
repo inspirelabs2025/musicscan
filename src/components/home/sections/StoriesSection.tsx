@@ -88,6 +88,9 @@ export function StoriesSection() {
                   <img
                     src={story.image_url}
                     alt={story.title}
+                    loading="lazy"
+                    width={400}
+                    height={300}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (

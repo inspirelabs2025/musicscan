@@ -46,6 +46,9 @@ export const ProductBanner = () => {
                 <img
                   src={product.primary_image!}
                   alt={product.title}
+                  loading="lazy"
+                  width={96}
+                  height={96}
                   className="w-full h-full object-cover"
                 />
               </Link>

@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Helmet } from 'react-helmet';
 import { Music, Clock, Eye, ChevronRight, Home } from 'lucide-react';
 import { useArtistStory, useArtistStories } from '@/hooks/useArtistStories';
@@ -28,6 +30,28 @@ const ArtistDetail = () => {
     }
   }, [story]);
 
+  // If no story found in artist_stories (non-spotlight), check if it exists as spotlight and redirect
+  const { data: spotlightCheck } = useQuery({
+    queryKey: ['artist-spotlight-check', slug],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('artist_stories')
+        .select('slug,is_spotlight')
+        .eq('slug', slug || '')
+        .eq('is_published', true)
+        .eq('is_spotlight', true)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !isLoading && !story && !!slug,
+  });
+
+  useEffect(() => {
+    if (spotlightCheck?.slug) {
+      navigate(`/artist-spotlight/${spotlightCheck.slug}`, { replace: true });
+    }
+  }, [spotlightCheck, navigate]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background py-12">
@@ -44,7 +68,8 @@ const ArtistDetail = () => {
     );
   }
 
-  if (!story) {
+  if (!story && !spotlightCheck) {
+    if (isLoading) return null;
     return (
       <>
         <Helmet>

@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Disc3, LogIn } from 'lucide-react';
+import { Menu, X, Disc3, LogIn, User, LayoutDashboard, LogOut, Library } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/hooks/useAuth';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const navLinks = [
   { label: 'Scan', href: '/ai-scan-v2' },
@@ -15,6 +18,10 @@ const navLinks = [
 export function StickyHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { user, signOut } = useAuth();
+
+  const userInitial = user?.user_metadata?.first_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U';
+  const displayName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Account';
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[hsl(240_20%_12%/0.92)] backdrop-blur-md border-b border-white/10">
@@ -43,12 +50,44 @@ export function StickyHeader() {
         {/* Right side */}
         <div className="flex items-center gap-2">
           {!isMobile && (
-            <Button asChild variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10 hover:text-white bg-transparent">
-              <Link to="/auth">
-                <LogIn className="w-4 h-4 mr-1.5" />
-                Login
-              </Link>
-            </Button>
+            user ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
+                    <Avatar className="h-7 w-7">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                        {userInitial}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm text-white/80 font-medium max-w-[100px] truncate">{displayName}</span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-1" align="end">
+                  <Link to="/dashboard" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
+                    <LayoutDashboard className="w-4 h-4" /> Dashboard
+                  </Link>
+                  <Link to="/collectie" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
+                    <Library className="w-4 h-4" /> Mijn Collectie
+                  </Link>
+                  <Link to="/profiel" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
+                    <User className="w-4 h-4" /> Profiel
+                  </Link>
+                  <button
+                    onClick={() => signOut()}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-destructive"
+                  >
+                    <LogOut className="w-4 h-4" /> Uitloggen
+                  </button>
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <Button asChild variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10 hover:text-white bg-transparent">
+                <Link to="/auth">
+                  <LogIn className="w-4 h-4 mr-1.5" />
+                  Login
+                </Link>
+              </Button>
+            )
           )}
 
           {/* Mobile hamburger */}
@@ -78,14 +117,34 @@ export function StickyHeader() {
                 {label}
               </Link>
             ))}
-            <Link
-              to="/auth"
-              onClick={() => setMenuOpen(false)}
-              className="px-4 py-3 text-vinyl-gold hover:bg-white/10 rounded-lg transition-colors font-medium flex items-center gap-2"
-            >
-              <LogIn className="w-4 h-4" />
-              Login
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-4 py-3 text-vinyl-gold hover:bg-white/10 rounded-lg transition-colors font-medium flex items-center gap-2"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => { setMenuOpen(false); signOut(); }}
+                  className="px-4 py-3 text-white/60 hover:bg-white/10 rounded-lg transition-colors font-medium flex items-center gap-2 text-left"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Uitloggen
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/auth"
+                onClick={() => setMenuOpen(false)}
+                className="px-4 py-3 text-vinyl-gold hover:bg-white/10 rounded-lg transition-colors font-medium flex items-center gap-2"
+              >
+                <LogIn className="w-4 h-4" />
+                Login
+              </Link>
+            )}
           </nav>
         </div>
       )}

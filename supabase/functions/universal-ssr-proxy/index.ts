@@ -144,8 +144,24 @@ const getMetaForContent = async (sb: any, contentType: string, slug: string): Pr
     }
 
     case 'muziek-verhaal': {
-      const { data: story } = await sb.from('music_stories').select('slug, title, story_content, artwork_url, meta_description, meta_title, artist, published_at, created_at, updated_at').eq('slug', slug).eq('is_published', true).is('single_name', null).maybeSingle();
-      if (!story) return null;
+      // First try music_stories without single_name filter (matches client-side useMuziekVerhaal hook)
+      let { data: story } = await sb.from('music_stories').select('slug, title, story_content, artwork_url, meta_description, meta_title, artist, published_at, created_at, updated_at').eq('slug', slug).eq('is_published', true).maybeSingle();
+      if (!story) {
+        console.log(`[SSR] muziek-verhaal: No music_story found for slug "${slug}", trying blog_posts...`);
+        // Fallback: check blog_posts table (plaat-verhaal content)
+        const { data: blog } = await sb.from('blog_posts').select('slug, yaml_frontmatter, markdown_content, album_cover_url, published_at, created_at, updated_at').eq('slug', slug).eq('is_published', true).maybeSingle();
+        if (blog) {
+          console.log(`[SSR] muziek-verhaal: Found in blog_posts, redirecting to plaat-verhaal`);
+          return {
+            title: `${(blog.yaml_frontmatter as any)?.artist || ''} - ${(blog.yaml_frontmatter as any)?.album || 'Verhaal'} | MusicScan`,
+            description: (blog.yaml_frontmatter as any)?.meta_description || (blog.markdown_content ? makeDescription(blog.markdown_content) : ''),
+            image: blog.album_cover_url || LOGO_URL,
+            url: `${BASE_URL}/muziek-verhaal/${slug}`, type: 'article'
+          };
+        }
+        console.log(`[SSR] muziek-verhaal: slug "${slug}" not found in any table`);
+        return null;
+      }
       const title = story.meta_title || story.title || 'Muziekverhaal | MusicScan';
       const desc = story.meta_description || (story.story_content ? makeDescription(story.story_content) : '');
       const image = story.artwork_url || LOGO_URL;

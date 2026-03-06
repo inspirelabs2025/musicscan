@@ -144,7 +144,7 @@ const getMetaForContent = async (sb: any, contentType: string, slug: string): Pr
       const fm = blog.yaml_frontmatter || {};
       const artist = fm.artist || '';
       const album = fm.album || '';
-      const title = artist && album ? `${artist} - ${album}: Het Verhaal | MusicScan` : (fm.title || 'Album Verhaal | MusicScan');
+      const title = artist && album ? `${artist} - ${album} | Het verhaal achter de plaat | MusicScan` : (fm.title || 'Album Verhaal | MusicScan');
       const desc = fm.description || (blog.markdown_content ? makeDescription(blog.markdown_content) : '');
       const image = blog.album_cover_url || fm.image || LOGO_URL;
       return {
@@ -173,7 +173,7 @@ const getMetaForContent = async (sb: any, contentType: string, slug: string): Pr
         if (blog) {
           console.log(`[SSR] muziek-verhaal: Found in blog_posts, redirecting to plaat-verhaal`);
           return {
-            title: `${(blog.yaml_frontmatter as any)?.artist || ''} - ${(blog.yaml_frontmatter as any)?.album || 'Verhaal'} | MusicScan`,
+            title: `${(blog.yaml_frontmatter as any)?.artist || ''} - ${(blog.yaml_frontmatter as any)?.album || 'Verhaal'} | Het verhaal achter de plaat | MusicScan`,
             description: (blog.yaml_frontmatter as any)?.meta_description || (blog.markdown_content ? makeDescription(blog.markdown_content) : ''),
             image: blog.album_cover_url || LOGO_URL,
             url: `${BASE_URL}/muziek-verhaal/${slug}`, type: 'article'
@@ -205,7 +205,7 @@ const getMetaForContent = async (sb: any, contentType: string, slug: string): Pr
       const desc = single.meta_description || (single.story_content ? makeDescription(single.story_content) : '');
       const image = single.artwork_url || LOGO_URL;
       return {
-        title: `${singleTitle}: Het Verhaal achter de Hit | MusicScan`, description: desc, image,
+        title: `${singleTitle} | Het verhaal achter de hit | MusicScan`, description: desc, image,
         url: `${BASE_URL}/singles/${slug}`, type: 'music.song',
         jsonLd: JSON.stringify({
           "@context": "https://schema.org", "@type": "MusicRecording",

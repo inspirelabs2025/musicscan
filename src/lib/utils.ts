@@ -28,3 +28,18 @@ export function setCookie(name: string, value: string, days: number): void {
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
   document.cookie = name + "=" + value + ";expires=" + expires.toUTCString() + ";path=/";
 }
+
+export function extractDiscogsIdFromUrl(input: string): number | null {
+  if (!input) return null;
+  const match = input.match(/\/release\/(\d+)/);
+  if (match) return parseInt(match[1], 10);
+  const masterMatch = input.match(/\/master\/(\d+)/);
+  if (masterMatch) return parseInt(masterMatch[1], 10);
+  return null;
+}
+
+export function normalizeFullUrl(pathname: string): string {
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.musicscan.app';
+  const cleanPath = pathname.replace(/\/+$/, '') || '/';
+  return `${baseUrl}${cleanPath}`;
+}

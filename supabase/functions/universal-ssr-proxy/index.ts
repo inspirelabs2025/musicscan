@@ -30,6 +30,17 @@ const fetchIndexHtml = async (): Promise<string> => {
 
 const normalizeSlug = (slug: string): string => slug.replace(/\/$/, '').trim();
 
+const optimizeImageUrl = (url: string): string => {
+  if (!url || url === LOGO_URL) return url;
+  // Add Supabase Storage transform for optimal OG image size
+  if (url.includes('supabase.co/storage')) {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}width=1200&height=630&resize=cover`;
+  }
+  // For Discogs images, use the URL as-is (already sized)
+  return url;
+};
+
 const escapeHtml = (str: string): string =>
   str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -78,6 +89,8 @@ interface MetaData {
 
 const injectMetaTags = (html: string, meta: MetaData): string => {
   let result = html;
+  const ogImage = optimizeImageUrl(meta.image);
+  const escapedImage = escapeHtml(ogImage);
 
   // Replace <title>
   result = result.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(meta.title)}</title>`);
@@ -91,14 +104,21 @@ const injectMetaTags = (html: string, meta: MetaData): string => {
   // Replace OG tags
   result = result.replace(/<meta\s+property="og:title"\s+content="[^"]*"\s*\/?>/, `<meta property="og:title" content="${escapeHtml(meta.title)}">`);
   result = result.replace(/<meta\s+property="og:description"\s+content="[^"]*"\s*\/?>/, `<meta property="og:description" content="${escapeHtml(meta.description)}">`);
-  result = result.replace(/<meta\s+property="og:image"\s+content="[^"]*"\s*\/?>/, `<meta property="og:image" content="${escapeHtml(meta.image)}">`);
+  result = result.replace(/<meta\s+property="og:image"\s+content="[^"]*"\s*\/?>/, `<meta property="og:image" content="${escapedImage}">`);
   result = result.replace(/<meta\s+property="og:url"\s+content="[^"]*"\s*\/?>/, `<meta property="og:url" content="${escapeHtml(meta.url)}">`);
   result = result.replace(/<meta\s+property="og:type"\s+content="[^"]*"\s*\/?>/, `<meta property="og:type" content="${escapeHtml(meta.type)}">`);
+
+  // Inject og:image dimensions and type after og:image
+  const ogImageDimensions = `<meta property="og:image:width" content="1200">\n    <meta property="og:image:height" content="630">\n    <meta property="og:image:type" content="image/jpeg">`;
+  result = result.replace(
+    /(<meta\s+property="og:image"\s+content="[^"]*"\s*\/?>)/,
+    `$1\n    ${ogImageDimensions}`
+  );
 
   // Replace Twitter tags
   result = result.replace(/<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?>/, `<meta name="twitter:title" content="${escapeHtml(meta.title)}">`);
   result = result.replace(/<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?>/, `<meta name="twitter:description" content="${escapeHtml(meta.description)}">`);
-  result = result.replace(/<meta\s+name="twitter:image"\s+content="[^"]*"\s*\/?>/, `<meta name="twitter:image" content="${escapeHtml(meta.image)}">`);
+  result = result.replace(/<meta\s+name="twitter:image"\s+content="[^"]*"\s*\/?>/, `<meta name="twitter:image" content="${escapedImage}">`);
   result = result.replace(/<meta\s+name="twitter:url"\s+content="[^"]*"\s*\/?>/, `<meta name="twitter:url" content="${escapeHtml(meta.url)}">`);
 
   // Replace canonical URL

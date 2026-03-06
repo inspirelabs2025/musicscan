@@ -30,6 +30,17 @@ const fetchIndexHtml = async (): Promise<string> => {
 
 const normalizeSlug = (slug: string): string => slug.replace(/\/$/, '').trim();
 
+const optimizeImageUrl = (url: string): string => {
+  if (!url || url === LOGO_URL) return url;
+  // Add Supabase Storage transform for optimal OG image size
+  if (url.includes('supabase.co/storage')) {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}width=1200&height=630&resize=cover`;
+  }
+  // For Discogs images, use the URL as-is (already sized)
+  return url;
+};
+
 const escapeHtml = (str: string): string =>
   str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -78,6 +89,8 @@ interface MetaData {
 
 const injectMetaTags = (html: string, meta: MetaData): string => {
   let result = html;
+  const ogImage = optimizeImageUrl(meta.image);
+  const escapedImage = escapeHtml(ogImage);
 
   // Replace <title>
   result = result.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(meta.title)}</title>`);
@@ -91,14 +104,21 @@ const injectMetaTags = (html: string, meta: MetaData): string => {
   // Replace OG tags
   result = result.replace(/<meta\s+property="og:title"\s+content="[^"]*"\s*\/?>/, `<meta property="og:title" content="${escapeHtml(meta.title)}">`);
   result = result.replace(/<meta\s+property="og:description"\s+content="[^"]*"\s*\/?>/, `<meta property="og:description" content="${escapeHtml(meta.description)}">`);
-  result = result.replace(/<meta\s+property="og:image"\s+content="[^"]*"\s*\/?>/, `<meta property="og:image" content="${escapeHtml(meta.image)}">`);
+  result = result.replace(/<meta\s+property="og:image"\s+content="[^"]*"\s*\/?>/, `<meta property="og:image" content="${escapedImage}">`);
   result = result.replace(/<meta\s+property="og:url"\s+content="[^"]*"\s*\/?>/, `<meta property="og:url" content="${escapeHtml(meta.url)}">`);
   result = result.replace(/<meta\s+property="og:type"\s+content="[^"]*"\s*\/?>/, `<meta property="og:type" content="${escapeHtml(meta.type)}">`);
+
+  // Inject og:image dimensions and type after og:image
+  const ogImageDimensions = `<meta property="og:image:width" content="1200">\n    <meta property="og:image:height" content="630">\n    <meta property="og:image:type" content="image/jpeg">`;
+  result = result.replace(
+    /(<meta\s+property="og:image"\s+content="[^"]*"\s*\/?>)/,
+    `$1\n    ${ogImageDimensions}`
+  );
 
   // Replace Twitter tags
   result = result.replace(/<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?>/, `<meta name="twitter:title" content="${escapeHtml(meta.title)}">`);
   result = result.replace(/<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?>/, `<meta name="twitter:description" content="${escapeHtml(meta.description)}">`);
-  result = result.replace(/<meta\s+name="twitter:image"\s+content="[^"]*"\s*\/?>/, `<meta name="twitter:image" content="${escapeHtml(meta.image)}">`);
+  result = result.replace(/<meta\s+name="twitter:image"\s+content="[^"]*"\s*\/?>/, `<meta name="twitter:image" content="${escapedImage}">`);
   result = result.replace(/<meta\s+name="twitter:url"\s+content="[^"]*"\s*\/?>/, `<meta name="twitter:url" content="${escapeHtml(meta.url)}">`);
 
   // Replace canonical URL
@@ -124,7 +144,7 @@ const getMetaForContent = async (sb: any, contentType: string, slug: string): Pr
       const fm = blog.yaml_frontmatter || {};
       const artist = fm.artist || '';
       const album = fm.album || '';
-      const title = artist && album ? `${artist} - ${album}: Het Verhaal | MusicScan` : (fm.title || 'Album Verhaal | MusicScan');
+      const title = artist && album ? `${artist} - ${album} | Het verhaal achter de plaat | MusicScan` : (fm.title || 'Album Verhaal | MusicScan');
       const desc = fm.description || (blog.markdown_content ? makeDescription(blog.markdown_content) : '');
       const image = blog.album_cover_url || fm.image || LOGO_URL;
       return {
@@ -153,7 +173,7 @@ const getMetaForContent = async (sb: any, contentType: string, slug: string): Pr
         if (blog) {
           console.log(`[SSR] muziek-verhaal: Found in blog_posts, redirecting to plaat-verhaal`);
           return {
-            title: `${(blog.yaml_frontmatter as any)?.artist || ''} - ${(blog.yaml_frontmatter as any)?.album || 'Verhaal'} | MusicScan`,
+            title: `${(blog.yaml_frontmatter as any)?.artist || ''} - ${(blog.yaml_frontmatter as any)?.album || 'Verhaal'} | Het verhaal achter de plaat | MusicScan`,
             description: (blog.yaml_frontmatter as any)?.meta_description || (blog.markdown_content ? makeDescription(blog.markdown_content) : ''),
             image: blog.album_cover_url || LOGO_URL,
             url: `${BASE_URL}/muziek-verhaal/${slug}`, type: 'article'
@@ -185,7 +205,7 @@ const getMetaForContent = async (sb: any, contentType: string, slug: string): Pr
       const desc = single.meta_description || (single.story_content ? makeDescription(single.story_content) : '');
       const image = single.artwork_url || LOGO_URL;
       return {
-        title: `${singleTitle}: Het Verhaal achter de Hit | MusicScan`, description: desc, image,
+        title: `${singleTitle} | Het verhaal achter de hit | MusicScan`, description: desc, image,
         url: `${BASE_URL}/singles/${slug}`, type: 'music.song',
         jsonLd: JSON.stringify({
           "@context": "https://schema.org", "@type": "MusicRecording",

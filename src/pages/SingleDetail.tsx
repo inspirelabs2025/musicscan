@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -379,8 +380,89 @@ export default function SingleDetail() {
               </div>
             </div>
           </article>
+
+          {/* Scan CTA Block */}
+          <ScanCTABlock />
+
+          {/* Meer Verhalen */}
+          <MoreSinglesSection currentSlug={slug!} />
         </div>
       </div>
     </>
+  );
+}
+
+function ScanCTABlock() {
+  return (
+    <div className="mt-12 rounded-2xl overflow-hidden">
+      <div className="bg-gradient-to-r from-[hsl(240_20%_12%)] via-[hsl(260_25%_18%)] to-[hsl(240_20%_12%)] p-8 md:p-12 text-center">
+        <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
+          Heb je deze plaat? Ontdek de waarde!
+        </h2>
+        <p className="text-white/70 mb-6 max-w-lg mx-auto">
+          Scan je vinyl of CD en ontdek direct de marktwaarde met Magic Mike
+        </p>
+        <Link
+          to="/ai-scan-v2"
+          className="inline-flex items-center gap-2 bg-[hsl(45_100%_51%)] hover:bg-[hsl(45_100%_45%)] text-[hsl(240_20%_12%)] font-bold px-8 py-3 rounded-xl text-lg transition-colors"
+        >
+          📸 Start Scannen
+        </Link>
+        <p className="text-white/50 text-sm mt-4">Gratis - Geen account nodig</p>
+      </div>
+    </div>
+  );
+}
+
+function MoreSinglesSection({ currentSlug }: { currentSlug: string }) {
+  const { data: moreSingles } = useQuery({
+    queryKey: ['more-singles', currentSlug],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('music_stories')
+        .select('id,slug,title,single_name,artist,artwork_url')
+        .eq('is_published', true)
+        .not('single_name', 'is', null)
+        .not('artwork_url', 'is', null)
+        .neq('slug', currentSlug)
+        .limit(20);
+      // Pick 4 random
+      const filtered = (data || []).filter(s => s.artwork_url);
+      const shuffled = filtered.sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, 4);
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (!moreSingles?.length) return null;
+
+  return (
+    <div className="mt-12">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-foreground">Meer Verhalen</h2>
+        <Link to="/singles" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
+          Alle singles <ArrowLeft className="w-4 h-4 rotate-180" />
+        </Link>
+      </div>
+      <div className="flex gap-4 overflow-x-auto pb-4">
+        {moreSingles.map((s) => (
+          <Link
+            key={s.id}
+            to={`/singles/${s.slug}`}
+            className="flex-shrink-0 w-40 md:w-48 group"
+          >
+            <div className="aspect-square rounded-xl overflow-hidden bg-muted mb-2">
+              <img
+                src={s.artwork_url!}
+                alt={`${s.artist} - ${s.single_name}`}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+            <h3 className="font-semibold text-sm text-foreground truncate">{s.single_name}</h3>
+            <p className="text-xs text-muted-foreground truncate">{s.artist}</p>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }

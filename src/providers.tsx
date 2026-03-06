@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { CartProvider } from '@/contexts/CartContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {

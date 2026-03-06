@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Helmet } from 'react-helmet';
 import { Music, Clock, Eye, ChevronRight, Home } from 'lucide-react';
 import { useArtistStory, useArtistStories } from '@/hooks/useArtistStories';

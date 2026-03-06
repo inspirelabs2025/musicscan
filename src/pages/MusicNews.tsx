@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,13 @@ import { nl } from "date-fns/locale";
 export default function MusicNews() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'releases' | 'news' | 'verhalen'>('releases');
+
+  // SEO
+  useEffect(() => {
+    document.title = 'Muzieknieuws - Nieuwe Releases & Actueel | MusicScan';
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute('content', 'Het laatste muzieknieuws: nieuwe releases, concerten en albumreviews. Blijf als eerste op de hoogte van alles in de muziekwereld.');
+  }, []);
   
   // URL-based filter management
   const { filters, updateFilter, resetFilters, activeFilterCount } = useUrlFilters();

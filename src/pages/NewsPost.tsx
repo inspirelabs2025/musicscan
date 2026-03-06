@@ -136,10 +136,13 @@ export const NewsPost = () => {
     }
   };
 
+  const newsDescription = post?.summary || 
+    (post?.content ? post.content.replace(/[#*>\-\[\]!`\n]/g, ' ').trim().slice(0, 120) + '... | MusicScan' : '');
+
   useSEO({
-    title: post ? `${post.title} | ${tr.nav.news}` : tr.nav.news,
-    description: post?.summary || '',
-    keywords: post ? `${post.category.toLowerCase()}, ${post.title}` : '',
+    title: post ? `${post.title} | Muzieknieuws | MusicScan` : 'Muzieknieuws | MusicScan',
+    description: newsDescription,
+    keywords: post ? `${post.category?.toLowerCase() || 'muzieknieuws'}, ${post.title}, muzieknieuws` : '',
   });
 
   if (isLoading) {

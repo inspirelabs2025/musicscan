@@ -27,10 +27,13 @@ export function StoriesSection() {
 
       albums?.forEach(a => {
         const fm = a.yaml_frontmatter as any;
+        const title = fm?.title;
+        // Skip items without a real title
+        if (!title || title === 'Album Verhaal' || title.trim() === '') return;
         items.push({
           id: a.id,
           slug: a.slug,
-          title: fm?.title || 'Album Verhaal',
+          title,
           artist: fm?.artist || '',
           image_url: a.album_cover_url,
           type: 'album',

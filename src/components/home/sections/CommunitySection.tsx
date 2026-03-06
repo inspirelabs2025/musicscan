@@ -21,7 +21,7 @@ export function CommunitySection() {
   });
 
   return (
-    <section className="py-10 bg-muted/50">
+    <section className="py-14 bg-muted/50">
       <div className="container mx-auto px-4">
         <h2 className="text-2xl font-bold text-foreground mb-6">Community</h2>
 

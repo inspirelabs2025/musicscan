@@ -12,9 +12,10 @@ export function ArtistsSection() {
         .from('artist_stories')
         .select('id,slug,artist_name,artwork_url,spotlight_description,is_spotlight')
         .eq('is_published', true)
+        .not('artwork_url', 'is', null)
         .order('views_count', { ascending: false })
         .limit(8);
-      return data || [];
+      return (data || []).filter((a) => !!a.artwork_url);
     },
     staleTime: 10 * 60 * 1000,
   });
@@ -41,7 +42,7 @@ export function ArtistsSection() {
               >
                 <div className={`rounded-xl overflow-hidden bg-muted mb-2 ${i === 0 ? 'aspect-[3/4]' : 'aspect-square'}`}>
                   <img
-                    src={artist.artwork_url || '/placeholder.svg'}
+                    src={artist.artwork_url!}
                     alt={artist.artist_name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />

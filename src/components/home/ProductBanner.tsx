@@ -13,11 +13,12 @@ export const ProductBanner = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from('platform_products')
-        .select('id,title,image_url,artist,price')
-        .eq('is_active', true)
+        .select('id,title,primary_image,artist,price,slug')
+        .eq('status', 'active')
+        .not('primary_image', 'is', null)
         .order('created_at', { ascending: false })
         .limit(4);
-      return data || [];
+      return (data || []).filter((p) => !!p.primary_image);
     },
     staleTime: 10 * 60 * 1000,
   });
@@ -39,11 +40,11 @@ export const ProductBanner = () => {
             {products?.slice(0, 4).map((product) => (
               <Link
                 key={product.id}
-                to={`/product/${product.id}`}
+                to={`/product/${product.slug || product.id}`}
                 className="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded overflow-hidden ring-2 ring-white/20 hover:ring-white/60 transition-all hover:scale-105"
               >
                 <img
-                  src={product.image_url || '/placeholder.svg'}
+                  src={product.primary_image!}
                   alt={product.title}
                   className="w-full h-full object-cover"
                 />

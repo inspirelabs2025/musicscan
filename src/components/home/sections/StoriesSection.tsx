@@ -17,13 +17,13 @@ export function StoriesSection() {
         type: 'album' | 'anecdote';
       }> = [];
 
-      // Album stories
+      // Album stories - fetch more to fill gaps
       const { data: albums } = await supabase
         .from('blog_posts')
         .select('id,slug,yaml_frontmatter,album_cover_url')
         .eq('is_published', true)
         .order('created_at', { ascending: false })
-        .limit(2);
+        .limit(4);
 
       albums?.forEach(a => {
         const fm = a.yaml_frontmatter as any;
@@ -37,21 +37,21 @@ export function StoriesSection() {
         });
       });
 
-      // Anecdotes
+      // Anecdotes - use correct column names
       const { data: anecdotes } = await supabase
         .from('music_anecdotes')
-        .select('id,slug,title,artist_name,image_url')
-        .eq('is_published', true)
+        .select('id,slug,anecdote_title,subject_name')
+        .eq('is_active', true)
         .order('created_at', { ascending: false })
-        .limit(2);
+        .limit(4);
 
       anecdotes?.forEach(a => {
         items.push({
           id: a.id,
-          slug: a.slug,
-          title: a.title,
-          artist: a.artist_name || '',
-          image_url: a.image_url,
+          slug: a.slug || a.id,
+          title: a.anecdote_title,
+          artist: a.subject_name || '',
+          image_url: null,
           type: 'anecdote',
         });
       });
@@ -81,11 +81,17 @@ export function StoriesSection() {
               className="group"
             >
               <div className="aspect-[4/3] rounded-xl overflow-hidden bg-muted mb-3">
-                <img
-                  src={story.image_url || '/placeholder.svg'}
-                  alt={story.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+                {story.image_url ? (
+                  <img
+                    src={story.image_url}
+                    alt={story.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                    <span className="text-4xl opacity-50">{story.type === 'album' ? '🎵' : '📖'}</span>
+                  </div>
+                )}
               </div>
               <Badge variant="secondary" className="mb-1.5 text-[10px]">
                 {story.type === 'album' ? 'Album Verhaal' : 'Anekdote'}

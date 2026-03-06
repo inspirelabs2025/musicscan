@@ -33,18 +33,29 @@ export function CommunitySection() {
                 <Camera className="w-5 h-5 text-primary" />
                 <h3 className="font-bold text-foreground">Fanwall</h3>
               </div>
-              <div className="flex gap-2 mb-4">
+              <div className="flex gap-3 mb-4">
                 {fanwallPhotos?.map((fw) => (
                   <Link
                     key={fw.id}
                     to={`/fanwall/${fw.slug}`}
-                    className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0"
+                    className="flex-shrink-0"
                   >
-                    <img
-                      src={fw.featured_photo_url || '/placeholder.svg'}
-                      alt={fw.artist_name}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform"
-                    />
+                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted">
+                      {fw.featured_photo_url ? (
+                        <img
+                          src={fw.featured_photo_url}
+                          alt={fw.artist_name}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                          <span className="text-xl font-bold text-primary/60">
+                            {fw.artist_name.charAt(0)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1 truncate w-20 text-center">{fw.artist_name}</p>
                   </Link>
                 ))}
               </div>

@@ -57,17 +57,25 @@ export const ScannerHero = () => {
           </Button>
 
           {/* 3-Step Strip */}
-          <div className="mt-10 max-w-xl mx-auto grid grid-cols-3 gap-4 md:gap-6">
+          <div className="mt-10 max-w-2xl mx-auto grid grid-cols-3 gap-3 md:gap-5 items-start">
             <div className="text-center">
-              <span className="text-2xl md:text-3xl mb-1 block">📷</span>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 md:p-4 mb-2 mx-auto w-fit">
+                <span className="text-3xl md:text-4xl block">📷</span>
+              </div>
               <p className="text-white/90 text-xs md:text-sm font-medium">Maak een foto</p>
             </div>
-            <div className="text-center">
-              <span className="text-2xl md:text-3xl mb-1 block">🤖</span>
+            <div className="text-center relative">
+              <span className="absolute -left-4 md:-left-6 top-5 md:top-6 text-white/40 text-lg md:text-xl font-bold">→</span>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 md:p-4 mb-2 mx-auto w-fit">
+                <span className="text-3xl md:text-4xl block">🤖</span>
+              </div>
               <p className="text-white/90 text-xs md:text-sm font-medium">Slimme herkenning</p>
             </div>
-            <div className="text-center">
-              <span className="text-2xl md:text-3xl mb-1 block">💰</span>
+            <div className="text-center relative">
+              <span className="absolute -left-4 md:-left-6 top-5 md:top-6 text-white/40 text-lg md:text-xl font-bold">→</span>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 md:p-4 mb-2 mx-auto w-fit">
+                <span className="text-3xl md:text-4xl block">💰</span>
+              </div>
               <p className="text-white/90 text-xs md:text-sm font-medium">Zie marktwaarde</p>
             </div>
           </div>

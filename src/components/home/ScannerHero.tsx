@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Camera, Disc3, Sparkles, Newspaper, BookOpen, Gamepad2, Podcast, ShoppingBag, ArrowRight, Zap } from 'lucide-react';
+import { Camera, Disc3, Sparkles, ArrowRight, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -7,16 +7,8 @@ export const ScannerHero = () => {
   const { t, tr } = useLanguage();
   const h = tr.homeUI;
 
-  const navButtons = [
-    { icon: Newspaper, label: t('quickLinks.albums'), href: '/nieuws' },
-    { icon: BookOpen, label: t('nav.stories'), href: '/verhalen' },
-    { icon: Gamepad2, label: t('quickLinks.quiz'), href: '/quizzen' },
-    { icon: Podcast, label: t('quickLinks.podcasts'), href: '/podcasts' },
-    { icon: ShoppingBag, label: t('quickLinks.shop'), href: '/shop' },
-  ];
-
   return (
-    <section className="relative min-h-[600px] md:min-h-[700px] lg:min-h-[800px] bg-black overflow-hidden flex items-center">
+    <section className="relative min-h-[500px] md:min-h-[600px] bg-black overflow-hidden flex items-center pt-14">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/50 via-black to-vinyl-gold/30" />
       
@@ -33,13 +25,11 @@ export const ScannerHero = () => {
       {/* Sparkle effects */}
       <Sparkles className="absolute top-20 left-[20%] w-8 h-8 text-vinyl-gold/60 animate-pulse" />
       <Sparkles className="absolute bottom-32 right-[25%] w-6 h-6 text-vinyl-purple/70 animate-pulse" style={{ animationDelay: '1s' }} />
-      <Sparkles className="absolute top-1/3 right-[15%] w-7 h-7 text-white/40 animate-pulse" style={{ animationDelay: '0.5s' }} />
 
       {/* Content */}
-      <div className="container relative z-10 py-16 md:py-24 lg:py-32 text-center">
+      <div className="container relative z-10 py-16 md:py-24 text-center">
         
-        {/* MAIN SCANNER CTA - Hero focus */}
-        <div className="mb-12 md:mb-16">
+        <div className="mb-8 md:mb-12">
           <div className="inline-flex items-center gap-2 bg-vinyl-gold/20 text-vinyl-gold px-4 py-2 rounded-full text-sm font-semibold mb-6 backdrop-blur-sm border border-vinyl-gold/30">
             <Zap className="w-4 h-4" />
             {t('hero.badge')}
@@ -65,43 +55,29 @@ export const ScannerHero = () => {
               <ArrowRight className="w-6 h-6 md:w-7 md:h-7 ml-3 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
-          
-          {/* Secondary subtitle */}
-          <p className="mt-4 text-white/50 text-sm flex items-center justify-center gap-1.5">
-            <Disc3 className="w-3.5 h-3.5" />
-            {h.addToCollection}
-          </p>
 
-          <p className="text-vinyl-gold/80 text-sm md:text-base font-semibold mt-4 animate-pulse">
+          {/* 3-Step Strip */}
+          <div className="mt-10 max-w-xl mx-auto grid grid-cols-3 gap-4 md:gap-6">
+            <div className="text-center">
+              <span className="text-2xl md:text-3xl mb-1 block">📷</span>
+              <p className="text-white/90 text-xs md:text-sm font-medium">Maak een foto</p>
+            </div>
+            <div className="text-center">
+              <span className="text-2xl md:text-3xl mb-1 block">🤖</span>
+              <p className="text-white/90 text-xs md:text-sm font-medium">Slimme herkenning</p>
+            </div>
+            <div className="text-center">
+              <span className="text-2xl md:text-3xl mb-1 block">💰</span>
+              <p className="text-white/90 text-xs md:text-sm font-medium">Zie marktwaarde</p>
+            </div>
+          </div>
+
+          <p className="text-vinyl-gold/80 text-sm md:text-base font-semibold mt-6 animate-pulse">
             {t('hero.promoCredits')}
           </p>
           <p className="text-white/50 text-xs mt-1">
             {t('hero.promoSub')}
           </p>
-        </div>
-
-        {/* Divider */}
-        <div className="flex items-center justify-center gap-4 mb-10">
-          <div className="h-px w-16 md:w-24 bg-gradient-to-r from-transparent to-white/30" />
-          <span className="text-white/50 text-sm font-medium">{t('hero.divider')}</span>
-          <div className="h-px w-16 md:w-24 bg-gradient-to-l from-transparent to-white/30" />
-        </div>
-
-        {/* Secondary Navigation buttons */}
-        <div className="flex flex-wrap justify-center gap-3 md:gap-4">
-          {navButtons.map(({ icon: Icon, label, href }) => (
-            <Button 
-              key={href}
-              asChild 
-              variant="outline"
-              className="bg-white/5 border-white/20 text-white hover:bg-white/15 hover:text-white hover:border-white/40 px-5 py-5 md:px-6 md:py-6 rounded-xl backdrop-blur-sm transition-all hover:scale-105"
-            >
-              <Link to={href}>
-                <Icon className="w-5 h-5 mr-2" />
-                {label}
-              </Link>
-            </Button>
-          ))}
         </div>
       </div>
     </section>

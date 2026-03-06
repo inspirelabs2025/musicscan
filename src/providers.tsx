@@ -19,9 +19,11 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({ children })
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LanguageProvider>
-          <CartProvider>
-            {children}
-          </CartProvider>
+          <SubscriptionProvider>
+            <CartProvider>
+              {children}
+            </CartProvider>
+          </SubscriptionProvider>
         </LanguageProvider>
       </AuthProvider>
     </QueryClientProvider>

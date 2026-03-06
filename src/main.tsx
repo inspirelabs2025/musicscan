@@ -92,11 +92,7 @@ function AppWrapper() {
     return <ErrorFallback error={error} />;
   }
 
-  return (
-    <Providers>
-      <RouterProvider router={router} fallbackElement={<LoadingFallback />} />
-    </Providers>
-  );
+  return <RouterProvider router={router} />;
 }
 
 const container = document.getElementById("root");

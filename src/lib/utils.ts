@@ -1,37 +1,30 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
-/**
- * Extract a Discogs release/master ID from a URL or raw string
- */
-export function extractDiscogsIdFromUrl(input: string | null | undefined): number | null {
-  if (!input) return null;
-  
-  const str = input.toString().trim();
-  
-  // If it's just a number
-  if (/^\d+$/.test(str)) {
-    return parseInt(str, 10);
+export function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') {
+    return undefined;
   }
-  
-  // Try to extract from URL patterns like /release/12345 or /master/12345
-  const match = str.match(/\/(release|master)\/(\d+)/);
-  if (match) {
-    return parseInt(match[2], 10);
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0)
+      return c.substring(nameEQ.length, c.length);
   }
-  
-  return null;
+  return undefined;
 }
 
-/**
- * Normalize a path into a full canonical URL for musicscan.app
- */
-export function normalizeFullUrl(path: string): string {
-  const base = 'https://www.musicscan.app';
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${base}${cleanPath}`;
+export function setCookie(name: string, value: string, days: number): void {
+  if (typeof document === 'undefined') {
+    return;
+  }
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = name + "=" + value + ";expires=" + expires.toUTCString() + ";path=/";
 }

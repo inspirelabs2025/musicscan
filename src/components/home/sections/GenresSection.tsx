@@ -5,25 +5,25 @@ const genres = [
   {
     label: 'Nederlandse Muziek',
     href: '/nederland',
-    gradient: 'from-orange-600 to-red-700',
+    gradient: 'from-orange-600/80 to-red-700/80',
     emoji: '🇳🇱',
   },
   {
     label: 'Dance & House',
     href: '/dance-house',
-    gradient: 'from-purple-600 to-pink-600',
+    gradient: 'from-purple-600/80 to-pink-600/80',
     emoji: '🎧',
   },
   {
     label: 'Filmmuziek',
     href: '/filmmuziek',
-    gradient: 'from-indigo-700 to-blue-600',
+    gradient: 'from-indigo-700/80 to-blue-600/80',
     emoji: '🎬',
   },
   {
     label: 'Franse Muziek',
     href: '/frankrijk',
-    gradient: 'from-blue-600 via-white/30 to-red-600',
+    gradient: 'from-blue-600/80 via-white/20 to-red-600/80',
     emoji: '🇫🇷',
   },
 ];
@@ -43,7 +43,7 @@ export function GenresSection() {
                 className="flex-shrink-0 w-52 md:w-64 group"
               >
                 <div className={`aspect-[16/9] rounded-xl overflow-hidden bg-gradient-to-br ${genre.gradient} flex items-center justify-center relative group-hover:scale-[1.02] transition-transform duration-300 shadow-lg`}>
-                  <span className="text-4xl md:text-5xl opacity-30 absolute">{genre.emoji}</span>
+                  <span className="text-5xl md:text-6xl opacity-20 absolute">{genre.emoji}</span>
                   <span className="relative z-10 text-white font-bold text-base md:text-lg text-center px-4 drop-shadow-lg">
                     {genre.label}
                   </span>

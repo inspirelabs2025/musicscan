@@ -17,7 +17,7 @@ export function MagicMikePodcastSection() {
                 <img
                   src={echoAvatar}
                   alt="Magic Mike"
-                  className="w-14 h-14 rounded-full border-2 border-primary/30 shadow-lg"
+                  className="w-14 h-14 rounded-full border-2 border-primary/30 shadow-lg object-cover"
                 />
                 <div>
                   <h3 className="font-bold text-foreground text-lg">Magic Mike</h3>

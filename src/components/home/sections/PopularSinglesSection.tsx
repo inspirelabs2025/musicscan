@@ -13,9 +13,23 @@ export function PopularSinglesSection() {
         .select('id,slug,title,artist,single_name,artwork_url,created_at')
         .eq('is_published', true)
         .not('single_name', 'is', null)
+        .not('artwork_url', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(8);
-      return data || [];
+        .limit(20);
+      // Filter out box sets, samplers, compilations — keep only real singles
+      const filtered = (data || []).filter((s) => {
+        const name = (s.single_name || '').toLowerCase();
+        return (
+          !name.includes('box set') &&
+          !name.includes('sampler') &&
+          !name.includes('collection') &&
+          !name.includes('dvd') &&
+          !name.includes('best of') &&
+          !name.includes('compilation') &&
+          s.artwork_url
+        );
+      });
+      return filtered.slice(0, 8);
     },
     staleTime: 10 * 60 * 1000,
   });
@@ -42,7 +56,7 @@ export function PopularSinglesSection() {
               >
                 <div className="aspect-square rounded-xl overflow-hidden bg-muted mb-2">
                   <img
-                    src={single.artwork_url || '/placeholder.svg'}
+                    src={single.artwork_url!}
                     alt={single.single_name || single.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />

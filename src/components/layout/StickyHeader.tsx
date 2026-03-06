@@ -43,7 +43,7 @@ export function StickyHeader() {
         {/* Right side */}
         <div className="flex items-center gap-2">
           {!isMobile && (
-            <Button asChild variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10 hover:text-white">
+            <Button asChild variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10 hover:text-white bg-transparent">
               <Link to="/auth">
                 <LogIn className="w-4 h-4 mr-1.5" />
                 Login

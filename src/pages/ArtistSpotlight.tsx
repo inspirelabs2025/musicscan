@@ -231,6 +231,15 @@ const ArtistSpotlight = () => {
         <meta name="twitter:title" content={spotlight.artist_name} />
         <meta name="twitter:description" content={spotlight.spotlight_description || ""} />
         {heroImage && <meta name="twitter:image" content={heroImage} />}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app" },
+            { "@type": "ListItem", "position": 2, "name": "Spotlights", "item": "https://www.musicscan.app/artist-spotlights" },
+            { "@type": "ListItem", "position": 3, "name": spotlight.artist_name, "item": canonicalUrl }
+          ]
+        })}</script>
       </Helmet>
 
       {spotlight.music_style && (

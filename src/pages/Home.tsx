@@ -4,6 +4,7 @@ import { useSEO } from '@/hooks/useSEO';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ScannerHero } from '@/components/home/ScannerHero';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SeoContentBlock } from '@/components/SEO/SeoContentBlock';
 
 // Lazy load sections
 const PopularSinglesSection = lazy(() => import('@/components/home/sections/PopularSinglesSection').then(m => ({ default: m.PopularSinglesSection })));
@@ -30,19 +31,36 @@ const Home = () => {
     "@type": "WebSite",
     "name": "MusicScan",
     "url": "https://www.musicscan.app",
-    "description": "MusicScan is hét complete muziekplatform voor liefhebbers. Muzieknieuws, verhalen, shop, quiz en smart scanner.",
+    "description": "Scan je vinyl en CD collectie, ontdek de waarde van je platen, lees verhalen achter iconische albums.",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://www.musicscan.app/public-catalog?search={search_term_string}",
+      "target": "https://www.musicscan.app/verhalen?search={search_term_string}",
       "query-input": "required name=search_term_string"
     },
     "inLanguage": "nl"
+  };
+
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "MusicScan",
+    "url": "https://www.musicscan.app",
+    "logo": "https://www.musicscan.app/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png",
+    "description": "MusicScan is hét muziekplatform voor vinyl- en CD-verzamelaars.",
+    "foundingDate": "2024",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "customer service",
+      "availableLanguage": ["Dutch", "English"]
+    },
+    "sameAs": ["https://www.facebook.com/musicscan"]
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(websiteSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
       </Helmet>
       {/* Hero */}
       <ScannerHero />
@@ -96,6 +114,9 @@ const Home = () => {
       <Suspense fallback={null}>
         <MobileInstallBanner />
       </Suspense>
+
+      {/* SEO Content Block */}
+      <SeoContentBlock text="MusicScan is hét muziekplatform voor vinyl- en CD-verzamelaars. Scan je platen met onze AI-scanner en ontdek direct de artiest, het album en de marktwaarde. Lees de verhalen achter iconische albums, test je muziekkennis met de dagelijkse quiz, en shop unieke album art producten zoals metal prints en canvas doeken. Of je nu vinyl wilt scannen, je collectie wilt beheren of gewoon muziekverhalen wilt lezen — bij MusicScan vind je alles." />
     </div>
   );
 };

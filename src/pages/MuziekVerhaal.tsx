@@ -281,6 +281,15 @@ export const MuziekVerhaal: React.FC = () => {
             <meta name="twitter:data2" content={story.views_count.toString()} />
           </>
         )}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app" },
+            { "@type": "ListItem", "position": 2, "name": "Verhalen", "item": "https://www.musicscan.app/verhalen" },
+            { "@type": "ListItem", "position": 3, "name": story.title, "item": currentUrl }
+          ]
+        })}</script>
       </Helmet>
       
       <ArticleStructuredData

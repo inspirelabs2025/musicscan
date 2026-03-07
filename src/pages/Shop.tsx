@@ -238,6 +238,14 @@ const Shop = () => {
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.musicscan.app/shop" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app" },
+            { "@type": "ListItem", "position": 2, "name": "Shop", "item": "https://www.musicscan.app/shop" }
+          ]
+        })}</script>
       </Helmet>
 
       <main className="min-h-screen bg-background">
@@ -250,7 +258,7 @@ const Shop = () => {
                 {totalProducts} {tr.common.products}
               </Badge>
               <h1 className="text-2xl md:text-5xl font-bold tracking-tight mb-2 md:mb-4 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
-                {sh.title}
+                Muziek Art Shop — Album Posters, Metal Prints & Canvas
               </h1>
               <p className="text-sm md:text-lg text-muted-foreground mb-4 md:mb-8 max-w-2xl mx-auto">{sh.subtitle}</p>
               <div className="relative max-w-xl mx-auto">
@@ -327,6 +335,11 @@ const Shop = () => {
             </>
           )}
         </div>
+
+        {/* SEO Content Block */}
+        <section className="text-muted-foreground text-sm opacity-70 max-w-3xl mx-auto text-center py-8 px-4">
+          <p>In de MusicScan Shop vind je unieke muziekproducten voor echte liefhebbers. Bestel album cover art als metal print, poster of canvas. Van klassieke jazz tot moderne pop — ontdek meer dan 6800 producten van artiesten als Pink Floyd, Miles Davis, Queen en meer. Alles wordt op bestelling gemaakt en direct bij je thuisbezorgd.</p>
+        </section>
       </main>
     </>
   );

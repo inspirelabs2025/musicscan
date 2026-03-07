@@ -21,11 +21,11 @@ const Scan = () => {
             <div className="flex items-center justify-center gap-3 mb-4">
               <Sparkles className="w-8 h-8 text-vinyl-purple animate-pulse" />
               <h1 className="text-4xl font-bold bg-gradient-to-r from-vinyl-purple to-vinyl-gold bg-clip-text text-transparent">
-                MusicScan App
+                Vinyl Scanner — Herken je LP met AI
               </h1>
               <Sparkles className="w-8 h-8 text-vinyl-gold animate-pulse" />
             </div>
-            <p className="text-xl text-muted-foreground">Scan je vinyl en CD collectie met foto herkenning</p>
+            <h2 className="text-xl text-muted-foreground">Maak een foto, ontdek artiest, album & marktwaarde</h2>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8 items-start">
@@ -34,7 +34,7 @@ const Scan = () => {
               <CardContent className="space-y-6">
                 <div className="flex items-center justify-center gap-2 mb-4">
                   <Smartphone className="w-6 h-6 text-vinyl-purple" />
-                  <h2 className="text-2xl font-semibold">Scan deze QR code</h2>
+                  <h3 className="text-2xl font-semibold">Scan deze QR code</h3>
                 </div>
                 
                 <div className="flex justify-center p-6 bg-white rounded-xl shadow-inner">
@@ -127,6 +127,11 @@ const Scan = () => {
               </span>
             </div>
           </div>
+
+          {/* SEO Content Block */}
+          <section className="text-muted-foreground text-sm opacity-70 max-w-3xl mx-auto text-center py-8">
+            <p>De MusicScan Vinyl Scanner herkent je platen via AI-beeldherkenning. Maak een foto van je LP, CD of single en krijg direct informatie over artiest, album, release-jaar en marktwaarde. Ideaal voor verzamelaars die willen weten wat hun platen waard zijn. Ontvang 10 gratis scans bij registratie.</p>
+          </section>
         </div>
       </div>
     </div>;

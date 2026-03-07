@@ -1,156 +1,22 @@
-# MusicScan robots.txt - Updated 2026-03-04
-# Primary domain: www.musicscan.app
-
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 0.5
-
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 1
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
-# LLM Crawlers - Explicitly allowed for training/indexing
-User-agent: GPTBot
-Allow: /
-Crawl-delay: 1
-
-User-agent: ChatGPT-User
-Allow: /
-Crawl-delay: 1
-
-User-agent: Google-Extended
-Allow: /
-Crawl-delay: 1
-
-User-agent: Claude-Web
-Allow: /
-Crawl-delay: 1
-
-User-agent: anthropic-ai
-Allow: /
-Crawl-delay: 1
-
-User-agent: Applebot-Extended
-Allow: /
-Crawl-delay: 1
-
-User-agent: PerplexityBot
-Allow: /
-Crawl-delay: 1
-
-User-agent: Diffbot
-Allow: /
-Crawl-delay: 1
-
-User-agent: Bytespider
-Allow: /
-Crawl-delay: 2
-
-# Priority content for indexing
-Allow: /artists
-Allow: /artists/*
-Allow: /singles
-Allow: /singles/*
-Allow: /muziek-verhaal
-Allow: /muziek-verhaal/*
-Allow: /nummer
-Allow: /nummer/*
-Allow: /plaat-verhaal
-Allow: /plaat-verhaal/*
-Allow: /anekdotes
-Allow: /anekdotes/*
-Allow: /nieuws
-Allow: /nieuws/*
-Allow: /vandaag-in-de-muziekgeschiedenis
-Allow: /nederland
-Allow: /nl-muziekfeit
-Allow: /nl-muziekfeit/*
-Allow: /nl-muziek
-Allow: /nl-muziek/*
-Allow: /podcasts
-Allow: /podcasts/*
-Allow: /podcast
-Allow: /podcast/*
-Allow: /de-plaat-en-het-verhaal
-Allow: /onze-podcasts
-Allow: /feeds/podcast/*
-
-# Shop & Products
-Allow: /shop
-Allow: /shop/*
-Allow: /posters
-Allow: /posters/*
-Allow: /product/*
-Allow: /art-shop
-Allow: /canvas
-Allow: /buttons
-Allow: /socks
-Allow: /shirts
-Allow: /tshirts
-Allow: /merchandise
-
-# Features
-Allow: /quizzen
-Allow: /kerst
-Allow: /dance-house
-Allow: /frankrijk
-Allow: /top-2000-analyse
-Allow: /new-releases
-
-# General crawlers
+# MusicScan robots.txt
 User-agent: *
 Allow: /
-Crawl-delay: 2
+Crawl-delay: 1
 
-# Sitemaps - All served from www.musicscan.app domain
+# Sitemaps
 Sitemap: https://www.musicscan.app/sitemap.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-static.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-blog.xml
 Sitemap: https://www.musicscan.app/sm/sitemap-artists.xml
 Sitemap: https://www.musicscan.app/sm/sitemap-singles.xml
 Sitemap: https://www.musicscan.app/sm/sitemap-music-stories.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-anecdotes.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-posters.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-metal-prints.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-tshirts.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-canvas.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-nl-muziekfeiten.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-new-releases.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-time-machine.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-fanwall.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-photos.xml
-Sitemap: https://www.musicscan.app/sitemap-podcasts.xml
+Sitemap: https://www.musicscan.app/sm/sitemap-blog.xml
 
-# Disallow admin and internal paths
+# Disallow private paths
 Disallow: /admin/
-Disallow: /_next/
-Disallow: /private/
-
-# Disallow SSR proxy URLs (duplicates)
-Disallow: /universal-ssr-proxy/
-Disallow: /functions/v1/universal-ssr-proxy/
-
-# Disallow search/filter URLs (duplicates)
-Disallow: /*?search=
-Disallow: /*?filter=
-Disallow: /*?page=
-Disallow: /art-shop?*
-
-# Disallow non-content pages (thin/duplicate content)
-Disallow: /public-shops-overview
-Disallow: /public-catalog
 Disallow: /auth
+Disallow: /private/
+Disallow: /profiel
 Disallow: /my-collection
 Disallow: /scan
-Disallow: /mijn-discogs
-Disallow: /spotify-profile
-Disallow: /prestaties
 Disallow: /slimme-tools
-Disallow: /liked-photos
-Disallow: /profiel
+Disallow: /universal-ssr-proxy/
+Disallow: /functions/v1/universal-ssr-proxy/

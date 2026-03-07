@@ -74,18 +74,29 @@
     <link rel="alternate" hreflang="nl" href="https://www.musicscan.app/" />
     <link rel="alternate" hreflang="x-default" href="https://www.musicscan.app/" />
     
-    <!-- Preconnect for performance - Critical resources -->
+    <!-- Preconnect for performance - Only 3 critical origins -->
     <link rel="preconnect" href="https://ssxbpyqnjfiyubsuonar.supabase.co" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="dns-prefetch" href="https://ssxbpyqnjfiyubsuonar.supabase.co">
-    <link rel="dns-prefetch" href="https://i.discogs.com">
-    <link rel="dns-prefetch" href="https://i.scdn.co">
-    <link rel="dns-prefetch" href="https://www.musicscan.app">
-    
-    <!-- Google Analytics preconnect -->
-    <link rel="preconnect" href="https://www.googletagmanager.com">
-    <link rel="preconnect" href="https://www.google-analytics.com">
+
+    <!-- Critical CSS - above-the-fold rendering without waiting for external CSS -->
+    <style>
+      /* Body & page background */
+      html, body { margin: 0; padding: 0; background: #0f0d1a; color: #fafafa; font-family: system-ui, -apple-system, sans-serif; }
+      #root { min-height: 100vh; }
+      /* Sticky header skeleton */
+      header, .sticky-header { position: fixed; top: 0; left: 0; right: 0; z-index: 50; height: 3.5rem; background: rgba(15,13,26,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; }
+      /* Hero section skeleton */
+      .hero-section, [class*="hero"] { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 4rem 1rem 2rem; }
+      .hero-section h1, [class*="hero"] h1 { font-size: 2.25rem; font-weight: 800; line-height: 1.1; color: #fff; margin: 0 0 1rem; }
+      @media(min-width:768px) { .hero-section h1, [class*="hero"] h1 { font-size: 3rem; } }
+      /* CTA button skeleton */
+      .hero-cta, [class*="hero"] a[href*="scan"], [class*="hero"] button { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 1rem; background: hsl(271 81% 56%); color: #fafafa; border: none; cursor: pointer; }
+      /* Steps strip skeleton */
+      .steps-strip, [class*="steps"] { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; padding: 1rem; }
+      /* Font display swap for system fonts */
+      * { -webkit-font-smoothing: antialiased; }
+    </style>
     
     <!-- Google Analytics Script - deferred for performance -->
     <script defer src="https://www.googletagmanager.com/gtag/js?id=G-B1TBDCNMR4"></script>

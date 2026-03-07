@@ -36,12 +36,12 @@ export const ScannerHero = () => {
           </div>
           
           <h1 className="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white mb-6 tracking-tight">
-            {t('hero.title')}
+            Scan Je Vinyl & CD Collectie
           </h1>
           
-          <p className="text-lg md:text-xl lg:text-2xl text-white/80 max-w-2xl mx-auto mb-10">
-            {t('hero.subtitle')}
-          </p>
+          <h2 className="text-lg md:text-xl lg:text-2xl text-white/80 max-w-2xl mx-auto mb-10">
+            Ontdek de Waarde van je Platen met AI
+          </h2>
           
           {/* Big Scanner Button */}
           <Button 

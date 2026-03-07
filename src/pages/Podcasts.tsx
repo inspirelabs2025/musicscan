@@ -121,6 +121,22 @@ export default function Podcasts() {
         <meta property="og:title" content="De Plaat & Het Verhaal — Muziek Podcast | MusicScan" />
         <meta property="og:description" content="Luister naar de verhalen achter legendarische albums. Elke aflevering duikt diep in de muziekgeschiedenis." />
         <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "PodcastSeries",
+          "name": "De Plaat & Het Verhaal",
+          "description": "Luister naar de verhalen achter legendarische albums.",
+          "url": "https://www.musicscan.app/podcasts",
+          "publisher": { "@type": "Organization", "name": "MusicScan" }
+        })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app" },
+            { "@type": "ListItem", "position": 2, "name": "Podcasts", "item": "https://www.musicscan.app/podcasts" }
+          ]
+        })}</script>
       </Helmet>
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-8">

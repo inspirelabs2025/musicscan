@@ -23,6 +23,22 @@ export default function QuizHub() {
         <meta property="og:title" content={tr.quiz.ogTitle} />
         <meta property="og:description" content={tr.quiz.ogDescription} />
         <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Quiz",
+          "name": "MusicScan Dagelijkse Muziekquiz",
+          "description": "Test je muziekkennis met de dagelijkse muziekquiz.",
+          "educationalLevel": "beginner",
+          "provider": { "@type": "Organization", "name": "MusicScan" }
+        })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app" },
+            { "@type": "ListItem", "position": 2, "name": "Muziekquiz", "item": "https://www.musicscan.app/quizzen" }
+          ]
+        })}</script>
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
@@ -56,6 +72,11 @@ export default function QuizHub() {
           <section>
             <h2 className="text-2xl font-bold mb-6">{tr.quiz.topPlayers}</h2>
             <QuizLeaderboard limit={10} />
+          </section>
+
+          {/* SEO Content Block */}
+          <section className="text-muted-foreground text-sm opacity-70 max-w-3xl mx-auto text-center py-8">
+            <p>De MusicScan Muziekquiz test je kennis over artiesten, albums en muziekgeschiedenis. Speel de dagelijkse challenge, verdien punten en beklim het leaderboard. Van pop en rock tot jazz en klassiek — elke dag nieuwe vragen.</p>
           </section>
         </div>
       </div>

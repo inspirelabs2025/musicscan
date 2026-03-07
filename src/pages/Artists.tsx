@@ -66,10 +66,7 @@ const Artists = () => {
         <title>{selectedGenre !== 'all' ? `${selectedGenre} ${a.artist}` : 'Artiesten — Ontdek Muzikanten & Hun Verhalen'} | MusicScan</title>
         <meta 
           name="description" 
-          content={selectedGenre !== 'all' 
-            ? `${a.defaultDesc}`
-            : a.defaultDesc
-          } 
+          content="Ontdek artiesten en hun muziekverhalen. Van legendarische rockbands tot jazz-iconen. Lees biografieën, bekijk discografieën en ontdek de muziek."
         />
         <meta property="og:title" content={`${selectedGenre !== 'all' ? selectedGenre + ' ' : ''}${tr.nav.artists} | MusicScan`} />
         <meta property="og:description" content={a.defaultDesc} />

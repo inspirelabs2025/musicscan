@@ -103,9 +103,14 @@ export default function PlatformProductDetail() {
   
   const productImage = product?.primary_image || 'https://www.musicscan.app/images/default-product-og.jpg';
 
+  // Extract variant identifier from slug for unique titles (e.g., "metaalprint-3" → "Variant 3")
+  const slugVariant = slug?.match(/-(\d+)$/)?.[1];
+  const sizeLabel = product?.metadata?.size || product?.metadata?.dimensions || '';
+  const variantSuffix = sizeLabel ? ` (${sizeLabel})` : slugVariant ? ` (#${slugVariant})` : '';
+
   // SEO optimization for product page
   useSEO({
-    title: product ? `${product.title}${product.artist ? ` - ${product.artist}` : ''}${isPoster ? ' | Premium Art Poster' : ''} | MusicScan Shop` : 'Product | MusicScan Shop',
+    title: product ? `${product.title}${product.artist ? ` - ${product.artist}` : ''}${variantSuffix}${isPoster ? ' | Premium Art Poster' : ''} | MusicScan Shop` : 'Product | MusicScan Shop',
     description: productDescription,
     keywords: product ? `${product.title}, ${product.artist || ''}, ${isPoster ? 'poster, AI art, kunstposter, wanddecoratie,' : ''} ${product.media_type || ''}, muziek, shop, kopen, ${product.tags?.join(', ') || ''}, ${product.categories?.join(', ') || ''}`.replace(/,\s*,/g, ',').replace(/^,|,$/g, '') : 'muziek shop, producten',
     canonicalUrl: currentUrl,

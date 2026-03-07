@@ -238,6 +238,14 @@ const Shop = () => {
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.musicscan.app/shop" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app" },
+            { "@type": "ListItem", "position": 2, "name": "Shop", "item": "https://www.musicscan.app/shop" }
+          ]
+        })}</script>
       </Helmet>
 
       <main className="min-h-screen bg-background">

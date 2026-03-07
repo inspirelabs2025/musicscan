@@ -1,8 +1,16 @@
-import { pipeline, env } from '@huggingface/transformers';
+// Dynamic import for @huggingface/transformers - only loaded when needed
+let pipelineModule: any = null;
 
-// Configure transformers.js to always download models
-env.allowLocalModels = false;
-env.useBrowserCache = false;
+const loadTransformers = async () => {
+  if (!pipelineModule) {
+    const module = await import('@huggingface/transformers');
+    pipelineModule = module;
+    // Configure transformers.js to always download models
+    module.env.allowLocalModels = false;
+    module.env.useBrowserCache = false;
+  }
+  return pipelineModule;
+};
 
 const MAX_IMAGE_DIMENSION = 1024;
 
@@ -34,7 +42,9 @@ function resizeImageIfNeeded(canvas: HTMLCanvasElement, ctx: CanvasRenderingCont
 export const removeBackground = async (imageElement: HTMLImageElement): Promise<Blob> => {
   try {
     console.log('Starting background removal process...');
-    const segmenter = await pipeline('image-segmentation', 'Xenova/segformer-b0-finetuned-ade-512-512',{
+    
+    const { pipeline } = await loadTransformers();
+    const segmenter = await pipeline('image-segmentation', 'Xenova/segformer-b0-finetuned-ade-512-512', {
       device: 'webgpu',
     });
     
@@ -83,7 +93,6 @@ export const removeBackground = async (imageElement: HTMLImageElement): Promise<
     
     // Apply inverted mask to alpha channel
     for (let i = 0; i < result[0].mask.data.length; i++) {
-      // Invert the mask value (1 - value) to keep the subject instead of the background
       const alpha = Math.round((1 - result[0].mask.data[i]) * 255);
       data[i * 4 + 3] = alpha;
     }

@@ -20,3 +20,7 @@ Disallow: /scan
 Disallow: /slimme-tools
 Disallow: /universal-ssr-proxy/
 Disallow: /functions/v1/universal-ssr-proxy/
+
+# Soft 404 prevention
+Disallow: /art-shop?search
+Disallow: /plaat-verhaal/*-*-*-*-*

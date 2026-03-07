@@ -4,6 +4,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "redirects": [
+    { "source": "/art-prints", "destination": "/shop", "permanent": true },
     { "source": "/blog/:slug", "destination": "/plaat-verhaal/:slug", "permanent": true },
     { "source": "/product/:slug/", "destination": "/product/:slug", "permanent": true },
     { "source": "/singles/:slug/", "destination": "/singles/:slug", "permanent": true },

@@ -50,5 +50,8 @@
 /reviews/:slug/ /reviews/:slug 301
 /shop/:slug/ /shop/:slug 301
 
+# Legacy redirects
+/art-prints /shop 301
+
 # SPA fallback - must be last
 /* /index.html 200

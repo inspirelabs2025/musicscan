@@ -84,6 +84,9 @@ export default function ArtShop() {
   return (
     <>
       <Helmet>
+        {searchQuery && filteredProducts?.length === 0 && (
+          <meta name="robots" content="noindex" />
+        )}
         <title>Metaalprints - Albumcovers op Metaal | VinylScout</title>
         <meta name="description" content="Ontdek onze collectie premium metaalprints van iconische albumcovers. Museum-kwaliteit prints op aluminium. Gratis verzending vanaf €50." />
         <meta property="og:title" content="Metaalprints - Albumcovers op Metaal" />

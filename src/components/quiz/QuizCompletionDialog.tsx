@@ -117,9 +117,10 @@ export function QuizCompletionDialog({
 
       setIsSuccess(true);
 
-      // Fire Meta Pixel CompleteRegistration event
+      // Fire Meta Pixel events for Facebook Ads tracking
       if (typeof window !== 'undefined' && (window as any).fbq) {
         (window as any).fbq('track', 'CompleteRegistration');
+        (window as any).fbq('track', 'Lead');
       }
       
       // Call callback with new user ID

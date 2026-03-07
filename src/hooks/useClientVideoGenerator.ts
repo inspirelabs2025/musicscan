@@ -1,8 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import type { FFmpeg } from '@ffmpeg/ffmpeg';
 
 export type VideoStyle = 'contain' | 'cover' | 'blurred-background';
 export type ZoomEffect = 'none' | 'grow-in' | 'grow-out' | 'grow-in-out';

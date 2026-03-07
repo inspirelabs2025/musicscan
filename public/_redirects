@@ -36,5 +36,19 @@
 # LLM Sitemap
 /sitemap-llm.xml https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/generate-llm-sitemap 200
 
+# Trailing slash normalization - 301 redirect to non-trailing-slash
+/product/:slug/ /product/:slug 301
+/singles/:slug/ /singles/:slug 301
+/artists/:slug/ /artists/:slug 301
+/muziek-verhaal/:slug/ /muziek-verhaal/:slug 301
+/plaat-verhaal/:slug/ /plaat-verhaal/:slug 301
+/artist-spotlight/:slug/ /artist-spotlight/:slug 301
+/anekdotes/:slug/ /anekdotes/:slug 301
+/nieuws/:slug/ /nieuws/:slug 301
+/new-release/:slug/ /new-release/:slug 301
+/nummer/:slug/ /nummer/:slug 301
+/reviews/:slug/ /reviews/:slug 301
+/shop/:slug/ /shop/:slug 301
+
 # SPA fallback - must be last
 /* /index.html 200

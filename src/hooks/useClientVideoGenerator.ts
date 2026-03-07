@@ -1,8 +1,20 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
+
+// Lazy-loaded FFmpeg modules
+let ffmpegModule: typeof import('@ffmpeg/ffmpeg') | null = null;
+let ffmpegUtilModule: typeof import('@ffmpeg/util') | null = null;
+
+const loadFFmpegModules = async () => {
+  if (!ffmpegModule) {
+    ffmpegModule = await import('@ffmpeg/ffmpeg');
+  }
+  if (!ffmpegUtilModule) {
+    ffmpegUtilModule = await import('@ffmpeg/util');
+  }
+  return { FFmpeg: ffmpegModule.FFmpeg, fetchFile: ffmpegUtilModule.fetchFile, toBlobURL: ffmpegUtilModule.toBlobURL };
+};
 
 export type VideoStyle = 'contain' | 'cover' | 'blurred-background';
 export type ZoomEffect = 'none' | 'grow-in' | 'grow-out' | 'grow-in-out';
@@ -22,11 +34,11 @@ interface VideoGeneratorResult {
 }
 
 // Singleton FFmpeg instance
-let ffmpegInstance: FFmpeg | null = null;
+let ffmpegInstance: InstanceType<Awaited<ReturnType<typeof loadFFmpegModules>>['FFmpeg']> | null = null;
 let ffmpegLoaded = false;
 let ffmpegLoadFailed = false;
 
-const getFFmpeg = async (): Promise<FFmpeg | null> => {
+const getFFmpeg = async () => {
   // If we already know loading failed, don't retry
   if (ffmpegLoadFailed) {
     return null;
@@ -37,6 +49,7 @@ const getFFmpeg = async (): Promise<FFmpeg | null> => {
   }
   
   try {
+    const { FFmpeg, toBlobURL } = await loadFFmpegModules();
     ffmpegInstance = new FFmpeg();
     
     const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
@@ -213,6 +226,7 @@ export const useClientVideoGenerator = () => {
     
     try {
       // Write input file
+      const { fetchFile } = await loadFFmpegModules();
       const webmData = await fetchFile(webmBlob);
       await ffmpeg.writeFile('input.webm', webmData);
       

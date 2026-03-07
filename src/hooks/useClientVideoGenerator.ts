@@ -1,7 +1,20 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { FFmpeg } from '@ffmpeg/ffmpeg';
+
+// Lazy-loaded FFmpeg modules
+let ffmpegModule: typeof import('@ffmpeg/ffmpeg') | null = null;
+let ffmpegUtilModule: typeof import('@ffmpeg/util') | null = null;
+
+const loadFFmpegModules = async () => {
+  if (!ffmpegModule) {
+    ffmpegModule = await import('@ffmpeg/ffmpeg');
+  }
+  if (!ffmpegUtilModule) {
+    ffmpegUtilModule = await import('@ffmpeg/util');
+  }
+  return { FFmpeg: ffmpegModule.FFmpeg, fetchFile: ffmpegUtilModule.fetchFile, toBlobURL: ffmpegUtilModule.toBlobURL };
+};
 
 export type VideoStyle = 'contain' | 'cover' | 'blurred-background';
 export type ZoomEffect = 'none' | 'grow-in' | 'grow-out' | 'grow-in-out';

@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { optimizeImageUrl } from '@/lib/image-utils';
 
 export function StoriesSection() {
   const { data: stories } = useQuery({
@@ -86,7 +87,7 @@ export function StoriesSection() {
               <div className="aspect-[4/3] rounded-xl overflow-hidden bg-muted mb-3">
                 {story.image_url ? (
                   <img
-                    src={story.image_url}
+                    src={optimizeImageUrl(story.image_url!, { width: 600, height: 400 })}
                     alt={story.title}
                     loading="lazy"
                     width={400}

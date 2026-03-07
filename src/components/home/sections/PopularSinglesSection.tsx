@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { optimizeImageUrl } from '@/lib/image-utils';
+import { optimizeImageUrl, generateArtworkAlt } from '@/lib/image-utils';
 
 export function PopularSinglesSection() {
   const { data: singles } = useQuery({
@@ -32,6 +32,9 @@ export function PopularSinglesSection() {
           s.artwork_url &&
           name.length > 0 &&
           name.length <= 60 &&
+          name !== 'none' &&
+          title !== 'none' &&
+          !!s.title &&
           !EXCLUDE_WORDS.some((w) => combined.includes(w))
         );
       });
@@ -62,9 +65,10 @@ export function PopularSinglesSection() {
               >
                 <div className="aspect-square rounded-xl overflow-hidden bg-muted mb-2">
                   <img
-                    src={optimizeImageUrl(single.artwork_url!, { width: 300, height: 300 })}
-                    alt={single.single_name || single.title}
+                    src={optimizeImageUrl(single.artwork_url!, { width: 192, height: 192 })}
+                    alt={generateArtworkAlt(single.artist, single.single_name || single.title, 'single cover')}
                     loading={i < 2 ? 'eager' : 'lazy'}
+                    decoding="async"
                     width={192}
                     height={192}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

@@ -16,7 +16,11 @@ export function MagicMikePodcastSection() {
               <div className="flex items-center gap-4 mb-4">
                 <img
                   src={echoAvatar}
-                  alt="Magic Mike"
+                  alt="Magic Mike muziekexpert"
+                  loading="lazy"
+                  decoding="async"
+                  width={56}
+                  height={56}
                   className="w-14 h-14 rounded-full border-2 border-primary/30 shadow-lg object-cover"
                 />
                 <div>

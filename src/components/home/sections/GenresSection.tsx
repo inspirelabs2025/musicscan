@@ -49,8 +49,9 @@ export function GenresSection() {
                 <div className="aspect-[16/9] rounded-xl overflow-hidden relative group-hover:scale-[1.02] transition-transform duration-300 shadow-lg">
                   <img
                     src={genre.image}
-                    alt={genre.label}
+                    alt={`${genre.label} muziek ontdekken`}
                     loading="lazy"
+                    decoding="async"
                     width={256}
                     height={144}
                     className="absolute inset-0 w-full h-full object-cover"
@@ -58,7 +59,7 @@ export function GenresSection() {
                   <div className="absolute inset-0 bg-black/50" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-4xl md:text-5xl mb-1">{genre.emoji}</span>
-                    <span className="text-white font-bold text-base md:text-lg text-center px-4 drop-shadow-lg">
+                    <span className="text-primary-foreground font-bold text-base md:text-lg text-center px-4 drop-shadow-lg">
                       {genre.label}
                     </span>
                   </div>

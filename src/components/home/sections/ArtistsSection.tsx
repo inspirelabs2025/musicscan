@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { optimizeImageUrl } from '@/lib/image-utils';
+import { optimizeImageUrl, generateArtworkAlt } from '@/lib/image-utils';
 
 export function ArtistsSection() {
   const { data: artists } = useQuery({
@@ -43,11 +43,12 @@ export function ArtistsSection() {
               >
                 <div className={`rounded-xl overflow-hidden bg-muted mb-2 ${i === 0 ? 'aspect-[3/4]' : 'aspect-square'}`}>
                   <img
-                    src={optimizeImageUrl(artist.artwork_url!, { width: 300, height: 300 })}
-                    alt={artist.artist_name}
+                    src={optimizeImageUrl(artist.artwork_url!, { width: i === 0 ? 256 : 192, height: i === 0 ? 340 : 192 })}
+                    alt={generateArtworkAlt(artist.artist_name, '', 'artist photo')}
                     loading="lazy"
-                    width={192}
-                    height={192}
+                    decoding="async"
+                    width={i === 0 ? 256 : 192}
+                    height={i === 0 ? 340 : 192}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -111,6 +112,15 @@ export default function Echo() {
   };
 
   return (
+    <>
+      <Helmet>
+        <title>Magic Mike — AI Muziekexpert | Vraag Alles Over Muziek | MusicScan</title>
+        <meta name="description" content="Chat met Magic Mike, je persoonlijke AI muziekexpert. Stel vragen over albums, artiesten, muziekgeschiedenis en meer. Ken elk verhaal achter de plaat." />
+        <link rel="canonical" href="https://www.musicscan.app/echo" />
+        <meta property="og:title" content="Magic Mike — AI Muziekexpert | MusicScan" />
+        <meta property="og:description" content="Chat met Magic Mike, je persoonlijke AI muziekexpert. Stel vragen over albums, artiesten, muziekgeschiedenis en meer." />
+        <meta property="og:type" content="website" />
+      </Helmet>
     <div className="min-h-screen bg-gradient-to-br from-echo-violet via-background to-background">
       <div className="relative overflow-hidden pt-2 pb-3 px-4 bg-gradient-to-br from-[hsl(270,60%,20%)] via-[hsl(270,50%,18%)] to-[hsl(270,55%,12%)]">
         <div className="container mx-auto max-w-5xl relative z-10">
@@ -231,5 +241,6 @@ export default function Echo() {
         </Card>
       </div>
     </div>
+    </>
   );
 }

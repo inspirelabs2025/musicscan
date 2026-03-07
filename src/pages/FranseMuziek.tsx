@@ -52,7 +52,7 @@ const FranseMuziek = () => {
   return (
     <>
       <Helmet>
-        <title>Franse Muziek - Van Édith Piaf tot Daft Punk | MusicScan</title>
+        <title>Franse Muziek — Artiesten, Albums & Verhalen | MusicScan</title>
         <meta 
           name="description" 
           content="Ontdek de rijke Franse muziekgeschiedenis: van het klassieke chanson van Édith Piaf tot de elektronische beats van Daft Punk. Verken artiesten, albums en verhalen." 

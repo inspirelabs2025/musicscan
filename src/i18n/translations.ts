@@ -355,8 +355,8 @@ const translations = {
     },
     shop: {
       title: "MusicScan Shop",
-      metaTitle: "Shop - Muziek Art & Merchandise | MusicScan",
-      metaDescription: "Ontdek unieke muziek merchandise, posters, canvas, metal prints, t-shirts en meer.",
+      metaTitle: "Muziek Shop — Posters, Metal Prints, Canvas & Merchandise | MusicScan",
+      metaDescription: "Shop unieke album art posters, metal prints, canvas doeken en muziek merchandise. Meer dan 6800 producten van je favoriete artiesten en albums.",
       subtitle: "Posters, canvas, metal prints, kleding en meer.",
       searchPlaceholder: "Zoek op artiest, album of product...",
       canvasDescription: "Album covers op canvas",
@@ -508,10 +508,10 @@ const translations = {
       goHome: "Ga naar Home",
     },
     quiz: {
-      metaTitle: "Muziek Quizzen | Test Je Kennis | MusicScan",
-      metaDescription: "Test je muziekkennis met onze interactieve quizzen. Speel tegen vrienden, verdien badges en beklim het leaderboard.",
-      ogTitle: "Muziek Quizzen | MusicScan",
-      ogDescription: "Test je muziekkennis met unieke quizzen over artiesten, albums, en muziekgeschiedenis.",
+      metaTitle: "Muziekquiz — Test je Muziekkennis | Dagelijkse Challenge | MusicScan",
+      metaDescription: "Speel de dagelijkse muziekquiz en test je kennis over artiesten, albums en muziekgeschiedenis. Verdien punten, unlock badges en beklim het leaderboard.",
+      ogTitle: "Muziekquiz — Test je Muziekkennis | MusicScan",
+      ogDescription: "Speel de dagelijkse muziekquiz en test je kennis over artiesten, albums en muziekgeschiedenis.",
       myQuizzesScores: "Mijn Quizzen & Scores",
       chooseYourQuiz: "Kies Je Quiz",
       topPlayers: "🏆 Top Spelers",
@@ -582,7 +582,7 @@ const translations = {
       export: "Export",
     },
     filmmuziek: {
-      title: "Filmmuziek | Soundtracks & Scores - MusicScan",
+      title: "Filmmuziek — Soundtracks, Componisten & Verhalen | MusicScan",
       description: "Ontdek de wereld van filmmuziek: van John Williams tot Hans Zimmer. Leer over iconische scores, componisten en de geschiedenis van film soundtracks.",
     },
     echo: {
@@ -620,8 +620,8 @@ const translations = {
     },
     nieuws: {
       title: "Muzieknieuws",
-      metaTitle: "Muzieknieuws | MusicScan",
-      metaDesc: "Het laatste muzieknieuws, dagelijks automatisch voor jou samengesteld.",
+      metaTitle: "Muzieknieuws — Nieuwe Releases & Actueel | MusicScan",
+      metaDesc: "Het laatste muzieknieuws: nieuwe releases, concerten en albumreviews. Blijf als eerste op de hoogte van alles in de muziekwereld.",
       dailyFresh: "Dagelijks Vers",
       subtitle: "Dagelijks automatisch samengesteld • Altijd actueel • Altijd betrouwbaar",
       searchPlaceholder: "Zoek in het nieuws...",
@@ -661,8 +661,8 @@ const translations = {
     },
     verhalen: {
       title: "Muziekverhalen",
-      metaTitle: "Muziekverhalen - Albums, Artiesten & Singles | MusicScan",
-      metaDesc: "Ontdek de verhalen achter je favoriete albums, artiesten en singles.",
+      metaTitle: "Muziekverhalen — Het Verhaal Achter Iconische Albums & Singles | MusicScan",
+      metaDesc: "Ontdek de verhalen achter legendarische albums en singles. Van studio-geheimen tot de inspiratie achter de muziek. Lees diepgaande muziekverhalen over artiesten en platen.",
       subtitle: "Ontdek de verhalen achter albums, artiesten en de geschiedenis van de muziek",
     },
     mijnDiscogsPage: {
@@ -832,8 +832,8 @@ const translations = {
       freeCreditsReceived: "gratis credits ontvangen!",
     },
     home: {
-      metaTitle: "MusicScan - Hét Muziekplatform | Nieuws, Verhalen, Shop, Quiz & Smart Scanner",
-      metaDesc: "MusicScan is hét complete muziekplatform. Ontdek muzieknieuws, lees verhalen over albums & artiesten, shop unieke muziekproducten, doe de quiz, en scan je vinyl & CD collectie met waardebepaling.",
+      metaTitle: "Vinyl Scanner & Muziekplatform | Scan je LP Collectie | MusicScan",
+      metaDesc: "Scan je vinyl en CD collectie, ontdek de waarde van je platen, lees verhalen achter iconische albums en test je muziekkennis. Gratis vinyl scanner met AI herkenning.",
     },
     marketplace: {
       title: "Marktplaats",
@@ -879,7 +879,7 @@ const translations = {
     },
     fanwall: {
       title: "FanWall",
-      metaTitle: "FanWall - Muziek Herinneringen | MusicScan",
+      metaTitle: "Fanwall — Deel je Muziekcollectie & Favoriete Platen | MusicScan",
       metaDesc: "Ontdek en deel muziek herinneringen: concertfoto's, vinyl collecties, en meer. Een visueel verhaal van muziekliefhebbers.",
       subtitle: "Muziek herinneringen gedeeld door fans",
       searchPlaceholder: "Zoek op artiest of beschrijving...",
@@ -3171,8 +3171,8 @@ const translations = {
     },
     shop: {
       title: "MusicScan Shop",
-      metaTitle: "Shop - Music Art & Merchandise | MusicScan",
-      metaDescription: "Discover unique music merchandise, posters, canvas, metal prints, t-shirts and more.",
+      metaTitle: "Music Shop — Posters, Metal Prints, Canvas & Merchandise | MusicScan",
+      metaDescription: "Shop unique album art posters, metal prints, canvas art and music merchandise. Over 6800 products from your favorite artists and albums.",
       subtitle: "Posters, canvas, metal prints, clothing and more.",
       searchPlaceholder: "Search by artist, album or product...",
       canvasDescription: "Album covers on canvas",
@@ -3324,10 +3324,10 @@ const translations = {
       goHome: "Go to Home",
     },
     quiz: {
-      metaTitle: "Music Quizzes | Test Your Knowledge | MusicScan",
-      metaDescription: "Test your music knowledge with our interactive quizzes. Play against friends, earn badges and climb the leaderboard.",
-      ogTitle: "Music Quizzes | MusicScan",
-      ogDescription: "Test your music knowledge with unique quizzes about artists, albums, and music history.",
+      metaTitle: "Music Quiz — Test Your Music Knowledge | Daily Challenge | MusicScan",
+      metaDescription: "Play the daily music quiz and test your knowledge about artists, albums and music history. Earn points, unlock badges and climb the leaderboard.",
+      ogTitle: "Music Quiz — Test Your Knowledge | MusicScan",
+      ogDescription: "Play the daily music quiz and test your knowledge about artists, albums and music history.",
       myQuizzesScores: "My Quizzes & Scores",
       chooseYourQuiz: "Choose Your Quiz",
       topPlayers: "🏆 Top Players",
@@ -3436,8 +3436,8 @@ const translations = {
     },
     nieuws: {
       title: "Music News",
-      metaTitle: "Music News | MusicScan",
-      metaDesc: "The latest music news, automatically curated for you daily.",
+      metaTitle: "Music News — New Releases & Updates | MusicScan",
+      metaDesc: "The latest music news: new releases, concerts and album reviews. Stay ahead of everything in the music world.",
       dailyFresh: "Daily Fresh",
       subtitle: "Automatically curated daily • Always current • Always reliable",
       searchPlaceholder: "Search the news...",
@@ -3477,8 +3477,8 @@ const translations = {
     },
     verhalen: {
       title: "Music Stories",
-      metaTitle: "Music Stories - Albums, Artists & Singles | MusicScan",
-      metaDesc: "Discover the stories behind your favorite albums, artists and singles.",
+      metaTitle: "Music Stories — The Story Behind Iconic Albums & Singles | MusicScan",
+      metaDesc: "Discover the stories behind legendary albums and singles. From studio secrets to the inspiration behind the music. Read in-depth music stories about artists and records.",
       subtitle: "Discover the stories behind albums, artists and the history of music",
     },
     mijnDiscogsPage: {
@@ -3648,8 +3648,8 @@ const translations = {
       freeCreditsReceived: "free credits received!",
     },
     home: {
-      metaTitle: "MusicScan - The Music Platform | News, Stories, Shop, Quiz & Smart Scanner",
-      metaDesc: "MusicScan is the ultimate music platform. Discover music news, read stories about albums & artists, shop unique music products, take the quiz, and scan your vinyl & CD collection with valuation.",
+      metaTitle: "Vinyl Scanner & Music Platform | Scan Your LP Collection | MusicScan",
+      metaDesc: "Scan your vinyl and CD collection, discover the value of your records, read stories behind iconic albums and test your music knowledge. Free vinyl scanner with AI recognition.",
     },
     marketplace: {
       title: "Marketplace",
@@ -3695,7 +3695,7 @@ const translations = {
     },
     fanwall: {
       title: "FanWall",
-      metaTitle: "FanWall - Music Memories | MusicScan",
+      metaTitle: "Fanwall — Share Your Music Collection & Favorite Records | MusicScan",
       metaDesc: "Discover and share music memories: concert photos, vinyl collections, and more. A visual story of music lovers.",
       subtitle: "Music memories shared by fans",
       searchPlaceholder: "Search by artist or description...",

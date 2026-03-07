@@ -18,9 +18,9 @@ export default function Singles() {
   const s = tr.singles;
 
   useSEO({
-    title: `${s.title} | MusicScan`,
-    description: s.subtitle,
-    keywords: 'singles, muziek verhalen, hit singles, muziekgeschiedenis',
+    title: 'Singles — Het Verhaal achter de Grootste Hits | MusicScan',
+    description: 'Ontdek hoe iconische hits zijn ontstaan. Van eerste idee tot nummer 1 — de verhalen achter de muziek die je kent.',
+    keywords: 'singles verhalen, hits geschiedenis, muziek singles, iconische nummers',
     canonicalUrl: 'https://www.musicscan.app/singles'
   });
 

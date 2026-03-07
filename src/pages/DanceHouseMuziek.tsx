@@ -12,7 +12,7 @@ import { DanceHouseSubgenres } from '@/components/dance-house/DanceHouseSubgenre
 
 const DanceHouseMuziek = () => {
   const pageUrl = 'https://www.musicscan.app/dance-house';
-  const pageTitle = 'Dance & House Muziek - Geschiedenis, Artiesten & Verhalen | MusicScan';
+  const pageTitle = 'Dance & House Muziek — Artiesten, Albums & Verhalen | MusicScan';
   const pageDescription = 'Ontdek de rijke geschiedenis van dance en house muziek. Van Chicago House tot moderne EDM, van Daft Punk tot Martin Garrix. Verhalen, tijdlijn en 100+ artiesten.';
   const ogImage = 'https://www.musicscan.app/og-dance-house.jpg';
 

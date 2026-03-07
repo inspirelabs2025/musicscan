@@ -11,7 +11,7 @@ import { NederlandseGenres } from "@/components/nederland/NederlandseGenres";
 
 const NederlandseMuziek = () => {
   const pageUrl = "https://vinylplaten.nl/nederland";
-  const pageTitle = "Nederlandse Muziek | Artiesten, Albums & Geschiedenis";
+  const pageTitle = "Nederlandse Muziek — Artiesten, Albums & Verhalen | MusicScan";
   const pageDescription = "Ontdek Nederlandse muziek van Golden Earring tot Tiësto. Quiz, interactieve kaart, artiesten per provincie en 60 jaar muziekgeschiedenis.";
   const ogImage = "https://vinylplaten.nl/og-nederland-muziek.jpg";
 

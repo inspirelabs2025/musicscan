@@ -582,7 +582,7 @@ const translations = {
       export: "Export",
     },
     filmmuziek: {
-      title: "Filmmuziek | Soundtracks & Scores - MusicScan",
+      title: "Filmmuziek — Soundtracks, Componisten & Verhalen | MusicScan",
       description: "Ontdek de wereld van filmmuziek: van John Williams tot Hans Zimmer. Leer over iconische scores, componisten en de geschiedenis van film soundtracks.",
     },
     echo: {

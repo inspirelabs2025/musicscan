@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Headphones, Search } from "lucide-react";
@@ -112,6 +113,15 @@ export default function Podcasts() {
   }
 
   return (
+    <>
+      <Helmet>
+        <title>De Plaat & Het Verhaal — Muziek Podcast | MusicScan</title>
+        <meta name="description" content="Luister naar de verhalen achter legendarische albums. Elke aflevering duikt diep in de muziekgeschiedenis." />
+        <link rel="canonical" href="https://www.musicscan.app/podcasts" />
+        <meta property="og:title" content="De Plaat & Het Verhaal — Muziek Podcast | MusicScan" />
+        <meta property="og:description" content="Luister naar de verhalen achter legendarische albums. Elke aflevering duikt diep in de muziekgeschiedenis." />
+        <meta property="og:type" content="website" />
+      </Helmet>
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">

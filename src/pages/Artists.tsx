@@ -63,7 +63,7 @@ const Artists = () => {
   return (
     <>
       <Helmet>
-        <title>{selectedGenre !== 'all' ? `${selectedGenre} ${a.artist}` : tr.nav.artists} | {a.title} | MusicScan</title>
+        <title>{selectedGenre !== 'all' ? `${selectedGenre} ${a.artist}` : 'Artiesten — Ontdek Muzikanten & Hun Verhalen'} | MusicScan</title>
         <meta 
           name="description" 
           content={selectedGenre !== 'all' 

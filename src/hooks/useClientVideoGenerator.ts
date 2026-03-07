@@ -34,11 +34,11 @@ interface VideoGeneratorResult {
 }
 
 // Singleton FFmpeg instance
-let ffmpegInstance: FFmpeg | null = null;
+let ffmpegInstance: InstanceType<Awaited<ReturnType<typeof loadFFmpegModules>>['FFmpeg']> | null = null;
 let ffmpegLoaded = false;
 let ffmpegLoadFailed = false;
 
-const getFFmpeg = async (): Promise<FFmpeg | null> => {
+const getFFmpeg = async () => {
   // If we already know loading failed, don't retry
   if (ffmpegLoadFailed) {
     return null;
@@ -49,6 +49,7 @@ const getFFmpeg = async (): Promise<FFmpeg | null> => {
   }
   
   try {
+    const { FFmpeg, toBlobURL } = await loadFFmpegModules();
     ffmpegInstance = new FFmpeg();
     
     const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
@@ -225,6 +226,7 @@ export const useClientVideoGenerator = () => {
     
     try {
       // Write input file
+      const { fetchFile } = await loadFFmpegModules();
       const webmData = await fetchFile(webmBlob);
       await ffmpeg.writeFile('input.webm', webmData);
       

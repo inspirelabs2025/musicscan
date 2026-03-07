@@ -27,7 +27,6 @@ export function CommunitySection() {
         <h2 className="text-2xl font-bold text-foreground mb-6">Community</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Fanwall */}
           <Card className="overflow-hidden border-border/50">
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-4">
@@ -36,17 +35,14 @@ export function CommunitySection() {
               </div>
               <div className="flex gap-3 mb-4">
                 {fanwallPhotos?.map((fw) => (
-                  <Link
-                    key={fw.id}
-                    to={`/fanwall/${fw.slug}`}
-                    className="flex-shrink-0"
-                  >
+                  <Link key={fw.id} to={`/fanwall/${fw.slug}`} className="flex-shrink-0">
                     <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted">
                       {fw.featured_photo_url ? (
                         <img
-                          src={optimizeImageUrl(fw.featured_photo_url!, { width: 200, height: 200 })}
-                          alt={fw.artist_name}
+                          src={optimizeImageUrl(fw.featured_photo_url!, { width: 80, height: 80 })}
+                          alt={`${fw.artist_name} fanwall foto`}
                           loading="lazy"
+                          decoding="async"
                           width={80}
                           height={80}
                           className="w-full h-full object-cover hover:scale-105 transition-transform"
@@ -71,7 +67,6 @@ export function CommunitySection() {
             </CardContent>
           </Card>
 
-          {/* Quiz */}
           <Card className="overflow-hidden border-border/50 bg-gradient-to-br from-primary/5 to-accent/5">
             <CardContent className="p-5 flex flex-col justify-between h-full">
               <div>

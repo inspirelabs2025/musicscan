@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { optimizeImageUrl } from '@/lib/image-utils';
+import { optimizeImageUrl, generateArtworkAlt } from '@/lib/image-utils';
 
 export function StoriesSection() {
   const { data: stories } = useQuery({
@@ -18,7 +18,6 @@ export function StoriesSection() {
         type: 'album' | 'anecdote';
       }> = [];
 
-      // Album stories - fetch more to fill gaps
       const { data: albums } = await supabase
         .from('blog_posts')
         .select('id,slug,yaml_frontmatter,album_cover_url')
@@ -29,7 +28,6 @@ export function StoriesSection() {
       albums?.forEach(a => {
         const fm = a.yaml_frontmatter as any;
         const title = fm?.title;
-        // Skip items without a real title
         if (!title || title === 'Album Verhaal' || title.trim() === '') return;
         items.push({
           id: a.id,
@@ -41,7 +39,6 @@ export function StoriesSection() {
         });
       });
 
-      // Anecdotes - use correct column names
       const { data: anecdotes } = await supabase
         .from('music_anecdotes')
         .select('id,slug,anecdote_title,subject_name')
@@ -87,9 +84,10 @@ export function StoriesSection() {
               <div className="aspect-[4/3] rounded-xl overflow-hidden bg-muted mb-3">
                 {story.image_url ? (
                   <img
-                    src={optimizeImageUrl(story.image_url!, { width: 600, height: 400 })}
-                    alt={story.title}
+                    src={optimizeImageUrl(story.image_url!, { width: 400, height: 300 })}
+                    alt={generateArtworkAlt(story.artist, story.title, 'album cover')}
                     loading="lazy"
+                    decoding="async"
                     width={400}
                     height={300}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { optimizeImageUrl } from '@/lib/image-utils';
 
 export function PopularSinglesSection() {
   const { data: singles } = useQuery({
@@ -61,7 +62,7 @@ export function PopularSinglesSection() {
               >
                 <div className="aspect-square rounded-xl overflow-hidden bg-muted mb-2">
                   <img
-                    src={single.artwork_url!}
+                    src={optimizeImageUrl(single.artwork_url!, { width: 300, height: 300 })}
                     alt={single.single_name || single.title}
                     loading={i < 2 ? 'eager' : 'lazy'}
                     width={192}

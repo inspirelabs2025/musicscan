@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { optimizeImageUrl } from '@/lib/image-utils';
 
 export function CommunitySection() {
   const { data: fanwallPhotos } = useQuery({
@@ -43,7 +44,7 @@ export function CommunitySection() {
                     <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted">
                       {fw.featured_photo_url ? (
                         <img
-                          src={fw.featured_photo_url}
+                          src={optimizeImageUrl(fw.featured_photo_url!, { width: 200, height: 200 })}
                           alt={fw.artist_name}
                           loading="lazy"
                           width={80}

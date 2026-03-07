@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { optimizeImageUrl } from '@/lib/image-utils';
 
 export const ProductBanner = () => {
   const { tr } = useLanguage();
@@ -44,7 +45,7 @@ export const ProductBanner = () => {
                 className="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded overflow-hidden ring-2 ring-white/20 hover:ring-white/60 transition-all hover:scale-105"
               >
                 <img
-                  src={product.primary_image!}
+                  src={optimizeImageUrl(product.primary_image!, { width: 300, height: 300 })}
                   alt={product.title}
                   loading="lazy"
                   width={96}

@@ -34,7 +34,7 @@ export default function Reviews() {
         <meta property="og:title" content="Album Reviews - MusicScan" />
         <meta property="og:description" content="Ontdek eerlijke en diepgaande album reviews van nieuwe releases en klassiekers." />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://www.musicscan.app/reviews/" />
+        <link rel="canonical" href="https://www.musicscan.app/reviews" />
       </Helmet>
 
       <div className="min-h-screen bg-background">

@@ -4,11 +4,19 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "redirects": [
-    {
-      "source": "/blog/:slug",
-      "destination": "/plaat-verhaal/:slug",
-      "permanent": true
-    }
+    { "source": "/blog/:slug", "destination": "/plaat-verhaal/:slug", "permanent": true },
+    { "source": "/product/:slug/", "destination": "/product/:slug", "permanent": true },
+    { "source": "/singles/:slug/", "destination": "/singles/:slug", "permanent": true },
+    { "source": "/artists/:slug/", "destination": "/artists/:slug", "permanent": true },
+    { "source": "/muziek-verhaal/:slug/", "destination": "/muziek-verhaal/:slug", "permanent": true },
+    { "source": "/plaat-verhaal/:slug/", "destination": "/plaat-verhaal/:slug", "permanent": true },
+    { "source": "/artist-spotlight/:slug/", "destination": "/artist-spotlight/:slug", "permanent": true },
+    { "source": "/anekdotes/:slug/", "destination": "/anekdotes/:slug", "permanent": true },
+    { "source": "/nieuws/:slug/", "destination": "/nieuws/:slug", "permanent": true },
+    { "source": "/new-release/:slug/", "destination": "/new-release/:slug", "permanent": true },
+    { "source": "/nummer/:slug/", "destination": "/nummer/:slug", "permanent": true },
+    { "source": "/reviews/:slug/", "destination": "/reviews/:slug", "permanent": true },
+    { "source": "/shop/:slug/", "destination": "/shop/:slug", "permanent": true }
   ],
   "rewrites": [
     {

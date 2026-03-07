@@ -24,3 +24,7 @@ Disallow: /functions/v1/universal-ssr-proxy/
 # Soft 404 prevention
 Disallow: /art-shop?search
 Disallow: /plaat-verhaal/*-*-*-*-*
+
+# Block all search parameter URLs (thin content)
+Disallow: /*?search=
+Disallow: /artists?search

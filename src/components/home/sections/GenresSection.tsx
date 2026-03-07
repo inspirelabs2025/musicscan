@@ -3,7 +3,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import promoNederlandBg from '@/assets/promo-nederland-bg.jpg';
 import promoDanceBg from '@/assets/promo-dance-bg.jpg';
 import promoFilmmuziekBg from '@/assets/promo-filmmuziek-bg.jpg';
-import promoFrankrijkBg from '@/assets/promo-franse-bg.jpg';
+import promoFrankrijkBg from '@/assets/promo-frankrijk-bg.jpg';
 
 const genres = [
   {

@@ -3,7 +3,7 @@ import { Music2, Podcast, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
-const echoAvatar = '/magic-mike-logo.webp';
+const echoAvatar = '/magic-mike-logo.png';
 
 export function MagicMikePodcastSection() {
   return (

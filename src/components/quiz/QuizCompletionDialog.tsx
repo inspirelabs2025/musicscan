@@ -116,6 +116,11 @@ export function QuizCompletionDialog({
       }
 
       setIsSuccess(true);
+
+      // Fire Meta Pixel CompleteRegistration event
+      if (typeof window !== 'undefined' && (window as any).fbq) {
+        (window as any).fbq('track', 'CompleteRegistration');
+      }
       
       // Call callback with new user ID
       onAccountCreated(signUpData.user.id);

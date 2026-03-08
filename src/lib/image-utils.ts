@@ -1,21 +1,44 @@
 /**
+ * Check if we're on a mobile viewport (<768px).
+ * Falls back to true during SSR or when window is unavailable.
+ */
+const isMobileViewport = (): boolean => {
+  if (typeof window === 'undefined') return true;
+  return window.innerWidth < 768;
+};
+
+/**
+ * Get mobile-optimized dimensions. Reduces image sizes on mobile for faster loads.
+ */
+function getMobileOptimizedSize(width?: number, height?: number): { width?: number; height?: number } {
+  if (!isMobileViewport()) return { width, height };
+  const scale = 0.52; // ~half size for mobile
+  return {
+    width: width ? Math.round(width * scale) : undefined,
+    height: height ? Math.round(height * scale) : undefined,
+  };
+}
+
+/**
  * Optimize image URLs with size hints for CDN/Cloudflare caching.
- * Uses standard /object/public/ path (no Image Transformations required).
+ * Automatically reduces dimensions on mobile viewports.
  */
 export function optimizeImageUrl(url: string, options?: { width?: number; height?: number; quality?: number }): string {
   if (!url) return url;
 
+  const { width, height } = getMobileOptimizedSize(options?.width, options?.height);
+
   if (url.includes('supabase.co/storage')) {
     const separator = url.includes('?') ? '&' : '?';
     const params: string[] = [];
-    if (options?.width) params.push(`width=${options.width * 2}`);
-    if (options?.height) params.push(`height=${options.height * 2}`);
+    if (width) params.push(`width=${width * 2}`);
+    if (height) params.push(`height=${height * 2}`);
     if (params.length === 0) return url;
     return url + separator + params.join('&');
   }
 
-  if (url.includes('i.discogs.com') && options?.width) {
-    const targetW = options.width * 2;
+  if (url.includes('i.discogs.com') && width) {
+    const targetW = width * 2;
     return url.replace(/width=\d+/, `width=${targetW}`).replace(/height=\d+/, `height=${targetW}`);
   }
 

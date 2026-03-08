@@ -95,7 +95,20 @@
       .steps-strip, [class*="steps"] { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; padding: 1rem; }
       /* Font display swap for system fonts */
       * { -webkit-font-smoothing: antialiased; }
+      /* CLS fix: reserve space for async sections */
+      .section-artists { min-height: 400px; }
+      .section-genres { min-height: 300px; }
+      @media(min-width:768px) { .section-artists { min-height: 350px; } .section-genres { min-height: 250px; } }
+      /* Singles section critical styles */
+      .singles-scroll { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; }
+      .singles-scroll a { flex-shrink: 0; width: 10rem; }
+      @media(min-width:768px) { .singles-scroll a { width: 12rem; } }
+      .single-art { aspect-ratio: 1/1; border-radius: 0.75rem; overflow: hidden; background: #1a1625; margin-bottom: 0.5rem; }
+      .single-art img { width: 100%; height: 100%; object-fit: cover; }
     </style>
+
+    <!-- Preload LCP hero image -->
+    <link rel="preload" as="image" href="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" fetchpriority="high">
     
     <!-- Google Analytics Script - deferred for performance -->
     <script defer src="https://www.googletagmanager.com/gtag/js?id=G-B1TBDCNMR4"></script>

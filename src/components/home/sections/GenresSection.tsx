@@ -34,7 +34,7 @@ const genres = [
 
 export function GenresSection() {
   return (
-    <section className="py-14 bg-muted/30 section-genres min-h-[500px] md:min-h-[250px]" style={{ contain: 'layout' }}>
+    <section className="py-14 bg-muted/30 section-genres h-[420px] md:h-auto md:min-h-[350px] overflow-hidden">
       <div className="container mx-auto px-4">
         <h2 className="text-2xl font-bold text-foreground mb-6">Ontdek op Genre</h2>
 

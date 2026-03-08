@@ -8,11 +8,11 @@ export const ScannerHero = () => {
   const h = tr.homeUI;
 
   return (
-    <section className="relative min-h-[500px] md:min-h-[600px] bg-black overflow-hidden flex items-center -mt-14 pt-14">
+    <section className="scanner-hero relative min-h-[500px] md:min-h-[600px] bg-black overflow-hidden flex items-center -mt-14 pt-14">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/50 via-black to-vinyl-gold/30" />
       
-      {/* Animated vinyl disc - left */}
+      {/* Animated vinyl disc - left - lazy CSS animation only */}
       <div className="absolute -left-10 md:-left-20 top-1/2 -translate-y-1/2 opacity-30 md:opacity-40">
         <Disc3 className="w-72 h-72 md:w-[28rem] md:h-[28rem] lg:w-[32rem] lg:h-[32rem] text-vinyl-purple animate-vinyl-spin" />
       </div>

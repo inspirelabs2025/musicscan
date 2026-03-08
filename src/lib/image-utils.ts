@@ -20,8 +20,9 @@ function getMobileOptimizedSize(width?: number, height?: number): { width?: numb
 }
 
 /**
- * Optimize image URLs with size hints for CDN/Cloudflare caching.
+ * Optimize image URLs with size hints and WebP format for CDN/Cloudflare caching.
  * Automatically reduces dimensions on mobile viewports.
+ * Appends format=webp for Supabase Storage URLs to serve modern formats.
  */
 export function optimizeImageUrl(url: string, options?: { width?: number; height?: number; quality?: number }): string {
   if (!url) return url;
@@ -33,7 +34,9 @@ export function optimizeImageUrl(url: string, options?: { width?: number; height
     const params: string[] = [];
     if (width) params.push(`width=${width * 2}`);
     if (height) params.push(`height=${height * 2}`);
-    if (params.length === 0) return url;
+    // Request WebP format for smaller payloads
+    params.push('format=webp');
+    if (options?.quality) params.push(`quality=${options.quality}`);
     return url + separator + params.join('&');
   }
 

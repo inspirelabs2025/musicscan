@@ -67,7 +67,8 @@ export function PopularSinglesSection() {
                   <img
                     src={optimizeImageUrl(single.artwork_url!, { width: 192, height: 192 })}
                     alt={generateArtworkAlt(single.artist, single.single_name || single.title, 'single cover')}
-                    loading={i < 2 ? 'eager' : 'lazy'}
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    fetchPriority={i === 0 ? 'high' : undefined}
                     decoding="async"
                     width={192}
                     height={192}

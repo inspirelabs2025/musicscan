@@ -34,7 +34,7 @@ const genres = [
 
 export function GenresSection() {
   return (
-    <section className="py-14 bg-muted/30">
+    <section className="py-14 bg-muted/30 section-genres">
       <div className="container mx-auto px-4">
         <h2 className="text-2xl font-bold text-foreground mb-6">Ontdek op Genre</h2>
 

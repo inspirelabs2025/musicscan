@@ -1,23 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
   <head>
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-NPVTT9C5');</script>
-    <!-- Meta Pixel Code - deferred to avoid render blocking -->
-    <script>
-    function loadFBPixel(){if(window._fbPixelLoaded)return;window._fbPixelLoaded=true;
-    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
-    (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init','1635291241045529');fbq('track','PageView');}
-    if('requestIdleCallback' in window){requestIdleCallback(loadFBPixel,{timeout:3000})}
-    else{setTimeout(loadFBPixel,3000)}
-    </script>
-    <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=1635291241045529&ev=PageView&noscript=1"
-    /></noscript>
-    <!-- End Meta Pixel Code -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -69,7 +52,7 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="https://www.musicscan.app/" />
     
-    <!-- Additional SEO - Dutch only, no multi-language -->
+    <!-- Additional SEO - Dutch only -->
     <link rel="alternate" hreflang="nl" href="https://www.musicscan.app/" />
     <link rel="alternate" hreflang="x-default" href="https://www.musicscan.app/" />
     
@@ -78,49 +61,92 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <!-- Critical CSS - above-the-fold rendering without waiting for external CSS -->
+    <!-- Critical CSS - everything above the fold renders without JS or external CSS -->
     <style>
-      /* Body & page background */
-      html, body { margin: 0; padding: 0; background: #0f0d1a; color: #fafafa; font-family: system-ui, -apple-system, sans-serif; }
-      #root { min-height: 100vh; }
-      /* Sticky header skeleton */
-      header, .sticky-header { position: fixed; top: 0; left: 0; right: 0; z-index: 50; height: 3.5rem; background: rgba(15,13,26,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; }
-      /* Hero section skeleton */
-      .hero-section, [class*="hero"] { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 4rem 1rem 2rem; }
-      .hero-section h1, [class*="hero"] h1 { font-size: 2.25rem; font-weight: 800; line-height: 1.1; color: #fff; margin: 0 0 1rem; }
-      @media(min-width:768px) { .hero-section h1, [class*="hero"] h1 { font-size: 3rem; } }
+      /* Font display swap for ALL font loading */
+      @font-face { font-family: 'system-ui'; font-display: swap; src: local('system-ui'); }
+      
+      /* Base reset & dark background */
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html { -webkit-text-size-adjust: 100%; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+      body { background: #0f0d1a; color: #fafafa; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.5; }
+      #root { min-height: 100vh; background: #0f0d1a; }
+      
+      /* Sticky header - renders immediately */
+      header, .sticky-header, [class*="StickyHeader"] { position: fixed; top: 0; left: 0; right: 0; z-index: 50; height: 3.5rem; background: rgba(15,13,26,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; }
+      
+      /* Hero section - immediate paint, no JS needed for layout */
+      .scanner-hero, section[class*="hero"], [class*="ScannerHero"] {
+        position: relative; min-height: 500px; background: #000; overflow: hidden;
+        display: flex; align-items: center; justify-content: center; text-align: center;
+        padding: 5rem 1rem 2rem; margin-top: -3.5rem; padding-top: calc(3.5rem + 4rem);
+      }
+      .scanner-hero::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(139,92,246,0.5), rgba(0,0,0,1), rgba(234,179,8,0.3));
+      }
+      
+      /* Hero H1 - LCP element, renders instantly */
+      .scanner-hero h1, section[class*="hero"] h1 {
+        font-size: 2.25rem; font-weight: 900; color: #fff; line-height: 1.1;
+        letter-spacing: -0.025em; margin-bottom: 1.5rem; position: relative; z-index: 1;
+      }
+      .scanner-hero h2, section[class*="hero"] h2 {
+        font-size: 1.125rem; color: rgba(255,255,255,0.8); margin-bottom: 2.5rem;
+        position: relative; z-index: 1;
+      }
+      @media(min-width:768px) {
+        .scanner-hero, section[class*="hero"] { min-height: 600px; }
+        .scanner-hero h1, section[class*="hero"] h1 { font-size: 3.75rem; }
+        .scanner-hero h2, section[class*="hero"] h2 { font-size: 1.25rem; }
+      }
+      @media(min-width:1024px) {
+        .scanner-hero h1, section[class*="hero"] h1 { font-size: 4.5rem; }
+        .scanner-hero h2, section[class*="hero"] h2 { font-size: 1.5rem; }
+      }
+      
       /* CTA button skeleton */
-      .hero-cta, [class*="hero"] a[href*="scan"], [class*="hero"] button { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 1rem; background: hsl(271 81% 56%); color: #fafafa; border: none; cursor: pointer; }
-      /* Steps strip skeleton */
-      .steps-strip, [class*="steps"] { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; padding: 1rem; }
-      /* Font display swap for system fonts */
-      * { -webkit-font-smoothing: antialiased; }
+      .hero-cta, [class*="hero"] a[href*="scan"], .scanner-hero button, .scanner-hero a {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        padding: 1rem 2rem; border-radius: 1rem; font-weight: 700; font-size: 1.25rem;
+        background: linear-gradient(to right, hsl(45,100%,51%), hsl(48,96%,53%), hsl(45,100%,51%));
+        color: #000; border: none; cursor: pointer; text-decoration: none;
+        box-shadow: 0 25px 50px -12px rgba(234,179,8,0.4); position: relative; z-index: 1;
+      }
+      
+      /* Steps strip */
+      .steps-strip, [class*="steps"] { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; padding: 1rem; }
+
       /* CLS fix: reserve space for async sections */
       .section-artists { min-height: 400px; }
       .section-genres { min-height: 300px; }
       @media(min-width:768px) { .section-artists { min-height: 350px; } .section-genres { min-height: 250px; } }
+      
       /* Singles section critical styles */
-      .singles-scroll { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; }
-      .singles-scroll a { flex-shrink: 0; width: 10rem; }
-      @media(min-width:768px) { .singles-scroll a { width: 12rem; } }
+      .singles-scroll { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+      .singles-scroll > * { flex-shrink: 0; width: 10rem; scroll-snap-align: start; }
+      @media(min-width:768px) { .singles-scroll > * { width: 12rem; } }
       .single-art { aspect-ratio: 1/1; border-radius: 0.75rem; overflow: hidden; background: #1a1625; margin-bottom: 0.5rem; }
       .single-art img { width: 100%; height: 100%; object-fit: cover; }
+      
+      /* Skeleton pulse animation - CSS only, no JS */
+      @keyframes skeleton-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+      .skeleton { background: #1a1625; border-radius: 0.5rem; animation: skeleton-pulse 2s ease-in-out infinite; }
+      
+      /* Grid layout for content sections */
+      .content-grid { display: grid; gap: 1rem; }
+      @media(min-width:640px) { .content-grid { grid-template-columns: repeat(2, 1fr); } }
+      @media(min-width:1024px) { .content-grid { grid-template-columns: repeat(3, 1fr); } }
+      
+      /* Image aspect ratio containers */
+      .aspect-square { aspect-ratio: 1/1; }
+      .aspect-video { aspect-ratio: 16/9; }
+      img { max-width: 100%; height: auto; }
+      
+      /* pt-14 for main content below fixed header */
+      main { padding-top: 3.5rem; }
     </style>
 
-    <!-- Preload LCP hero image -->
-    <link rel="preload" as="image" href="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" fetchpriority="high">
-    
-    <!-- Google Analytics Script - deferred for performance -->
-    <script defer src="https://www.googletagmanager.com/gtag/js?id=G-B1TBDCNMR4"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-B1TBDCNMR4', {
-        send_page_view: false
-      });
-    </script>
-    
     <!-- Performance hints -->
     <meta name="format-detection" content="telephone=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -165,8 +191,39 @@
   </head>
 
   <body>
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NPVTT9C5" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- All third-party scripts AFTER page content - non-render-blocking -->
+    <script>
+    // GTM - deferred after paint
+    requestAnimationFrame(function(){setTimeout(function(){
+      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-NPVTT9C5');
+    },0)});
+    </script>
+    <script>
+    // GA4 - deferred
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-B1TBDCNMR4', { send_page_view: false });
+    requestAnimationFrame(function(){setTimeout(function(){
+      var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-B1TBDCNMR4';document.head.appendChild(s);
+    },100)});
+    </script>
+    <script>
+    // Meta Pixel - deferred via requestIdleCallback
+    function loadFBPixel(){if(window._fbPixelLoaded)return;window._fbPixelLoaded=true;
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+    (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init','1635291241045529');fbq('track','PageView');}
+    if('requestIdleCallback' in window){requestIdleCallback(loadFBPixel,{timeout:3000})}
+    else{setTimeout(loadFBPixel,3000)}
+    </script>
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1635291241045529&ev=PageView&noscript=1" /></noscript>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NPVTT9C5" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </body>
 </html>

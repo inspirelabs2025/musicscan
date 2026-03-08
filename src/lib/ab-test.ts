@@ -1,41 +1,43 @@
-import { getCookie, setCookie } from './utils';
+export type AiNudgeVariant = 'control' | 'nudge';
 
-const AI_NUDGE_VARIANT_COOKIE = 'ai_nudge_variant';
-const AI_NUDGE_EXPERIMENT_ID = 'ai-nudge-v1';
+const AB_TEST_KEY = 'ai_nudge_ab_test_variant';
 
-// Define possible variants for the A/B test
-type AINudgeVariant = 'control' | 'nudge';
-
-/**
- * Determines the A/B test variant for the AI nudge feature.
- * Uses a cookie to ensure consistent variant assignment for a user.
- * If no variant is set, it randomly assigns 'control' or 'nudge' and sets a cookie.
- * @returns {AINudgeVariant} The assigned variant ('control' or 'nudge').
- */
-export function getAINudgeVariant(): AINudgeVariant {
-  let variant = getCookie(AI_NUDGE_VARIANT_COOKIE) as AINudgeVariant;
-
-  if (!variant) {
-    // If no variant cookie, randomly assign one
-    variant = Math.random() < 0.5 ? 'control' : 'nudge';
-    setCookie(AI_NUDGE_VARIANT_COOKIE, variant, 365); // Persist for 1 year
+export function getAiNudgeVariant(): AiNudgeVariant {
+  // First, check server-side assigned variant (e.g., from an environment variable).
+  // This would typically be set during build or deployment.
+  const serverVariant = import.meta.env.VITE_AI_NUDGE_VARIANT as AiNudgeVariant | undefined;
+  if (serverVariant && ['control', 'nudge'].includes(serverVariant)) {
+    // Persist server variant to local storage for consistent user experience
+    // across sessions, unless the user specifically has a client-side override.
+    if (!localStorage.getItem(AB_TEST_KEY)) {
+      localStorage.setItem(AB_TEST_KEY, serverVariant);
+    }
+    return serverVariant;
   }
 
-  return variant;
+  // If no server-side variant, check local storage for a previously assigned variant.
+  const storedVariant = localStorage.getItem(AB_TEST_KEY) as AiNudgeVariant | null;
+  if (storedVariant && ['control', 'nudge'].includes(storedVariant)) {
+    return storedVariant;
+  }
+
+  // If no stored variant, randomly assign one and store it.
+  // For initial rollout, we'll assign 'nudge' to a higher percentage
+  // or default to it if no specific A/B testing framework is in place.
+  // For this task, we'll default to 'control' unless explicitly set to 'nudge' somewhere.
+  const assignedVariant: AiNudgeVariant = Math.random() < 0.5 ? 'control' : 'nudge'; // 50/50 split example
+  localStorage.setItem(AB_TEST_KEY, assignedVariant);
+  return assignedVariant;
 }
 
 /**
- * Tracks an A/B test event using Google Analytics.
- * @param {string} eventName The name of the event (e.g., 'view_nudge', 'click_nudge').
- * @param {AINudgeVariant} variant The A/B test variant.
+ * Simulates an AI feature usage event. 
+ * In a real application, this would track actual AI feature usage.
  */
-export function trackAIBTestEvent(eventName: string, variant: AINudgeVariant): void {
-  if (window.gtag) {
-    window.gtag('event', eventName, {
-      event_category: 'ai_nudge_experiment',
-      event_label: variant,
-      experiment_id: AI_NUDGE_EXPERIMENT_ID,
-      experiment_variant: variant,
-    });
-  }
+export function recordAiFeatureUsage() {
+  localStorage.setItem('ai_feature_used', 'true');
+}
+
+export function hasUsedAiFeature(): boolean {
+  return localStorage.getItem('ai_feature_used') === 'true';
 }

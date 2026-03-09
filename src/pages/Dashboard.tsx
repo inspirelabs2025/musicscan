@@ -80,7 +80,7 @@ const Dashboard = () => {
         totalSteps={totalSteps} nextStep={nextStep} previousStep={previousStep}
         completeOnboarding={completeOnboarding} skipOnboarding={skipOnboarding}
       />
-      <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background">
+      <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background overflow-x-hidden">
         {/* Musical Background Elements */}
         <div className="fixed inset-0 opacity-5 pointer-events-none">
           <div className="absolute top-20 left-10 text-4xl animate-pulse">🎵</div>
@@ -89,7 +89,7 @@ const Dashboard = () => {
           <div className="absolute bottom-20 right-10 text-3xl animate-pulse delay-700">🎸</div>
         </div>
 
-        <div className="relative" style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 24px' }}>
+        <div className="relative" style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 24px', overflow: 'hidden' }}>
           {/* Welcome Header */}
           <div className="text-center mb-8 animate-fade-in">
             <div className="flex items-center justify-center gap-3 mb-4">
@@ -171,7 +171,7 @@ const Dashboard = () => {
               <Sparkles className="w-6 h-6 text-vinyl-purple" />
               {t.dashboard.commandCenter}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <EchoWidget />
               <AIInsightsWidget />
               <ChatWidget />

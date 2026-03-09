@@ -89,9 +89,9 @@ const Dashboard = () => {
           <div className="absolute bottom-20 right-10 text-3xl animate-pulse delay-700">🎸</div>
         </div>
 
-        <div className="relative" style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 24px', overflow: 'hidden' }}>
+        <div className="relative" style={{ maxWidth: '1280px', margin: '0 auto', padding: '40px 24px', overflow: 'hidden' }}>
           {/* Welcome Header */}
-          <div className="text-center mb-8 animate-fade-in">
+          <div className="text-center mb-12 animate-fade-in">
             <div className="flex items-center justify-center gap-3 mb-4">
               <Sparkles className="w-8 h-8 text-vinyl-purple animate-pulse" />
               <h1 className="text-4xl font-bold bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold bg-clip-text text-transparent">
@@ -99,7 +99,7 @@ const Dashboard = () => {
               </h1>
               <Sparkles className="w-8 h-8 text-vinyl-gold animate-pulse delay-300" />
             </div>
-            <p className="text-muted-foreground text-lg">{t.dashboard.personalExperience}</p>
+            <p className="text-muted-foreground text-lg mt-2">{t.dashboard.personalExperience}</p>
           </div>
 
           {/* Quick Actions Hero */}

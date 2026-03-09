@@ -102,29 +102,16 @@ export const LatestAlbumsSection: React.FC = () => {
   if (!albums || albums.length === 0) return null;
 
   return (
-    <section className="py-12 bg-gradient-to-r from-accent/5 via-background to-accent/5 relative overflow-hidden">
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-10 left-1/4 animate-pulse">🎵</div>
-        <div className="absolute top-20 right-1/4 animate-pulse delay-300">🎶</div>
-        <div className="absolute bottom-20 left-1/3 animate-pulse delay-600">♪</div>
-        <div className="absolute bottom-10 right-1/3 animate-pulse delay-900">♫</div>
+    <div>
+      <div className="flex items-center gap-2 mb-4">
+        <Music className="w-5 h-5 text-primary" />
+        <h2 className="text-xl font-bold">{d.newestUploads}</h2>
       </div>
-      <div className="container mx-auto px-4 relative">
-        <div className="text-center mb-8 animate-fade-in">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Music className="w-6 h-6 text-vinyl-purple animate-pulse" />
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-vinyl-purple to-vinyl-gold bg-clip-text text-transparent">{d.newestUploads}</h2>
-            <Disc className="w-6 h-6 text-vinyl-gold animate-pulse delay-300" />
-          </div>
-          <p className="text-muted-foreground">{d.discoverLatestAlbums}</p>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 max-w-6xl mx-auto">
-          {albums.map((album) => <AlbumCard key={album.id} album={album} language={language} />)}
-        </div>
-        <div className="text-center mt-6 animate-fade-in delay-300">
-          <p className="text-sm text-muted-foreground">{d.addYourCollection}</p>
-        </div>
+      <p className="text-sm text-muted-foreground mb-4">{d.discoverLatestAlbums}</p>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {albums.map((album) => <AlbumCard key={album.id} album={album} language={language} />)}
       </div>
-    </section>
+      <p className="text-xs text-muted-foreground text-center mt-4">{d.addYourCollection}</p>
+    </div>
   );
 };

@@ -2,8 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Camera, TrendingUp, Music, Disc, MessageSquare, Zap, Clock, Star,
-  BarChart3, Upload, Search, Shuffle, Sparkles, Users, Newspaper, Shield,
-  Loader2, Play, Trophy, ShoppingBag, BookOpen, Target
+  BarChart3, Search, Sparkles, Users, Newspaper, Shield,
+  Loader2, Play, Trophy, ShoppingBag, Target
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -80,84 +80,53 @@ const Dashboard = () => {
         totalSteps={totalSteps} nextStep={nextStep} previousStep={previousStep}
         completeOnboarding={completeOnboarding} skipOnboarding={skipOnboarding}
       />
-      <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background overflow-x-hidden">
-        {/* Musical Background Elements */}
-        <div className="fixed inset-0 opacity-5 pointer-events-none">
-          <div className="absolute top-20 left-10 text-4xl animate-pulse">🎵</div>
-          <div className="absolute top-40 right-20 text-3xl animate-pulse delay-500">🎶</div>
-          <div className="absolute bottom-40 left-20 text-4xl animate-pulse delay-1000">🎼</div>
-          <div className="absolute bottom-20 right-10 text-3xl animate-pulse delay-700">🎸</div>
-        </div>
-
-        <div className="relative" style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', padding: '40px 24px', overflow: 'hidden' }}>
+      <div className="min-h-screen bg-background">
+        <div
+          className="relative mx-auto"
+          style={{ maxWidth: '1100px', padding: '32px 20px 48px', width: '100%', boxSizing: 'border-box' }}
+        >
           {/* Welcome Header */}
-          <div className="text-center mb-12 animate-fade-in">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Sparkles className="w-8 h-8 text-vinyl-purple animate-pulse" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold bg-clip-text text-transparent">
-                {t.dashboard.welcomeBack}
-              </h1>
-              <Sparkles className="w-8 h-8 text-vinyl-gold animate-pulse delay-300" />
-            </div>
-            <p className="text-muted-foreground text-lg mt-2">{t.dashboard.personalExperience}</p>
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-bold text-foreground">
+              {t.dashboard.welcomeBack}
+            </h1>
+            <p className="text-muted-foreground mt-2">{t.dashboard.personalExperience}</p>
           </div>
 
-          {/* Quick Actions Hero */}
-          <section className="mb-12 animate-fade-in">
-            <div 
-              className="relative overflow-hidden rounded-2xl p-5 shadow-xl"
-              style={{ background: 'linear-gradient(135deg, hsl(270 70% 40%), hsl(270 60% 50%), hsl(260 70% 55%))' }}
+          {/* Quick Actions */}
+          <section className="mb-10">
+            <div
+              className="rounded-xl p-5 overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(270 60% 50%))' }}
             >
-              <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-3 left-6 text-3xl opacity-20 animate-bounce" style={{ animationDelay: '0.1s' }}>🎵</div>
-                <div className="absolute top-5 right-10 text-2xl opacity-20 animate-pulse" style={{ animationDelay: '0.5s' }}>🎶</div>
-                <div className="absolute bottom-3 left-1/3 text-xl opacity-20 animate-pulse" style={{ animationDelay: '0.3s' }}>🎸</div>
-                <div className="absolute bottom-4 right-1/4 text-2xl opacity-20 animate-bounce" style={{ animationDelay: '0.7s' }}>🥁</div>
-                <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, hsl(45 100% 60%), transparent)' }} />
-                <div className="absolute -left-6 -bottom-6 w-28 h-28 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, white, transparent)' }} />
-              </div>
-              <div className="relative z-10">
-                <h3 className="text-lg font-bold flex items-center gap-2 mb-4" style={{ color: 'hsl(45 100% 60%)' }}>
-                  <Zap className="w-5 h-5" style={{ color: 'hsl(45 100% 60%)' }} />
-                  <span className="font-extrabold tracking-wide">{t.dashboard.quickActions}</span>
-                </h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <Link to="/ai-scan-v2" className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-bold text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-xl group" style={{ background: 'linear-gradient(135deg, hsl(45 100% 55%), hsl(45 100% 50%))', color: 'black' }}>
-                    <div className="p-2.5 rounded-full" style={{ background: 'rgba(0,0,0,0.12)' }}>
-                      <Camera className="w-6 h-6 group-hover:animate-pulse" />
-                    </div>
-                    <span>{t.dashboard.scanNow}</span>
-                  </Link>
-                  <Link to="/my-collection" className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.03] group" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', backdropFilter: 'blur(4px)' }}>
-                    <div className="p-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }}>
-                      <Search className="w-6 h-6 group-hover:animate-pulse" />
-                    </div>
-                    <span>{t.dashboard.myCollection}</span>
-                  </Link>
-                  <button onClick={() => window.dispatchEvent(new Event('open-magic-mike'))} className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.03] group cursor-pointer" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', backdropFilter: 'blur(4px)' }}>
-                    <div className="p-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }}>
-                      <MessageSquare className="w-6 h-6 group-hover:animate-pulse" />
-                    </div>
-                    <span>{t.dashboard.chat}</span>
-                  </button>
-                </div>
+              <h3 className="text-base font-bold mb-4 flex items-center gap-2" style={{ color: 'hsl(45 100% 60%)' }}>
+                <Zap className="w-4 h-4" style={{ color: 'hsl(45 100% 60%)' }} />
+                {t.dashboard.quickActions}
+              </h3>
+              <div className="grid grid-cols-3 gap-3">
+                <Link to="/ai-scan-v2" className="flex flex-col items-center justify-center gap-2 h-20 rounded-lg font-bold text-sm transition-all hover:scale-[1.02]" style={{ background: 'linear-gradient(135deg, hsl(45 100% 55%), hsl(45 100% 50%))', color: 'black' }}>
+                  <Camera className="w-5 h-5" />
+                  <span>{t.dashboard.scanNow}</span>
+                </Link>
+                <Link to="/my-collection" className="flex flex-col items-center justify-center gap-2 h-20 rounded-lg font-semibold text-sm transition-all hover:scale-[1.02]" style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: 'white' }}>
+                  <Search className="w-5 h-5" />
+                  <span>{t.dashboard.myCollection}</span>
+                </Link>
+                <button onClick={() => window.dispatchEvent(new Event('open-magic-mike'))} className="flex flex-col items-center justify-center gap-2 h-20 rounded-lg font-semibold text-sm transition-all hover:scale-[1.02] cursor-pointer" style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: 'white' }}>
+                  <MessageSquare className="w-5 h-5" />
+                  <span>{t.dashboard.chat}</span>
+                </button>
               </div>
             </div>
-          </section>
-
-          {/* Credits & Subscription */}
-          <section className="mb-12 animate-fade-in grid grid-cols-1 md:grid-cols-2 gap-6">
-            <CreditsDisplay />
-            <SubscriptionStatus />
           </section>
 
           {/* Stats Cards */}
-          <section className="mb-12 animate-fade-in">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <BarChart3 className="w-6 h-6 text-vinyl-purple" />
+          <section className="mb-10">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-primary" />
               {t.dashboard.yourMusicDNA}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard title={t.dashboard.totalCollection} value={statsLoading ? "..." : `${scanStats?.totalScans || 0}`} subtitle={t.dashboard.albumsDiscovered} icon={Disc} />
               <StatCard title={t.dashboard.collectionValue} value={collectionLoading ? "..." : `€${collectionStats?.totalValue ? Math.round(collectionStats.totalValue) : 0}`} subtitle={t.dashboard.estimatedTotal} icon={TrendingUp} />
               <StatCard title={t.dashboard.thisMonth} value={statsLoading ? "..." : `${scanStats?.totalScans || 0}`} subtitle={t.dashboard.newScans} icon={Camera} />
@@ -165,85 +134,92 @@ const Dashboard = () => {
             </div>
           </section>
 
-          {/* AI & Interactive Widgets Section */}
-          <section className="mb-12 animate-fade-in">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-vinyl-purple" />
+          {/* Credits & Subscription */}
+          <section className="mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CreditsDisplay />
+              <SubscriptionStatus />
+            </div>
+          </section>
+
+          {/* Command Center - 3 + 2 layout */}
+          <section className="mb-10">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
               {t.dashboard.commandCenter}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <EchoWidget />
               <AIInsightsWidget />
               <ChatWidget />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <QuizWidget />
               <SpotifyWidget />
             </div>
           </section>
 
-
-          {/* Fun & Interactive Section */}
-          <section className="mb-12 animate-fade-in">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Disc className="w-6 h-6 text-vinyl-purple" />
+          {/* Fun & Interactive */}
+          <section className="mb-10">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Disc className="w-5 h-5 text-primary" />
               {t.dashboard.musicFun}
             </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <AlbumOfTheDay albums={unifiedAlbums || []} />
               <MusicStoryWidget />
               <CollectionPersonality genres={collectionStats?.genres || []} totalItems={collectionStats?.totalItems || 0} totalValue={collectionStats?.totalValue || 0} />
             </div>
           </section>
 
-          {/* Content & Community Section */}
-          <section className="mb-12 animate-fade-in">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Newspaper className="w-6 h-6 text-vinyl-gold" />
+          {/* Content & Activity */}
+          <section className="mb-10">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Newspaper className="w-5 h-5 text-primary" />
               {t.dashboard.discoverLearn}
             </h2>
-            <div className="grid grid-cols-1 gap-6">
+            <div className="space-y-4">
               <UnifiedContentWidget />
-              <Card className="border-2 hover:border-accent/50 transition-all duration-300 lg:col-span-3">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-accent" />
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-muted-foreground" />
                     {t.dashboard.recentActivity}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {activitiesLoading ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {[...Array(3)].map((_, i) => (
                         <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 animate-pulse">
-                          <div className="w-12 h-12 bg-muted rounded-lg"></div>
+                          <div className="w-10 h-10 bg-muted rounded-lg" />
                           <div className="flex-1 space-y-2">
-                            <div className="h-4 bg-muted rounded w-3/4"></div>
-                            <div className="h-3 bg-muted rounded w-1/2"></div>
+                            <div className="h-4 bg-muted rounded w-3/4" />
+                            <div className="h-3 bg-muted rounded w-1/2" />
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : dashboardActivities && dashboardActivities.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                       {dashboardActivities.map((activity) => (
-                        <div key={`${activity.type}-${activity.id}`} className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent/10 transition-colors">
-                          <div className="w-12 h-12 bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/20 rounded-lg flex items-center justify-center text-xl">
+                        <div key={`${activity.type}-${activity.id}`} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors">
+                          <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center text-lg shrink-0">
                             {activity.icon}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{activity.description}</p>
-                            {activity.details && <p className="text-sm text-muted-foreground truncate">{activity.details}</p>}
+                            <p className="text-sm font-medium truncate">{activity.description}</p>
+                            {activity.details && <p className="text-xs text-muted-foreground truncate">{activity.details}</p>}
                             <p className="text-xs text-muted-foreground">{new Date(activity.timestamp).toLocaleDateString(t.common?.locale === 'en' ? 'en-US' : 'nl-NL')}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <Music className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-muted-foreground">{t.dashboard.noScansYet}</p>
-                      <Button asChild className="mt-3">
+                    <div className="text-center py-6">
+                      <Music className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">{t.dashboard.noScansYet}</p>
+                      <Button asChild size="sm" className="mt-3">
                         <Link to="/scanner"><Camera className="w-4 h-4 mr-2" />{t.dashboard.startScanning}</Link>
                       </Button>
                     </div>
@@ -253,63 +229,66 @@ const Dashboard = () => {
             </div>
           </section>
 
-          <LatestAlbumsSection />
+          {/* Latest Albums - constrained */}
+          <section className="mb-10">
+            <LatestAlbumsSection />
+          </section>
 
-          {/* Navigation Shortcuts */}
-          <section className="mb-12 animate-fade-in">
-            <Card className="border-2 hover:border-primary/50 transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="w-5 h-5 text-primary" />
+          {/* Quick Navigation */}
+          <section className="mb-10">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Target className="w-4 h-4 text-primary" />
                   {t.dashboard.quickNavigation}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-purple/10">
-                    <Link to="/collection-overview"><TrendingUp className="w-5 h-5" /><span className="text-xs">{t.dashboard.overview}</span></Link>
+                <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
+                  <Button asChild variant="outline" size="sm" className="h-14 flex flex-col gap-1 text-xs">
+                    <Link to="/collection-overview"><TrendingUp className="w-4 h-4" />{t.dashboard.overview}</Link>
                   </Button>
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-gold/10">
-                    <Link to="/collection-chat"><MessageSquare className="w-5 h-5" /><span className="text-xs">💬 {t.dashboard.chat}</span></Link>
+                  <Button asChild variant="outline" size="sm" className="h-14 flex flex-col gap-1 text-xs">
+                    <Link to="/collection-chat"><MessageSquare className="w-4 h-4" />{t.dashboard.chat}</Link>
                   </Button>
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-accent/20">
-                    <Link to="/my-shop"><Star className="w-5 h-5" /><span className="text-xs">{t.dashboard.myShop}</span></Link>
+                  <Button asChild variant="outline" size="sm" className="h-14 flex flex-col gap-1 text-xs">
+                    <Link to="/my-shop"><Star className="w-4 h-4" />{t.dashboard.myShop}</Link>
                   </Button>
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-secondary/50">
-                    <Link to="/unified-scan-overview"><BarChart3 className="w-5 h-5" /><span className="text-xs">{t.dashboard.allScans}</span></Link>
+                  <Button asChild variant="outline" size="sm" className="h-14 flex flex-col gap-1 text-xs">
+                    <Link to="/unified-scan-overview"><BarChart3 className="w-4 h-4" />{t.dashboard.allScans}</Link>
                   </Button>
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-amber-500/10">
-                    <Link to="/quizzen"><Trophy className="w-5 h-5 text-amber-500" /><span className="text-xs">{t.dashboard.quizzes}</span></Link>
+                  <Button asChild variant="outline" size="sm" className="h-14 flex flex-col gap-1 text-xs">
+                    <Link to="/quizzen"><Trophy className="w-4 h-4" />{t.dashboard.quizzes}</Link>
                   </Button>
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-purple-500/10">
-                    <Link to="/mijn-quizzen"><Target className="w-5 h-5 text-purple-500" /><span className="text-xs">{t.dashboard.scores}</span></Link>
+                  <Button asChild variant="outline" size="sm" className="h-14 flex flex-col gap-1 text-xs">
+                    <Link to="/mijn-quizzen"><Target className="w-4 h-4" />{t.dashboard.scores}</Link>
                   </Button>
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-cyan-500/10">
-                    <Link to="/artists"><Users className="w-5 h-5 text-cyan-500" /><span className="text-xs">🎤 {t.nav.artists}</span></Link>
+                  <Button asChild variant="outline" size="sm" className="h-14 flex flex-col gap-1 text-xs">
+                    <Link to="/artists"><Users className="w-4 h-4" />{t.nav.artists}</Link>
                   </Button>
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-pink-500/10">
-                    <Link to="/shop"><ShoppingBag className="w-5 h-5 text-pink-500" /><span className="text-xs">🛍️ {t.nav.shop}</span></Link>
+                  <Button asChild variant="outline" size="sm" className="h-14 flex flex-col gap-1 text-xs">
+                    <Link to="/shop"><ShoppingBag className="w-4 h-4" />{t.nav.shop}</Link>
                   </Button>
                 </div>
               </CardContent>
             </Card>
           </section>
 
-          {/* Top Genres/Artists Quick Preview */}
+          {/* Music Style */}
           {collectionStats && !collectionLoading && (
-            <section className="mt-16 animate-fade-in delay-900">
+            <section className="mb-10">
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Music className="w-5 h-5 text-vinyl-purple" />
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Music className="w-4 h-4 text-primary" />
                     {t.dashboard.yourMusicStyle}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h4 className="font-semibold mb-3 text-sm text-muted-foreground">{t.dashboard.topGenres}</h4>
-                      <div className="space-y-2">
+                      <h4 className="font-semibold mb-2 text-sm text-muted-foreground">{t.dashboard.topGenres}</h4>
+                      <div className="space-y-1.5">
                         {collectionStats.genres?.slice(0, 3).map((genre) => (
                           <div key={genre.genre} className="flex justify-between items-center">
                             <span className="text-sm">{genre.genre}</span>
@@ -319,8 +298,8 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div>
-                      <h4 className="font-semibold mb-3 text-sm text-muted-foreground">{t.dashboard.topArtists}</h4>
-                      <div className="space-y-2">
+                      <h4 className="font-semibold mb-2 text-sm text-muted-foreground">{t.dashboard.topArtists}</h4>
+                      <div className="space-y-1.5">
                         {collectionStats.artists?.slice(0, 3).map((artist) => (
                           <div key={artist.artist} className="flex justify-between items-center">
                             <span className="text-sm">{artist.artist}</span>
@@ -335,23 +314,23 @@ const Dashboard = () => {
             </section>
           )}
 
-          {/* Admin Tools Section */}
+          {/* Admin Tools */}
           {user?.email === ADMIN_EMAIL && (
-            <section className="mt-16 animate-fade-in delay-1000">
+            <section className="mb-10">
               <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
-                    <Shield className="h-5 w-5" />
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2 text-orange-700 dark:text-orange-300">
+                    <Shield className="h-4 w-4" />
                     Admin Tools
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Button asChild variant="outline" className="border-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/20">
+                <CardContent>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button asChild variant="outline" size="sm" className="border-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/20">
                       <Link to="/super-admin" className="flex items-center gap-2"><BarChart3 className="h-4 w-4" />SuperAdmin Dashboard</Link>
                     </Button>
                     <BatchBlogGenerator />
-                    <Button onClick={restartOnboarding} variant="outline" className="border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/20">
+                    <Button onClick={restartOnboarding} variant="outline" size="sm" className="border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/20">
                       <Play className="h-4 w-4 mr-2" />Test Onboarding
                     </Button>
                   </div>

@@ -49,7 +49,7 @@ export const AiNudgeBanner: React.FC = () => {
         <p className="text-sm mt-2 leading-relaxed">Je hebt de AI features nog maar 0x gebruikt. Ontdek wat AI voor je project kan doen!</p>
         <div className="mt-4">
           <Link to="/ai-features" onClick={handleDismiss}>
-            <Button size="sm" className="bg-primary-foreground text-primary hover:bg-white focus-visible:ring-offset-primary">
+            <Button size="sm" className="bg-primary-foreground text-primary hover:bg-white focus-visible:ring-offset-primary px-6 py-2">
               Ontdek AI
             </Button>
           </Link>

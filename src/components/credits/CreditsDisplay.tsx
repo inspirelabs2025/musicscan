@@ -52,14 +52,14 @@ export const CreditsDisplay: React.FC = () => {
               </Button>
             </div>
             {/* Betaalmethodes */}
-            <div className="flex items-center gap-3 justify-center pt-1">
+            <div className="flex items-center gap-2 justify-center pt-1">
               <span className="text-[11px] text-muted-foreground">{s.payWith}</span>
-              <div className="flex items-center gap-2">
-                <img src="/images/payment/ideal.svg" alt="iDEAL" className="h-6" />
-                <img src="/images/payment/visa.svg" alt="Visa" className="h-4" />
-                <img src="/images/payment/mastercard.svg" alt="Mastercard" className="h-6" />
-                <img src="/images/payment/paypal.svg" alt="PayPal" className="h-5" />
-                <img src="/images/payment/klarna.svg" alt="Klarna" className="h-5" />
+              <div className="flex items-center gap-1.5">
+                <img src="/images/payment/ideal.svg" alt="iDEAL" className="h-4 w-auto" />
+                <img src="/images/payment/visa.svg" alt="Visa" className="h-3.5 w-auto" />
+                <img src="/images/payment/mastercard.svg" alt="Mastercard" className="h-4 w-auto" />
+                <img src="/images/payment/paypal.svg" alt="PayPal" className="h-3.5 w-auto" />
+                <img src="/images/payment/klarna.svg" alt="Klarna" className="h-3.5 w-auto" />
               </div>
             </div>
           </>

@@ -34,23 +34,21 @@ export const AiNudgeBanner: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-md">
-      <div className="relative p-6 rounded-xl shadow-lg flex items-center justify-between gap-4 bg-gradient-to-r from-primary via-purple-500 to-indigo-500 text-primary-foreground">
-        <div className="flex flex-col">
-          <p className="font-semibold">🤖 AI features beschikbaar!</p>
-          <p className="text-sm mt-1">Je hebt de AI features nog maar 0x gebruikt. Ontdek wat AI voor je project kan doen!</p>
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-2 right-2 h-auto p-1 text-primary-foreground/80 hover:bg-white/10 hover:text-primary-foreground"
-            onClick={handleDismiss}
-            aria-label="Sluit notificatie"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-          <Link to="/ai-features" onClick={handleDismiss} className="mt-auto">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-lg">
+      <div className="relative rounded-xl shadow-lg bg-gradient-to-r from-primary via-purple-500 to-indigo-500 text-primary-foreground px-8 py-6 pr-14">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-3 right-3 h-auto p-1 text-primary-foreground/80 hover:bg-white/10 hover:text-primary-foreground"
+          onClick={handleDismiss}
+          aria-label="Sluit notificatie"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+        <p className="font-semibold text-base">🤖 AI features beschikbaar!</p>
+        <p className="text-sm mt-2 leading-relaxed">Je hebt de AI features nog maar 0x gebruikt. Ontdek wat AI voor je project kan doen!</p>
+        <div className="mt-4">
+          <Link to="/ai-features" onClick={handleDismiss}>
             <Button size="sm" className="bg-primary-foreground text-primary hover:bg-white focus-visible:ring-offset-primary">
               Ontdek AI
             </Button>

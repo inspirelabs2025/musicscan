@@ -45,23 +45,23 @@ export function PopularSinglesSection() {
   if (!singles?.length) return null;
 
   return (
-    <section className="py-8 md:py-16 bg-background">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-5 md:mb-8">
-          <h2 className="text-xl md:text-3xl font-bold text-foreground">Populaire Singles</h2>
-          <Link to="/verhalen?tab=singles" className="text-sm font-semibold text-primary hover:text-primary/80 flex items-center gap-1 transition-colors min-h-[44px] min-w-[44px] justify-end items-center">
+    <section className="py-12 md:py-16 bg-background">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground">Populaire Singles</h2>
+          <Link to="/verhalen?tab=singles" className="text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1 transition-colors min-h-[44px] min-w-[44px] justify-end items-center">
             Alle singles <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
-        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {singles.map((single, i) => (
             <Link
               key={single.id}
               to={`/singles/${single.slug}`}
-              className="flex-shrink-0 w-[140px] md:w-48 group snap-start"
+              className="flex-shrink-0 w-[150px] md:w-[180px] group snap-start"
             >
-              <div className="aspect-square rounded-xl overflow-hidden bg-muted mb-2 shadow-md relative">
+              <div className="aspect-square rounded-lg overflow-hidden bg-card mb-2 shadow-md relative border border-border">
                 {single.artwork_url ? (
                   <img
                     src={optimizeImageUrl(single.artwork_url!, { width: 192, height: 192 })}
@@ -82,7 +82,7 @@ export function PopularSinglesSection() {
                 ) : null}
                 <div
                   data-fallback
-                  className="absolute inset-0 items-center justify-center bg-muted"
+                  className="absolute inset-0 items-center justify-center bg-card"
                   style={{ display: single.artwork_url ? 'none' : 'flex' }}
                 >
                   <Music className="w-8 h-8 text-muted-foreground/50" />

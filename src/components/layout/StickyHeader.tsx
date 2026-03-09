@@ -25,7 +25,7 @@ export function StickyHeader() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[hsl(240_20%_12%/0.92)] backdrop-blur-md border-b border-white/10">
-      <div style={{ paddingLeft: '24px', paddingRight: '24px', maxWidth: '1280px', marginLeft: 'auto', marginRight: 'auto' }} className="h-14 flex items-center justify-between gap-4">
+      <div style={{ paddingLeft: '16px', paddingRight: '16px', maxWidth: '1280px', marginLeft: 'auto', marginRight: 'auto', width: '100%' }} className="h-14 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 text-white font-bold text-lg" onClick={() => setMenuOpen(false)}>
           <Disc3 className="w-6 h-6 text-vinyl-gold" />

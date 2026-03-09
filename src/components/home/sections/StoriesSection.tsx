@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { optimizeImageUrl, generateArtworkAlt } from '@/lib/image-utils';
@@ -65,7 +64,7 @@ export function StoriesSection() {
   if (!stories?.length) return null;
 
   return (
-    <section className="py-10 md:py-16 bg-background px-4 sm:px-6 lg:px-8">
+    <section className="py-10 md:py-16 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground">Album Verhalen & Anekdotes</h2>

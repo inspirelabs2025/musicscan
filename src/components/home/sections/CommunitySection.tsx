@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Camera, Gamepad2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { optimizeImageUrl } from '@/lib/image-utils';
@@ -22,7 +21,7 @@ export function CommunitySection() {
   });
 
   return (
-    <section className="py-10 md:py-16 bg-background px-4 sm:px-6 lg:px-8">
+    <section className="py-10 md:py-16 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8">Community</h2>
 

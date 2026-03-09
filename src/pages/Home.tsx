@@ -69,9 +69,9 @@ const Home = () => {
       </Helmet>
 
       <ScannerHero />
-      <div className="mt-6" />
+      <div style={{ height: '48px' }} />
 
-      <div style={{ paddingLeft: '16px', paddingRight: '16px', maxWidth: '1280px', marginLeft: 'auto', marginRight: 'auto' }}>
+      <div style={{ paddingLeft: '16px', paddingRight: '16px', maxWidth: '1280px', marginLeft: 'auto', marginRight: 'auto', display: 'flex', flexDirection: 'column', gap: '48px' }}>
         <Suspense fallback={<SectionFallback />}>
           <PopularSinglesSection />
         </Suspense>

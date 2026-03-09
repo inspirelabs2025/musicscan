@@ -55,26 +55,28 @@ export const ScannerHero = () => {
           </div>
 
           {/* 3-Step Strip */}
-          <div className="mt-6 md:mt-10 max-w-md md:max-w-2xl mx-auto grid grid-cols-3 gap-2 md:gap-5 items-start">
-            <div className="text-center">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-4 mb-1.5 md:mb-2 mx-auto w-fit">
-                <span className="text-2xl md:text-4xl block">📷</span>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div className="mt-6 md:mt-10 grid grid-cols-3 gap-2 md:gap-5 items-start" style={{ maxWidth: '600px', width: '100%' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-4 mb-1.5 md:mb-2" style={{ margin: '0 auto', width: 'fit-content' }}>
+                  <span className="text-2xl md:text-4xl block">📷</span>
+                </div>
+                <p className="text-white/90 text-[11px] md:text-sm font-medium">Maak een foto</p>
               </div>
-              <p className="text-white/90 text-[11px] md:text-sm font-medium">Maak een foto</p>
-            </div>
-            <div className="text-center relative">
-              <span className="absolute -left-2 md:-left-6 top-3 md:top-6 text-white/40 text-sm md:text-xl font-bold">→</span>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-4 mb-1.5 md:mb-2 mx-auto w-fit">
-                <span className="text-2xl md:text-4xl block">🤖</span>
+              <div style={{ textAlign: 'center', position: 'relative' }}>
+                <span className="absolute -left-2 md:-left-6 top-3 md:top-6 text-white/40 text-sm md:text-xl font-bold">→</span>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-4 mb-1.5 md:mb-2" style={{ margin: '0 auto', width: 'fit-content' }}>
+                  <span className="text-2xl md:text-4xl block">🤖</span>
+                </div>
+                <p className="text-white/90 text-[11px] md:text-sm font-medium">Slimme herkenning</p>
               </div>
-              <p className="text-white/90 text-[11px] md:text-sm font-medium">Slimme herkenning</p>
-            </div>
-            <div className="text-center relative">
-              <span className="absolute -left-2 md:-left-6 top-3 md:top-6 text-white/40 text-sm md:text-xl font-bold">→</span>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-4 mb-1.5 md:mb-2 mx-auto w-fit">
-                <span className="text-2xl md:text-4xl block">💰</span>
+              <div style={{ textAlign: 'center', position: 'relative' }}>
+                <span className="absolute -left-2 md:-left-6 top-3 md:top-6 text-white/40 text-sm md:text-xl font-bold">→</span>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-4 mb-1.5 md:mb-2" style={{ margin: '0 auto', width: 'fit-content' }}>
+                  <span className="text-2xl md:text-4xl block">💰</span>
+                </div>
+                <p className="text-white/90 text-[11px] md:text-sm font-medium">Zie marktwaarde</p>
               </div>
-              <p className="text-white/90 text-[11px] md:text-sm font-medium">Zie marktwaarde</p>
             </div>
           </div>
 

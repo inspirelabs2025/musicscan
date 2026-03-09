@@ -52,7 +52,7 @@ export const CreditsDisplay: React.FC = () => {
               </Button>
             </div>
             {/* Betaalmethodes */}
-            <div className="flex items-center gap-2 justify-center pt-1 overflow-hidden">
+            <div className="flex items-center gap-2 justify-center pt-2 overflow-hidden">
               <span className="text-[11px] text-muted-foreground">{s.payWith}</span>
               <div className="flex items-center gap-2 overflow-hidden">
                 <img src="/images/payment/ideal.svg" alt="iDEAL" style={{ height: '16px', width: 'auto', maxWidth: '40px' }} />

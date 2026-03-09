@@ -166,15 +166,17 @@ const Dashboard = () => {
           </section>
 
           {/* AI & Interactive Widgets Section */}
-          <section className="mb-16 animate-fade-in delay-400">
-            <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
+          <section className="mb-12 animate-fade-in">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Sparkles className="w-6 h-6 text-vinyl-purple" />
               {t.dashboard.commandCenter}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <EchoWidget />
               <AIInsightsWidget />
               <ChatWidget />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <QuizWidget />
               <SpotifyWidget />
             </div>

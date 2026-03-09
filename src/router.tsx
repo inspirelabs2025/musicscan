@@ -225,6 +225,7 @@ export const router = createBrowserRouter([
       { path: 'tijdmachine/:slug', element: wrap(TimeMachineStory) },
       { path: 'de-plaat-en-het-verhaal', element: wrap(DePlaatEnHetVerhaal) },
       { path: 'plaatverhaal/:slug', element: wrap(PlaatVerhaal) },
+      { path: 'plaat-verhaal/:slug', element: wrap(PlaatVerhaal) },
       { path: 'muzieknieuws', element: wrap(MusicNews) },
       { path: 'maand/:month', element: wrap(MonthOverview) },
       { path: 'jaar/:year', element: wrap(YearOverview) },

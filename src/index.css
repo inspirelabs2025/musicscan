@@ -114,28 +114,6 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
-  .section-padding {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  @media (min-width: 640px) {
-    .section-padding {
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-    }
-  }
-  @media (min-width: 1024px) {
-    .section-padding {
-      padding-left: 2rem;
-      padding-right: 2rem;
-    }
-  }
-  
-  .section-container {
-    max-width: 80rem;
-    margin-left: auto;
-    margin-right: auto;
-  }
 
   .scrollbar-hide {
     -ms-overflow-style: none;

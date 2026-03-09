@@ -89,7 +89,7 @@ const Dashboard = () => {
           <div className="absolute bottom-20 right-10 text-3xl animate-pulse delay-700">🎸</div>
         </div>
 
-        <div className="relative" style={{ maxWidth: '1280px', margin: '0 auto', padding: '40px 24px', overflow: 'hidden' }}>
+        <div className="relative" style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', padding: '40px 24px', overflow: 'hidden' }}>
           {/* Welcome Header */}
           <div className="text-center mb-12 animate-fade-in">
             <div className="flex items-center justify-center gap-3 mb-4">
@@ -103,9 +103,9 @@ const Dashboard = () => {
           </div>
 
           {/* Quick Actions Hero */}
-          <section className="mb-16 animate-fade-in delay-200">
+          <section className="mb-12 animate-fade-in">
             <div 
-              className="relative overflow-hidden rounded-2xl p-6 shadow-xl"
+              className="relative overflow-hidden rounded-2xl p-5 shadow-xl"
               style={{ background: 'linear-gradient(135deg, hsl(270 70% 40%), hsl(270 60% 50%), hsl(260 70% 55%))' }}
             >
               <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -117,7 +117,7 @@ const Dashboard = () => {
                 <div className="absolute -left-6 -bottom-6 w-28 h-28 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, white, transparent)' }} />
               </div>
               <div className="relative z-10">
-                <h3 className="text-lg font-bold flex items-center gap-2 mb-5" style={{ color: 'hsl(45 100% 60%)' }}>
+                <h3 className="text-lg font-bold flex items-center gap-2 mb-4" style={{ color: 'hsl(45 100% 60%)' }}>
                   <Zap className="w-5 h-5" style={{ color: 'hsl(45 100% 60%)' }} />
                   <span className="font-extrabold tracking-wide">{t.dashboard.quickActions}</span>
                 </h3>
@@ -146,14 +146,14 @@ const Dashboard = () => {
           </section>
 
           {/* Credits & Subscription */}
-          <section className="mb-16 animate-fade-in delay-250 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <section className="mb-12 animate-fade-in grid grid-cols-1 md:grid-cols-2 gap-6">
             <CreditsDisplay />
             <SubscriptionStatus />
           </section>
 
           {/* Stats Cards */}
-          <section className="mb-16 animate-fade-in delay-300">
-            <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
+          <section className="mb-12 animate-fade-in">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <BarChart3 className="w-6 h-6 text-vinyl-purple" />
               {t.dashboard.yourMusicDNA}
             </h2>
@@ -166,15 +166,17 @@ const Dashboard = () => {
           </section>
 
           {/* AI & Interactive Widgets Section */}
-          <section className="mb-16 animate-fade-in delay-400">
-            <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
+          <section className="mb-12 animate-fade-in">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Sparkles className="w-6 h-6 text-vinyl-purple" />
               {t.dashboard.commandCenter}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <EchoWidget />
               <AIInsightsWidget />
               <ChatWidget />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <QuizWidget />
               <SpotifyWidget />
             </div>
@@ -182,12 +184,12 @@ const Dashboard = () => {
 
 
           {/* Fun & Interactive Section */}
-          <section className="mb-16 animate-fade-in delay-500">
-            <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
+          <section className="mb-12 animate-fade-in">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Disc className="w-6 h-6 text-vinyl-purple" />
               {t.dashboard.musicFun}
             </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <AlbumOfTheDay albums={unifiedAlbums || []} />
               <MusicStoryWidget />
               <CollectionPersonality genres={collectionStats?.genres || []} totalItems={collectionStats?.totalItems || 0} totalValue={collectionStats?.totalValue || 0} />
@@ -195,12 +197,12 @@ const Dashboard = () => {
           </section>
 
           {/* Content & Community Section */}
-          <section className="mb-16 animate-fade-in delay-600">
-            <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
+          <section className="mb-12 animate-fade-in">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Newspaper className="w-6 h-6 text-vinyl-gold" />
               {t.dashboard.discoverLearn}
             </h2>
-            <div className="grid grid-cols-1 gap-8">
+            <div className="grid grid-cols-1 gap-6">
               <UnifiedContentWidget />
               <Card className="border-2 hover:border-accent/50 transition-all duration-300 lg:col-span-3">
                 <CardHeader>
@@ -254,7 +256,7 @@ const Dashboard = () => {
           <LatestAlbumsSection />
 
           {/* Navigation Shortcuts */}
-          <section className="mb-16 animate-fade-in delay-700">
+          <section className="mb-12 animate-fade-in">
             <Card className="border-2 hover:border-primary/50 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

@@ -22,13 +22,13 @@ export function CommunitySection() {
   });
 
   return (
-    <section className="py-14 bg-muted/50">
-      <div className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold text-foreground mb-6">Community</h2>
+    <section className="py-12 md:py-16 bg-muted/50">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8">Community</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="overflow-hidden border-border/50">
-            <CardContent className="p-5">
+          <Card className="overflow-hidden rounded-xl border-border/50 shadow-md">
+            <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Camera className="w-5 h-5 text-primary" />
                 <h3 className="font-bold text-foreground">Fanwall</h3>
@@ -36,7 +36,7 @@ export function CommunitySection() {
               <div className="flex gap-3 mb-4">
                 {fanwallPhotos?.map((fw) => (
                   <Link key={fw.id} to={`/fanwall/${fw.slug}`} className="flex-shrink-0">
-                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted shadow-sm">
                       {fw.featured_photo_url ? (
                         <img
                           src={optimizeImageUrl(fw.featured_photo_url!, { width: 80, height: 80 })}
@@ -67,8 +67,8 @@ export function CommunitySection() {
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden border-border/50 bg-gradient-to-br from-primary/5 to-accent/5">
-            <CardContent className="p-5 flex flex-col justify-between h-full">
+          <Card className="overflow-hidden rounded-xl border-border/50 bg-gradient-to-br from-primary/5 to-accent/5 shadow-md">
+            <CardContent className="p-6 flex flex-col justify-between h-full">
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <Gamepad2 className="w-5 h-5 text-primary" />

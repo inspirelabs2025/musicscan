@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Music } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -46,11 +46,11 @@ export function PopularSinglesSection() {
   if (!singles?.length) return null;
 
   return (
-    <section className="py-14 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Populaire Singles</h2>
-          <Link to="/verhalen?tab=singles" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
+    <section className="py-12 md:py-16 bg-background">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground">Populaire Singles</h2>
+          <Link to="/verhalen?tab=singles" className="text-sm font-semibold text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
             Alle singles <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -63,17 +63,23 @@ export function PopularSinglesSection() {
                 to={`/singles/${single.slug}`}
                 className="flex-shrink-0 w-40 md:w-48 group"
               >
-                <div className="aspect-square rounded-xl overflow-hidden bg-muted mb-2">
-                  <img
-                    src={optimizeImageUrl(single.artwork_url!, { width: 192, height: 192 })}
-                    alt={generateArtworkAlt(single.artist, single.single_name || single.title, 'single cover')}
-                    loading={i === 0 ? 'eager' : 'lazy'}
-                    fetchPriority={i === 0 ? 'high' : undefined}
-                    decoding="async"
-                    width={192}
-                    height={192}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+                <div className="aspect-square rounded-xl overflow-hidden bg-muted mb-2 shadow-md">
+                  {single.artwork_url ? (
+                    <img
+                      src={optimizeImageUrl(single.artwork_url!, { width: 192, height: 192 })}
+                      alt={generateArtworkAlt(single.artist, single.single_name || single.title, 'single cover')}
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      fetchPriority={i === 0 ? 'high' : undefined}
+                      decoding="async"
+                      width={192}
+                      height={192}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }}
+                    />
+                  ) : null}
+                  <div className={`w-full h-full flex items-center justify-center bg-muted ${single.artwork_url ? 'hidden' : ''}`}>
+                    <Music className="w-8 h-8 text-muted-foreground/50" />
+                  </div>
                 </div>
                 <h3 className="text-sm font-semibold text-foreground truncate">{single.single_name || single.title}</h3>
                 <p className="text-xs text-muted-foreground truncate">{single.artist}</p>

@@ -105,7 +105,7 @@ const Dashboard = () => {
           {/* Quick Actions Hero */}
           <section className="mb-12 animate-fade-in">
             <div 
-              className="relative overflow-hidden rounded-2xl p-6 shadow-xl"
+              className="relative overflow-hidden rounded-2xl p-5 shadow-xl"
               style={{ background: 'linear-gradient(135deg, hsl(270 70% 40%), hsl(270 60% 50%), hsl(260 70% 55%))' }}
             >
               <div className="absolute inset-0 pointer-events-none overflow-hidden">

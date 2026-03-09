@@ -89,9 +89,9 @@ const Dashboard = () => {
           <div className="absolute bottom-20 right-10 text-3xl animate-pulse delay-700">🎸</div>
         </div>
 
-        <div className="relative" style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 24px', overflow: 'hidden' }}>
+        <div className="relative" style={{ maxWidth: '1280px', margin: '0 auto', padding: '40px 24px', overflow: 'hidden' }}>
           {/* Welcome Header */}
-          <div className="text-center mb-8 animate-fade-in">
+          <div className="text-center mb-12 animate-fade-in">
             <div className="flex items-center justify-center gap-3 mb-4">
               <Sparkles className="w-8 h-8 text-vinyl-purple animate-pulse" />
               <h1 className="text-4xl font-bold bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold bg-clip-text text-transparent">
@@ -99,11 +99,11 @@ const Dashboard = () => {
               </h1>
               <Sparkles className="w-8 h-8 text-vinyl-gold animate-pulse delay-300" />
             </div>
-            <p className="text-muted-foreground text-lg">{t.dashboard.personalExperience}</p>
+            <p className="text-muted-foreground text-lg mt-2">{t.dashboard.personalExperience}</p>
           </div>
 
           {/* Quick Actions Hero */}
-          <section className="mb-12 animate-fade-in delay-200">
+          <section className="mb-16 animate-fade-in delay-200">
             <div 
               className="relative overflow-hidden rounded-2xl p-6 shadow-xl"
               style={{ background: 'linear-gradient(135deg, hsl(270 70% 40%), hsl(270 60% 50%), hsl(260 70% 55%))' }}
@@ -146,14 +146,14 @@ const Dashboard = () => {
           </section>
 
           {/* Credits & Subscription */}
-          <section className="mb-12 animate-fade-in delay-250 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <section className="mb-16 animate-fade-in delay-250 grid grid-cols-1 md:grid-cols-2 gap-8">
             <CreditsDisplay />
             <SubscriptionStatus />
           </section>
 
           {/* Stats Cards */}
-          <section className="mb-12 animate-fade-in delay-300">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+          <section className="mb-16 animate-fade-in delay-300">
+            <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
               <BarChart3 className="w-6 h-6 text-vinyl-purple" />
               {t.dashboard.yourMusicDNA}
             </h2>
@@ -166,12 +166,12 @@ const Dashboard = () => {
           </section>
 
           {/* AI & Interactive Widgets Section */}
-          <section className="mb-12 animate-fade-in delay-400">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+          <section className="mb-16 animate-fade-in delay-400">
+            <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
               <Sparkles className="w-6 h-6 text-vinyl-purple" />
               {t.dashboard.commandCenter}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
               <EchoWidget />
               <AIInsightsWidget />
               <ChatWidget />
@@ -182,12 +182,12 @@ const Dashboard = () => {
 
 
           {/* Fun & Interactive Section */}
-          <section className="mb-12 animate-fade-in delay-500">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+          <section className="mb-16 animate-fade-in delay-500">
+            <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
               <Disc className="w-6 h-6 text-vinyl-purple" />
               {t.dashboard.musicFun}
             </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <AlbumOfTheDay albums={unifiedAlbums || []} />
               <MusicStoryWidget />
               <CollectionPersonality genres={collectionStats?.genres || []} totalItems={collectionStats?.totalItems || 0} totalValue={collectionStats?.totalValue || 0} />
@@ -195,12 +195,12 @@ const Dashboard = () => {
           </section>
 
           {/* Content & Community Section */}
-          <section className="mb-12 animate-fade-in delay-600">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+          <section className="mb-16 animate-fade-in delay-600">
+            <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
               <Newspaper className="w-6 h-6 text-vinyl-gold" />
               {t.dashboard.discoverLearn}
             </h2>
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-8">
               <UnifiedContentWidget />
               <Card className="border-2 hover:border-accent/50 transition-all duration-300 lg:col-span-3">
                 <CardHeader>
@@ -254,7 +254,7 @@ const Dashboard = () => {
           <LatestAlbumsSection />
 
           {/* Navigation Shortcuts */}
-          <section className="mb-12 animate-fade-in delay-700">
+          <section className="mb-16 animate-fade-in delay-700">
             <Card className="border-2 hover:border-primary/50 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -295,7 +295,7 @@ const Dashboard = () => {
 
           {/* Top Genres/Artists Quick Preview */}
           {collectionStats && !collectionLoading && (
-            <section className="mt-12 animate-fade-in delay-900">
+            <section className="mt-16 animate-fade-in delay-900">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -335,7 +335,7 @@ const Dashboard = () => {
 
           {/* Admin Tools Section */}
           {user?.email === ADMIN_EMAIL && (
-            <section className="mt-12 animate-fade-in delay-1000">
+            <section className="mt-16 animate-fade-in delay-1000">
               <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-300">

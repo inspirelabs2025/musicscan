@@ -7,12 +7,11 @@ const echoAvatar = '/magic-mike-logo.png';
 
 export function MagicMikePodcastSection() {
   return (
-    <section className="py-14 bg-background">
-      <div className="container mx-auto px-4">
+    <section className="py-12 md:py-16 bg-background">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Magic Mike */}
-          <Card className="overflow-hidden border-border/50">
-            <CardContent className="p-5">
+          <Card className="overflow-hidden rounded-xl border-border/50 shadow-md">
+            <CardContent className="p-6">
               <div className="flex items-center gap-4 mb-4">
                 <img
                   src={echoAvatar}
@@ -40,9 +39,8 @@ export function MagicMikePodcastSection() {
             </CardContent>
           </Card>
 
-          {/* Podcast */}
-          <Card className="overflow-hidden border-border/50">
-            <CardContent className="p-5 flex flex-col justify-between h-full">
+          <Card className="overflow-hidden rounded-xl border-border/50 shadow-md">
+            <CardContent className="p-6 flex flex-col justify-between h-full">
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <Podcast className="w-5 h-5 text-primary" />

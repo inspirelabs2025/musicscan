@@ -65,23 +65,23 @@ export function StoriesSection() {
   if (!stories?.length) return null;
 
   return (
-    <section className="py-14 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Album Verhalen & Anekdotes</h2>
-          <Link to="/verhalen" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
+    <section className="py-12 md:py-16 bg-background">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground">Album Verhalen & Anekdotes</h2>
+          <Link to="/verhalen" className="text-sm font-semibold text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
             Alle verhalen <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {stories.map((story) => (
             <Link
               key={story.id}
               to={story.type === 'album' ? `/muziek-verhaal/${story.slug}` : `/anekdotes/${story.slug}`}
               className="group"
             >
-              <div className="aspect-[4/3] rounded-xl overflow-hidden bg-muted mb-3">
+              <div className="aspect-[4/3] rounded-xl overflow-hidden bg-muted mb-3 shadow-md">
                 {story.image_url ? (
                   <img
                     src={optimizeImageUrl(story.image_url!, { width: 400, height: 300 })}

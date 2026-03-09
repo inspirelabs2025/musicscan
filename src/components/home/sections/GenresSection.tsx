@@ -6,47 +6,27 @@ import promoFilmmuziekBg from '@/assets/promo-filmmuziek-bg.jpg';
 import promoFrankrijkBg from '@/assets/promo-frankrijk-bg.jpg';
 
 const genres = [
-  {
-    label: 'Nederlandse Muziek',
-    href: '/nederland',
-    emoji: '🇳🇱',
-    image: promoNederlandBg,
-  },
-  {
-    label: 'Dance & House',
-    href: '/dance-house',
-    emoji: '🎧',
-    image: promoDanceBg,
-  },
-  {
-    label: 'Filmmuziek',
-    href: '/filmmuziek',
-    emoji: '🎬',
-    image: promoFilmmuziekBg,
-  },
-  {
-    label: 'Franse Muziek',
-    href: '/frankrijk',
-    emoji: '🇫🇷',
-    image: promoFrankrijkBg,
-  },
+  { label: 'Nederlandse Muziek', href: '/nederland', emoji: '🇳🇱', image: promoNederlandBg },
+  { label: 'Dance & House', href: '/dance-house', emoji: '🎧', image: promoDanceBg },
+  { label: 'Filmmuziek', href: '/filmmuziek', emoji: '🎬', image: promoFilmmuziekBg },
+  { label: 'Franse Muziek', href: '/frankrijk', emoji: '🇫🇷', image: promoFrankrijkBg },
 ];
 
 export function GenresSection() {
   return (
-    <section className="py-14 bg-muted/30 section-genres h-[420px] md:h-auto md:min-h-[350px] overflow-hidden">
-      <div className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold text-foreground mb-6">Ontdek op Genre</h2>
+    <section className="py-12 md:py-16 bg-muted/30">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8">Ontdek op Genre</h2>
 
         <ScrollArea className="w-full">
-          <div className="flex gap-4 pb-4">
+          <div className="flex gap-5 pb-4">
             {genres.map((genre) => (
               <Link
                 key={genre.href}
                 to={genre.href}
                 className="flex-shrink-0 w-52 md:w-64 group"
               >
-                <div className="aspect-[16/9] rounded-xl overflow-hidden relative group-hover:scale-[1.02] transition-transform duration-300 shadow-lg">
+                <div className="aspect-[16/9] rounded-xl overflow-hidden relative shadow-md group-hover:shadow-lg group-hover:scale-[1.02] transition-all duration-300">
                   <img
                     src={genre.image}
                     alt={`${genre.label} muziek ontdekken`}
@@ -56,7 +36,7 @@ export function GenresSection() {
                     height={144}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/50" />
+                  <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-4xl md:text-5xl mb-1">{genre.emoji}</span>
                     <span className="text-primary-foreground font-bold text-base md:text-lg text-center px-4 drop-shadow-lg">

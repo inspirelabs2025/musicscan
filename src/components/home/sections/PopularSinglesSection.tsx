@@ -54,7 +54,7 @@ export function PopularSinglesSection() {
           </Link>
         </div>
 
-        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
           {singles.map((single, i) => (
             <Link
               key={single.id}

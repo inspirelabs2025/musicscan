@@ -6,7 +6,6 @@ import { ScannerHero } from '@/components/home/ScannerHero';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SeoContentBlock } from '@/components/SEO/SeoContentBlock';
 
-// Lazy load sections
 const PopularSinglesSection = lazy(() => import('@/components/home/sections/PopularSinglesSection').then(m => ({ default: m.PopularSinglesSection })));
 const ArtistsSection = lazy(() => import('@/components/home/sections/ArtistsSection').then(m => ({ default: m.ArtistsSection })));
 const StoriesSection = lazy(() => import('@/components/home/sections/StoriesSection').then(m => ({ default: m.StoriesSection })));
@@ -17,9 +16,9 @@ const ProductBanner = lazy(() => import('@/components/home/ProductBanner').then(
 const MobileInstallBanner = lazy(() => import('@/components/MobileInstallBanner').then(m => ({ default: m.MobileInstallBanner })));
 
 const SectionFallback = () => (
-  <div className="py-12 md:py-16">
+  <div className="py-8 md:py-16">
     <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-      <Skeleton className="h-48 rounded-xl" />
+      <Skeleton className="h-32 md:h-48 rounded-xl" />
     </div>
   </div>
 );
@@ -63,7 +62,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(websiteSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>

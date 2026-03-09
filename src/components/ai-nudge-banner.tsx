@@ -34,7 +34,7 @@ export const AiNudgeBanner: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-sm">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-md">
       <div className="relative p-4 rounded-lg shadow-lg flex items-center justify-between gap-4 bg-gradient-to-r from-primary via-purple-500 to-indigo-500 text-primary-foreground">
         <div className="flex flex-col">
           <p className="font-semibold">🤖 AI features beschikbaar!</p>

@@ -16,13 +16,13 @@ export const CreditsDisplay: React.FC = () => {
 
   return (
     <Card>
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Coins className="h-5 w-5 text-primary" />
           {s.scanCredits}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5">
         <div className="flex items-baseline gap-2">
           <span className="text-3xl font-bold">{isLoading ? '...' : (credits?.balance ?? 0)}</span>
           <span className="text-sm text-muted-foreground">{s.creditsAvailable}</span>

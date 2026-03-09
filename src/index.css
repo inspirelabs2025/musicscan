@@ -90,6 +90,29 @@ All colors MUST be HSL.
   }
 }
 
+.section-padding {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+@media (min-width: 640px) {
+  .section-padding {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+}
+@media (min-width: 1024px) {
+  .section-padding {
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+  }
+}
+
+.section-container {
+  max-width: 80rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
 @layer utilities {
   .section-padding {
     padding-left: 1rem;

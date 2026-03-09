@@ -184,12 +184,12 @@ const Dashboard = () => {
 
 
           {/* Fun & Interactive Section */}
-          <section className="mb-16 animate-fade-in delay-500">
-            <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
+          <section className="mb-12 animate-fade-in">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Disc className="w-6 h-6 text-vinyl-purple" />
               {t.dashboard.musicFun}
             </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <AlbumOfTheDay albums={unifiedAlbums || []} />
               <MusicStoryWidget />
               <CollectionPersonality genres={collectionStats?.genres || []} totalItems={collectionStats?.totalItems || 0} totalValue={collectionStats?.totalValue || 0} />

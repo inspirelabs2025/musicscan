@@ -66,54 +66,53 @@ const Dashboard2 = () => {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden pt-14">
 
-      {/* ── HERO (same style as ScannerHero) ── */}
-      <section className="relative min-h-[280px] md:min-h-[380px] bg-black overflow-hidden flex items-center -mt-14 pt-14">
+      {/* ═══ HERO ═══ */}
+      <section className="relative min-h-[260px] md:min-h-[340px] bg-black overflow-hidden flex items-center -mt-14 pt-14">
         <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/50 via-black to-vinyl-gold/30" />
-
-        {/* Spinning vinyl discs */}
-        <div className="absolute -left-16 md:-left-20 top-1/2 -translate-y-1/2 opacity-20 md:opacity-30">
-          <Disc3 className="w-48 h-48 md:w-80 md:h-80 text-vinyl-purple animate-vinyl-spin" />
+        <div className="absolute -left-16 md:-left-20 top-1/2 -translate-y-1/2 opacity-15 md:opacity-25">
+          <Disc3 className="w-48 h-48 md:w-72 md:h-72 text-vinyl-purple animate-vinyl-spin" />
         </div>
-        <div className="absolute -right-16 md:-right-20 top-1/2 -translate-y-1/2 opacity-10 md:opacity-20">
-          <Disc3 className="w-40 h-40 md:w-64 md:h-64 text-vinyl-gold animate-vinyl-spin" style={{ animationDirection: 'reverse', animationDuration: '25s' }} />
+        <div className="absolute -right-16 md:-right-20 top-1/2 -translate-y-1/2 opacity-10 md:opacity-15">
+          <Disc3 className="w-40 h-40 md:w-56 md:h-56 text-vinyl-gold animate-vinyl-spin" style={{ animationDirection: 'reverse', animationDuration: '25s' }} />
         </div>
 
-        <div className="section-container section-padding relative z-10 py-10 md:py-16 w-full" style={{ textAlign: 'center' }}>
-          <div className="inline-flex items-center gap-1.5 bg-vinyl-gold/20 text-vinyl-gold px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold mb-4 backdrop-blur-sm border border-vinyl-gold/30">
+        <div style={{ maxWidth: '1280px', marginLeft: 'auto', marginRight: 'auto', paddingLeft: '16px', paddingRight: '16px', textAlign: 'center', width: '100%', position: 'relative', zIndex: 10 }} className="py-8 md:py-14">
+          <div className="inline-flex items-center gap-1.5 bg-vinyl-gold/20 text-vinyl-gold px-3 py-1.5 rounded-full text-xs font-semibold mb-3 backdrop-blur-sm border border-vinyl-gold/30">
             <Zap className="w-3.5 h-3.5" />
             Jouw Dashboard
           </div>
 
-          <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white mb-3 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white mb-2 tracking-tight">
             {t.dashboard.welcomeBack}{firstName ? `, ${firstName}` : ''}
           </h1>
-          <p className="text-sm md:text-lg text-white/70 max-w-xl mx-auto mb-6 md:mb-8">
+          <p className="text-sm md:text-base text-white/60 max-w-lg mx-auto mb-5">
             {t.dashboard.personalExperience}
           </p>
 
-          <div className="flex gap-3 justify-center mb-6 md:mb-8">
-            <Button asChild size="lg" className="bg-gradient-to-r from-vinyl-gold via-yellow-500 to-vinyl-gold hover:from-yellow-500 hover:via-vinyl-gold hover:to-yellow-500 text-black font-bold text-sm md:text-lg px-6 md:px-10 py-4 md:py-6 rounded-xl shadow-2xl shadow-vinyl-gold/40 hover:shadow-vinyl-gold/60 transition-all hover:scale-105">
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }} className="mb-6">
+            <Button asChild size="lg" className="bg-gradient-to-r from-vinyl-gold via-yellow-500 to-vinyl-gold hover:from-yellow-500 hover:via-vinyl-gold hover:to-yellow-500 text-black font-bold text-sm md:text-base px-6 md:px-8 py-4 md:py-5 rounded-xl shadow-2xl shadow-vinyl-gold/30 transition-all hover:scale-105">
               <Link to="/ai-scan-v2">
-                <Camera className="w-4 h-4 md:w-6 md:h-6 mr-2" />
+                <Camera className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                 {t.dashboard.scanNow}
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 font-semibold text-sm md:text-lg px-6 md:px-10 py-4 md:py-6 rounded-xl">
+            <Button asChild size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 font-semibold text-sm md:text-base px-6 md:px-8 py-4 md:py-5 rounded-xl">
               <Link to="/my-collection">
-                <Search className="w-4 h-4 md:w-6 md:h-6 mr-2" />
+                <Search className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                 {t.dashboard.myCollection}
               </Link>
             </Button>
           </div>
 
-          {/* Stats strip */}
-          <div className="flex justify-center">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-4" style={{ maxWidth: '600px', width: '100%' }}>
+          {/* Stat pills */}
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div className="grid grid-cols-4 gap-2 md:gap-3" style={{ maxWidth: '520px', width: '100%' }}>
               {statItems.map((stat) => (
-                <div key={stat.label} className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-3">
-                  <stat.icon className="w-4 h-4 text-vinyl-gold mx-auto mb-1" />
-                  <div className="text-base md:text-xl font-bold text-white">{stat.value}</div>
-                  <div className="text-[10px] md:text-xs text-white/50">{stat.label}</div>
+                <div key={stat.label} className="bg-white/10 backdrop-blur-sm rounded-lg px-2.5 py-2 text-center">
+                  <stat.icon className="w-3.5 h-3.5 text-vinyl-gold mx-auto mb-0.5" />
+                  <div className="text-sm md:text-base font-bold text-white leading-tight">{stat.value}</div>
+                  <div className="text-[9px] md:text-[10px] text-white/50 leading-tight">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -121,15 +120,13 @@ const Dashboard2 = () => {
         </div>
       </section>
 
-      {/* ── SECTIONS (same spacing as Home: gap-64px) ── */}
+      {/* ═══ CONTENT ═══ */}
       <div style={{ paddingLeft: '16px', paddingRight: '16px', maxWidth: '1280px', marginLeft: 'auto', marginRight: 'auto', display: 'flex', flexDirection: 'column' as const, gap: '48px', paddingTop: '48px', paddingBottom: '48px' }}>
 
-        {/* ── Smart Tools (horizontal scroll like PopularSinglesSection) ── */}
+        {/* ─── Slimme Tools: 2x2 grid ─── */}
         <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Slimme Tools</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Slimme Tools</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <EchoWidget />
             <ChatWidget />
             <QuizWidget />
@@ -137,7 +134,7 @@ const Dashboard2 = () => {
           </div>
         </section>
 
-        {/* ── Mijn Collectie (2-col cards like StoriesSection) ── */}
+        {/* ─── Mijn Collectie: 2 col ─── */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground">Mijn Collectie</h2>
@@ -145,7 +142,7 @@ const Dashboard2 = () => {
               Bekijk alles <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <AlbumOfTheDay albums={unifiedAlbums || []} />
             <CollectionPersonality
               genres={collectionStats?.genres || []}
@@ -155,15 +152,13 @@ const Dashboard2 = () => {
           </div>
         </section>
 
-        {/* ── Muziek Verhalen (full-width like Home) ── */}
+        {/* ─── Muziek Verhalen ─── */}
         <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Muziek Verhalen</h2>
-          </div>
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Muziek Verhalen</h2>
           <MusicStoryWidget />
         </section>
 
-        {/* ── Account & Status (2-col grid like CommunitySection) ── */}
+        {/* ─── Account & Status: 2 col ─── */}
         <section>
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Account & Status</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -175,8 +170,8 @@ const Dashboard2 = () => {
               <SpotifyWidget />
 
               {/* Recente Activiteit */}
-              <div className="rounded-xl bg-card border border-border p-4 md:p-5 shadow-md">
-                <div className="flex items-center gap-2 mb-3">
+              <div className="rounded-xl bg-card border border-border p-5 shadow-md">
+                <div className="flex items-center gap-2 mb-4">
                   <Clock className="w-5 h-5 text-primary" />
                   <h3 className="font-bold text-foreground text-sm md:text-base">{t.dashboard.recentActivity}</h3>
                 </div>
@@ -218,17 +213,17 @@ const Dashboard2 = () => {
           </div>
         </section>
 
-        {/* ── Muziekstijl (genre cards like GenresSection) ── */}
+        {/* ─── Muziekstijl ─── */}
         {collectionStats && collectionStats.genres?.length > 0 && (
           <section className="rounded-xl bg-secondary/30 p-6 md:p-8">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">{t.dashboard.yourMusicStyle}</h2>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
               {collectionStats.genres.slice(0, 5).map((g) => {
                 const maxCount = collectionStats.genres?.[0]?.count || 1;
                 const pct = Math.round((g.count / maxCount) * 100);
                 return (
                   <div key={g.genre} className="rounded-xl bg-card border border-border p-4 shadow-md text-center">
-                    <div className="text-2xl md:text-3xl font-black text-primary mb-1">{g.count}</div>
+                    <div className="text-2xl font-black text-primary mb-1">{g.count}</div>
                     <div className="text-sm font-semibold text-foreground mb-2 truncate">{g.genre}</div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
@@ -241,7 +236,7 @@ const Dashboard2 = () => {
             {collectionStats.artists && collectionStats.artists.length > 0 && (
               <div className="mt-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">Top Artiesten</h3>
-                <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+                <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
                   {collectionStats.artists.slice(0, 8).map((a) => (
                     <div key={a.artist} className="flex-shrink-0 snap-start text-center">
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-card border border-border shadow-sm flex items-center justify-center mx-auto">
@@ -257,24 +252,20 @@ const Dashboard2 = () => {
           </section>
         )}
 
-        {/* ── Ontdek & Leer (full-width) ── */}
+        {/* ─── Ontdek & Leer ─── */}
         <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Ontdek & Leer</h2>
-          </div>
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Ontdek & Leer</h2>
           <UnifiedContentWidget />
         </section>
 
-        {/* ── Nieuwste Uploads ── */}
+        {/* ─── Nieuwste Uploads ─── */}
         <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Nieuwste Uploads</h2>
-          </div>
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Nieuwste Uploads</h2>
           <LatestAlbumsSection />
         </section>
 
-        {/* ── Quick Nav (like Community cards) ── */}
-        <section className="rounded-xl bg-card border border-border p-4 md:p-6 shadow-md">
+        {/* ─── Snelle Navigatie ─── */}
+        <section className="rounded-xl bg-card border border-border p-5 md:p-6 shadow-md">
           <h3 className="font-bold text-foreground text-base md:text-lg mb-4">Snelle Navigatie</h3>
           <div className="flex flex-wrap gap-2">
             {[
@@ -298,9 +289,9 @@ const Dashboard2 = () => {
           </div>
         </section>
 
-        {/* ── Admin Tools ── */}
+        {/* ─── Admin ─── */}
         {user?.email === ADMIN_EMAIL && (
-          <section className="rounded-xl bg-card border border-border p-4 md:p-6 shadow-md">
+          <section className="rounded-xl bg-card border border-border p-5 shadow-md">
             <div className="flex items-center gap-2 mb-3">
               <Shield className="w-5 h-5 text-primary" />
               <h3 className="font-bold text-foreground text-sm md:text-base">Admin Tools</h3>

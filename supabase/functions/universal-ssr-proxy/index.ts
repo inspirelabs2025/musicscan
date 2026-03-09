@@ -445,10 +445,16 @@ Deno.serve(async (req) => {
     const meta = await getMetaForContent(sb, contentType, slug);
 
     if (!meta) {
-      console.log(`[SSR] No content found for ${contentType}/${slug}, serving plain index.html`);
+      console.log(`[SSR] No content found for ${contentType}/${slug}, returning 404`);
+      // Return proper HTTP 404 so Google doesn't index non-existent pages
       const indexHtml = await fetchIndexHtml();
-      return new Response(indexHtml, {
-        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60' }
+      // Inject noindex + 404 title into the HTML
+      const notFoundHtml = indexHtml
+        .replace(/<title>[^<]*<\/title>/, `<title>404 - Pagina niet gevonden | MusicScan</title>`)
+        .replace('</head>', `<meta name="robots" content="noindex, nofollow">\n</head>`);
+      return new Response(notFoundHtml, {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache, no-store' }
       });
     }
 

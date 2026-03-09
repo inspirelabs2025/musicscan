@@ -34,7 +34,7 @@ export function StickyHeader() {
 
         {/* Desktop nav */}
         {!isMobile && (
-    2     <nav className="2lex items-center gap-1">
+    <nav className="flex items-center gap-2">
             {navLinks.map(({ label, href }) => (
               <Link
                 key={href}

@@ -89,7 +89,7 @@ const Dashboard = () => {
           <div className="absolute bottom-20 right-10 text-3xl animate-pulse delay-700">🎸</div>
         </div>
 
-        <div className="container mx-auto px-4 py-8 relative">
+        <div className="relative" style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 24px' }}>
           {/* Welcome Header */}
           <div className="text-center mb-8 animate-fade-in">
             <div className="flex items-center justify-center gap-3 mb-4">

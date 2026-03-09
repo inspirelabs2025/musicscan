@@ -87,19 +87,15 @@ export const LatestAlbumsSection: React.FC = () => {
 
   if (isLoading) {
     return (
-      <section className="py-12 bg-gradient-to-r from-accent/5 via-background to-accent/5">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <Music className="w-6 h-6 text-vinyl-purple" />
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-vinyl-purple to-vinyl-gold bg-clip-text text-transparent">{d.newestUploads}</h2>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 max-w-6xl mx-auto">
-            {[...Array(6)].map((_, i) => <div key={i}><Skeleton className="h-[200px] w-full rounded-lg" /></div>)}
-          </div>
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <Music className="w-5 h-5 text-primary" />
+          <h2 className="text-xl font-bold">{d.newestUploads}</h2>
         </div>
-      </section>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {[...Array(6)].map((_, i) => <div key={i}><Skeleton className="h-[180px] w-full rounded-lg" /></div>)}
+        </div>
+      </div>
     );
   }
 

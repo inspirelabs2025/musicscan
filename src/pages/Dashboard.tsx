@@ -295,7 +295,7 @@ const Dashboard = () => {
 
           {/* Top Genres/Artists Quick Preview */}
           {collectionStats && !collectionLoading && (
-            <section className="mt-12 animate-fade-in delay-900">
+            <section className="mt-16 animate-fade-in delay-900">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">

@@ -117,7 +117,7 @@ const Dashboard = () => {
                 <div className="absolute -left-6 -bottom-6 w-28 h-28 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, white, transparent)' }} />
               </div>
               <div className="relative z-10">
-                <h3 className="text-lg font-bold flex items-center gap-2 mb-5" style={{ color: 'hsl(45 100% 60%)' }}>
+                <h3 className="text-lg font-bold flex items-center gap-2 mb-4" style={{ color: 'hsl(45 100% 60%)' }}>
                   <Zap className="w-5 h-5" style={{ color: 'hsl(45 100% 60%)' }} />
                   <span className="font-extrabold tracking-wide">{t.dashboard.quickActions}</span>
                 </h3>

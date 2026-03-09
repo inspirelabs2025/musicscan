@@ -23,7 +23,7 @@ export const ScannerHero = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 relative z-10 py-10 md:py-24 text-center w-full">
+      <div style={{ maxWidth: '1280px', marginLeft: 'auto', marginRight: 'auto', paddingLeft: '16px', paddingRight: '16px', textAlign: 'center', width: '100%', position: 'relative', zIndex: 10 }} className="py-10 md:py-24">
         
         <div className="mb-6 md:mb-12">
           <div className="inline-flex items-center gap-1.5 bg-vinyl-gold/20 text-vinyl-gold px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold mb-4 md:mb-6 backdrop-blur-sm border border-vinyl-gold/30">

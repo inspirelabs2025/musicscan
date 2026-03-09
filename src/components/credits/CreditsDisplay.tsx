@@ -23,7 +23,7 @@ export const CreditsDisplay: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-baseline gap-3">
           <span className="text-3xl font-bold">{isLoading ? '...' : (credits?.balance ?? 0)}</span>
           <span className="text-sm text-muted-foreground">{s.creditsAvailable}</span>
         </div>

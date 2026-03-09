@@ -207,8 +207,18 @@ export const PlaatVerhaal: React.FC = () => {
           .from('blog_posts')
           .update({ views_count: (blogData.views_count || 0) + 1 })
           .eq('id', blogData.id);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching blog:', error);
+        console.error('Error details:', {
+          message: error?.message,
+          status: error?.status,
+          statusText: error?.statusText,
+          code: error?.code,
+          hint: error?.hint,
+          details: error?.details,
+          slug,
+          domain: window.location.hostname,
+        });
         setNotFound(true);
       } finally {
         setLoading(false);

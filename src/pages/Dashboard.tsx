@@ -66,7 +66,7 @@ const Dashboard = () => {
     );
   }
 
-  const firstName = profile?.display_name?.split(' ')[0] || user?.email?.split('@')[0] || '';
+  const firstName = profile?.first_name || user?.email?.split('@')[0] || '';
   const totalCollection = scanStats?.totalScans || 0;
   const collectionValue = collectionStats?.totalValue ? Math.round(collectionStats.totalValue) : 0;
   const successRate = scanStats?.successRate || 0;

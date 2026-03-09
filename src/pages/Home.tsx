@@ -71,33 +71,35 @@ const Home = () => {
       <ScannerHero />
       <div className="mt-6" />
 
-      <Suspense fallback={<SectionFallback />}>
-        <PopularSinglesSection />
-      </Suspense>
+      <div style={{ paddingLeft: '16px', paddingRight: '16px', maxWidth: '1280px', marginLeft: 'auto', marginRight: 'auto' }}>
+        <Suspense fallback={<SectionFallback />}>
+          <PopularSinglesSection />
+        </Suspense>
 
-      <Suspense fallback={<SectionFallback />}>
-        <ArtistsSection />
-      </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <ArtistsSection />
+        </Suspense>
 
-      <Suspense fallback={<SectionFallback />}>
-        <StoriesSection />
-      </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <StoriesSection />
+        </Suspense>
 
-      <Suspense fallback={<SectionFallback />}>
-        <GenresSection />
-      </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <GenresSection />
+        </Suspense>
 
-      <Suspense fallback={<SectionFallback />}>
-        <CommunitySection />
-      </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <CommunitySection />
+        </Suspense>
 
-      <Suspense fallback={<SectionFallback />}>
-        <MagicMikePodcastSection />
-      </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <MagicMikePodcastSection />
+        </Suspense>
 
-      <Suspense fallback={null}>
-        <ProductBanner />
-      </Suspense>
+        <Suspense fallback={null}>
+          <ProductBanner />
+        </Suspense>
+      </div>
 
       <Suspense fallback={null}>
         <MobileInstallBanner />

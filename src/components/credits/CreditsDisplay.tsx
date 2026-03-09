@@ -52,14 +52,14 @@ export const CreditsDisplay: React.FC = () => {
               </Button>
             </div>
             {/* Betaalmethodes */}
-            <div className="flex items-center gap-2 justify-center pt-1">
+            <div className="flex items-center gap-2 justify-center pt-1 overflow-hidden">
               <span className="text-[11px] text-muted-foreground">{s.payWith}</span>
-              <div className="flex items-center gap-1.5">
-                <img src="/images/payment/ideal.svg" alt="iDEAL" className="h-4 w-auto" />
-                <img src="/images/payment/visa.svg" alt="Visa" className="h-3.5 w-auto" />
-                <img src="/images/payment/mastercard.svg" alt="Mastercard" className="h-4 w-auto" />
-                <img src="/images/payment/paypal.svg" alt="PayPal" className="h-3.5 w-auto" />
-                <img src="/images/payment/klarna.svg" alt="Klarna" className="h-3.5 w-auto" />
+              <div className="flex items-center gap-2 overflow-hidden">
+                <img src="/images/payment/ideal.svg" alt="iDEAL" style={{ height: '16px', width: 'auto', maxWidth: '40px' }} />
+                <img src="/images/payment/visa.svg" alt="Visa" style={{ height: '14px', width: 'auto', maxWidth: '40px' }} />
+                <img src="/images/payment/mastercard.svg" alt="Mastercard" style={{ height: '16px', width: 'auto', maxWidth: '40px' }} />
+                <img src="/images/payment/paypal.svg" alt="PayPal" style={{ height: '14px', width: 'auto', maxWidth: '40px' }} />
+                <img src="/images/payment/klarna.svg" alt="Klarna" style={{ height: '14px', width: 'auto', maxWidth: '40px' }} />
               </div>
             </div>
           </>

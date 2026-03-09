@@ -80,10 +80,10 @@ export const ScannerHero = () => {
             </div>
           </div>
 
-          <p className="text-vinyl-gold/80 text-xs md:text-base font-semibold mt-4 md:mt-6 animate-pulse">
+          <p className="text-vinyl-gold/80 text-xs md:text-base font-semibold animate-pulse" style={{ marginTop: '24px' }}>
             {t('hero.promoCredits')}
           </p>
-          <p className="text-white/50 text-[10px] md:text-xs mt-1">
+          <p className="text-white/50 text-[10px] md:text-xs" style={{ marginTop: '8px' }}>
             {t('hero.promoSub')}
           </p>
         </div>

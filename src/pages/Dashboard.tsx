@@ -7,7 +7,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { StatCard } from '@/components/StatCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useCollectionStats } from '@/hooks/useCollectionStats';
@@ -67,6 +66,11 @@ const Dashboard = () => {
     );
   }
 
+  const firstName = profile?.display_name?.split(' ')[0] || user?.email?.split('@')[0] || '';
+  const totalCollection = scanStats?.totalScans || 0;
+  const collectionValue = collectionStats?.totalValue ? Math.round(collectionStats.totalValue) : 0;
+  const successRate = scanStats?.successRate || 0;
+
   return (
     <>
       <OnboardingModal 
@@ -77,114 +81,90 @@ const Dashboard = () => {
       />
 
       <div className="min-h-screen bg-background">
-        <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
-          {/* ── Header ── */}
-          <header className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              {t.dashboard.welcomeBack}
-            </h1>
-            <p className="text-sm text-muted-foreground">{t.dashboard.personalExperience}</p>
-          </header>
-
-          {/* ── Quick actions ── */}
-          <div className="flex flex-wrap gap-2">
-            <Button asChild size="sm">
-              <Link to="/ai-scan-v2">
-                <Camera className="w-4 h-4 mr-1.5" />
-                {t.dashboard.scanNow}
-              </Link>
-            </Button>
-            <Button asChild variant="secondary" size="sm">
-              <Link to="/my-collection">
-                <Search className="w-4 h-4 mr-1.5" />
-                {t.dashboard.myCollection}
-              </Link>
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => window.dispatchEvent(new Event('open-magic-mike'))}
-            >
-              <MessageSquare className="w-4 h-4 mr-1.5" />
-              Magic Mike
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/quizzen">
-                <Trophy className="w-4 h-4 mr-1.5" />
-                {t.dashboard.quizzes}
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/shop">
-                <ShoppingBag className="w-4 h-4 mr-1.5" />
-                {t.nav.shop}
-              </Link>
-            </Button>
-          </div>
-
-          {/* ── Stats row ── */}
-          <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatCard title={t.dashboard.totalCollection} value={statsLoading ? "…" : `${scanStats?.totalScans || 0}`} subtitle={t.dashboard.albumsDiscovered} icon={Disc} />
-            <StatCard title={t.dashboard.collectionValue} value={collectionLoading ? "…" : `€${collectionStats?.totalValue ? Math.round(collectionStats.totalValue) : 0}`} subtitle={t.dashboard.estimatedTotal} icon={TrendingUp} />
-            <StatCard title={t.dashboard.thisMonth} value={statsLoading ? "…" : `${scanStats?.totalScans || 0}`} subtitle={t.dashboard.newScans} icon={Camera} />
-            <StatCard title={t.dashboard.successRate} value={statsLoading ? "…" : `${(scanStats?.successRate || 0).toFixed(1)}%`} subtitle={t.dashboard.successfulScans} icon={Star} />
-          </section>
-
-          {/* ── Credits & Subscription ── */}
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <CreditsDisplay />
-            <SubscriptionStatus />
-          </section>
-
-          {/* ── Smart Tools (2 + 3 layout) ── */}
-          <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              {t.dashboard.commandCenter}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <EchoWidget />
-              <ChatWidget />
+          {/* ═══════════════════════════════════════════════════
+              HERO BAR — gradient banner with stats & CTAs
+             ═══════════════════════════════════════════════════ */}
+          <section className="rounded-xl p-5 sm:p-6 bg-gradient-to-r from-[hsl(271,81%,20%)] to-[hsl(271,81%,40%)] text-white">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+                  {t.dashboard.welcomeBack}{firstName ? `, ${firstName}` : ''}
+                </h1>
+                <p className="text-sm text-white/70 mt-0.5">{t.dashboard.personalExperience}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button asChild size="sm" className="bg-white text-primary hover:bg-white/90 font-semibold">
+                  <Link to="/ai-scan-v2">
+                    <Camera className="w-4 h-4 mr-1.5" />
+                    {t.dashboard.scanNow}
+                  </Link>
+                </Button>
+                <Button asChild size="sm" variant="outline" className="border-white/30 text-white hover:bg-white/10">
+                  <Link to="/my-collection">
+                    <Search className="w-4 h-4 mr-1.5" />
+                    {t.dashboard.myCollection}
+                  </Link>
+                </Button>
+              </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <AIInsightsWidget />
-              <QuizWidget />
-              <SpotifyWidget />
+
+            {/* Inline stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+              {[
+                { label: t.dashboard.totalCollection, value: statsLoading ? '…' : String(totalCollection), icon: Disc },
+                { label: t.dashboard.collectionValue, value: collectionLoading ? '…' : `€${collectionValue}`, icon: TrendingUp },
+                { label: t.dashboard.thisMonth, value: statsLoading ? '…' : String(totalCollection), icon: Camera },
+                { label: t.dashboard.successRate, value: statsLoading ? '…' : `${successRate.toFixed(1)}%`, icon: Star },
+              ].map((stat) => (
+                <div key={stat.label} className="flex items-center gap-2.5 rounded-lg bg-white/10 backdrop-blur-sm px-3 py-2">
+                  <stat.icon className="w-4 h-4 text-white/60 shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold leading-tight">{stat.value}</div>
+                    <div className="text-[11px] text-white/60 truncate">{stat.label}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 
-          {/* ── Muziek Fun ── */}
-          <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Disc className="w-4 h-4 text-primary" />
-              {t.dashboard.musicFun}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <AlbumOfTheDay albums={unifiedAlbums || []} />
-              <MusicStoryWidget />
-              <CollectionPersonality
-                genres={collectionStats?.genres || []}
-                totalItems={collectionStats?.totalItems || 0}
-                totalValue={collectionStats?.totalValue || 0}
-              />
-            </div>
-          </section>
+          {/* ═══════════════════════════════════════════════════
+              TWO-COLUMN LAYOUT — main + sidebar
+             ═══════════════════════════════════════════════════ */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-          {/* ── Content & Activity ── */}
-          <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Newspaper className="w-4 h-4 text-primary" />
-              {t.dashboard.discoverLearn}
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {/* content feed — spans 2 cols */}
-              <div className="lg:col-span-2">
-                <UnifiedContentWidget />
+            {/* ── Main Column (2/3) ── */}
+            <div className="lg:col-span-2 space-y-4">
+
+              {/* Smart Tools 2×2 */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <EchoWidget />
+                <ChatWidget />
+                <QuizWidget />
+                <AIInsightsWidget />
               </div>
 
-              {/* activity sidebar */}
-              <Card className="h-fit">
+              {/* Music Fun row */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <MusicStoryWidget />
+                <AlbumOfTheDay albums={unifiedAlbums || []} />
+                <CollectionPersonality
+                  genres={collectionStats?.genres || []}
+                  totalItems={collectionStats?.totalItems || 0}
+                  totalValue={collectionStats?.totalValue || 0}
+                />
+              </div>
+            </div>
+
+            {/* ── Sidebar (1/3) ── */}
+            <div className="space-y-4">
+              <CreditsDisplay />
+              <SubscriptionStatus />
+              <SpotifyWidget />
+
+              {/* Recent Activity */}
+              <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                     <Clock className="w-3.5 h-3.5" />
@@ -196,7 +176,7 @@ const Dashboard = () => {
                     <div className="space-y-3">
                       {[...Array(4)].map((_, i) => (
                         <div key={i} className="flex items-center gap-2.5 animate-pulse">
-                          <div className="w-8 h-8 bg-muted rounded-md shrink-0" />
+                          <div className="w-7 h-7 bg-muted rounded shrink-0" />
                           <div className="flex-1 space-y-1">
                             <div className="h-3 bg-muted rounded w-3/4" />
                             <div className="h-2.5 bg-muted rounded w-1/2" />
@@ -205,13 +185,12 @@ const Dashboard = () => {
                       ))}
                     </div>
                   ) : dashboardActivities && dashboardActivities.length > 0 ? (
-                    <div className="space-y-1">
-                      {dashboardActivities.slice(0, 8).map((a) => (
-                        <div key={`${a.type}-${a.id}`} className="flex items-center gap-2.5 py-1.5 rounded-md hover:bg-muted/40 transition-colors px-1 -mx-1">
-                          <span className="text-base shrink-0">{a.icon}</span>
+                    <div className="space-y-0.5">
+                      {dashboardActivities.slice(0, 6).map((a) => (
+                        <div key={`${a.type}-${a.id}`} className="flex items-center gap-2 py-1.5 rounded hover:bg-muted/40 transition-colors px-1 -mx-1">
+                          <span className="text-sm shrink-0">{a.icon}</span>
                           <div className="min-w-0 flex-1">
                             <p className="text-xs font-medium truncate">{a.description}</p>
-                            {a.details && <p className="text-[11px] text-muted-foreground truncate">{a.details}</p>}
                           </div>
                           <span className="text-[10px] text-muted-foreground shrink-0">
                             {new Date(a.timestamp).toLocaleDateString(t.common?.locale === 'en' ? 'en-US' : 'nl-NL', { day: 'numeric', month: 'short' })}
@@ -220,81 +199,70 @@ const Dashboard = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-6">
-                      <Music className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                    <div className="text-center py-4">
+                      <Music className="w-7 h-7 text-muted-foreground/30 mx-auto mb-1.5" />
                       <p className="text-xs text-muted-foreground">{t.dashboard.noScansYet}</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
-            </div>
-          </section>
 
-          {/* ── Latest Albums ── */}
-          <section>
-            <LatestAlbumsSection />
-          </section>
-
-          {/* ── Quick Nav ── */}
-          <section>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { to: '/collection-overview', icon: TrendingUp, label: t.dashboard.overview },
-                { to: '/collection-chat', icon: MessageSquare, label: t.dashboard.chat },
-                { to: '/my-shop', icon: Star, label: t.dashboard.myShop },
-                { to: '/unified-scan-overview', icon: BarChart3, label: t.dashboard.allScans },
-                { to: '/quizzen', icon: Trophy, label: t.dashboard.quizzes },
-                { to: '/mijn-quizzen', icon: Target, label: t.dashboard.scores },
-                { to: '/artists', icon: Users, label: t.nav.artists },
-                { to: '/shop', icon: ShoppingBag, label: t.nav.shop },
-              ].map(({ to, icon: Icon, label }) => (
-                <Button key={to} asChild variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground hover:text-foreground">
-                  <Link to={to}>
-                    <Icon className="w-3.5 h-3.5 mr-1.5" />
-                    {label}
-                  </Link>
-                </Button>
-              ))}
-            </div>
-          </section>
-
-          {/* ── Music Style ── */}
-          {collectionStats && !collectionLoading && (collectionStats.genres?.length > 0 || collectionStats.artists?.length > 0) && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
-                  <Music className="w-3.5 h-3.5" />
-                  {t.dashboard.yourMusicStyle}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-8">
-                  <div>
-                    <h4 className="text-xs font-medium text-muted-foreground mb-2">{t.dashboard.topGenres}</h4>
-                    <div className="space-y-1">
-                      {collectionStats.genres?.slice(0, 3).map((g) => (
-                        <div key={g.genre} className="flex justify-between text-sm">
-                          <span>{g.genre}</span>
-                          <span className="text-muted-foreground text-xs">{g.count}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-medium text-muted-foreground mb-2">{t.dashboard.topArtists}</h4>
-                    <div className="space-y-1">
+              {/* Music Style */}
+              {collectionStats && (collectionStats.genres?.length > 0 || collectionStats.artists?.length > 0) && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                      <Music className="w-3.5 h-3.5" />
+                      {t.dashboard.yourMusicStyle}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {collectionStats.genres?.slice(0, 3).map((g) => (
+                      <div key={g.genre} className="flex justify-between text-sm">
+                        <span>{g.genre}</span>
+                        <span className="text-muted-foreground text-xs">{g.count}</span>
+                      </div>
+                    ))}
+                    <div className="border-t pt-2 mt-2">
                       {collectionStats.artists?.slice(0, 3).map((a) => (
-                        <div key={a.artist} className="flex justify-between text-sm">
+                        <div key={a.artist} className="flex justify-between text-sm py-0.5">
                           <span className="truncate mr-2">{a.artist}</span>
                           <span className="text-muted-foreground text-xs shrink-0">{a.count}</span>
                         </div>
                       ))}
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+
+          {/* ═══════════════════════════════════════════════════
+              FULL-WIDTH SECTIONS
+             ═══════════════════════════════════════════════════ */}
+          <UnifiedContentWidget />
+          <LatestAlbumsSection />
+
+          {/* ── Quick Nav ── */}
+          <nav className="flex flex-wrap gap-2 pt-2">
+            {[
+              { to: '/collection-overview', icon: TrendingUp, label: t.dashboard.overview },
+              { to: '/collection-chat', icon: MessageSquare, label: t.dashboard.chat },
+              { to: '/my-shop', icon: Star, label: t.dashboard.myShop },
+              { to: '/unified-scan-overview', icon: BarChart3, label: t.dashboard.allScans },
+              { to: '/quizzen', icon: Trophy, label: t.dashboard.quizzes },
+              { to: '/mijn-quizzen', icon: Target, label: t.dashboard.scores },
+              { to: '/artists', icon: Users, label: t.nav.artists },
+              { to: '/shop', icon: ShoppingBag, label: t.nav.shop },
+            ].map(({ to, icon: Icon, label }) => (
+              <Button key={to} asChild variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground hover:text-foreground">
+                <Link to={to}>
+                  <Icon className="w-3.5 h-3.5 mr-1" />
+                  {label}
+                </Link>
+              </Button>
+            ))}
+          </nav>
 
           {/* ── Admin ── */}
           {user?.email === ADMIN_EMAIL && (

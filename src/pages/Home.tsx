@@ -71,41 +71,29 @@ const Home = () => {
       <ScannerHero />
       <div className="mt-6" />
 
-      <div className="px-4 sm:px-6 lg:px-8">
-        <Suspense fallback={<SectionFallback />}>
-          <PopularSinglesSection />
-        </Suspense>
-      </div>
+      <Suspense fallback={<SectionFallback />}>
+        <PopularSinglesSection />
+      </Suspense>
 
-      <div className="px-4 sm:px-6 lg:px-8">
-        <Suspense fallback={<SectionFallback />}>
-          <ArtistsSection />
-        </Suspense>
-      </div>
+      <Suspense fallback={<SectionFallback />}>
+        <ArtistsSection />
+      </Suspense>
 
-      <div className="px-4 sm:px-6 lg:px-8">
-        <Suspense fallback={<SectionFallback />}>
-          <StoriesSection />
-        </Suspense>
-      </div>
+      <Suspense fallback={<SectionFallback />}>
+        <StoriesSection />
+      </Suspense>
 
-      <div className="px-4 sm:px-6 lg:px-8">
-        <Suspense fallback={<SectionFallback />}>
-          <GenresSection />
-        </Suspense>
-      </div>
+      <Suspense fallback={<SectionFallback />}>
+        <GenresSection />
+      </Suspense>
 
-      <div className="px-4 sm:px-6 lg:px-8">
-        <Suspense fallback={<SectionFallback />}>
-          <CommunitySection />
-        </Suspense>
-      </div>
+      <Suspense fallback={<SectionFallback />}>
+        <CommunitySection />
+      </Suspense>
 
-      <div className="px-4 sm:px-6 lg:px-8">
-        <Suspense fallback={<SectionFallback />}>
-          <MagicMikePodcastSection />
-        </Suspense>
-      </div>
+      <Suspense fallback={<SectionFallback />}>
+        <MagicMikePodcastSection />
+      </Suspense>
 
       <Suspense fallback={null}>
         <ProductBanner />

@@ -40,39 +40,43 @@ export const ScannerHero = () => {
           </h2>
           
           {/* Big Scanner Button */}
-          <Button 
-            asChild 
-            size="lg"
-            className="bg-gradient-to-r from-vinyl-gold via-yellow-500 to-vinyl-gold hover:from-yellow-500 hover:via-vinyl-gold hover:to-yellow-500 text-black font-bold text-base md:text-2xl px-8 md:px-14 py-6 md:py-10 rounded-2xl shadow-2xl shadow-vinyl-gold/40 hover:shadow-vinyl-gold/60 transition-all duration-300 hover:scale-105 group min-h-[48px]"
-          >
-            <Link to="/ai-scan-v2">
-              <Camera className="w-5 h-5 md:w-8 md:h-8 mr-2 md:mr-3" />
-              {t('hero.cta')}
-              <ArrowRight className="w-5 h-5 md:w-7 md:h-7 ml-2 md:ml-3 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </Button>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <Button 
+              asChild 
+              size="lg"
+              className="bg-gradient-to-r from-vinyl-gold via-yellow-500 to-vinyl-gold hover:from-yellow-500 hover:via-vinyl-gold hover:to-yellow-500 text-black font-bold text-base md:text-2xl px-8 md:px-14 py-6 md:py-10 rounded-2xl shadow-2xl shadow-vinyl-gold/40 hover:shadow-vinyl-gold/60 transition-all duration-300 hover:scale-105 group min-h-[48px]"
+            >
+              <Link to="/ai-scan-v2">
+                <Camera className="w-5 h-5 md:w-8 md:h-8 mr-2 md:mr-3" />
+                {t('hero.cta')}
+                <ArrowRight className="w-5 h-5 md:w-7 md:h-7 ml-2 md:ml-3 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
+          </div>
 
           {/* 3-Step Strip */}
-          <div className="mt-6 md:mt-10 max-w-md md:max-w-2xl mx-auto grid grid-cols-3 gap-2 md:gap-5 items-start">
-            <div className="text-center">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-4 mb-1.5 md:mb-2 mx-auto w-fit">
-                <span className="text-2xl md:text-4xl block">📷</span>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div className="mt-6 md:mt-10 grid grid-cols-3 gap-2 md:gap-5 items-start" style={{ maxWidth: '600px', width: '100%' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-4 mb-1.5 md:mb-2" style={{ margin: '0 auto', width: 'fit-content' }}>
+                  <span className="text-2xl md:text-4xl block">📷</span>
+                </div>
+                <p className="text-white/90 text-[11px] md:text-sm font-medium">Maak een foto</p>
               </div>
-              <p className="text-white/90 text-[11px] md:text-sm font-medium">Maak een foto</p>
-            </div>
-            <div className="text-center relative">
-              <span className="absolute -left-2 md:-left-6 top-3 md:top-6 text-white/40 text-sm md:text-xl font-bold">→</span>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-4 mb-1.5 md:mb-2 mx-auto w-fit">
-                <span className="text-2xl md:text-4xl block">🤖</span>
+              <div style={{ textAlign: 'center', position: 'relative' }}>
+                <span className="absolute -left-2 md:-left-6 top-3 md:top-6 text-white/40 text-sm md:text-xl font-bold">→</span>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-4 mb-1.5 md:mb-2" style={{ margin: '0 auto', width: 'fit-content' }}>
+                  <span className="text-2xl md:text-4xl block">🤖</span>
+                </div>
+                <p className="text-white/90 text-[11px] md:text-sm font-medium">Slimme herkenning</p>
               </div>
-              <p className="text-white/90 text-[11px] md:text-sm font-medium">Slimme herkenning</p>
-            </div>
-            <div className="text-center relative">
-              <span className="absolute -left-2 md:-left-6 top-3 md:top-6 text-white/40 text-sm md:text-xl font-bold">→</span>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-4 mb-1.5 md:mb-2 mx-auto w-fit">
-                <span className="text-2xl md:text-4xl block">💰</span>
+              <div style={{ textAlign: 'center', position: 'relative' }}>
+                <span className="absolute -left-2 md:-left-6 top-3 md:top-6 text-white/40 text-sm md:text-xl font-bold">→</span>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-4 mb-1.5 md:mb-2" style={{ margin: '0 auto', width: 'fit-content' }}>
+                  <span className="text-2xl md:text-4xl block">💰</span>
+                </div>
+                <p className="text-white/90 text-[11px] md:text-sm font-medium">Zie marktwaarde</p>
               </div>
-              <p className="text-white/90 text-[11px] md:text-sm font-medium">Zie marktwaarde</p>
             </div>
           </div>
 

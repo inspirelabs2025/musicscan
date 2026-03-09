@@ -81,20 +81,18 @@ const Dashboard = () => {
       />
 
       <div className="min-h-screen bg-background">
-        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '1.5rem 1rem', boxSizing: 'border-box' as const, width: '100%', overflowX: 'hidden' as const }}>
 
-          {/* ═══════════════════════════════════════════════════
-              HERO BAR — gradient banner with stats & CTAs
-             ═══════════════════════════════════════════════════ */}
-          <section className="rounded-xl p-5 sm:p-6 bg-gradient-to-r from-[hsl(271,81%,20%)] to-[hsl(271,81%,40%)] text-white">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+          {/* ── 1. HERO BANNER ── */}
+          <section className="rounded-xl bg-gradient-to-r from-[hsl(271,81%,22%)] to-[hsl(271,81%,36%)] text-white" style={{ padding: '1.25rem' }}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-bold tracking-tight truncate">
                   {t.dashboard.welcomeBack}{firstName ? `, ${firstName}` : ''}
                 </h1>
-                <p className="text-sm text-white/70 mt-0.5">{t.dashboard.personalExperience}</p>
+                <p className="text-xs text-white/60 mt-0.5">{t.dashboard.personalExperience}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 shrink-0">
                 <Button asChild size="sm" className="bg-white text-primary hover:bg-white/90 font-semibold">
                   <Link to="/ai-scan-v2">
                     <Camera className="w-4 h-4 mr-1.5" />
@@ -110,44 +108,45 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Inline stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+            {/* Stat pills */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
               {[
                 { label: t.dashboard.totalCollection, value: statsLoading ? '…' : String(totalCollection), icon: Disc },
                 { label: t.dashboard.collectionValue, value: collectionLoading ? '…' : `€${collectionValue}`, icon: TrendingUp },
                 { label: t.dashboard.thisMonth, value: statsLoading ? '…' : String(totalCollection), icon: Camera },
                 { label: t.dashboard.successRate, value: statsLoading ? '…' : `${successRate.toFixed(1)}%`, icon: Star },
               ].map((stat) => (
-                <div key={stat.label} className="flex items-center gap-2.5 rounded-lg bg-white/10 backdrop-blur-sm px-3 py-2">
-                  <stat.icon className="w-4 h-4 text-white/60 shrink-0" />
+                <div key={stat.label} className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5">
+                  <stat.icon className="w-3.5 h-3.5 text-white/50 shrink-0" />
                   <div className="min-w-0">
                     <div className="text-sm font-bold leading-tight">{stat.value}</div>
-                    <div className="text-[11px] text-white/60 truncate">{stat.label}</div>
+                    <div className="text-[10px] text-white/50 truncate">{stat.label}</div>
                   </div>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* ═══════════════════════════════════════════════════
-              TWO-COLUMN LAYOUT — main + sidebar
-             ═══════════════════════════════════════════════════ */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* ── 2. MAIN GRID ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
 
             {/* ── Main Column (2/3) ── */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 space-y-6">
 
-              {/* Smart Tools 2×2 */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <EchoWidget />
-                <ChatWidget />
-                <QuizWidget />
-                <AIInsightsWidget />
-              </div>
+              {/* Magic Mike */}
+              <EchoWidget />
 
-              {/* Music Fun row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <MusicStoryWidget />
+              {/* Chat met je Muziek */}
+              <ChatWidget />
+
+              {/* Collectie Quiz Challenge */}
+              <QuizWidget />
+
+              {/* Muziek Inzichten */}
+              <MusicStoryWidget />
+
+              {/* Album van de Dag + Collectie Persoonlijkheid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <AlbumOfTheDay albums={unifiedAlbums || []} />
                 <CollectionPersonality
                   genres={collectionStats?.genres || []}
@@ -158,25 +157,31 @@ const Dashboard = () => {
             </div>
 
             {/* ── Sidebar (1/3) ── */}
-            <div className="space-y-4">
+            <div className="space-y-6">
+
+              {/* Scan Credits */}
               <CreditsDisplay />
+
+              {/* Abonnement Status */}
               <SubscriptionStatus />
+
+              {/* Spotify */}
               <SpotifyWidget />
 
-              {/* Recent Activity */}
+              {/* Recente Activiteit */}
               <Card>
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-2" style={{ padding: '1.25rem 1.25rem 0.5rem' }}>
                   <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                     <Clock className="w-3.5 h-3.5" />
                     {t.dashboard.recentActivity}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent style={{ padding: '0.75rem 1.25rem 1.25rem' }}>
                   {activitiesLoading ? (
                     <div className="space-y-3">
                       {[...Array(4)].map((_, i) => (
                         <div key={i} className="flex items-center gap-2.5 animate-pulse">
-                          <div className="w-7 h-7 bg-muted rounded shrink-0" />
+                          <div className="w-6 h-6 bg-muted rounded shrink-0" />
                           <div className="flex-1 space-y-1">
                             <div className="h-3 bg-muted rounded w-3/4" />
                             <div className="h-2.5 bg-muted rounded w-1/2" />
@@ -185,14 +190,14 @@ const Dashboard = () => {
                       ))}
                     </div>
                   ) : dashboardActivities && dashboardActivities.length > 0 ? (
-                    <div className="space-y-0.5">
+                    <div className="space-y-0">
                       {dashboardActivities.slice(0, 6).map((a) => (
-                        <div key={`${a.type}-${a.id}`} className="flex items-center gap-2 py-1.5 rounded hover:bg-muted/40 transition-colors px-1 -mx-1">
+                        <div key={`${a.type}-${a.id}`} className="flex items-center gap-2 py-1.5 border-b border-border/40 last:border-0">
                           <span className="text-sm shrink-0">{a.icon}</span>
                           <div className="min-w-0 flex-1">
                             <p className="text-xs font-medium truncate">{a.description}</p>
                           </div>
-                          <span className="text-[10px] text-muted-foreground shrink-0">
+                          <span className="text-[10px] text-muted-foreground shrink-0 whitespace-nowrap">
                             {new Date(a.timestamp).toLocaleDateString(t.common?.locale === 'en' ? 'en-US' : 'nl-NL', { day: 'numeric', month: 'short' })}
                           </span>
                         </div>
@@ -200,92 +205,117 @@ const Dashboard = () => {
                     </div>
                   ) : (
                     <div className="text-center py-4">
-                      <Music className="w-7 h-7 text-muted-foreground/30 mx-auto mb-1.5" />
+                      <Music className="w-6 h-6 text-muted-foreground/30 mx-auto mb-1" />
                       <p className="text-xs text-muted-foreground">{t.dashboard.noScansYet}</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
-              {/* Music Style */}
+              {/* Je Muziekstijl */}
               {collectionStats && (collectionStats.genres?.length > 0 || collectionStats.artists?.length > 0) && (
                 <Card>
-                  <CardHeader className="pb-2">
+                  <CardHeader className="pb-2" style={{ padding: '1.25rem 1.25rem 0.5rem' }}>
                     <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                       <Music className="w-3.5 h-3.5" />
                       {t.dashboard.yourMusicStyle}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    {collectionStats.genres?.slice(0, 3).map((g) => (
-                      <div key={g.genre} className="flex justify-between text-sm">
-                        <span>{g.genre}</span>
-                        <span className="text-muted-foreground text-xs">{g.count}</span>
-                      </div>
-                    ))}
-                    <div className="border-t pt-2 mt-2">
-                      {collectionStats.artists?.slice(0, 3).map((a) => (
-                        <div key={a.artist} className="flex justify-between text-sm py-0.5">
-                          <span className="truncate mr-2">{a.artist}</span>
-                          <span className="text-muted-foreground text-xs shrink-0">{a.count}</span>
-                        </div>
-                      ))}
+                  <CardContent style={{ padding: '0.75rem 1.25rem 1.25rem' }}>
+                    <div className="space-y-1.5">
+                      {collectionStats.genres?.slice(0, 5).map((g) => {
+                        const maxCount = collectionStats.genres?.[0]?.count || 1;
+                        const pct = Math.round((g.count / maxCount) * 100);
+                        return (
+                          <div key={g.genre} className="space-y-0.5">
+                            <div className="flex justify-between text-xs">
+                              <span className="font-medium truncate mr-2">{g.genre}</span>
+                              <span className="text-muted-foreground shrink-0">{g.count}</span>
+                            </div>
+                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full bg-primary/60 rounded-full" style={{ width: `${pct}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
+                    {collectionStats.artists && collectionStats.artists.length > 0 && (
+                      <div className="border-t border-border/40 mt-3 pt-3 space-y-1">
+                        {collectionStats.artists.slice(0, 4).map((a) => (
+                          <div key={a.artist} className="flex justify-between text-xs py-0.5">
+                            <span className="truncate mr-2">{a.artist}</span>
+                            <span className="text-muted-foreground shrink-0">{a.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
+
+              {/* AI Insights (sidebar) */}
+              <AIInsightsWidget />
             </div>
           </div>
 
-          {/* ═══════════════════════════════════════════════════
-              FULL-WIDTH SECTIONS
-             ═══════════════════════════════════════════════════ */}
-          <UnifiedContentWidget />
-          <LatestAlbumsSection />
+          {/* ── 3. FULL-WIDTH SECTIONS ── */}
+          <div className="mt-6 space-y-6">
 
-          {/* ── Quick Nav ── */}
-          <nav className="flex flex-wrap gap-2 pt-2">
-            {[
-              { to: '/collection-overview', icon: TrendingUp, label: t.dashboard.overview },
-              { to: '/collection-chat', icon: MessageSquare, label: t.dashboard.chat },
-              { to: '/my-shop', icon: Star, label: t.dashboard.myShop },
-              { to: '/unified-scan-overview', icon: BarChart3, label: t.dashboard.allScans },
-              { to: '/quizzen', icon: Trophy, label: t.dashboard.quizzes },
-              { to: '/mijn-quizzen', icon: Target, label: t.dashboard.scores },
-              { to: '/artists', icon: Users, label: t.nav.artists },
-              { to: '/shop', icon: ShoppingBag, label: t.nav.shop },
-            ].map(({ to, icon: Icon, label }) => (
-              <Button key={to} asChild variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground hover:text-foreground">
-                <Link to={to}>
-                  <Icon className="w-3.5 h-3.5 mr-1" />
-                  {label}
-                </Link>
-              </Button>
-            ))}
-          </nav>
+            {/* Ontdek & Leer */}
+            <UnifiedContentWidget />
 
-          {/* ── Admin ── */}
-          {user?.email === ADMIN_EMAIL && (
-            <Card className="border-border">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
-                  <Shield className="w-3.5 h-3.5" />
-                  Admin Tools
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            {/* Nieuwste Uploads */}
+            <LatestAlbumsSection />
+
+            {/* Quick Nav */}
+            <Card>
+              <CardContent style={{ padding: '1.25rem' }}>
                 <div className="flex flex-wrap gap-2">
-                  <Button asChild variant="outline" size="sm">
-                    <Link to="/super-admin"><BarChart3 className="h-3.5 w-3.5 mr-1.5" />SuperAdmin</Link>
-                  </Button>
-                  <BatchBlogGenerator />
-                  <Button onClick={restartOnboarding} variant="outline" size="sm">
-                    <Play className="h-3.5 w-3.5 mr-1.5" />Test Onboarding
-                  </Button>
+                  {[
+                    { to: '/collection-overview', icon: TrendingUp, label: t.dashboard.overview },
+                    { to: '/collection-chat', icon: MessageSquare, label: t.dashboard.chat },
+                    { to: '/my-shop', icon: Star, label: t.dashboard.myShop },
+                    { to: '/unified-scan-overview', icon: BarChart3, label: t.dashboard.allScans },
+                    { to: '/quizzen', icon: Trophy, label: t.dashboard.quizzes },
+                    { to: '/mijn-quizzen', icon: Target, label: t.dashboard.scores },
+                    { to: '/artists', icon: Users, label: t.nav.artists },
+                    { to: '/shop', icon: ShoppingBag, label: t.nav.shop },
+                    { to: '/nieuws', icon: Newspaper, label: 'Nieuws' },
+                  ].map(({ to, icon: Icon, label }) => (
+                    <Button key={to} asChild variant="outline" size="sm" className="h-8 text-xs">
+                      <Link to={to}>
+                        <Icon className="w-3.5 h-3.5 mr-1" />
+                        {label}
+                      </Link>
+                    </Button>
+                  ))}
                 </div>
               </CardContent>
             </Card>
-          )}
+
+            {/* Admin Tools */}
+            {user?.email === ADMIN_EMAIL && (
+              <Card>
+                <CardHeader className="pb-2" style={{ padding: '1.25rem 1.25rem 0.5rem' }}>
+                  <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                    <Shield className="w-3.5 h-3.5" />
+                    Admin Tools
+                  </CardTitle>
+                </CardHeader>
+                <CardContent style={{ padding: '0.75rem 1.25rem 1.25rem' }}>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/super-admin"><BarChart3 className="h-3.5 w-3.5 mr-1.5" />SuperAdmin</Link>
+                    </Button>
+                    <BatchBlogGenerator />
+                    <Button onClick={restartOnboarding} variant="outline" size="sm">
+                      <Play className="h-3.5 w-3.5 mr-1.5" />Test Onboarding
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </div>
     </>

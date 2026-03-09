@@ -146,7 +146,7 @@ const Dashboard = () => {
           </section>
 
           {/* Credits & Subscription */}
-          <section className="mb-16 animate-fade-in delay-250 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <section className="mb-12 animate-fade-in grid grid-cols-1 md:grid-cols-2 gap-6">
             <CreditsDisplay />
             <SubscriptionStatus />
           </section>

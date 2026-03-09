@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Camera, Search, Disc, TrendingUp, Star, Clock, Music,
-  MessageSquare, Trophy, Sparkles, BarChart3, Users,
+  Camera, Search, Disc3, Disc, TrendingUp, Star, Clock, Music,
+  MessageSquare, Trophy, Sparkles, BarChart3, Users, Zap,
   Newspaper, ShoppingBag, Target, Shield, Play, ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,11 +29,13 @@ import { MusicStoryWidget } from '@/components/dashboard/MusicStoryWidget';
 import { CreditsDisplay } from '@/components/credits/CreditsDisplay';
 import { useDashboardActivity } from '@/hooks/useDashboardActivity';
 import { Loader2 } from 'lucide-react';
+import { BatchBlogGenerator } from '@/components/admin/BatchBlogGenerator';
 
 const Dashboard2 = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const { tr: t } = useLanguage();
+  const ADMIN_EMAIL = 'rogiervisser76@gmail.com';
   const { data: collectionStats, isLoading: collectionLoading } = useCollectionStats();
   const { data: recentScans, isLoading: scansLoading } = useDirectScans();
   const { data: unifiedAlbums, isLoading: albumsLoading } = useUnifiedAlbums();
@@ -62,99 +64,122 @@ const Dashboard2 = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 py-8 w-full">
+    <div className="min-h-screen bg-background overflow-x-hidden pt-14">
 
-        {/* ── HERO ── */}
-        <section className="rounded-2xl border border-border bg-card overflow-hidden">
-          <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-xl font-bold text-foreground">
-                  {t.dashboard.welcomeBack}{firstName ? `, ${firstName}` : ''}
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1">{t.dashboard.personalExperience}</p>
-              </div>
-              <div className="flex gap-2">
-                <Button asChild size="sm">
-                  <Link to="/ai-scan-v2">
-                    <Camera className="w-4 h-4 mr-1.5" />
-                    {t.dashboard.scanNow}
-                  </Link>
-                </Button>
-                <Button asChild size="sm" variant="secondary">
-                  <Link to="/my-collection">
-                    <Search className="w-4 h-4 mr-1.5" />
-                    {t.dashboard.myCollection}
-                  </Link>
-                </Button>
-              </div>
-            </div>
+      {/* ── HERO (same style as ScannerHero) ── */}
+      <section className="relative min-h-[280px] md:min-h-[380px] bg-black overflow-hidden flex items-center -mt-14 pt-14">
+        <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/50 via-black to-vinyl-gold/30" />
+
+        {/* Spinning vinyl discs */}
+        <div className="absolute -left-16 md:-left-20 top-1/2 -translate-y-1/2 opacity-20 md:opacity-30">
+          <Disc3 className="w-48 h-48 md:w-80 md:h-80 text-vinyl-purple animate-vinyl-spin" />
+        </div>
+        <div className="absolute -right-16 md:-right-20 top-1/2 -translate-y-1/2 opacity-10 md:opacity-20">
+          <Disc3 className="w-40 h-40 md:w-64 md:h-64 text-vinyl-gold animate-vinyl-spin" style={{ animationDirection: 'reverse', animationDuration: '25s' }} />
+        </div>
+
+        <div className="section-container section-padding relative z-10 py-10 md:py-16 w-full" style={{ textAlign: 'center' }}>
+          <div className="inline-flex items-center gap-1.5 bg-vinyl-gold/20 text-vinyl-gold px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold mb-4 backdrop-blur-sm border border-vinyl-gold/30">
+            <Zap className="w-3.5 h-3.5" />
+            Jouw Dashboard
           </div>
 
-          {/* Stats row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-border divide-x divide-border">
-            {statItems.map((stat) => (
-              <div key={stat.label} className="flex items-center gap-3 px-4 py-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <stat.icon className="w-4 h-4 text-primary" />
+          <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white mb-3 tracking-tight">
+            {t.dashboard.welcomeBack}{firstName ? `, ${firstName}` : ''}
+          </h1>
+          <p className="text-sm md:text-lg text-white/70 max-w-xl mx-auto mb-6 md:mb-8">
+            {t.dashboard.personalExperience}
+          </p>
+
+          <div className="flex gap-3 justify-center mb-6 md:mb-8">
+            <Button asChild size="lg" className="bg-gradient-to-r from-vinyl-gold via-yellow-500 to-vinyl-gold hover:from-yellow-500 hover:via-vinyl-gold hover:to-yellow-500 text-black font-bold text-sm md:text-lg px-6 md:px-10 py-4 md:py-6 rounded-xl shadow-2xl shadow-vinyl-gold/40 hover:shadow-vinyl-gold/60 transition-all hover:scale-105">
+              <Link to="/ai-scan-v2">
+                <Camera className="w-4 h-4 md:w-6 md:h-6 mr-2" />
+                {t.dashboard.scanNow}
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 font-semibold text-sm md:text-lg px-6 md:px-10 py-4 md:py-6 rounded-xl">
+              <Link to="/my-collection">
+                <Search className="w-4 h-4 md:w-6 md:h-6 mr-2" />
+                {t.dashboard.myCollection}
+              </Link>
+            </Button>
+          </div>
+
+          {/* Stats strip */}
+          <div className="flex justify-center">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-4" style={{ maxWidth: '600px', width: '100%' }}>
+              {statItems.map((stat) => (
+                <div key={stat.label} className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-3">
+                  <stat.icon className="w-4 h-4 text-vinyl-gold mx-auto mb-1" />
+                  <div className="text-base md:text-xl font-bold text-white">{stat.value}</div>
+                  <div className="text-[10px] md:text-xs text-white/50">{stat.label}</div>
                 </div>
-                <div>
-                  <div className="text-base font-bold text-foreground leading-tight">{stat.value}</div>
-                  <div className="text-[11px] text-muted-foreground">{stat.label}</div>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTIONS (same spacing as Home: gap-64px) ── */}
+      <div style={{ paddingLeft: '16px', paddingRight: '16px', maxWidth: '1280px', marginLeft: 'auto', marginRight: 'auto', display: 'flex', flexDirection: 'column' as const, gap: '48px', paddingTop: '48px', paddingBottom: '48px' }}>
+
+        {/* ── Smart Tools (horizontal scroll like PopularSinglesSection) ── */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Slimme Tools</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <EchoWidget />
+            <ChatWidget />
+            <QuizWidget />
+            <AIInsightsWidget />
           </div>
         </section>
 
-        {/* ── MAIN GRID ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-
-          {/* ── LEFT COLUMN ── */}
-          <div className="lg:col-span-2 space-y-6">
-
-            {/* Smart Tools 2x2 */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <EchoWidget />
-              <ChatWidget />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <QuizWidget />
-              <AIInsightsWidget />
-            </div>
-
-            {/* Music Story */}
-            <MusicStoryWidget />
-
-            {/* Album + Personality */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <AlbumOfTheDay albums={unifiedAlbums || []} />
-              <CollectionPersonality
-                genres={collectionStats?.genres || []}
-                totalItems={collectionStats?.totalItems || 0}
-                totalValue={collectionStats?.totalValue || 0}
-              />
-            </div>
+        {/* ── Mijn Collectie (2-col cards like StoriesSection) ── */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Mijn Collectie</h2>
+            <Link to="/my-collection" className="text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1 transition-colors min-h-[44px]">
+              Bekijk alles <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <AlbumOfTheDay albums={unifiedAlbums || []} />
+            <CollectionPersonality
+              genres={collectionStats?.genres || []}
+              totalItems={collectionStats?.totalItems || 0}
+              totalValue={collectionStats?.totalValue || 0}
+            />
+          </div>
+        </section>
 
-          {/* ── RIGHT SIDEBAR ── */}
-          <div className="space-y-6">
+        {/* ── Muziek Verhalen (full-width like Home) ── */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Muziek Verhalen</h2>
+          </div>
+          <MusicStoryWidget />
+        </section>
 
-            <CreditsDisplay />
-            <SubscriptionStatus />
-            <SpotifyWidget />
+        {/* ── Account & Status (2-col grid like CommunitySection) ── */}
+        <section>
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Account & Status</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <CreditsDisplay />
+              <SubscriptionStatus />
+            </div>
+            <div className="space-y-4">
+              <SpotifyWidget />
 
-            {/* Recente Activiteit */}
-            <Card>
-              <CardHeader className="p-5 pb-3">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-primary" />
-                  {t.dashboard.recentActivity}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-5 pb-5 pt-0">
+              {/* Recente Activiteit */}
+              <div className="rounded-xl bg-card border border-border p-4 md:p-5 shadow-md">
+                <div className="flex items-center gap-2 mb-3">
+                  <Clock className="w-5 h-5 text-primary" />
+                  <h3 className="font-bold text-foreground text-sm md:text-base">{t.dashboard.recentActivity}</h3>
+                </div>
                 {activitiesLoading ? (
                   <div className="space-y-3">
                     {[...Array(4)].map((_, i) => (
@@ -168,15 +193,15 @@ const Dashboard2 = () => {
                     ))}
                   </div>
                 ) : dashboardActivities && dashboardActivities.length > 0 ? (
-                  <div className="space-y-1">
+                  <div className="space-y-0">
                     {dashboardActivities.slice(0, 6).map((a) => (
-                      <div key={`${a.type}-${a.id}`} className="flex items-center gap-3 py-2 border-b border-border/30 last:border-0">
-                        <span className="text-sm shrink-0 w-6 text-center">{a.icon}</span>
+                      <div key={`${a.type}-${a.id}`} className="flex items-center gap-3 py-2.5 border-b border-border/30 last:border-0">
+                        <span className="text-base shrink-0 w-7 text-center">{a.icon}</span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-foreground truncate">{a.description}</p>
-                          {a.details && <p className="text-[11px] text-muted-foreground truncate">{a.details}</p>}
+                          <p className="text-sm font-medium text-foreground truncate">{a.description}</p>
+                          {a.details && <p className="text-xs text-muted-foreground truncate">{a.details}</p>}
                         </div>
-                        <span className="text-[10px] text-muted-foreground shrink-0">
+                        <span className="text-xs text-muted-foreground shrink-0">
                           {new Date(a.timestamp).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
                         </span>
                       </div>
@@ -188,85 +213,106 @@ const Dashboard2 = () => {
                     <p className="text-xs text-muted-foreground">{t.dashboard.noScansYet}</p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Muziekstijl */}
-            {collectionStats && collectionStats.genres?.length > 0 && (
-              <Card>
-                <CardHeader className="p-5 pb-3">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Music className="w-4 h-4 text-primary" />
-                    {t.dashboard.yourMusicStyle}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-5 pb-5 pt-0">
-                  <div className="space-y-2.5">
-                    {collectionStats.genres.slice(0, 5).map((g) => {
-                      const maxCount = collectionStats.genres?.[0]?.count || 1;
-                      const pct = Math.round((g.count / maxCount) * 100);
-                      return (
-                        <div key={g.genre}>
-                          <div className="flex justify-between text-xs mb-1">
-                            <span className="font-medium text-foreground truncate mr-2">{g.genre}</span>
-                            <span className="text-muted-foreground shrink-0">{g.count}</span>
-                          </div>
-                          <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {collectionStats.artists && collectionStats.artists.length > 0 && (
-                    <div className="border-t border-border mt-4 pt-3 space-y-1.5">
-                      <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-2">Top Artiesten</p>
-                      {collectionStats.artists.slice(0, 4).map((a) => (
-                        <div key={a.artist} className="flex justify-between text-xs py-0.5">
-                          <span className="text-foreground truncate mr-2">{a.artist}</span>
-                          <span className="text-muted-foreground shrink-0">{a.count}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
-
-        {/* ── FULL-WIDTH BOTTOM ── */}
-        <div className="mt-8 space-y-6">
-          <UnifiedContentWidget />
-          <LatestAlbumsSection />
-
-          {/* Quick Nav */}
-          <Card>
-            <CardContent className="p-5">
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { to: '/collection-overview', icon: TrendingUp, label: t.dashboard.overview },
-                  { to: '/collection-chat', icon: MessageSquare, label: t.dashboard.chat },
-                  { to: '/my-shop', icon: Star, label: t.dashboard.myShop },
-                  { to: '/unified-scan-overview', icon: BarChart3, label: t.dashboard.allScans },
-                  { to: '/quizzen', icon: Trophy, label: t.dashboard.quizzes },
-                  { to: '/mijn-quizzen', icon: Target, label: t.dashboard.scores },
-                  { to: '/artists', icon: Users, label: t.nav.artists },
-                  { to: '/shop', icon: ShoppingBag, label: t.nav.shop },
-                  { to: '/nieuws', icon: Newspaper, label: 'Nieuws' },
-                ].map(({ to, icon: Icon, label }) => (
-                  <Button key={to} asChild variant="outline" size="sm" className="h-8 text-xs">
-                    <Link to={to}>
-                      <Icon className="w-3.5 h-3.5 mr-1" />
-                      {label}
-                    </Link>
-                  </Button>
-                ))}
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Muziekstijl (genre cards like GenresSection) ── */}
+        {collectionStats && collectionStats.genres?.length > 0 && (
+          <section className="rounded-xl bg-secondary/30 p-6 md:p-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">{t.dashboard.yourMusicStyle}</h2>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
+              {collectionStats.genres.slice(0, 5).map((g) => {
+                const maxCount = collectionStats.genres?.[0]?.count || 1;
+                const pct = Math.round((g.count / maxCount) * 100);
+                return (
+                  <div key={g.genre} className="rounded-xl bg-card border border-border p-4 shadow-md text-center">
+                    <div className="text-2xl md:text-3xl font-black text-primary mb-1">{g.count}</div>
+                    <div className="text-sm font-semibold text-foreground mb-2 truncate">{g.genre}</div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {collectionStats.artists && collectionStats.artists.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-lg font-bold text-foreground mb-4">Top Artiesten</h3>
+                <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+                  {collectionStats.artists.slice(0, 8).map((a) => (
+                    <div key={a.artist} className="flex-shrink-0 snap-start text-center">
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-card border border-border shadow-sm flex items-center justify-center mx-auto">
+                        <span className="text-lg md:text-xl font-bold text-primary/60">{a.artist.charAt(0)}</span>
+                      </div>
+                      <p className="text-xs font-semibold text-foreground truncate mt-2 w-16 md:w-20">{a.artist}</p>
+                      <p className="text-[10px] text-muted-foreground">{a.count} items</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── Ontdek & Leer (full-width) ── */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Ontdek & Leer</h2>
+          </div>
+          <UnifiedContentWidget />
+        </section>
+
+        {/* ── Nieuwste Uploads ── */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Nieuwste Uploads</h2>
+          </div>
+          <LatestAlbumsSection />
+        </section>
+
+        {/* ── Quick Nav (like Community cards) ── */}
+        <section className="rounded-xl bg-card border border-border p-4 md:p-6 shadow-md">
+          <h3 className="font-bold text-foreground text-base md:text-lg mb-4">Snelle Navigatie</h3>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { to: '/collection-overview', icon: TrendingUp, label: t.dashboard.overview },
+              { to: '/collection-chat', icon: MessageSquare, label: t.dashboard.chat },
+              { to: '/my-shop', icon: Star, label: t.dashboard.myShop },
+              { to: '/unified-scan-overview', icon: BarChart3, label: t.dashboard.allScans },
+              { to: '/quizzen', icon: Trophy, label: t.dashboard.quizzes },
+              { to: '/mijn-quizzen', icon: Target, label: t.dashboard.scores },
+              { to: '/artists', icon: Users, label: t.nav.artists },
+              { to: '/shop', icon: ShoppingBag, label: t.nav.shop },
+              { to: '/nieuws', icon: Newspaper, label: 'Nieuws' },
+            ].map(({ to, icon: Icon, label }) => (
+              <Button key={to} asChild variant="outline" size="sm" className="min-h-[44px] text-xs md:text-sm">
+                <Link to={to}>
+                  <Icon className="w-4 h-4 mr-1.5" />
+                  {label}
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Admin Tools ── */}
+        {user?.email === ADMIN_EMAIL && (
+          <section className="rounded-xl bg-card border border-border p-4 md:p-6 shadow-md">
+            <div className="flex items-center gap-2 mb-3">
+              <Shield className="w-5 h-5 text-primary" />
+              <h3 className="font-bold text-foreground text-sm md:text-base">Admin Tools</h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline" size="sm" className="min-h-[44px]">
+                <Link to="/super-admin"><BarChart3 className="h-4 w-4 mr-1.5" />SuperAdmin</Link>
+              </Button>
+              <BatchBlogGenerator />
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

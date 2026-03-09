@@ -37,20 +37,20 @@ export const ProductBanner = () => {
             </h3>
           </div>
 
-          <div className="flex gap-2.5 md:gap-3 overflow-x-auto pb-1 md:pb-0 snap-x snap-mandatory scrollbar-hide">
+          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-1 md:pb-0 snap-x snap-mandatory scrollbar-hide">
             {products?.slice(0, 4).map((product) => (
               <Link
                 key={product.id}
                 to={`/product/${product.slug || product.id}`}
-                className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden ring-2 ring-primary-foreground/20 hover:ring-primary-foreground/60 transition-all hover:scale-105 snap-start min-h-[44px]"
+                className="flex-shrink-0 w-20 h-20 md:w-28 md:h-28 rounded-lg overflow-hidden ring-2 ring-primary-foreground/20 hover:ring-primary-foreground/60 transition-all hover:scale-105 snap-start min-h-[44px]"
               >
                 <img
-                  src={optimizeImageUrl(product.primary_image!, { width: 96, height: 96 })}
+                  src={optimizeImageUrl(product.primary_image!, { width: 128, height: 128 })}
                   alt={generateArtworkAlt(product.artist || '', product.title, 'product')}
                   loading="lazy"
                   decoding="async"
-                  width={96}
-                  height={96}
+                  width={128}
+                  height={128}
                   className="w-full h-full object-cover"
                 />
               </Link>

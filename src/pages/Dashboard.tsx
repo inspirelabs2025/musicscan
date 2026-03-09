@@ -195,12 +195,12 @@ const Dashboard = () => {
           </section>
 
           {/* Content & Community Section */}
-          <section className="mb-12 animate-fade-in delay-600">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+          <section className="mb-16 animate-fade-in delay-600">
+            <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
               <Newspaper className="w-6 h-6 text-vinyl-gold" />
               {t.dashboard.discoverLearn}
             </h2>
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-8">
               <UnifiedContentWidget />
               <Card className="border-2 hover:border-accent/50 transition-all duration-300 lg:col-span-3">
                 <CardHeader>

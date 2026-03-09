@@ -132,6 +132,7 @@ export const router = createBrowserRouter([
       { path: 'auth/set-password', element: wrap(SetPassword) },
       { path: 'set-password', element: wrap(SetPassword) },
       { path: 'dashboard', element: wrap(Dashboard) },
+      { path: 'dashboard2', element: wrap(Dashboard2) },
       { path: 'settings', element: wrap(Settings) },
       { path: 'profile', element: wrap(Profile) },
       

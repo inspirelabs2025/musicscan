@@ -191,7 +191,7 @@ const Auth = () => {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md" style={{ padding: '8px 16px' }}>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">{t.title}</CardTitle>
           <CardDescription>{t.subtitle}</CardDescription>

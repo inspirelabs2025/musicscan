@@ -256,7 +256,7 @@ const Dashboard = () => {
           <LatestAlbumsSection />
 
           {/* Navigation Shortcuts */}
-          <section className="mb-16 animate-fade-in delay-700">
+          <section className="mb-12 animate-fade-in">
             <Card className="border-2 hover:border-primary/50 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

@@ -7,6 +7,7 @@ import { PageLoader } from './components/shared/page-loader';
 const Home = lazy(() => import('./pages/Home'));
 const Auth = lazy(() => import('./pages/Auth'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Dashboard2 = lazy(() => import('./pages/Dashboard2'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
 const Shop = lazy(() => import('./pages/Shop'));

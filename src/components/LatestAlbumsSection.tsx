@@ -50,30 +50,25 @@ const useLatestAlbums = () => {
 
 const AlbumCard: React.FC<{ album: Album; language: string }> = ({ album, language }) => {
   const uploadDate = new Date(album.created_at).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US', { day: 'numeric', month: 'short' });
-  const mediaIcon = album.media_type === 'vinyl' ? <Disc className="w-4 h-4" /> : <Music className="w-4 h-4" />;
-  const mediaColor = album.media_type === 'vinyl' ? 'text-vinyl-purple' : 'text-vinyl-gold';
+  const mediaIcon = album.media_type === 'vinyl' ? <Disc className="w-3.5 h-3.5" /> : <Music className="w-3.5 h-3.5" />;
 
   return (
-    <Card className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-vinyl-purple/30 hover-scale animate-fade-in bg-gradient-to-br from-card via-card to-accent/5">
-      <CardContent className="p-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/5 via-transparent to-vinyl-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div className="relative z-10">
-          <div className="w-full aspect-square mb-3 bg-gradient-to-br from-muted to-muted/50 rounded-lg overflow-hidden group-hover:scale-105 transition-all duration-300">
-            {album.image_url ? (
-              <img src={album.image_url} alt={`${album.artist} - ${album.title}`} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/20">{mediaIcon}</div>
-            )}
-          </div>
-          <div className="space-y-1">
-            <div className="text-sm font-medium text-foreground/90 group-hover:text-vinyl-purple transition-colors line-clamp-1">{album.title}</div>
-            <div className="text-xs text-muted-foreground group-hover:text-foreground/70 transition-colors line-clamp-1">{album.artist}</div>
-            {album.year && <div className="text-xs text-muted-foreground">{album.year}</div>}
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center gap-1 text-xs text-muted-foreground"><Calendar className="w-3 h-3" /><span>{uploadDate}</span></div>
-              <div className={`flex items-center gap-1 text-xs ${mediaColor}`}>{mediaIcon}<span className="capitalize">{album.media_type}</span></div>
+    <Card className="group hover:shadow-md transition-shadow">
+      <CardContent className="p-3">
+        <div className="w-full aspect-square mb-2 bg-muted rounded-md overflow-hidden">
+          {album.image_url ? (
+            <img src={album.image_url} alt={`${album.artist} - ${album.title}`} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+              {mediaIcon}
             </div>
-          </div>
+          )}
+        </div>
+        <p className="text-sm font-medium truncate">{album.title}</p>
+        <p className="text-xs text-muted-foreground truncate">{album.artist}</p>
+        <div className="flex items-center justify-between mt-1.5 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-1"><Calendar className="w-3 h-3" />{uploadDate}</div>
+          <div className="flex items-center gap-1">{mediaIcon}<span className="capitalize">{album.media_type}</span></div>
         </div>
       </CardContent>
     </Card>
@@ -87,13 +82,13 @@ export const LatestAlbumsSection: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <Music className="w-5 h-5 text-primary" />
-          <h2 className="text-xl font-bold">{d.newestUploads}</h2>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {[...Array(6)].map((_, i) => <div key={i}><Skeleton className="h-[180px] w-full rounded-lg" /></div>)}
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <Music className="w-4 h-4 text-primary" />
+          {d.newestUploads}
+        </h2>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+          {[...Array(6)].map((_, i) => <Skeleton key={i} className="aspect-square rounded-lg" />)}
         </div>
       </div>
     );
@@ -102,16 +97,14 @@ export const LatestAlbumsSection: React.FC = () => {
   if (!albums || albums.length === 0) return null;
 
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-4">
-        <Music className="w-5 h-5 text-primary" />
-        <h2 className="text-xl font-bold">{d.newestUploads}</h2>
-      </div>
-      <p className="text-sm text-muted-foreground mb-4">{d.discoverLatestAlbums}</p>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="space-y-3">
+      <h2 className="text-lg font-semibold flex items-center gap-2">
+        <Music className="w-4 h-4 text-primary" />
+        {d.newestUploads}
+      </h2>
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
         {albums.map((album) => <AlbumCard key={album.id} album={album} language={language} />)}
       </div>
-      <p className="text-xs text-muted-foreground text-center mt-4">{d.addYourCollection}</p>
     </div>
   );
 };

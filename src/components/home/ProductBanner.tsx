@@ -25,7 +25,7 @@ export const ProductBanner = () => {
   });
 
   return (
-    <section className="bg-primary py-6 md:py-12">
+    <section className="bg-primary py-8 md:py-12">
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
           <div className="text-center md:text-left flex-shrink-0">

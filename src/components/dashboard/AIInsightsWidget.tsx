@@ -16,12 +16,12 @@ export const AIInsightsWidget = () => {
 
   if (aiLoading || statsLoading) {
     return (
-      <Card className="border-2 hover:border-vinyl-purple/50 transition-all duration-300">
-        <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-vinyl-purple" />
-          {d.musicInsights}
-        </CardTitle>
+      <Card className="h-full">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Brain className="w-4 h-4 text-primary" />
+            {d.musicInsights}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -49,58 +49,43 @@ export const AIInsightsWidget = () => {
   }
 
   return (
-    <Card className="border-2 hover:border-vinyl-purple/50 transition-all duration-300 hover:shadow-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-vinyl-purple animate-pulse" />
+    <Card className="h-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Brain className="w-4 h-4 text-primary" />
           {d.musicInsights}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center p-3 bg-vinyl-purple/10 rounded-lg">
-            <div className="text-2xl font-bold text-vinyl-purple">{uniqueGenres}</div>
-            <div className="text-xs text-muted-foreground">{d.genresDiscovered}</div>
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="text-center p-2 bg-muted/50 rounded-lg">
+            <div className="text-xl font-bold text-foreground">{uniqueGenres}</div>
+            <div className="text-[11px] text-muted-foreground">{d.genresDiscovered}</div>
           </div>
-          <div className="text-center p-3 bg-vinyl-gold/10 rounded-lg">
-            <div className="text-2xl font-bold text-vinyl-gold">{uniqueArtists}</div>
-            <div className="text-xs text-muted-foreground">{d.artists}</div>
+          <div className="text-center p-2 bg-muted/50 rounded-lg">
+            <div className="text-xl font-bold text-foreground">{uniqueArtists}</div>
+            <div className="text-[11px] text-muted-foreground">{d.artists}</div>
           </div>
         </div>
 
         {totalItems > 0 && (
-          <div className="space-y-2">
-            {topGenre && (
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-vinyl-purple">🎨</span>
-                <span>{d.topGenreLabel} <strong>{topGenre.genre}</strong> ({topGenre.count} {d.albumsCount})</span>
-              </div>
-            )}
-            {topArtist && (
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-vinyl-gold">🎤</span>
-                <span>{d.topArtistLabel} <strong>{topArtist.artist}</strong> ({topArtist.count} {d.albumsCount})</span>
-              </div>
-            )}
-            {timeSpan && timeSpan > 0 && (
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-accent">⏰</span>
-                <span>{d.timeSpanLabel} <strong>{timeSpan} {d.yearsOfMusicHistory}</strong></span>
-              </div>
-            )}
+          <div className="space-y-1.5 text-sm text-muted-foreground">
+            {topGenre && <p>🎨 {d.topGenreLabel} <strong className="text-foreground">{topGenre.genre}</strong> ({topGenre.count})</p>}
+            {topArtist && <p>🎤 {d.topArtistLabel} <strong className="text-foreground">{topArtist.artist}</strong> ({topArtist.count})</p>}
+            {timeSpan > 0 && <p>⏰ <strong className="text-foreground">{timeSpan}</strong> {d.yearsOfMusicHistory}</p>}
           </div>
         )}
 
-        <div className="flex gap-2">
-          <Button asChild size="sm" className="flex-1 bg-gradient-to-r from-vinyl-purple to-vinyl-purple/80">
+        <div className="flex gap-2 pt-1">
+          <Button asChild size="sm" className="flex-1">
             <Link to="/collection-overview?tab=dna">
-              <Sparkles className="w-4 h-4 mr-2" />
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
               {d.musicDNA}
             </Link>
           </Button>
-          <Button asChild size="sm" variant="outline" className="flex-1 hover:bg-vinyl-gold/10">
+          <Button asChild size="sm" variant="outline" className="flex-1">
             <Link to="/quiz">
-              <Trophy className="w-4 h-4 mr-2" />
+              <Trophy className="w-3.5 h-3.5 mr-1.5" />
               {d.quizStart}
             </Link>
           </Button>
@@ -108,15 +93,10 @@ export const AIInsightsWidget = () => {
 
         {totalItems === 0 && (
           <div className="text-center py-4">
-            <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-2 opacity-50" />
-            <p className="text-sm text-muted-foreground mb-3">
-              {d.addAlbumsForInsights}
-            </p>
+            <Brain className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground mb-2">{d.addAlbumsForInsights}</p>
             <Button asChild size="sm">
-              <Link to="/scanner">
-                <ArrowRight className="w-4 h-4 mr-2" />
-                {d.startScanningShort}
-              </Link>
+              <Link to="/scanner"><ArrowRight className="w-3.5 h-3.5 mr-1.5" />{d.startScanningShort}</Link>
             </Button>
           </div>
         )}

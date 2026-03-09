@@ -64,8 +64,8 @@ export const CreditsDisplay: React.FC = () => {
             </div>
           </>
         )}
-        <div className="border-t pt-3">
-          <p className="text-sm text-muted-foreground mb-2">{s.havePromoCode}</p>
+        <div className="border-t pt-4">
+          <p className="text-sm text-muted-foreground mb-3">{s.havePromoCode}</p>
           <PromoCodeInput />
         </div>
       </CardContent>

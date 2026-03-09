@@ -335,7 +335,7 @@ const Dashboard = () => {
 
           {/* Admin Tools Section */}
           {user?.email === ADMIN_EMAIL && (
-            <section className="mt-12 animate-fade-in delay-1000">
+            <section className="mt-16 animate-fade-in delay-1000">
               <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-300">

@@ -65,11 +65,11 @@ export function StoriesSection() {
   if (!stories?.length) return null;
 
   return (
-    <section className="py-8 md:py-16 bg-background">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-5 md:mb-8">
-          <h2 className="text-xl md:text-3xl font-bold text-foreground">Album Verhalen & Anekdotes</h2>
-          <Link to="/verhalen" className="text-sm font-semibold text-primary hover:text-primary/80 flex items-center gap-1 transition-colors min-h-[44px] min-w-[44px] justify-end whitespace-nowrap">
+    <section className="py-12 md:py-16 bg-background">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground">Album Verhalen & Anekdotes</h2>
+          <Link to="/verhalen" className="text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1 transition-colors min-h-[44px] min-w-[44px] justify-end whitespace-nowrap">
             Alle verhalen <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -79,9 +79,9 @@ export function StoriesSection() {
             <Link
               key={story.id}
               to={story.type === 'album' ? `/muziek-verhaal/${story.slug}` : `/anekdotes/${story.slug}`}
-              className="group flex sm:flex-col gap-3 sm:gap-0 min-h-[44px]"
+              className="group rounded-xl overflow-hidden bg-card border border-border shadow-lg hover:shadow-xl transition-shadow min-h-[44px]"
             >
-              <div className="w-24 h-24 sm:w-full sm:aspect-[4/3] rounded-xl overflow-hidden bg-muted sm:mb-3 shadow-md flex-shrink-0">
+              <div className="w-full aspect-[4/3] bg-muted">
                 {story.image_url ? (
                   <img
                     src={optimizeImageUrl(story.image_url!, { width: 400, height: 300 })}
@@ -94,16 +94,16 @@ export function StoriesSection() {
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                    <span className="text-2xl sm:text-4xl opacity-50">{story.type === 'album' ? '🎵' : '📖'}</span>
+                    <span className="text-4xl opacity-50">{story.type === 'album' ? '🎵' : '📖'}</span>
                   </div>
                 )}
               </div>
-              <div className="flex flex-col justify-center sm:justify-start min-w-0">
-                <Badge variant="secondary" className="mb-1 text-[10px] w-fit">
+              <div className="p-3 md:p-4">
+                <span className="inline-block mb-1.5 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-primary text-primary-foreground">
                   {story.type === 'album' ? 'Album Verhaal' : 'Anekdote'}
-                </Badge>
+                </span>
                 <h3 className="text-sm font-semibold text-foreground line-clamp-2">{story.title}</h3>
-                <p className="text-xs text-muted-foreground">{story.artist}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{story.artist}</p>
               </div>
             </Link>
           ))}

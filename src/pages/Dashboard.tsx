@@ -152,8 +152,8 @@ const Dashboard = () => {
           </section>
 
           {/* Stats Cards */}
-          <section className="mb-12 animate-fade-in delay-300">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+          <section className="mb-16 animate-fade-in delay-300">
+            <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
               <BarChart3 className="w-6 h-6 text-vinyl-purple" />
               {t.dashboard.yourMusicDNA}
             </h2>

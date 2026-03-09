@@ -69,6 +69,7 @@ const Home = () => {
       </Helmet>
 
       <ScannerHero />
+      <div className="mt-6" />
 
       <Suspense fallback={<SectionFallback />}>
         <PopularSinglesSection />

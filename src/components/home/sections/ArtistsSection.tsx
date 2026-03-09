@@ -23,9 +23,9 @@ export function ArtistsSection() {
   if (!artists?.length) return null;
 
   return (
-    <section className="py-12 md:py-16 bg-secondary/30">
+    <section className="py-10 md:py-16 bg-secondary/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-6 md:mb-8">
+        <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground">Artiesten</h2>
           <Link to="/artists" className="text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1 transition-colors min-h-[44px] min-w-[44px] justify-end">
             Alle artiesten <ArrowRight className="w-4 h-4" />

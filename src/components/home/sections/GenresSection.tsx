@@ -13,9 +13,9 @@ const genres = [
 
 export function GenresSection() {
   return (
-    <section className="py-12 md:py-16 bg-secondary/30">
+    <section className="py-10 md:py-16 bg-secondary/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6 md:mb-8">Ontdek op Genre</h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8">Ontdek op Genre</h2>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {genres.map((genre) => (

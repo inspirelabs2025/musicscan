@@ -35,7 +35,7 @@ export const AiNudgeBanner: React.FC = () => {
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-lg">
-      <div className="relative rounded-xl shadow-lg bg-gradient-to-r from-primary via-purple-500 to-indigo-500 text-primary-foreground" style={{ padding: '28px 48px 28px 32px' }}>
+      <div className="relative rounded-xl shadow-lg bg-gradient-to-r from-primary via-purple-500 to-indigo-500 text-primary-foreground" style={{ padding: '28px 48px 32px 32px' }}>
         <Button
           variant="ghost"
           size="sm"

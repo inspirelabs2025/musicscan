@@ -127,7 +127,7 @@ const AdminEmailNotifications = lazy(() => import('./pages/admin/EmailNotificati
 const AdminUserManagement = lazy(() => import('./pages/admin/UserManagement'));
 const AdminAllProducts = lazy(() => import('./pages/admin/AllProducts'));
 const AdminPlatformProducts = lazy(() => import('./pages/admin/PlatformProducts'));
-const AdminShopProducts = lazy(() => import('./pages/admin/ShopProducts'));
+const AdminShopProducts = lazy(() => import('./pages/admin/ShopProducts').then(m => ({ default: m.ShopProducts })));
 const AdminShopOrders = lazy(() => import('./pages/admin/ShopOrders'));
 const AdminTimeMachineManager = lazy(() => import('./pages/admin/TimeMachineManager'));
 const AdminMediaLibrary = lazy(() => import('./pages/admin/MediaLibrary'));

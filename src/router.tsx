@@ -1,5 +1,10 @@
 import React, { lazy, Suspense } from 'react';
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, useParams } from 'react-router-dom';
+
+const FanwallSlugRedirect = () => {
+  const { slug } = useParams();
+  return <Navigate to={`/fan-wall/${slug}`} replace />;
+};
 import App from './App';
 import { PageLoader } from './components/shared/page-loader';
 

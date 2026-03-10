@@ -107,7 +107,7 @@ export function StickyHeader() {
 
       {/* Mobile menu */}
       {isMobile && menuOpen && (
-        <div className="bg-[hsl(240_20%_10%/0.98)] backdrop-blur-md border-t border-white/10 pb-4 max-w-full overflow-hidden">
+        <div className="absolute top-full left-0 right-0 bg-[hsl(240_20%_10%/0.98)] backdrop-blur-md border-t border-white/10 pb-4">
           <nav className="container mx-auto px-4 flex flex-col gap-1 pt-2">
             <div className="flex items-center gap-2 px-4 py-2">
               <LanguageSwitcher />

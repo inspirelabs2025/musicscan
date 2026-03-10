@@ -86,15 +86,15 @@ export const ConditionGradingPanel: React.FC<ConditionGradingPanelProps> = ({
   const mediaLabel = mediaType === 'vinyl' ? 'Vinyl' : 'CD';
 
   return (
-    <div className="mt-3 p-3 bg-background/60 rounded-lg border border-border/50 space-y-3">
-      <div className="text-xs font-semibold flex items-center gap-1.5">
+    <div className="mt-3 p-3 bg-gray-100 dark:bg-gray-200 rounded-lg border border-gray-300 space-y-3">
+      <div className="text-xs font-semibold flex items-center gap-1.5 text-gray-900">
         📋 {s.conditionGrading}
       </div>
 
       <div className="space-y-1">
-        <label className="text-xs text-muted-foreground">{s.mediaState} {mediaLabel}</label>
+        <label className="text-xs text-gray-600">{s.mediaState} {mediaLabel}</label>
         <Select value={conditionMedia} onValueChange={onConditionMediaChange}>
-          <SelectTrigger className="h-8 text-xs bg-background">
+          <SelectTrigger className="h-8 text-xs bg-white text-gray-900 border-gray-300">
             <SelectValue placeholder={s.selectCondition} />
           </SelectTrigger>
           <SelectContent className="z-[200] bg-popover">
@@ -109,9 +109,9 @@ export const ConditionGradingPanel: React.FC<ConditionGradingPanelProps> = ({
       </div>
 
       <div className="space-y-1">
-        <label className="text-xs text-muted-foreground">{s.sleeveState}</label>
+        <label className="text-xs text-gray-600">{s.sleeveState}</label>
         <Select value={conditionSleeve} onValueChange={onConditionSleeveChange}>
-          <SelectTrigger className="h-8 text-xs bg-background">
+          <SelectTrigger className="h-8 text-xs bg-white text-gray-900 border-gray-300">
             <SelectValue placeholder={s.selectCondition} />
           </SelectTrigger>
           <SelectContent className="z-[200] bg-popover">

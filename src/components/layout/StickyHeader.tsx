@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Link } from 'react-router-dom';
 import { Menu, X, Disc3, LogIn, User, LayoutDashboard, LogOut, Library } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,7 +49,8 @@ export function StickyHeader() {
         )}
 
         {/* Right side */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <LanguageSwitcher />
           {!isMobile && (
             user ? (
               <Popover>

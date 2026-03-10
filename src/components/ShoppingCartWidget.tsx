@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { GuestCheckoutModal } from './GuestCheckoutModal';
 import { trackBeginCheckout } from '@/utils/googleAnalytics';
+import { openExternalPayment } from '@/utils/externalPayment';
 
 export const ShoppingCartWidget = () => {
   const { items, removeFromCart, getTotalPrice, getItemCount, checkout, isLoading, clearCart } = useCart();

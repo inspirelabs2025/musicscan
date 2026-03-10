@@ -1397,29 +1397,29 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
 
               {/* Pricing card inline */}
               {msg.pricingData && (msg.pricingData.lowest_price || msg.pricingData.median_price || msg.pricingData.highest_price) && (
-                <div className="mt-3 p-3 bg-gradient-to-br from-primary/5 to-transparent rounded-xl border border-primary/10">
+                <div className="mt-3 p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
                   <div className="grid grid-cols-3 gap-2 text-center">
                     {msg.pricingData.lowest_price && (
                       <div>
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{sc.lowest}</div>
-                        <div className="text-lg font-bold text-primary">€{Number(msg.pricingData.lowest_price).toFixed(2)}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-white/60 font-medium">{sc.lowest}</div>
+                        <div className="text-lg font-bold text-green-400">€{Number(msg.pricingData.lowest_price).toFixed(2)}</div>
                       </div>
                     )}
                     {msg.pricingData.median_price && (
                       <div>
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{sc.median}</div>
-                        <div className="text-lg font-bold text-foreground">€{Number(msg.pricingData.median_price).toFixed(2)}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-white/60 font-medium">{sc.median}</div>
+                        <div className="text-lg font-bold text-white">€{Number(msg.pricingData.median_price).toFixed(2)}</div>
                       </div>
                     )}
                     {msg.pricingData.highest_price && (
                       <div>
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{sc.highest}</div>
-                        <div className="text-lg font-bold text-foreground">€{Number(msg.pricingData.highest_price).toFixed(2)}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-white/60 font-medium">{sc.highest}</div>
+                        <div className="text-lg font-bold text-white">€{Number(msg.pricingData.highest_price).toFixed(2)}</div>
                       </div>
                     )}
                   </div>
               {msg.pricingData.num_for_sale != null && msg.pricingData.num_for_sale > 0 && (
-                    <div className="text-xs text-muted-foreground text-center mt-2 pt-2 border-t border-border/30">
+                    <div className="text-xs text-white/50 text-center mt-2 pt-2 border-t border-white/10">
                       🏪 {msg.pricingData.num_for_sale} {sc.copiesForSaleDiscogs}
                     </div>
                   )}
@@ -1428,18 +1428,18 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
 
               {/* Marketplace listings */}
               {msg.pricingData?.marketplace_listings && msg.pricingData.marketplace_listings.length > 0 && (
-                <div className="mt-3 p-3 bg-background/60 rounded-lg border border-border/50">
-                  <div className="text-xs font-semibold mb-2 flex items-center gap-1">
+                <div className="mt-3 p-3 bg-gray-100 dark:bg-gray-200 rounded-lg border border-gray-300">
+                  <div className="text-xs font-semibold mb-2 flex items-center gap-1 text-gray-900">
                     🏪 {msg.pricingData.num_for_sale || msg.pricingData.marketplace_listings.length} {sc.copiesForSale}
                   </div>
                   <div className="space-y-1.5">
                     {msg.pricingData.marketplace_listings.slice(0, 5).map((listing, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-xs gap-2 py-1 border-b border-border/30 last:border-0">
-                        <span className="font-semibold text-primary min-w-[60px]">€{listing.price.toFixed(2)}</span>
-                        <span className="text-muted-foreground truncate flex-1">
+                      <div key={idx} className="flex items-center justify-between text-xs gap-2 py-1 border-b border-gray-300 last:border-0">
+                        <span className="font-semibold text-green-700 min-w-[60px]">€{listing.price.toFixed(2)}</span>
+                        <span className="text-gray-700 truncate flex-1">
                           {listing.condition_media}{listing.condition_sleeve && listing.condition_sleeve !== 'Unknown' ? ` / ${listing.condition_sleeve}` : ''}
                         </span>
-                        <span className="text-muted-foreground text-right min-w-[70px]">{listing.ships_from}</span>
+                        <span className="text-gray-700 text-right min-w-[70px]">{listing.ships_from}</span>
                       </div>
                     ))}
                   </div>
@@ -1448,7 +1448,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
                       href={`https://www.discogs.com/sell/release/${msg.v2Result.discogs_id}?curr=EUR`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
+                      className="inline-flex items-center gap-1 text-xs text-blue-700 hover:underline mt-2"
                     >
                       <ExternalLink className="h-3 w-3" />
                       {sc.viewAllOffers}

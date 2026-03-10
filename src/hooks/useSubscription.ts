@@ -83,7 +83,8 @@ export const useSubscription = () => {
       
       if (data?.url) {
         // Open portal in new tab
-        window.open(data.url, '_blank');
+        // External browser for app store compliance
+        openExternalPayment(data.url);
       }
       
       return data;

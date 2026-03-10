@@ -60,8 +60,8 @@ export const GuestCheckoutModal = ({ open, onOpenChange, items, onSuccess }: Gue
 
       if (error) throw error;
 
-      // Open Stripe checkout in new window
-      window.open(data.url, '_blank');
+      // External browser for app store compliance
+      openExternalPayment(data.url);
       
       onSuccess();
       onOpenChange(false);

@@ -63,7 +63,8 @@ const Pricing = () => {
       });
       if (error) throw error;
       if (data?.url) {
-        window.open(data.url, '_blank');
+        // External browser for app store compliance
+        openExternalPayment(data.url);
       }
     } catch (error: any) {
       toast({ title: tr.common.error, description: error.message || p.tryAgain, variant: 'destructive' });

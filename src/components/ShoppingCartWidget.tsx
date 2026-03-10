@@ -33,7 +33,8 @@ export const ShoppingCartWidget = () => {
         
         if (result?.url) {
           console.log('[ShoppingCartWidget] Opening Stripe checkout:', result.url);
-          window.open(result.url, '_blank');
+          // External browser for app store compliance
+          openExternalPayment(result.url);
           
           toast({
             title: "Betalingslink geopend",

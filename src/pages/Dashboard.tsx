@@ -242,7 +242,7 @@ const Dashboard = () => {
                       <Music className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
                       <p className="text-muted-foreground">{t.dashboard.noScansYet}</p>
                       <Button asChild className="mt-3">
-                        <Link to="/scanner"><Camera className="w-4 h-4 mr-2" />{t.dashboard.startScanning}</Link>
+                        <Link to="/ai-scan-v2"><Camera className="w-4 h-4 mr-2" />{t.dashboard.startScanning}</Link>
                       </Button>
                     </div>
                   )}

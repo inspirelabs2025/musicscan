@@ -1,5 +1,10 @@
 import React, { lazy, Suspense } from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate, useParams } from 'react-router-dom';
+
+const FanwallSlugRedirect = () => {
+  const { slug } = useParams();
+  return <Navigate to={`/fan-wall/${slug}`} replace />;
+};
 import App from './App';
 import { PageLoader } from './components/shared/page-loader';
 
@@ -207,6 +212,8 @@ export const router = createBrowserRouter([
       { path: 'social', element: wrap(Social) },
       { path: 'fan-wall', element: wrap(FanWall) },
       { path: 'fan-wall/:slug', element: wrap(ArtistFanWall) },
+      { path: 'fanwall', element: <Navigate to="/fan-wall" replace /> },
+      { path: 'fanwall/:slug', element: <FanwallSlugRedirect /> },
       { path: 'fan-wall-overview', element: wrap(ArtistFanWallOverview) },
       { path: 'upload-photo', element: wrap(UploadPhoto) },
       { path: 'mijn-fotos', element: wrap(MyPhotos) },

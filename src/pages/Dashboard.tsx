@@ -128,7 +128,7 @@ const Dashboard = () => {
                     </div>
                     <span>{t.dashboard.scanNow}</span>
                   </Link>
-                  <Link to="/my-collection" className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.03] group" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', backdropFilter: 'blur(4px)' }}>
+                  <Link to="/mijn-collectie" className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.03] group" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', backdropFilter: 'blur(4px)' }}>
                     <div className="p-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }}>
                       <Search className="w-6 h-6 group-hover:animate-pulse" />
                     </div>

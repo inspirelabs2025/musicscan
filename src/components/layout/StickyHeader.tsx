@@ -25,7 +25,7 @@ export function StickyHeader() {
   const displayName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Account';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[hsl(240_20%_12%/0.92)] backdrop-blur-md border-b border-white/10 overflow-hidden">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[hsl(240_20%_12%/0.92)] backdrop-blur-md border-b border-white/10">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 text-white font-bold text-lg" onClick={() => setMenuOpen(false)}>

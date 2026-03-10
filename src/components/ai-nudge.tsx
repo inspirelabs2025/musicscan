@@ -4,34 +4,27 @@ import { Button } from "./ui/button";
 import { BirdIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAIMetrics } from "@/hooks/use-ai-metrics";
-import { getAINudgeVariant, trackAIBTestEvent } from "@/lib/ab-test";
+import { useAINudgeVariant } from "@/lib/ab-test";
 import { Link } from "react-router-dom";
 
 export const AINudge: React.FC = () => {
   const { user } = useAuth();
   const { data: aiMetrics } = useAIMetrics();
   const [isOpen, setIsOpen] = useState(false);
-  const [variant, setVariant] = useState<'control' | 'nudge'>('control');
+  const variant = useAINudgeVariant();
 
   useEffect(() => {
-    if (user && aiMetrics && aiMetrics.ai_usage_count === 0) {
-      const abVariant = getAINudgeVariant();
-      setVariant(abVariant);
-      if (abVariant === 'nudge') {
-        setIsOpen(true);
-        trackAIBTestEvent('view_nudge', 'nudge');
-      }
+    if (user && aiMetrics && aiMetrics.ai_usage_count === 0 && variant === 'nudge') {
+      setIsOpen(true);
     }
-  }, [user, aiMetrics]);
+  }, [user, aiMetrics, variant]);
 
   const handleDismiss = () => {
     setIsOpen(false);
-    trackAIBTestEvent('dismiss_nudge', variant);
   };
 
   const handleExploreClick = () => {
     setIsOpen(false);
-    trackAIBTestEvent('click_nudge', variant);
   };
 
   if (!user || aiMetrics?.ai_usage_count !== 0 || variant === 'control') {

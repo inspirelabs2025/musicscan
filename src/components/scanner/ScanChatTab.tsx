@@ -1291,8 +1291,8 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
           </div>
           <div>
             <span className="text-sm font-bold tracking-tight text-white">Magic Mike</span>
-            {mediaType && <span className="text-xs text-muted-foreground ml-1.5 bg-muted px-1.5 py-0.5 rounded-full">{mediaType === 'vinyl' ? sc.vinylLabel : sc.cdLabel}</span>}
-            <p className="text-xs text-muted-foreground">{sc.musicDetective}</p>
+            {mediaType && <span className="text-xs text-white/50 ml-1.5 bg-white/10 px-1.5 py-0.5 rounded-full">{mediaType === 'vinyl' ? sc.vinylLabel : sc.cdLabel}</span>}
+            <p className="text-xs text-white/50">{sc.musicDetective}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">

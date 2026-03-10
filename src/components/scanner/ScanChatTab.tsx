@@ -1397,29 +1397,29 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
 
               {/* Pricing card inline */}
               {msg.pricingData && (msg.pricingData.lowest_price || msg.pricingData.median_price || msg.pricingData.highest_price) && (
-                <div className="mt-3 p-3 bg-gradient-to-br from-primary/5 to-transparent rounded-xl border border-primary/10">
+                <div className="mt-3 p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
                   <div className="grid grid-cols-3 gap-2 text-center">
                     {msg.pricingData.lowest_price && (
                       <div>
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{sc.lowest}</div>
-                        <div className="text-lg font-bold text-primary">€{Number(msg.pricingData.lowest_price).toFixed(2)}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-white/60 font-medium">{sc.lowest}</div>
+                        <div className="text-lg font-bold text-green-400">€{Number(msg.pricingData.lowest_price).toFixed(2)}</div>
                       </div>
                     )}
                     {msg.pricingData.median_price && (
                       <div>
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{sc.median}</div>
-                        <div className="text-lg font-bold text-foreground">€{Number(msg.pricingData.median_price).toFixed(2)}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-white/60 font-medium">{sc.median}</div>
+                        <div className="text-lg font-bold text-white">€{Number(msg.pricingData.median_price).toFixed(2)}</div>
                       </div>
                     )}
                     {msg.pricingData.highest_price && (
                       <div>
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{sc.highest}</div>
-                        <div className="text-lg font-bold text-foreground">€{Number(msg.pricingData.highest_price).toFixed(2)}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-white/60 font-medium">{sc.highest}</div>
+                        <div className="text-lg font-bold text-white">€{Number(msg.pricingData.highest_price).toFixed(2)}</div>
                       </div>
                     )}
                   </div>
               {msg.pricingData.num_for_sale != null && msg.pricingData.num_for_sale > 0 && (
-                    <div className="text-xs text-muted-foreground text-center mt-2 pt-2 border-t border-border/30">
+                    <div className="text-xs text-white/50 text-center mt-2 pt-2 border-t border-white/10">
                       🏪 {msg.pricingData.num_for_sale} {sc.copiesForSaleDiscogs}
                     </div>
                   )}

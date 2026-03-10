@@ -49,35 +49,49 @@ function extractListingsFromHTML(html: string): { total_for_sale: number; listin
       if (anyPrice) price = parseFloat(anyPrice[1].replace(',', ''));
     }
 
-    // Extract condition - Discogs uses abbreviated forms like "VG+", "NM", "M"
-    // and full forms like "Very Good Plus (VG+)"
+    // Extract condition - Discogs uses item_condition block with spans
     let conditionMedia = '';
     let conditionSleeve = '';
-    
-    // Look for "Media: ..." and "Sleeve: ..." or the p.item_condition spans
+
+    // Strategy 1: Look for item_condition block with spans
     const condBlock = row.match(/<p[^>]*class="[^"]*item_condition[^"]*"[^>]*>([\s\S]*?)<\/p>/i);
     if (condBlock) {
       const block = condBlock[1];
-      // Media condition tooltip or text
-      const mediaMatch = block.match(/Media[^<]*<[^>]*>([^<]+)/i)
-        || block.match(/data-condition="([^"]+)"/i);
-      if (mediaMatch) conditionMedia = mediaMatch[1].trim();
-      
-      const sleeveMatch = block.match(/Sleeve[^<]*<[^>]*>([^<]+)/i);
-      if (sleeveMatch) conditionSleeve = sleeveMatch[1].trim();
-    }
-    
-    // Fallback: look for condition abbreviations in spans with tooltips
-    if (!conditionMedia) {
-      const condSpans = row.match(/title="([^"]*(?:Mint|Good|Fair|Poor)[^"]*)"/gi);
-      if (condSpans && condSpans.length >= 1) {
-        const m1 = condSpans[0].match(/title="([^"]+)"/);
-        if (m1) conditionMedia = m1[1];
-        if (condSpans.length >= 2) {
-          const m2 = condSpans[1].match(/title="([^"]+)"/);
-          if (m2) conditionSleeve = m2[1];
+
+      // Media condition: find spans with condition grade text, skip sleeve spans
+      const allSpans = [...block.matchAll(/<span[^>]*>([\s\S]*?)<\/span>/gi)];
+      for (const span of allSpans) {
+        const text = span[1].replace(/<[^>]+>/g, '').trim().split('\n')[0].trim();
+        if (!conditionMedia && /(?:Mint|Near Mint|Very Good|Good|Fair|Poor|Generic)/i.test(text)) {
+          if (!span[0].includes('item_sleeve_condition')) {
+            conditionMedia = text;
+          }
         }
       }
+
+      // Sleeve condition: span with class item_sleeve_condition
+      const sleeveMatch = block.match(/<span[^>]*class="[^"]*item_sleeve_condition[^"]*"[^>]*>([\s\S]*?)<\/span>/i);
+      if (sleeveMatch) {
+        conditionSleeve = sleeveMatch[1].replace(/<[^>]+>/g, '').trim();
+      }
+    }
+
+    // Strategy 2: Fallback - tooltip titles with condition grades
+    if (!conditionMedia) {
+      const tooltipMatches = [...row.matchAll(/title="([^"]*(?:Mint|Very Good|Good|Fair|Poor)[^"]*)"/gi)];
+      if (tooltipMatches.length >= 1) {
+        conditionMedia = tooltipMatches[0][1];
+        if (tooltipMatches.length >= 2) {
+          conditionSleeve = tooltipMatches[1][1];
+        }
+      }
+    }
+
+    // Strategy 3: Direct abbreviated grade pattern
+    if (!conditionMedia) {
+      const gradePattern = /\b(M|NM|VG\+|VG|G\+|G|F|P)\s*[\/\(]/;
+      const gradeMatch = row.match(gradePattern);
+      if (gradeMatch) conditionMedia = gradeMatch[1];
     }
 
     // Extract seller name

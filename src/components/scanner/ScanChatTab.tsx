@@ -86,6 +86,19 @@ interface PricingData {
   marketplace_listings?: MarketplaceListing[];
 }
 
+// Abbreviate Discogs condition grades: "Very Good Plus (VG+)" → "VG+"
+const abbreviateCondition = (cond: string): string => {
+  if (!cond || cond === 'Not specified') return cond;
+  const abbr = cond.match(/\(([^)]+)\)/);
+  if (abbr) return abbr[1];
+  const map: Record<string, string> = {
+    'mint': 'M', 'near mint': 'NM', 'very good plus': 'VG+', 'very good': 'VG',
+    'good plus': 'G+', 'good': 'G', 'fair': 'F', 'poor': 'P', 'generic': 'Generic',
+  };
+  const lower = cond.toLowerCase().trim();
+  return map[lower] || cond;
+};
+
 const SUPABASE_URL = "https://ssxbpyqnjfiyubsuonar.supabase.co";
 
 // Extract [[SCAN_DATA:{...}]] from message text

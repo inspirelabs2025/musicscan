@@ -1296,7 +1296,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" onClick={resetChat} className="rounded-full h-8 w-8 border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 cursor-pointer relative z-10" title={sc.restart}>
+          <Button variant="outline" size="icon" onClick={resetChat} className="rounded-full h-8 w-8 border-white/20 hover:bg-red-500/20 hover:text-red-400 hover:border-red-400/30 cursor-pointer relative z-10 text-white/70" title={sc.restart}>
             <RotateCcw className="h-3.5 w-3.5" />
           </Button>
         </div>

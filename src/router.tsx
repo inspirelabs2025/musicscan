@@ -116,7 +116,7 @@ const FilmmuziekFeitDetail = lazy(() => import('./pages/FilmmuziekFeitDetail'));
 const MusicNews = lazy(() => import('./pages/MusicNews'));
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
 const CollectionItemPage = lazy(() => import('./pages/CollectionItemPage'));
-const AdminLayoutPage = lazy(() => import('./pages/AdminLayoutPage'));
+
 
 // Admin pages
 const AdminMainAdmin = lazy(() => import('./pages/admin/MainAdmin'));

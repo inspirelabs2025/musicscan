@@ -331,8 +331,7 @@ export default function AIScanV2() {
   return <>
       <div className="min-h-screen bg-gradient-to-br from-[hsl(270,40%,12%)] via-[hsl(270,30%,16%)] to-[hsl(240,20%,14%)] pb-20">
 
-      <div className="relative p-4 pt-4 md:pt-20">
-        <LanguageSwitcher className="absolute right-4 top-4 md:right-6 md:top-6 z-10" />
+      <div className="p-4 pt-4 md:pt-20">
         <div className="max-w-4xl mx-auto space-y-3">
           {/* Header - compact on mobile */}
           <div className="text-center space-y-1 md:space-y-2">

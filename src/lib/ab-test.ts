@@ -1,41 +1,82 @@
-import { getCookie, setCookie } from './utils';
+import { useEffect, useState } from "react";
 
-const AI_NUDGE_VARIANT_COOKIE = 'ai_nudge_variant';
-const AI_NUDGE_EXPERIMENT_ID = 'ai-nudge-v1';
+// Define possible values for the AI nudge A/B test
+export const AB_TEST_VALUES = {
+  AI_NUDGE: {
+    CONTROL: 'control',
+    NUDGE: 'nudge',
+  },
+} as const;
 
-// Define possible variants for the A/B test
-type AINudgeVariant = 'control' | 'nudge';
+type ABNudgeVariant = typeof AB_TEST_VALUES.AI_NUDGE[keyof typeof AB_TEST_VALUES.AI_NUDGE];
+
+interface ABTestService {
+  getABVariant: (testName: keyof typeof AB_TEST_VALUES, defaultValue?: string) => string;
+}
+
+const AB_TEST_LOCAL_STORAGE_KEY = "ab_test_variants";
 
 /**
- * Determines the A/B test variant for the AI nudge feature.
- * Uses a cookie to ensure consistent variant assignment for a user.
- * If no variant is set, it randomly assigns 'control' or 'nudge' and sets a cookie.
- * @returns {AINudgeVariant} The assigned variant ('control' or 'nudge').
+ * Client-side function to determine the A/B test variant for a given test.
+ * It first checks if a variant is already stored in localStorage.
+ * If not, it randomly assigns a variant and stores it.
+ * @param testName The name of the A/B test (e.g., 'AI_NUDGE').
+ * @param defaultValue An optional default value if random assignment is not desired or fails.
+ * @returns The assigned A/B test variant.
  */
-export function getAINudgeVariant(): AINudgeVariant {
-  let variant = getCookie(AI_NUDGE_VARIANT_COOKIE) as AINudgeVariant;
+export const getABVariant: ABTestService['getABVariant'] = (testName, defaultValue) => {
+  const testVariants = AB_TEST_VALUES[testName];
+  if (!testVariants) {
+    console.warn(`AB Test '${String(testName)}' not defined. Returning default.`);
+    return defaultValue || '';
+  }
+
+  const storedVariants = JSON.parse(localStorage.getItem(AB_TEST_LOCAL_STORAGE_KEY) || '{}');
+  let variant = storedVariants[testName];
 
   if (!variant) {
-    // If no variant cookie, randomly assign one
-    variant = Math.random() < 0.5 ? 'control' : 'nudge';
-    setCookie(AI_NUDGE_VARIANT_COOKIE, variant, 365); // Persist for 1 year
+    const possibleVariants = Object.values(testVariants);
+    if (possibleVariants.length === 0) {
+      console.warn(`No variants defined for AB Test '${String(testName)}'. Returning default.`);
+      return defaultValue || '';
+    }
+
+    // Randomly assign a variant
+    const randomIndex = Math.floor(Math.random() * possibleVariants.length);
+    variant = possibleVariants[randomIndex];
+
+    // Store the assigned variant
+    storedVariants[testName] = variant;
+    localStorage.setItem(AB_TEST_LOCAL_STORAGE_KEY, JSON.stringify(storedVariants));
   }
+
+  return variant;
+};
+
+/**
+ * React hook to get the A/B test variant for a given test, with state management.
+ * This hook ensures that the component re-renders if the variant changes (though it shouldn't once set).
+ * @param testName The name of the A/B test (e.g., 'AI_NUDGE').
+ * @param defaultValue An optional default value.
+ * @returns The assigned A/B test variant.
+ */
+export function useABTestVariant<T extends keyof typeof AB_TEST_VALUES>(testName: T, defaultValue?: typeof AB_TEST_VALUES[T][keyof typeof AB_TEST_VALUES[T]]): typeof AB_TEST_VALUES[T][keyof typeof AB_TEST_VALUES[T]] {
+  const [variant, setVariant] = useState<typeof AB_TEST_VALUES[T][keyof typeof AB_TEST_VALUES[T]]>(() => {
+    // Initialize from localStorage or assign new, then cast to specific type
+    return getABVariant(testName, defaultValue as string) as typeof AB_TEST_VALUES[T][keyof typeof AB_TEST_VALUES[T]];
+  });
+
+  useEffect(() => {
+    const newVariant = getABVariant(testName, defaultValue as string) as typeof AB_TEST_VALUES[T][keyof typeof AB_TEST_VALUES[T]];
+    if (newVariant !== variant) {
+      setVariant(newVariant);
+    }
+  }, [testName, defaultValue, variant]);
 
   return variant;
 }
 
-/**
- * Tracks an A/B test event using Google Analytics.
- * @param {string} eventName The name of the event (e.g., 'view_nudge', 'click_nudge').
- * @param {AINudgeVariant} variant The A/B test variant.
- */
-export function trackAIBTestEvent(eventName: string, variant: AINudgeVariant): void {
-  if (window.gtag) {
-    window.gtag('event', eventName, {
-      event_category: 'ai_nudge_experiment',
-      event_label: variant,
-      experiment_id: AI_NUDGE_EXPERIMENT_ID,
-      experiment_variant: variant,
-    });
-  }
+// Example usage (for AI Nudge specific variant)
+export function useAINudgeVariant(): ABNudgeVariant {
+  return useABTestVariant('AI_NUDGE', AB_TEST_VALUES.AI_NUDGE.CONTROL);
 }

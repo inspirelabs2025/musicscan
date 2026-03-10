@@ -35,7 +35,7 @@ export function CommunitySection() {
               </div>
               <div className="flex gap-3 mb-4">
                 {fanwallPhotos?.map((fw) => (
-                  <Link key={fw.id} to={`/fanwall/${fw.slug}`} className="flex-shrink-0">
+                  <Link key={fw.id} to={`/fan-wall/${fw.slug}`} className="flex-shrink-0">
                     <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted">
                       {fw.featured_photo_url ? (
                         <img
@@ -60,7 +60,7 @@ export function CommunitySection() {
                 ))}
               </div>
               <Button asChild variant="outline" size="sm">
-                <Link to="/fanwall">
+                <Link to="/fan-wall">
                   Bekijk Fanwall <ArrowRight className="w-4 h-4 ml-1" />
                 </Link>
               </Button>

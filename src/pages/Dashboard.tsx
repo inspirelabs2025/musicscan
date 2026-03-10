@@ -128,7 +128,7 @@ const Dashboard = () => {
                     </div>
                     <span>{t.dashboard.scanNow}</span>
                   </Link>
-                  <Link to="/my-collection" className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.03] group" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', backdropFilter: 'blur(4px)' }}>
+                  <Link to="/mijn-collectie" className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.03] group" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', backdropFilter: 'blur(4px)' }}>
                     <div className="p-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }}>
                       <Search className="w-6 h-6 group-hover:animate-pulse" />
                     </div>
@@ -242,7 +242,7 @@ const Dashboard = () => {
                       <Music className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
                       <p className="text-muted-foreground">{t.dashboard.noScansYet}</p>
                       <Button asChild className="mt-3">
-                        <Link to="/scanner"><Camera className="w-4 h-4 mr-2" />{t.dashboard.startScanning}</Link>
+                        <Link to="/ai-scan-v2"><Camera className="w-4 h-4 mr-2" />{t.dashboard.startScanning}</Link>
                       </Button>
                     </div>
                   )}
@@ -271,7 +271,7 @@ const Dashboard = () => {
                     <Link to="/collection-chat"><MessageSquare className="w-5 h-5" /><span className="text-xs">💬 {t.dashboard.chat}</span></Link>
                   </Button>
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-accent/20">
-                    <Link to="/my-shop"><Star className="w-5 h-5" /><span className="text-xs">{t.dashboard.myShop}</span></Link>
+                    <Link to="/mijn-winkel"><Star className="w-5 h-5" /><span className="text-xs">{t.dashboard.myShop}</span></Link>
                   </Button>
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-secondary/50">
                     <Link to="/unified-scan-overview"><BarChart3 className="w-5 h-5" /><span className="text-xs">{t.dashboard.allScans}</span></Link>
@@ -346,7 +346,7 @@ const Dashboard = () => {
                 <CardContent className="space-y-4">
                   <div className="flex flex-col sm:flex-row gap-4">
                     <Button asChild variant="outline" className="border-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/20">
-                      <Link to="/super-admin" className="flex items-center gap-2"><BarChart3 className="h-4 w-4" />SuperAdmin Dashboard</Link>
+                      <Link to="/admin" className="flex items-center gap-2"><BarChart3 className="h-4 w-4" />SuperAdmin Dashboard</Link>
                     </Button>
                     <BatchBlogGenerator />
                     <Button onClick={restartOnboarding} variant="outline" className="border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/20">

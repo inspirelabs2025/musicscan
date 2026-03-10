@@ -117,8 +117,71 @@ const MusicNews = lazy(() => import('./pages/MusicNews'));
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
 const CollectionItemPage = lazy(() => import('./pages/CollectionItemPage'));
 
+
 // Admin pages
-const AdminPages = lazy(() => import('./pages/admin/BulkArtGenerator'));
+const AdminMainAdmin = lazy(() => import('./pages/admin/MainAdmin'));
+const AdminStatusDashboard = lazy(() => import('./pages/admin/StatusDashboard'));
+const AdminSystemOverview = lazy(() => import('./pages/admin/SystemOverview'));
+const AdminCronjobMonitor = lazy(() => import('./pages/admin/CronjobMonitorPage'));
+const AdminEmailNotifications = lazy(() => import('./pages/admin/EmailNotificationsPage'));
+const AdminUserManagement = lazy(() => import('./pages/admin/UserManagement'));
+const AdminAllProducts = lazy(() => import('./pages/admin/AllProducts'));
+const AdminPlatformProducts = lazy(() => import('./pages/admin/PlatformProducts'));
+const AdminShopProducts = lazy(() => import('./pages/admin/ShopProducts').then(m => ({ default: m.ShopProducts })));
+const AdminShopOrders = lazy(() => import('./pages/admin/ShopOrders'));
+const AdminTimeMachineManager = lazy(() => import('./pages/admin/TimeMachineManager'));
+const AdminMediaLibrary = lazy(() => import('./pages/admin/MediaLibrary'));
+const AdminArtGenerator = lazy(() => import('./pages/admin/ArtGenerator'));
+const AdminBulkArtGenerator = lazy(() => import('./pages/admin/BulkArtGenerator'));
+const AdminSketchArtGenerator = lazy(() => import('./pages/admin/SketchArtGenerator'));
+const AdminLyricPosterGenerator = lazy(() => import('./pages/admin/LyricPosterGenerator'));
+const AdminSockGenerator = lazy(() => import('./pages/admin/SockGenerator'));
+const AdminTshirtGenerator = lazy(() => import('./pages/admin/TshirtGenerator'));
+const AdminButtonGenerator = lazy(() => import('./pages/admin/ButtonGenerator'));
+const AdminPhotoStylizer = lazy(() => import('./pages/admin/PhotoStylizer'));
+const AdminSinglesImporter = lazy(() => import('./pages/admin/SinglesImporterPage'));
+const AdminArtistStoriesGenerator = lazy(() => import('./pages/admin/ArtistStoriesGenerator'));
+const AdminArtistSpotlights = lazy(() => import('./pages/admin/ArtistSpotlights'));
+const AdminTop2000Importer = lazy(() => import('./pages/admin/Top2000Importer'));
+const AdminMasterArtists = lazy(() => import('./pages/admin/MasterArtists'));
+const AdminAlbumReviews = lazy(() => import('./pages/admin/AdminAlbumReviews'));
+const AdminStudioStories = lazy(() => import('./pages/admin/StudioStoriesPage'));
+const AdminOwnPodcasts = lazy(() => import('./pages/admin/OwnPodcasts'));
+const AdminNewsRssManager = lazy(() => import('./pages/admin/NewsRssManager'));
+const AdminCuratedArtists = lazy(() => import('./pages/admin/CuratedArtists'));
+const AdminDiscogsLookup = lazy(() => import('./pages/admin/DiscogsLookup'));
+const AdminDiscogsMessages = lazy(() => import('./pages/admin/AdminDiscogsMessages'));
+const AdminPhotoModeration = lazy(() => import('./pages/admin/PhotoModeration'));
+const AdminAutoComments = lazy(() => import('./pages/admin/AutoComments'));
+const AdminMagicMikeProfile = lazy(() => import('./pages/admin/MagicMikeProfile'));
+const AdminStatistics = lazy(() => import('./pages/admin/Statistics'));
+const AdminAiCostMonitor = lazy(() => import('./pages/admin/AiCostMonitor'));
+const AdminSEOMonitoring = lazy(() => import('./pages/admin/SEOMonitoring'));
+const AdminSitemapManagement = lazy(() => import('./pages/admin/SitemapManagement'));
+const AdminPriceHistory = lazy(() => import('./pages/admin/PriceHistoryAdmin'));
+const AdminFixBlogSlugs = lazy(() => import('./pages/admin/FixBlogSlugs'));
+const AdminFixProductTitles = lazy(() => import('./pages/admin/FixProductTitles'));
+const AdminBulkCleanup = lazy(() => import('./pages/admin/BulkProductCleanup'));
+const AdminAutoCleanupToday = lazy(() => import('./pages/admin/AutoCleanupToday'));
+const AdminBackfillFanwalls = lazy(() => import('./pages/admin/BackfillArtistFanwalls'));
+const AdminCreateFanwall = lazy(() => import('./pages/admin/CreateArtistFanwall'));
+const AdminGenerateSeed = lazy(() => import('./pages/admin/GenerateSeed'));
+const AdminBulkPosterUpload = lazy(() => import('./pages/admin/BulkPosterUpload'));
+const AdminPopupManager = lazy(() => import('./pages/admin/PopupManager'));
+const AdminRenderQueue = lazy(() => import('./pages/admin/RenderQueue'));
+const AdminTikTokVideos = lazy(() => import('./pages/admin/TikTokVideoAdmin'));
+const AdminMetricool = lazy(() => import('./pages/admin/MetricoolAdmin'));
+const AdminFacebookAdmin = lazy(() => import('./pages/admin/FacebookAdmin'));
+const AdminFacebookSync = lazy(() => import('./pages/admin/FacebookSync'));
+const AdminInstagramAdmin = lazy(() => import('./pages/admin/InstagramAdmin'));
+const AdminPromoCodes = lazy(() => import('./pages/admin/AdminPromoCodes'));
+const AdminSEOKeywords = lazy(() => import('./pages/admin/SEOKeywords'));
+const AdminYearOverview = lazy(() => import('./pages/admin/AdminYearOverview'));
+const AdminRenderJobs = lazy(() => import('./pages/admin/RenderJobsPage'));
+const AdminFacebookTestPost = lazy(() => import('./pages/admin/FacebookTestPost'));
+const AdminTestAnecdote = lazy(() => import('./pages/admin/TestAnecdoteGeneration'));
+const AdminChristmasImporter = lazy(() => import('./pages/admin/ChristmasImporter'));
+const AdminChristmasImportLogs = lazy(() => import('./pages/admin/ChristmasImportLogs'));
 
 const wrap = (Component: React.LazyExoticComponent<any>) => (
   <Suspense fallback={<PageLoader />}>
@@ -259,7 +322,70 @@ export const router = createBrowserRouter([
       { path: 'pricing', element: wrap(Pricing) },
       
       // Admin
-      { path: 'admin', element: wrap(SuperAdminDashboard) },
+      { path: 'admin', element: wrap(AdminMainAdmin) },
+      { path: 'admin/dashboard', element: wrap(SuperAdminDashboard) },
+      { path: 'admin/status', element: wrap(AdminStatusDashboard) },
+      { path: 'admin/system-overview', element: wrap(AdminSystemOverview) },
+      { path: 'admin/cronjob-monitor', element: wrap(AdminCronjobMonitor) },
+      { path: 'admin/email-notifications', element: wrap(AdminEmailNotifications) },
+      { path: 'admin/users', element: wrap(AdminUserManagement) },
+      { path: 'admin/products', element: wrap(AdminAllProducts) },
+      { path: 'admin/platform-products', element: wrap(AdminPlatformProducts) },
+      { path: 'admin/shop-products', element: wrap(AdminShopProducts) },
+      { path: 'admin/shop-orders', element: wrap(AdminShopOrders) },
+      { path: 'admin/time-machine', element: wrap(AdminTimeMachineManager) },
+      { path: 'admin/media-library', element: wrap(AdminMediaLibrary) },
+      { path: 'admin/art-generator', element: wrap(AdminArtGenerator) },
+      { path: 'admin/bulk-art-generator', element: wrap(AdminBulkArtGenerator) },
+      { path: 'admin/sketch-art-generator', element: wrap(AdminSketchArtGenerator) },
+      { path: 'admin/lyric-poster-generator', element: wrap(AdminLyricPosterGenerator) },
+      { path: 'admin/sock-generator', element: wrap(AdminSockGenerator) },
+      { path: 'admin/tshirt-generator', element: wrap(AdminTshirtGenerator) },
+      { path: 'admin/button-generator', element: wrap(AdminButtonGenerator) },
+      { path: 'admin/photo-stylizer', element: wrap(AdminPhotoStylizer) },
+      { path: 'admin/singles-importer', element: wrap(AdminSinglesImporter) },
+      { path: 'admin/artist-stories-generator', element: wrap(AdminArtistStoriesGenerator) },
+      { path: 'admin/artist-spotlights', element: wrap(AdminArtistSpotlights) },
+      { path: 'admin/top2000-importer', element: wrap(AdminTop2000Importer) },
+      { path: 'admin/master-artists', element: wrap(AdminMasterArtists) },
+      { path: 'admin/album-reviews', element: wrap(AdminAlbumReviews) },
+      { path: 'admin/studio-stories', element: wrap(AdminStudioStories) },
+      { path: 'admin/own-podcasts', element: wrap(AdminOwnPodcasts) },
+      { path: 'admin/news-rss-manager', element: wrap(AdminNewsRssManager) },
+      { path: 'admin/curated-artists', element: wrap(AdminCuratedArtists) },
+      { path: 'admin/discogs-lookup', element: wrap(AdminDiscogsLookup) },
+      { path: 'admin/discogs-messages', element: wrap(AdminDiscogsMessages) },
+      { path: 'admin/photo-moderation', element: wrap(AdminPhotoModeration) },
+      { path: 'admin/auto-comments', element: wrap(AdminAutoComments) },
+      { path: 'admin/magic-mike', element: wrap(AdminMagicMikeProfile) },
+      { path: 'admin/statistics', element: wrap(AdminStatistics) },
+      { path: 'admin/ai-costs', element: wrap(AdminAiCostMonitor) },
+      { path: 'admin/seo-monitoring', element: wrap(AdminSEOMonitoring) },
+      { path: 'admin/sitemap-management', element: wrap(AdminSitemapManagement) },
+      { path: 'admin/price-history', element: wrap(AdminPriceHistory) },
+      { path: 'admin/fix-blog-slugs', element: wrap(AdminFixBlogSlugs) },
+      { path: 'admin/fix-product-titles', element: wrap(AdminFixProductTitles) },
+      { path: 'admin/bulk-cleanup', element: wrap(AdminBulkCleanup) },
+      { path: 'admin/auto-cleanup-today', element: wrap(AdminAutoCleanupToday) },
+      { path: 'admin/backfill-artist-fanwalls', element: wrap(AdminBackfillFanwalls) },
+      { path: 'admin/create-artist-fanwall', element: wrap(AdminCreateFanwall) },
+      { path: 'admin/generate-seed', element: wrap(AdminGenerateSeed) },
+      { path: 'admin/bulk-poster-upload', element: wrap(AdminBulkPosterUpload) },
+      { path: 'admin/popups', element: wrap(AdminPopupManager) },
+      { path: 'admin/render-queue', element: wrap(AdminRenderQueue) },
+      { path: 'admin/tiktok-videos', element: wrap(AdminTikTokVideos) },
+      { path: 'admin/metricool', element: wrap(AdminMetricool) },
+      { path: 'admin/facebook-admin', element: wrap(AdminFacebookAdmin) },
+      { path: 'admin/facebook-sync', element: wrap(AdminFacebookSync) },
+      { path: 'admin/instagram-admin', element: wrap(AdminInstagramAdmin) },
+      { path: 'admin/promo-codes', element: wrap(AdminPromoCodes) },
+      { path: 'admin/seo-keywords', element: wrap(AdminSEOKeywords) },
+      { path: 'admin/year-overview', element: wrap(AdminYearOverview) },
+      { path: 'admin/render-jobs', element: wrap(AdminRenderJobs) },
+      { path: 'admin/facebook-test-post', element: wrap(AdminFacebookTestPost) },
+      { path: 'admin/test/anecdote', element: wrap(AdminTestAnecdote) },
+      { path: 'admin/christmas-importer', element: wrap(AdminChristmasImporter) },
+      { path: 'admin/christmas-import-logs', element: wrap(AdminChristmasImportLogs) },
       
       // Catch-all
       { path: '*', element: wrap(NotFound) },

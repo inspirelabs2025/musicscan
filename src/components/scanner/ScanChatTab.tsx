@@ -1517,11 +1517,11 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         {!showWelcomeActions && !mediaType && (
           <div className="flex flex-col items-center gap-2 my-3 animate-fadeIn">
             <div className="flex gap-3 justify-center">
-              <Button variant="outline" size="lg" onClick={() => pickMediaType('vinyl')} className="h-16 px-8 flex flex-col gap-1.5 rounded-2xl border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary hover:shadow-md transition-all">
+              <Button variant="outline" size="lg" onClick={() => pickMediaType('vinyl')} className="h-16 px-8 flex flex-col gap-1.5 rounded-2xl border-white/15 bg-white/10 backdrop-blur-sm hover:border-primary hover:shadow-md transition-all text-white">
                 <Disc3 className="h-6 w-6 text-primary" />
                 <span className="text-xs font-medium">Vinyl</span>
               </Button>
-              <Button variant="outline" size="lg" onClick={() => pickMediaType('cd')} className="h-16 px-8 flex flex-col gap-1.5 rounded-2xl border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary hover:shadow-md transition-all">
+              <Button variant="outline" size="lg" onClick={() => pickMediaType('cd')} className="h-16 px-8 flex flex-col gap-1.5 rounded-2xl border-white/15 bg-white/10 backdrop-blur-sm hover:border-primary hover:shadow-md transition-all text-white">
                 <Disc className="h-6 w-6 text-primary" />
                 <span className="text-xs font-medium">CD</span>
               </Button>

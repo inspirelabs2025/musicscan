@@ -1502,11 +1502,11 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         {/* Welcome action buttons */}
         {showWelcomeActions && !mediaType && messages.length === 1 && (
           <div className="flex gap-3 justify-center my-4 animate-fadeIn">
-            <Button variant="outline" size="lg" onClick={pickScanAction} className="h-20 px-10 flex flex-col gap-2 rounded-2xl border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all">
+            <Button variant="outline" size="lg" onClick={pickScanAction} className="h-20 px-10 flex flex-col gap-2 rounded-2xl border-white/15 bg-white/10 backdrop-blur-sm hover:border-primary hover:bg-primary/15 hover:shadow-md transition-all text-white">
               <ScanLine className="h-7 w-7 text-primary" />
               <span className="text-sm font-semibold">{sc.scanButton}</span>
             </Button>
-            <Button variant="outline" size="lg" onClick={pickAskAction} className="h-20 px-10 flex flex-col gap-2 rounded-2xl border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all">
+            <Button variant="outline" size="lg" onClick={pickAskAction} className="h-20 px-10 flex flex-col gap-2 rounded-2xl border-white/15 bg-white/10 backdrop-blur-sm hover:border-primary hover:bg-primary/15 hover:shadow-md transition-all text-white">
               <MessageCircle className="h-7 w-7 text-primary" />
               <span className="text-sm font-semibold">{sc.askButton}</span>
             </Button>

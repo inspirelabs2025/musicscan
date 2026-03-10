@@ -331,12 +331,12 @@ export default function AIScanV2() {
   return <>
       <div className="min-h-screen bg-gradient-to-br from-[hsl(270,40%,12%)] via-[hsl(270,30%,16%)] to-[hsl(240,20%,14%)] pb-20">
 
-      <div className="p-4 pt-4 md:pt-20">
+      <div className="relative p-4 pt-4 md:pt-20">
+        <LanguageSwitcher className="absolute right-4 top-4 md:right-6 md:top-6 z-10" />
         <div className="max-w-4xl mx-auto space-y-3">
           {/* Header - compact on mobile */}
           <div className="text-center space-y-1 md:space-y-2">
             <div className="flex items-center justify-center gap-2 md:gap-4 flex-wrap">
-              <LanguageSwitcher className="absolute right-4 top-4 md:right-6 md:top-6" />
               <h1 className="text-xl md:text-3xl font-bold text-white flex items-center gap-1.5">
                 <Brain className="h-5 w-5 md:h-8 md:w-8 text-primary" />
                 Smart Scan

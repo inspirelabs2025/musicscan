@@ -336,6 +336,7 @@ export default function AIScanV2() {
           {/* Header - compact on mobile */}
           <div className="text-center space-y-1 md:space-y-2">
             <div className="flex items-center justify-center gap-2 md:gap-4 flex-wrap">
+              <LanguageSwitcher className="absolute right-4 top-4 md:right-6 md:top-6" />
               <h1 className="text-xl md:text-3xl font-bold text-white flex items-center gap-1.5">
                 <Brain className="h-5 w-5 md:h-8 md:w-8 text-primary" />
                 Smart Scan

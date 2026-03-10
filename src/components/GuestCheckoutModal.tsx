@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import type { CartItem } from "@/contexts/CartContext";
 import { trackBeginCheckout } from "@/utils/googleAnalytics";
+import { openExternalPayment } from "@/utils/externalPayment";
 
 interface GuestCheckoutModalProps {
   open: boolean;

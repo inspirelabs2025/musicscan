@@ -1437,7 +1437,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
                       <div key={idx} className="flex items-center justify-between text-xs gap-2 py-1 border-b border-gray-300 last:border-0">
                         <span className="font-semibold text-green-700 min-w-[60px]">€{listing.price.toFixed(2)}</span>
                         <span className="text-gray-700 truncate flex-1">
-                          {listing.condition_media}{listing.condition_sleeve && listing.condition_sleeve !== 'Unknown' ? ` / ${listing.condition_sleeve}` : ''}
+                          {abbreviateCondition(listing.condition_media)}{listing.condition_sleeve && listing.condition_sleeve !== 'Unknown' && listing.condition_sleeve !== 'Not specified' ? ` / ${abbreviateCondition(listing.condition_sleeve)}` : ''}
                         </span>
                         <span className="text-gray-700 text-right min-w-[70px]">{listing.ships_from}</span>
                       </div>

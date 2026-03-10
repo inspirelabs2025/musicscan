@@ -994,9 +994,13 @@ async function localFirstLookup(combinedData: any, audit: any[]): Promise<any | 
     // Strategy 3: Matrix token search (lowest priority, most fuzzy)
     if (matrix && matrix.length >= 4) {
       console.log(`🏠 Local-first: Searching by matrix tokens...`);
-      const tokens = matrix.toUpperCase().split(/[\s\-\/]+/).filter((t: string) => t.length >= 3);
-      
-      if (tokens.length > 0) {
+      const MATRIX_TOKEN_BLOCKLIST = new Set(['EMI', 'CBS', 'RCA', 'BMG', 'WEA', 'MCA', 'SONY', 'POLY', 'DECCA', 'PHILIPS', 'WARNER', 'VIRGIN', 'ISLAND', 'CAPITOL', 'ATLANTIC', 'MERCURY', 'POLYDOR', 'PARLOPHONE', 'CHRYSALIS', 'ARIOLA', 'FONTANA', 'HARVEST', 'VERTIGO', 'APPLE', 'EPIC', 'ARISTA', 'GEFFEN', 'ELEKTRA', 'REPRISE', 'ASYLUM', 'AAD', 'DDD', 'ADD', 'IFPI', 'BIEM', 'STEMRA', 'GEMA', 'SACEM', 'JASRAC', 'ASCAP', 'MCPS', 'STEREO', 'MONO', 'MADE', 'THE', 'AND', 'VOL']);
+      const allTokens = matrix.toUpperCase().split(/[\s\-\/]+/).filter((t: string) => t.length >= 3);
+      const tokens = allTokens.filter((t: string) => !MATRIX_TOKEN_BLOCKLIST.has(t));
+
+      if (tokens.length === 0) {
+        console.log(`🏠 Local-first: All matrix tokens blocklisted, skipping Strategy 3`);
+      } else {
         // Search matrix_variants jsonb for token overlap
         const { data: matrixHits } = await supabase
           .from('release_enrichments')
@@ -1005,15 +1009,40 @@ async function localFirstLookup(combinedData: any, audit: any[]): Promise<any | 
           .limit(50);
 
         if (matrixHits) {
+          const inputArtist = (combinedData.artist || '').toLowerCase().trim();
+          interface MatrixCandidate { hit: typeof matrixHits[0]; score: number; artistMatch: boolean }
+          const candidates: MatrixCandidate[] = [];
+
           for (const hit of matrixHits) {
             const variants = hit.matrix_variants || [];
+            let bestScore = 0;
             for (const variant of variants) {
               const variantValue = (variant.value || '').toUpperCase();
               const matchedTokens = tokens.filter((t: string) => variantValue.includes(t));
-              if (matchedTokens.length >= 2 || (matchedTokens.length >= 1 && tokens.length === 1)) {
-                return { ...hit, match_type: 'matrix' };
+              if (matchedTokens.length >= 2) {
+                bestScore = Math.max(bestScore, matchedTokens.length);
               }
             }
+            if (bestScore >= 2) {
+              const hitArtist = (hit.artist || '').toLowerCase().trim();
+              const artistMatch = inputArtist.length > 0 && hitArtist.length > 0 &&
+                (inputArtist.includes(hitArtist) || hitArtist.includes(inputArtist));
+              if (!artistMatch) {
+                console.log(`⚠️ Matrix match candidate skipped (artist mismatch): "${hit.artist}" vs input "${combinedData.artist}", score=${bestScore}`);
+                continue;
+              }
+              candidates.push({ hit, score: bestScore, artistMatch });
+            }
+          }
+
+          if (candidates.length > 0) {
+            // Sort: highest score first, artist matches preferred on tie
+            candidates.sort((a, b) => {
+              if (b.score !== a.score) return b.score - a.score;
+              return (b.artistMatch ? 1 : 0) - (a.artistMatch ? 1 : 0);
+            });
+            console.log(`🏠 Local-first: Matrix match found (score=${candidates[0].score}, artist="${candidates[0].hit.artist}")`);
+            return { ...candidates[0].hit, match_type: 'matrix' };
           }
         }
       }

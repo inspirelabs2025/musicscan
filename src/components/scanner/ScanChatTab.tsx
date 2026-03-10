@@ -322,7 +322,7 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
           key={i}
           variant="outline"
           size="sm"
-          className="h-9 text-xs gap-2 rounded-full border-border/50 bg-card/80 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/30 hover:shadow-sm transition-all"
+          className="h-9 text-xs gap-2 rounded-full border-white/15 bg-white/10 backdrop-blur-sm hover:bg-primary/15 hover:border-primary/30 hover:shadow-sm transition-all text-white/80"
           onClick={() => onSend(sug.text)}
         >
           <span className="text-base leading-none">{sug.emoji}</span>
@@ -1283,20 +1283,20 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   return (
     <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-280px)]">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 px-3 py-3 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm">
+      <div className="flex items-center justify-between mb-4 px-3 py-3 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="relative">
             <img src={magicMikeAvatar} alt="Magic Mike" className="h-11 w-11 rounded-full object-cover object-top ring-2 ring-primary/40 shadow-lg" />
-            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-card" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-white/20" />
           </div>
           <div>
-            <span className="text-sm font-bold tracking-tight">Magic Mike</span>
-            {mediaType && <span className="text-xs text-muted-foreground ml-1.5 bg-muted px-1.5 py-0.5 rounded-full">{mediaType === 'vinyl' ? sc.vinylLabel : sc.cdLabel}</span>}
-            <p className="text-xs text-muted-foreground">{sc.musicDetective}</p>
+            <span className="text-sm font-bold tracking-tight text-white">Magic Mike</span>
+            {mediaType && <span className="text-xs text-white/50 ml-1.5 bg-white/10 px-1.5 py-0.5 rounded-full">{mediaType === 'vinyl' ? sc.vinylLabel : sc.cdLabel}</span>}
+            <p className="text-xs text-white/50">{sc.musicDetective}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" onClick={resetChat} className="rounded-full h-8 w-8 border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 cursor-pointer relative z-10" title={sc.restart}>
+          <Button variant="outline" size="icon" onClick={resetChat} className="rounded-full h-8 w-8 border-white/20 hover:bg-red-500/20 hover:text-red-400 hover:border-red-400/30 cursor-pointer relative z-10 text-white/70" title={sc.restart}>
             <RotateCcw className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -1330,7 +1330,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
             <div className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm shadow-sm transition-colors ${
               msg.role === 'user' 
                 ? 'bg-primary text-primary-foreground rounded-br-md' 
-                : 'bg-card/90 backdrop-blur-sm border border-border/40 rounded-bl-md'
+                : 'bg-white/10 backdrop-blur-sm border border-white/15 rounded-bl-md text-white/90'
             }`}>
               {msg.role === 'assistant' ? (
                 <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:leading-relaxed [&_li]:leading-relaxed">
@@ -1502,11 +1502,11 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         {/* Welcome action buttons */}
         {showWelcomeActions && !mediaType && messages.length === 1 && (
           <div className="flex gap-3 justify-center my-4 animate-fadeIn">
-            <Button variant="outline" size="lg" onClick={pickScanAction} className="h-20 px-10 flex flex-col gap-2 rounded-2xl border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all">
+            <Button variant="outline" size="lg" onClick={pickScanAction} className="h-20 px-10 flex flex-col gap-2 rounded-2xl border-white/15 bg-white/10 backdrop-blur-sm hover:border-primary hover:bg-primary/15 hover:shadow-md transition-all text-white">
               <ScanLine className="h-7 w-7 text-primary" />
               <span className="text-sm font-semibold">{sc.scanButton}</span>
             </Button>
-            <Button variant="outline" size="lg" onClick={pickAskAction} className="h-20 px-10 flex flex-col gap-2 rounded-2xl border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary hover:bg-primary/5 hover:shadow-md transition-all">
+            <Button variant="outline" size="lg" onClick={pickAskAction} className="h-20 px-10 flex flex-col gap-2 rounded-2xl border-white/15 bg-white/10 backdrop-blur-sm hover:border-primary hover:bg-primary/15 hover:shadow-md transition-all text-white">
               <MessageCircle className="h-7 w-7 text-primary" />
               <span className="text-sm font-semibold">{sc.askButton}</span>
             </Button>
@@ -1517,11 +1517,11 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         {!showWelcomeActions && !mediaType && (
           <div className="flex flex-col items-center gap-2 my-3 animate-fadeIn">
             <div className="flex gap-3 justify-center">
-              <Button variant="outline" size="lg" onClick={() => pickMediaType('vinyl')} className="h-16 px-8 flex flex-col gap-1.5 rounded-2xl border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary hover:shadow-md transition-all">
+              <Button variant="outline" size="lg" onClick={() => pickMediaType('vinyl')} className="h-16 px-8 flex flex-col gap-1.5 rounded-2xl border-white/15 bg-white/10 backdrop-blur-sm hover:border-primary hover:shadow-md transition-all text-white">
                 <Disc3 className="h-6 w-6 text-primary" />
                 <span className="text-xs font-medium">Vinyl</span>
               </Button>
-              <Button variant="outline" size="lg" onClick={() => pickMediaType('cd')} className="h-16 px-8 flex flex-col gap-1.5 rounded-2xl border-border/50 bg-card/80 backdrop-blur-sm hover:border-primary hover:shadow-md transition-all">
+              <Button variant="outline" size="lg" onClick={() => pickMediaType('cd')} className="h-16 px-8 flex flex-col gap-1.5 rounded-2xl border-white/15 bg-white/10 backdrop-blur-sm hover:border-primary hover:shadow-md transition-all text-white">
                 <Disc className="h-6 w-6 text-primary" />
                 <span className="text-xs font-medium">CD</span>
               </Button>
@@ -1625,7 +1625,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         {(isStreaming || isRunningV2) && messages[messages.length - 1]?.role !== 'assistant' && (
           <div className="flex justify-start gap-2.5">
             <img src={magicMikeAvatar} alt="Magic Mike" className="h-8 w-8 rounded-full object-cover object-top shrink-0 ring-2 ring-primary/20 shadow-sm" />
-            <div className="bg-card/90 backdrop-blur-sm border border-border/40 rounded-2xl rounded-bl-md px-5 py-3.5 shadow-sm">
+            <div className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl rounded-bl-md px-5 py-3.5 shadow-sm">
               <div className="flex gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '0ms' }} />
                 <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -1639,7 +1639,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
       {/* Input bar */}
       {true && (
         <div className="fixed left-0 right-0 z-40 px-3 pb-2" style={{ bottom: /android/i.test(navigator.userAgent) ? 'calc(56px + 48px)' : 'calc(56px + max(env(safe-area-inset-bottom), 8px))' }}>
-        <div className="max-w-2xl mx-auto flex items-end gap-1.5 p-2 rounded-2xl bg-card/95 backdrop-blur-md border border-border/50 shadow-[0_-2px_15px_rgba(0,0,0,0.1)]">
+        <div className="max-w-2xl mx-auto flex items-end gap-1.5 p-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 shadow-[0_-2px_15px_rgba(0,0,0,0.3)]">
           <div className="flex items-center gap-0.5 shrink-0">
             <Button
               variant="ghost"

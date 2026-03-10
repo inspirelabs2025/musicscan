@@ -322,7 +322,7 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
           key={i}
           variant="outline"
           size="sm"
-          className="h-9 text-xs gap-2 rounded-full border-border/50 bg-card/80 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/30 hover:shadow-sm transition-all"
+          className="h-9 text-xs gap-2 rounded-full border-white/15 bg-white/10 backdrop-blur-sm hover:bg-primary/15 hover:border-primary/30 hover:shadow-sm transition-all text-white/80"
           onClick={() => onSend(sug.text)}
         >
           <span className="text-base leading-none">{sug.emoji}</span>

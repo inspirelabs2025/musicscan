@@ -123,11 +123,10 @@ const Auth = () => {
             if (data?.success) toast.success(`${data.credits} ${t.freeCreditsReceived}`);
           } catch (e) { console.warn('Promo code redemption after signup:', e); }
         }
-        toast.success(t.accountCreated);
         if (typeof window !== 'undefined' && (window as any).fbq) {
           (window as any).fbq('track', 'CompleteRegistration');
         }
-        setActiveTab('signin');
+        navigate('/welkom');
       }
     } catch (err) {
       setError(t.genericError);

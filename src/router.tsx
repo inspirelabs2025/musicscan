@@ -11,6 +11,7 @@ import { PageLoader } from './components/shared/page-loader';
 // Lazy-load pages
 const Home = lazy(() => import('./pages/Home'));
 const Auth = lazy(() => import('./pages/Auth'));
+const Welkom = lazy(() => import('./pages/Welkom'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
@@ -196,6 +197,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: wrap(Home) },
       { path: 'auth', element: wrap(Auth) },
+      { path: 'welkom', element: wrap(Welkom) },
       { path: 'auth/set-password', element: wrap(SetPassword) },
       { path: 'set-password', element: wrap(SetPassword) },
       { path: 'dashboard', element: wrap(Dashboard) },

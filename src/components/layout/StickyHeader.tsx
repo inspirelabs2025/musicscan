@@ -107,8 +107,11 @@ export function StickyHeader() {
 
       {/* Mobile menu */}
       {isMobile && menuOpen && (
-        <div className="bg-[hsl(240_20%_10%/0.98)] backdrop-blur-md border-t border-white/10 pb-4">
+        <div className="bg-[hsl(240_20%_10%/0.98)] backdrop-blur-md border-t border-white/10 pb-4 max-w-full overflow-hidden">
           <nav className="container mx-auto px-4 flex flex-col gap-1 pt-2">
+            <div className="flex items-center gap-2 px-4 py-2">
+              <LanguageSwitcher />
+            </div>
             {navLinks.map(({ label, href }) => (
               <Link
                 key={href}

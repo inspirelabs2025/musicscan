@@ -7,7 +7,6 @@ import { PageLoader } from './components/shared/page-loader';
 const Home = lazy(() => import('./pages/Home'));
 const Auth = lazy(() => import('./pages/Auth'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Dashboard2 = lazy(() => import('./pages/Dashboard2'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
 const Shop = lazy(() => import('./pages/Shop'));
@@ -132,7 +131,6 @@ export const router = createBrowserRouter([
       { path: 'auth/set-password', element: wrap(SetPassword) },
       { path: 'set-password', element: wrap(SetPassword) },
       { path: 'dashboard', element: wrap(Dashboard) },
-      { path: 'dashboard2', element: wrap(Dashboard2) },
       { path: 'settings', element: wrap(Settings) },
       { path: 'profile', element: wrap(Profile) },
       
@@ -227,7 +225,6 @@ export const router = createBrowserRouter([
       { path: 'tijdmachine/:slug', element: wrap(TimeMachineStory) },
       { path: 'de-plaat-en-het-verhaal', element: wrap(DePlaatEnHetVerhaal) },
       { path: 'plaatverhaal/:slug', element: wrap(PlaatVerhaal) },
-      { path: 'plaat-verhaal/:slug', element: wrap(PlaatVerhaal) },
       { path: 'muzieknieuws', element: wrap(MusicNews) },
       { path: 'maand/:month', element: wrap(MonthOverview) },
       { path: 'jaar/:year', element: wrap(YearOverview) },

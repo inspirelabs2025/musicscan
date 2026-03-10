@@ -202,26 +202,13 @@ export const PlaatVerhaal: React.FC = () => {
 
         setBlog(blogData as BlogPost);
 
-        // Increment view count (best-effort, outside main try/catch)
-        supabase
+        // Increment view count (best-effort)
+        await supabase
           .from('blog_posts')
           .update({ views_count: (blogData.views_count || 0) + 1 })
-          .eq('id', blogData.id)
-          .then(({ error: viewErr }) => {
-            if (viewErr) console.warn('View count update failed (non-critical):', viewErr.message);
-          });
-      } catch (error: any) {
+          .eq('id', blogData.id);
+      } catch (error) {
         console.error('Error fetching blog:', error);
-        console.error('Error details:', {
-          message: error?.message,
-          status: error?.status,
-          statusText: error?.statusText,
-          code: error?.code,
-          hint: error?.hint,
-          details: error?.details,
-          slug,
-          domain: window.location.hostname,
-        });
         setNotFound(true);
       } finally {
         setLoading(false);

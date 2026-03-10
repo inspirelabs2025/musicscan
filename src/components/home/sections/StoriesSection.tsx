@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { optimizeImageUrl, generateArtworkAlt } from '@/lib/image-utils';
@@ -64,23 +65,23 @@ export function StoriesSection() {
   if (!stories?.length) return null;
 
   return (
-    <section className="py-10 md:py-16 bg-background section-padding">
-      <div className="section-container">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground">Album Verhalen & Anekdotes</h2>
-          <Link to="/verhalen" className="text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1 transition-colors min-h-[44px] min-w-[44px] justify-end whitespace-nowrap">
+    <section className="py-14 bg-background">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-foreground">Album Verhalen & Anekdotes</h2>
+          <Link to="/verhalen" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
             Alle verhalen <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {stories.map((story) => (
             <Link
               key={story.id}
               to={story.type === 'album' ? `/muziek-verhaal/${story.slug}` : `/anekdotes/${story.slug}`}
-              className="group rounded-xl overflow-hidden bg-card border border-border shadow-lg hover:shadow-xl transition-shadow min-h-[44px]"
+              className="group"
             >
-              <div className="w-full aspect-[4/3] bg-muted">
+              <div className="aspect-[4/3] rounded-xl overflow-hidden bg-muted mb-3">
                 {story.image_url ? (
                   <img
                     src={optimizeImageUrl(story.image_url!, { width: 400, height: 300 })}
@@ -97,13 +98,11 @@ export function StoriesSection() {
                   </div>
                 )}
               </div>
-              <div className="p-3 md:p-4">
-                <span className="inline-block mb-1.5 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-primary text-primary-foreground">
-                  {story.type === 'album' ? 'Album Verhaal' : 'Anekdote'}
-                </span>
-                <h3 className="text-sm font-semibold text-foreground line-clamp-2">{story.title}</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">{story.artist}</p>
-              </div>
+              <Badge variant="secondary" className="mb-1.5 text-[10px]">
+                {story.type === 'album' ? 'Album Verhaal' : 'Anekdote'}
+              </Badge>
+              <h3 className="text-sm font-semibold text-foreground line-clamp-2">{story.title}</h3>
+              <p className="text-xs text-muted-foreground">{story.artist}</p>
             </Link>
           ))}
         </div>

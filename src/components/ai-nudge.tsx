@@ -4,8 +4,7 @@ import { Button } from "./ui/button";
 import { BirdIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAIMetrics } from "@/hooks/use-ai-metrics";
-import { getAiNudgeVariant as getAINudgeVariant } from "@/lib/ab-test";
-const trackAIBTestEvent = (_event: string, _data?: unknown) => { /* noop */ };
+import { getAINudgeVariant, trackAIBTestEvent } from "@/lib/ab-test";
 import { Link } from "react-router-dom";
 
 export const AINudge: React.FC = () => {

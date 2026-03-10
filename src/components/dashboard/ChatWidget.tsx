@@ -23,6 +23,7 @@ const useRecentChatMessages = () => {
         .select('id, message, sender_type, created_at')
         .order('created_at', { ascending: false })
         .limit(3);
+
       if (error) throw error;
       return data as ChatMessage[];
     },
@@ -38,54 +39,73 @@ export const ChatWidget = () => {
   const quickPrompts = [
     d.promptRarestAlbums,
     d.promptTopGenres,
+    d.promptRecommendations,
+    d.promptCollectionValue,
   ];
 
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Bot className="w-4 h-4 text-primary" />
+    <Card className="border-2 hover:border-vinyl-gold/50 transition-all duration-300 hover:shadow-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Bot className="w-5 h-5 text-vinyl-gold animate-pulse" />
           {d.chatWithYourMusic}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4">
         {!isLoading && messages && messages.length > 0 ? (
-          <div className="bg-muted/40 p-2.5 rounded-lg">
-            <div className="text-[11px] text-muted-foreground mb-1">
-              {messages[0].sender_type === 'user' ? `👤 ${d.you}` : `🤖 ${d.assistant}`}
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-muted-foreground mb-2">{d.lastConversation}</div>
+            <div className="bg-accent/10 p-3 rounded-lg">
+              <div className="text-xs text-muted-foreground mb-1">
+                {messages[0].sender_type === 'user' ? `👤 ${d.you}` : `🤖 ${d.assistant}`}
+              </div>
+              <div className="text-sm line-clamp-2">
+                {messages[0].message}
+              </div>
             </div>
-            <p className="text-sm line-clamp-2">{messages[0].message}</p>
           </div>
         ) : (
           <div className="text-center py-3">
-            <MessageSquare className="w-8 h-8 text-muted-foreground/40 mx-auto mb-1.5" />
-            <p className="text-sm text-muted-foreground">{d.startAConversation}</p>
+            <MessageSquare className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+            <p className="text-sm text-muted-foreground">
+              {d.startAConversation}
+            </p>
           </div>
         )}
 
-        <div className="space-y-1">
-          {quickPrompts.map((prompt, i) => (
-            <Button key={i} asChild variant="ghost" size="sm" className="h-auto p-2 text-xs justify-start w-full hover:bg-muted/50">
-              <Link to={`/collection-chat?prompt=${encodeURIComponent(prompt)}`}>
-                <Sparkles className="w-3 h-3 mr-2 shrink-0 text-primary" />
-                <span className="line-clamp-1 text-left">{prompt}</span>
-              </Link>
-            </Button>
-          ))}
+        <div className="space-y-2">
+          <div className="text-sm font-medium text-muted-foreground">{d.askMeSomething}</div>
+          <div className="grid grid-cols-1 gap-1">
+            {quickPrompts.slice(0, 2).map((prompt, index) => (
+              <Button 
+                key={index}
+                asChild
+                variant="ghost"
+                size="sm"
+                className="h-auto p-2 text-xs text-left justify-start hover:bg-vinyl-gold/10"
+              >
+                <Link to={`/collection-chat?prompt=${encodeURIComponent(prompt)}`}>
+                  <Sparkles className="w-3 h-3 mr-2 flex-shrink-0" />
+                  <span className="line-clamp-1">{prompt}</span>
+                </Link>
+              </Button>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          <Button
-            size="sm"
+        <div className="grid grid-cols-2 gap-2">
+          <Button 
             onClick={() => window.dispatchEvent(new CustomEvent('open-magic-mike'))}
+            className="bg-gradient-to-r from-vinyl-gold to-vinyl-gold/80"
           >
-            <Bot className="w-3.5 h-3.5 mr-1.5" />
-            Chat
+            <Bot className="w-4 h-4 mr-2" />
+            Chat met Mike
           </Button>
-          <Button asChild variant="outline" size="sm">
+          <Button asChild variant="outline">
             <Link to="/collection-chat">
-              <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+              <MessageSquare className="w-4 h-4 mr-2" />
               {d.openChat}
+              <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </Button>
         </div>

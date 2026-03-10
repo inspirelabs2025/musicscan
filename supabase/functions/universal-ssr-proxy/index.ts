@@ -445,18 +445,10 @@ Deno.serve(async (req) => {
     const meta = await getMetaForContent(sb, contentType, slug);
 
     if (!meta) {
-      console.log(`[SSR] No content found for ${contentType}/${slug}, returning 404`);
-      // Return proper HTTP 404 so Google doesn't index non-existent pages
+      console.log(`[SSR] No content found for ${contentType}/${slug}, serving plain index.html`);
       const indexHtml = await fetchIndexHtml();
-      // Replace existing robots tags with noindex + inject 404 title
-      const notFoundHtml = indexHtml
-        .replace(/<title>[^<]*<\/title>/, `<title>404 - Pagina niet gevonden | MusicScan</title>`)
-        .replace(/<meta\s+name="robots"\s+content="[^"]*"\s*\/?>/g, `<meta name="robots" content="noindex, nofollow">`)
-        .replace(/<meta\s+name="googlebot"\s+content="[^"]*"\s*\/?>/g, `<meta name="googlebot" content="noindex, nofollow">`)
-        .replace(/<meta\s+name="bingbot"\s+content="[^"]*"\s*\/?>/g, `<meta name="bingbot" content="noindex, nofollow">`);
-      return new Response(notFoundHtml, {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache, no-store' }
+      return new Response(indexHtml, {
+        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60' }
       });
     }
 

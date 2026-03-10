@@ -16,14 +16,14 @@ export const CreditsDisplay: React.FC = () => {
 
   return (
     <Card>
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Coins className="h-5 w-5 text-primary" />
           {s.scanCredits}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-5">
-        <div className="flex items-baseline gap-3">
+      <CardContent className="space-y-4">
+        <div className="flex items-baseline gap-2">
           <span className="text-3xl font-bold">{isLoading ? '...' : (credits?.balance ?? 0)}</span>
           <span className="text-sm text-muted-foreground">{s.creditsAvailable}</span>
         </div>
@@ -52,20 +52,20 @@ export const CreditsDisplay: React.FC = () => {
               </Button>
             </div>
             {/* Betaalmethodes */}
-            <div className="flex items-center gap-2 justify-center pt-2 overflow-hidden">
+            <div className="flex items-center gap-3 justify-center pt-1">
               <span className="text-[11px] text-muted-foreground">{s.payWith}</span>
-              <div className="flex items-center gap-2 overflow-hidden">
-                <img src="/images/payment/ideal.svg" alt="iDEAL" style={{ height: '16px', width: 'auto', maxWidth: '40px' }} />
-                <img src="/images/payment/visa.svg" alt="Visa" style={{ height: '14px', width: 'auto', maxWidth: '40px' }} />
-                <img src="/images/payment/mastercard.svg" alt="Mastercard" style={{ height: '16px', width: 'auto', maxWidth: '40px' }} />
-                <img src="/images/payment/paypal.svg" alt="PayPal" style={{ height: '14px', width: 'auto', maxWidth: '40px' }} />
-                <img src="/images/payment/klarna.svg" alt="Klarna" style={{ height: '14px', width: 'auto', maxWidth: '40px' }} />
+              <div className="flex items-center gap-2">
+                <img src="/images/payment/ideal.svg" alt="iDEAL" className="h-6" />
+                <img src="/images/payment/visa.svg" alt="Visa" className="h-4" />
+                <img src="/images/payment/mastercard.svg" alt="Mastercard" className="h-6" />
+                <img src="/images/payment/paypal.svg" alt="PayPal" className="h-5" />
+                <img src="/images/payment/klarna.svg" alt="Klarna" className="h-5" />
               </div>
             </div>
           </>
         )}
-        <div className="border-t pt-4">
-          <p className="text-sm text-muted-foreground mb-3">{s.havePromoCode}</p>
+        <div className="border-t pt-3">
+          <p className="text-sm text-muted-foreground mb-2">{s.havePromoCode}</p>
           <PromoCodeInput />
         </div>
       </CardContent>

@@ -6,6 +6,7 @@ import { ScannerHero } from '@/components/home/ScannerHero';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SeoContentBlock } from '@/components/SEO/SeoContentBlock';
 
+// Lazy load sections
 const PopularSinglesSection = lazy(() => import('@/components/home/sections/PopularSinglesSection').then(m => ({ default: m.PopularSinglesSection })));
 const ArtistsSection = lazy(() => import('@/components/home/sections/ArtistsSection').then(m => ({ default: m.ArtistsSection })));
 const StoriesSection = lazy(() => import('@/components/home/sections/StoriesSection').then(m => ({ default: m.StoriesSection })));
@@ -15,13 +16,7 @@ const MagicMikePodcastSection = lazy(() => import('@/components/home/sections/Ma
 const ProductBanner = lazy(() => import('@/components/home/ProductBanner').then(m => ({ default: m.ProductBanner })));
 const MobileInstallBanner = lazy(() => import('@/components/MobileInstallBanner').then(m => ({ default: m.MobileInstallBanner })));
 
-const SectionFallback = () => (
-  <div className="py-8 md:py-16">
-    <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-      <Skeleton className="h-32 md:h-48 rounded-xl" />
-    </div>
-  </div>
-);
+const SectionFallback = () => <div className="py-10"><Skeleton className="h-48 mx-4 rounded-xl" /></div>;
 
 const Home = () => {
   const { tr } = useLanguage();
@@ -62,49 +57,65 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden pt-14">
+    <div className="min-h-screen bg-background">
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(websiteSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
       </Helmet>
-
+      {/* Hero */}
       <ScannerHero />
-      <div style={{ height: '64px' }} />
 
-      <div style={{ paddingLeft: '16px', paddingRight: '16px', maxWidth: '1280px', marginLeft: 'auto', marginRight: 'auto', display: 'flex', flexDirection: 'column', gap: '64px' }}>
-        <Suspense fallback={<SectionFallback />}>
-          <PopularSinglesSection />
-        </Suspense>
+      {/* Sectie 1: Populaire Singles */}
+      <Suspense fallback={<SectionFallback />}>
+        <PopularSinglesSection />
+      </Suspense>
 
-        <Suspense fallback={<SectionFallback />}>
-          <ArtistsSection />
-        </Suspense>
+      <div className="py-2" />
 
-        <Suspense fallback={<SectionFallback />}>
-          <StoriesSection />
-        </Suspense>
+      {/* Sectie 2: Artiesten */}
+      <Suspense fallback={<SectionFallback />}>
+        <ArtistsSection />
+      </Suspense>
 
-        <Suspense fallback={<SectionFallback />}>
-          <GenresSection />
-        </Suspense>
+      <div className="py-2" />
 
-        <Suspense fallback={<SectionFallback />}>
-          <CommunitySection />
-        </Suspense>
+      {/* Sectie 3: Album Verhalen & Anekdotes */}
+      <Suspense fallback={<SectionFallback />}>
+        <StoriesSection />
+      </Suspense>
 
-        <Suspense fallback={<SectionFallback />}>
-          <MagicMikePodcastSection />
-        </Suspense>
+      <div className="py-2" />
 
-        <Suspense fallback={null}>
-          <ProductBanner />
-        </Suspense>
-      </div>
+      {/* Sectie 4: Ontdek op Genre */}
+      <Suspense fallback={<SectionFallback />}>
+        <GenresSection />
+      </Suspense>
 
+      <div className="py-2" />
+
+      {/* Sectie 5: Community */}
+      <Suspense fallback={<SectionFallback />}>
+        <CommunitySection />
+      </Suspense>
+
+      <div className="py-2" />
+
+      {/* Sectie 6: Magic Mike & Podcasts */}
+      <Suspense fallback={<SectionFallback />}>
+        <MagicMikePodcastSection />
+      </Suspense>
+
+      {/* Sectie 7: Shop */}
+      <Suspense fallback={null}>
+        <ProductBanner />
+      </Suspense>
+
+      {/* PWA Install */}
       <Suspense fallback={null}>
         <MobileInstallBanner />
       </Suspense>
 
+      {/* SEO Content Block */}
       <SeoContentBlock text="MusicScan is hét muziekplatform voor vinyl- en CD-verzamelaars. Scan je platen met onze AI-scanner en ontdek direct de artiest, het album en de marktwaarde. Lees de verhalen achter iconische albums, test je muziekkennis met de dagelijkse quiz, en shop unieke album art producten zoals metal prints en canvas doeken. Of je nu vinyl wilt scannen, je collectie wilt beheren of gewoon muziekverhalen wilt lezen — bij MusicScan vind je alles." />
     </div>
   );

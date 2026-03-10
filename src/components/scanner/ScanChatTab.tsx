@@ -1283,14 +1283,14 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   return (
     <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-280px)]">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 px-3 py-3 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm">
+      <div className="flex items-center justify-between mb-4 px-3 py-3 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="relative">
             <img src={magicMikeAvatar} alt="Magic Mike" className="h-11 w-11 rounded-full object-cover object-top ring-2 ring-primary/40 shadow-lg" />
-            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-card" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-white/20" />
           </div>
           <div>
-            <span className="text-sm font-bold tracking-tight">Magic Mike</span>
+            <span className="text-sm font-bold tracking-tight text-white">Magic Mike</span>
             {mediaType && <span className="text-xs text-muted-foreground ml-1.5 bg-muted px-1.5 py-0.5 rounded-full">{mediaType === 'vinyl' ? sc.vinylLabel : sc.cdLabel}</span>}
             <p className="text-xs text-muted-foreground">{sc.musicDetective}</p>
           </div>

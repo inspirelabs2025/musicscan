@@ -320,10 +320,10 @@ export default function AIScanV2() {
 
   // Show loading while checking auth
   if (loading) {
-    return <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center">
+    return <div className="min-h-screen bg-gradient-to-br from-[hsl(270,40%,12%)] via-[hsl(270,30%,16%)] to-[hsl(240,20%,14%)] flex items-center justify-center">
         <div className="text-center">
-          <Clock className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">{s.loading}</p>
+          <Clock className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-white/60">{s.loading}</p>
         </div>
       </div>;
   }

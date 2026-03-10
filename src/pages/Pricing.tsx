@@ -13,6 +13,7 @@ import { useCredits } from '@/hooks/useCredits';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { openExternalPayment } from '@/utils/externalPayment';
 import { Progress } from '@/components/ui/progress';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';

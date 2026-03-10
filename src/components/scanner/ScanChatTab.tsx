@@ -1625,7 +1625,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
         {(isStreaming || isRunningV2) && messages[messages.length - 1]?.role !== 'assistant' && (
           <div className="flex justify-start gap-2.5">
             <img src={magicMikeAvatar} alt="Magic Mike" className="h-8 w-8 rounded-full object-cover object-top shrink-0 ring-2 ring-primary/20 shadow-sm" />
-            <div className="bg-card/90 backdrop-blur-sm border border-border/40 rounded-2xl rounded-bl-md px-5 py-3.5 shadow-sm">
+            <div className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl rounded-bl-md px-5 py-3.5 shadow-sm">
               <div className="flex gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '0ms' }} />
                 <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '150ms' }} />

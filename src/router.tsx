@@ -197,6 +197,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: wrap(Home) },
       { path: 'auth', element: wrap(Auth) },
+      { path: 'welkom', element: wrap(Welkom) },
       { path: 'auth/set-password', element: wrap(SetPassword) },
       { path: 'set-password', element: wrap(SetPassword) },
       { path: 'dashboard', element: wrap(Dashboard) },

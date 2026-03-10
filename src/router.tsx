@@ -207,6 +207,8 @@ export const router = createBrowserRouter([
       { path: 'social', element: wrap(Social) },
       { path: 'fan-wall', element: wrap(FanWall) },
       { path: 'fan-wall/:slug', element: wrap(ArtistFanWall) },
+      { path: 'fanwall', element: <Navigate to="/fan-wall" replace /> },
+      { path: 'fanwall/:slug', element: <Navigate to="/fan-wall/:slug" replace /> },
       { path: 'fan-wall-overview', element: wrap(ArtistFanWallOverview) },
       { path: 'upload-photo', element: wrap(UploadPhoto) },
       { path: 'mijn-fotos', element: wrap(MyPhotos) },

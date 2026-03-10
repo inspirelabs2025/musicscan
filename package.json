@@ -13,6 +13,7 @@
     "mobile:dev": "npm run build:dev && cap sync"
   },
   "dependencies": {
+    "@capacitor/browser": "^8.0.2",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
     "@hookform/resolvers": "^5.2.2",

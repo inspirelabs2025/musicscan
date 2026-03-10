@@ -109,9 +109,9 @@ export const ConditionGradingPanel: React.FC<ConditionGradingPanelProps> = ({
       </div>
 
       <div className="space-y-1">
-        <label className="text-xs text-muted-foreground">{s.sleeveState}</label>
+        <label className="text-xs text-gray-600">{s.sleeveState}</label>
         <Select value={conditionSleeve} onValueChange={onConditionSleeveChange}>
-          <SelectTrigger className="h-8 text-xs bg-background">
+          <SelectTrigger className="h-8 text-xs bg-white text-gray-900 border-gray-300">
             <SelectValue placeholder={s.selectCondition} />
           </SelectTrigger>
           <SelectContent className="z-[200] bg-popover">

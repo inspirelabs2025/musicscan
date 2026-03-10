@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { GuestCheckoutModal } from './GuestCheckoutModal';
 import { trackBeginCheckout } from '@/utils/googleAnalytics';
+import { openExternalPayment } from '@/utils/externalPayment';
 
 export const ShoppingCartWidget = () => {
   const { items, removeFromCart, getTotalPrice, getItemCount, checkout, isLoading, clearCart } = useCart();
@@ -32,7 +33,8 @@ export const ShoppingCartWidget = () => {
         
         if (result?.url) {
           console.log('[ShoppingCartWidget] Opening Stripe checkout:', result.url);
-          window.open(result.url, '_blank');
+          // External browser for app store compliance
+          openExternalPayment(result.url);
           
           toast({
             title: "Betalingslink geopend",

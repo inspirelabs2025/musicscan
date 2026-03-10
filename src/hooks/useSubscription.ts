@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { openExternalPayment } from '@/utils/externalPayment';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -61,7 +62,8 @@ export const useSubscription = () => {
       
       if (data?.url) {
         // Open checkout in new tab
-        window.open(data.url, '_blank');
+        // External browser for app store compliance
+        openExternalPayment(data.url);
       }
       
       return data;
@@ -81,7 +83,8 @@ export const useSubscription = () => {
       
       if (data?.url) {
         // Open portal in new tab
-        window.open(data.url, '_blank');
+        // External browser for app store compliance
+        openExternalPayment(data.url);
       }
       
       return data;

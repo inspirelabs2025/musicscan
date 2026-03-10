@@ -1330,7 +1330,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
             <div className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm shadow-sm transition-colors ${
               msg.role === 'user' 
                 ? 'bg-primary text-primary-foreground rounded-br-md' 
-                : 'bg-card/90 backdrop-blur-sm border border-border/40 rounded-bl-md'
+                : 'bg-white/10 backdrop-blur-sm border border-white/15 rounded-bl-md text-white/90'
             }`}>
               {msg.role === 'assistant' ? (
                 <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:leading-relaxed [&_li]:leading-relaxed">

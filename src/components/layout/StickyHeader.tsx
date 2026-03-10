@@ -25,8 +25,8 @@ export function StickyHeader() {
   const displayName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Account';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[hsl(240_20%_12%/0.92)] backdrop-blur-md border-b border-white/10">
-      <div className="container mx-auto px-4 h-14 flex items-center justify-between">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[hsl(240_20%_12%/0.92)] backdrop-blur-md border-b border-white/10 overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 text-white font-bold text-lg" onClick={() => setMenuOpen(false)}>
           <Disc3 className="w-6 h-6 text-vinyl-gold" />
@@ -49,8 +49,8 @@ export function StickyHeader() {
         )}
 
         {/* Right side */}
-        <div className="flex items-center gap-1">
-          <LanguageSwitcher />
+        <div className="flex items-center gap-2">
+          {!isMobile && <LanguageSwitcher />}
           {!isMobile && (
             user ? (
               <Popover>
@@ -107,8 +107,11 @@ export function StickyHeader() {
 
       {/* Mobile menu */}
       {isMobile && menuOpen && (
-        <div className="bg-[hsl(240_20%_10%/0.98)] backdrop-blur-md border-t border-white/10 pb-4">
+        <div className="bg-[hsl(240_20%_10%/0.98)] backdrop-blur-md border-t border-white/10 pb-4 max-w-full overflow-hidden">
           <nav className="container mx-auto px-4 flex flex-col gap-1 pt-2">
+            <div className="flex items-center gap-2 px-4 py-2">
+              <LanguageSwitcher />
+            </div>
             {navLinks.map(({ label, href }) => (
               <Link
                 key={href}

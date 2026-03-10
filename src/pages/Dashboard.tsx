@@ -346,7 +346,7 @@ const Dashboard = () => {
                 <CardContent className="space-y-4">
                   <div className="flex flex-col sm:flex-row gap-4">
                     <Button asChild variant="outline" className="border-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/20">
-                      <Link to="/super-admin" className="flex items-center gap-2"><BarChart3 className="h-4 w-4" />SuperAdmin Dashboard</Link>
+                      <Link to="/admin" className="flex items-center gap-2"><BarChart3 className="h-4 w-4" />SuperAdmin Dashboard</Link>
                     </Button>
                     <BatchBlogGenerator />
                     <Button onClick={restartOnboarding} variant="outline" className="border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/20">

@@ -60,7 +60,7 @@ export function CommunitySection() {
                 ))}
               </div>
               <Button asChild variant="outline" size="sm">
-                <Link to="/fanwall">
+                <Link to="/fan-wall">
                   Bekijk Fanwall <ArrowRight className="w-4 h-4 ml-1" />
                 </Link>
               </Button>

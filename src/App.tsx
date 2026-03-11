@@ -18,6 +18,7 @@ function App() {
         <Outlet />
         <Toaster />
         <AINudge />
+        <FloatingMikeChat />
       </main>
     </Providers>
   );

@@ -4,6 +4,7 @@ import { Providers } from "./providers";
 import { AINudge } from "./components/ai-nudge";
 import { FloatingMikeChat } from "./components/FloatingMikeChat";
 import { StickyHeader } from "./components/layout/StickyHeader";
+import { MobileBottomNav } from "./components/MobileBottomNav";
 import { GlobalCanonical } from "./components/SEO/GlobalCanonical";
 import { usePageTracking } from "./hooks/usePageTracking";
 

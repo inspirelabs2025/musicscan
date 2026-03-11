@@ -68,7 +68,7 @@ const useCategoryProducts = (categoryKey: string, dbFilter: string) => {
       // Shuffle for diverse mix, then take 12
       const shuffled = (data || []).sort(() => Math.random() - 0.5).slice(0, 12);
       
-      return (data || []).map(p => ({
+      return shuffled.map(p => ({
         id: p.id,
         title: p.title,
         artist: p.artist || undefined,

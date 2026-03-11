@@ -33,6 +33,8 @@ export function StickyHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { user, signOut } = useAuth();
+  const navLinks = useNavLinks();
+  const menuLabels = useMenuLabels();
 
   const userInitial = user?.user_metadata?.first_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U';
   const displayName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Account';

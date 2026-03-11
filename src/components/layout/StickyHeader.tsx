@@ -111,7 +111,7 @@ export function StickyHeader() {
           {isMobile && (
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="p-2 text-white/80 hover:text-white transition-colors"
+              className="p-2 text-vinyl-gold hover:text-vinyl-gold transition-colors"
               aria-label="Menu"
             >
               {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}

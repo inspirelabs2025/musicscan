@@ -83,18 +83,18 @@ export function StickyHeader() {
                   <Link to="/dashboard" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
                     <LayoutDashboard className="w-4 h-4" /> Dashboard
                   </Link>
-                  <Link to="/mijn-collectie" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
-                    <Library className="w-4 h-4" /> Mijn Collectie
-                  </Link>
-                  <Link to="/profile" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
-                    <User className="w-4 h-4" /> Profiel
-                  </Link>
-                  <button
-                    onClick={() => signOut()}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-destructive"
-                  >
-                    <LogOut className="w-4 h-4" /> Uitloggen
-                  </button>
+                    <Link to="/mijn-collectie" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
+                      <Library className="w-4 h-4" /> {menuLabels.myCollection}
+                    </Link>
+                    <Link to="/profile" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
+                      <User className="w-4 h-4" /> {menuLabels.profile}
+                    </Link>
+                    <button
+                      onClick={() => signOut()}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-destructive"
+                    >
+                      <LogOut className="w-4 h-4" /> {menuLabels.logout}
+                    </button>
                 </PopoverContent>
               </Popover>
             ) : (

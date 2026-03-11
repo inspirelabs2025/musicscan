@@ -7,19 +7,34 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-const navLinks = [
-  { label: 'Scan', href: '/ai-scan-v2' },
-  { label: 'Verhalen', href: '/verhalen' },
-  { label: 'Shop', href: '/shop' },
-  { label: 'Quiz', href: '/quizzen' },
-  { label: 'Magic Mike', href: '/echo' },
-];
+const useNavLinks = () => {
+  const { language } = useLanguage();
+  return [
+    { label: 'Scan', href: '/ai-scan-v2' },
+    { label: language === 'nl' ? 'Verhalen' : 'Stories', href: '/verhalen' },
+    { label: 'Shop', href: '/shop' },
+    { label: 'Quiz', href: '/quizzen' },
+    { label: 'Magic Mike', href: '/echo' },
+  ];
+};
+
+const useMenuLabels = () => {
+  const { language } = useLanguage();
+  return {
+    myCollection: language === 'nl' ? 'Mijn Collectie' : 'My Collection',
+    profile: language === 'nl' ? 'Profiel' : 'Profile',
+    logout: language === 'nl' ? 'Uitloggen' : 'Log out',
+  };
+};
 
 export function StickyHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { user, signOut } = useAuth();
+  const navLinks = useNavLinks();
+  const menuLabels = useMenuLabels();
 
   const userInitial = user?.user_metadata?.first_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U';
   const displayName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Account';
@@ -68,18 +83,18 @@ export function StickyHeader() {
                   <Link to="/dashboard" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
                     <LayoutDashboard className="w-4 h-4" /> Dashboard
                   </Link>
-                  <Link to="/mijn-collectie" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
-                    <Library className="w-4 h-4" /> Mijn Collectie
-                  </Link>
-                  <Link to="/profile" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
-                    <User className="w-4 h-4" /> Profiel
-                  </Link>
-                  <button
-                    onClick={() => signOut()}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-destructive"
-                  >
-                    <LogOut className="w-4 h-4" /> Uitloggen
-                  </button>
+                    <Link to="/mijn-collectie" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
+                      <Library className="w-4 h-4" /> {menuLabels.myCollection}
+                    </Link>
+                    <Link to="/profile" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
+                      <User className="w-4 h-4" /> {menuLabels.profile}
+                    </Link>
+                    <button
+                      onClick={() => signOut()}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-destructive"
+                    >
+                      <LogOut className="w-4 h-4" /> {menuLabels.logout}
+                    </button>
                 </PopoverContent>
               </Popover>
             ) : (
@@ -137,7 +152,7 @@ export function StickyHeader() {
                   className="px-4 py-3 text-white/60 hover:bg-white/10 rounded-lg transition-colors font-medium flex items-center gap-2 text-left"
                 >
                   <LogOut className="w-4 h-4" />
-                  Uitloggen
+                  {menuLabels.logout}
                 </button>
               </>
             ) : (

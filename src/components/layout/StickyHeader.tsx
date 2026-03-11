@@ -7,14 +7,27 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-const navLinks = [
-  { label: 'Scan', href: '/ai-scan-v2' },
-  { label: 'Verhalen', href: '/verhalen' },
-  { label: 'Shop', href: '/shop' },
-  { label: 'Quiz', href: '/quizzen' },
-  { label: 'Magic Mike', href: '/echo' },
-];
+const useNavLinks = () => {
+  const { language } = useLanguage();
+  return [
+    { label: 'Scan', href: '/ai-scan-v2' },
+    { label: language === 'nl' ? 'Verhalen' : 'Stories', href: '/verhalen' },
+    { label: 'Shop', href: '/shop' },
+    { label: 'Quiz', href: '/quizzen' },
+    { label: 'Magic Mike', href: '/echo' },
+  ];
+};
+
+const useMenuLabels = () => {
+  const { language } = useLanguage();
+  return {
+    myCollection: language === 'nl' ? 'Mijn Collectie' : 'My Collection',
+    profile: language === 'nl' ? 'Profiel' : 'Profile',
+    logout: language === 'nl' ? 'Uitloggen' : 'Log out',
+  };
+};
 
 export function StickyHeader() {
   const [menuOpen, setMenuOpen] = useState(false);

@@ -152,7 +152,7 @@ export function StickyHeader() {
                   className="px-4 py-3 text-white/60 hover:bg-white/10 rounded-lg transition-colors font-medium flex items-center gap-2 text-left"
                 >
                   <LogOut className="w-4 h-4" />
-                  Uitloggen
+                  {menuLabels.logout}
                 </button>
               </>
             ) : (

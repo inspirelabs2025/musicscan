@@ -135,22 +135,22 @@ export default function Echo() {
         <Card className="border-2 border-echo-lavender/20 bg-card/95 backdrop-blur">
           <CardHeader>
             <Tabs value={activeMode} onValueChange={setActiveMode} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 bg-echo-violet/20">
-                <TabsTrigger value="general" className="data-[state=active]:bg-echo-lavender data-[state=active]:text-black">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  {e.explore}
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-echo-violet/20 h-auto gap-1 p-1">
+                <TabsTrigger value="general" className="data-[state=active]:bg-echo-lavender data-[state=active]:text-black text-xs px-2 py-1.5">
+                  <Sparkles className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+                  <span className="truncate">{e.explore}</span>
                 </TabsTrigger>
-                <TabsTrigger value="album_story" className="data-[state=active]:bg-echo-gold data-[state=active]:text-white">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  {e.albumStory}
+                <TabsTrigger value="album_story" className="data-[state=active]:bg-echo-gold data-[state=active]:text-white text-xs px-2 py-1.5">
+                  <BookOpen className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+                  <span className="truncate">{e.albumStory}</span>
                 </TabsTrigger>
-                <TabsTrigger value="lyric_analysis" className="data-[state=active]:bg-vinyl-purple data-[state=active]:text-white">
-                  <Lightbulb className="w-4 h-4 mr-2" />
-                  {e.lyricAnalysis}
+                <TabsTrigger value="lyric_analysis" className="data-[state=active]:bg-vinyl-purple data-[state=active]:text-white text-xs px-2 py-1.5">
+                  <Lightbulb className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+                  <span className="truncate">{e.lyricAnalysis}</span>
                 </TabsTrigger>
-                <TabsTrigger value="memory" className="data-[state=active]:bg-vinyl-gold data-[state=active]:text-black">
-                  <Heart className="w-4 h-4 mr-2" />
-                  {e.memories}
+                <TabsTrigger value="memory" className="data-[state=active]:bg-vinyl-gold data-[state=active]:text-black text-xs px-2 py-1.5">
+                  <Heart className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+                  <span className="truncate">{e.memories}</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>

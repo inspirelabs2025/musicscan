@@ -268,7 +268,7 @@ const Dashboard = () => {
                     <Link to="/collection-overview"><TrendingUp className="w-5 h-5" /><span className="text-xs">{t.dashboard.overview}</span></Link>
                   </Button>
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-gold/10">
-                    <Link to="/collection-chat"><MessageSquare className="w-5 h-5" /><span className="text-xs">💬 {t.dashboard.chat}</span></Link>
+                    <Link to="/echo"><MessageSquare className="w-5 h-5" /><span className="text-xs">💬 {t.dashboard.chat}</span></Link>
                   </Button>
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-accent/20">
                     <Link to="/mijn-winkel"><Star className="w-5 h-5" /><span className="text-xs">{t.dashboard.myShop}</span></Link>

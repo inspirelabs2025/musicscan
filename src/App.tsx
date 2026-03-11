@@ -15,12 +15,13 @@ function App() {
     <Providers>
       <GlobalCanonical />
       <StickyHeader />
-      <main className="pt-14">
+      <main className="pt-14 pb-16 md:pb-0">
         <Outlet />
         <Toaster />
         <AINudge />
         <FloatingMikeChat />
       </main>
+      <MobileBottomNav />
     </Providers>
   );
 }

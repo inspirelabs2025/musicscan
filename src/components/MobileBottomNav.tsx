@@ -21,7 +21,7 @@ export function MobileBottomNav() {
 
   const navItems = [
     { icon: Home, label: t('nav.home'), url: "/" },
-    { icon: ScanLine, label: m.scan, url: "/ai-scan-v2", requiresAuth: true },
+    { icon: ScanLine, label: m.scan, url: "/ai-scan-v2" },
     { icon: Library, label: m.collection, url: "/my-collection", requiresAuth: true },
     { icon: Trophy, label: m.quiz, url: "/quizzen" },
   ];

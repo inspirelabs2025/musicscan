@@ -1228,7 +1228,12 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   };
 
   const saveToCollection = async () => {
-    if (!user || !verifiedResult || !verifiedResult.discogs_id) {
+    if (!user) {
+      toast({ title: sc.cannotSave, description: language === 'nl' ? 'Log in om je resultaat op te slaan in je collectie.' : 'Log in to save your result to your collection.', variant: "destructive" });
+      window.location.href = '/auth';
+      return;
+    }
+    if (!verifiedResult || !verifiedResult.discogs_id) {
       toast({ title: sc.cannotSave, description: sc.cannotSaveDesc, variant: "destructive" });
       return;
     }

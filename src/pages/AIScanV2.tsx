@@ -124,12 +124,7 @@ export default function AIScanV2() {
     }
   }, [analysisResult?.result?.discogs_id, searchByDiscogsId]);
 
-  // Redirect to auth if not logged in
-  useEffect(() => {
-    if (!loading && !user) {
-      window.location.href = '/auth';
-    }
-  }, [user, loading]);
+   // No longer redirecting — guests can try scanning without login
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     files.forEach(file => {
@@ -175,9 +170,10 @@ export default function AIScanV2() {
     if (!user) {
       toast({
         title: s.notLoggedIn,
-        description: s.mustBeLoggedIn,
+        description: tr.language === 'nl' ? 'Log in om scans op te slaan.' : 'Log in to save scans.',
         variant: "destructive"
       });
+      navigate('/auth');
       return;
     }
     if (uploadedFiles.length === 0) {

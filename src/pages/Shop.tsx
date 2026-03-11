@@ -61,12 +61,14 @@ const useCategoryProducts = (categoryKey: string, dbFilter: string) => {
       }
       
       const { data, error } = await query
-        .order('created_at', { ascending: false })
-        .limit(12);
+        .limit(50);
       
       if (error) throw error;
       
-      return (data || []).map(p => ({
+      // Shuffle for diverse mix, then take 12
+      const shuffled = (data || []).sort(() => Math.random() - 0.5).slice(0, 12);
+      
+      return shuffled.map(p => ({
         id: p.id,
         title: p.title,
         artist: p.artist || undefined,

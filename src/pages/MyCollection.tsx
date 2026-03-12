@@ -76,7 +76,7 @@ const CollectionCard = ({ item, onExportSingle, onClick, t }: { item: Collection
           </div>
         )}
         
-        <Button variant="outline" size="sm" className="w-full mt-2 text-xs h-7" onClick={(e) => { e.stopPropagation(); onClick(); }}>
+        <Button size="sm" className="w-full mt-2 text-xs h-7" onClick={(e) => { e.stopPropagation(); onClick(); }}>
           <ExternalLink className="w-3 h-3 mr-1" />
           Open
         </Button>
@@ -166,7 +166,7 @@ export default function MyCollection() {
             <div className="flex flex-wrap items-center gap-2">
               <DiscogsConnectButton />
               {isConnected && discogsEligibleIds.length > 0 && (
-                <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)}>
+                <Button size="sm" onClick={() => setShowExportDialog(true)}>
                   <Upload className="w-4 h-4 mr-1" />{t.export} ({discogsEligibleIds.length})
                 </Button>
               )}

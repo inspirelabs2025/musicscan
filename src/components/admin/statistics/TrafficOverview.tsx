@@ -12,7 +12,7 @@ export function TrafficOverview({ days }: TrafficOverviewProps) {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Array(7).fill(0).map((_, i) => (
           <Card key={i}>
             <CardContent className="p-4">
@@ -72,7 +72,7 @@ export function TrafficOverview({ days }: TrafficOverviewProps) {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {stats.map((stat) => (
         <Card key={stat.label}>
           <CardContent className="p-4">

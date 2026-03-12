@@ -92,7 +92,7 @@ export default function Statistics() {
   return (
     <AdminGuard>
       <AdminLayout>
-        <div className="p-6 space-y-6">
+        <div className="p-4 space-y-4 overflow-x-hidden">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-6">
               <div>
@@ -163,7 +163,7 @@ export default function Statistics() {
           <TrafficOverview days={days} />
 
           <Tabs defaultValue="clean" className="space-y-4">
-            <TabsList className="grid grid-cols-8 w-full max-w-5xl">
+            <TabsList className="flex flex-wrap gap-1 w-full">
               <TabsTrigger value="clean">🛡️ Clean</TabsTrigger>
               <TabsTrigger value="sources">Bronnen</TabsTrigger>
               <TabsTrigger value="content">Content</TabsTrigger>

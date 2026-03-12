@@ -309,17 +309,17 @@ const DiscogsMessages = () => {
             <Card className="flex-1 flex flex-col min-h-0">
               {/* Header */}
               <CardHeader className="pb-3 border-b shrink-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
                     <Button
-                      variant="ghost" size="icon" className="h-8 w-8 lg:hidden"
+                      variant="ghost" size="icon" className="h-8 w-8 lg:hidden shrink-0"
                       onClick={() => setSelectedOrder(null)}
                     >
                       <ArrowLeft className="w-4 h-4" />
                     </Button>
-                    <CardTitle className="text-base">Order #{selectedOrder.id}</CardTitle>
+                    <CardTitle className="text-base truncate">Order #{selectedOrder.id}</CardTitle>
                   </div>
-                  <Badge variant="outline" className={statusColor(selectedOrder.status)}>
+                  <Badge variant="outline" className={`max-w-[58%] truncate shrink-0 ${statusColor(selectedOrder.status)}`}>
                     {selectedOrder.status}
                   </Badge>
                 </div>

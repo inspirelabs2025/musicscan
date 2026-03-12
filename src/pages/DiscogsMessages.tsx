@@ -174,14 +174,28 @@ const DiscogsMessages = () => {
     return (
       <div className="w-full py-6" style={{ maxWidth: "100vw", overflowX: "clip" }}>
         <div className="mx-auto w-full" style={{ maxWidth: "1280px", paddingInline: "16px", boxSizing: "border-box" }}>
-          <Card className="mx-auto max-w-xl rounded-2xl">
-            <CardContent className="px-5 py-8 text-center space-y-4">
-              <MessageSquare className="w-14 h-14 mx-auto text-muted-foreground" />
-              <h1 className="text-2xl font-bold">Discogs Messages</h1>
-              <p className="text-muted-foreground">
+          <Card className="mx-auto max-w-xl rounded-[1.75rem] overflow-hidden">
+            <div className="px-4 py-4 border-b bg-muted/40 flex items-center gap-3 min-w-0">
+              <div className="h-11 w-11 rounded-xl bg-background border flex items-center justify-center shrink-0">
+                <MessageSquare className="w-6 h-6 text-muted-foreground" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold truncate">Discogs Messages</h1>
+                <p className="text-xs text-muted-foreground truncate">Koppeling vereist</p>
+              </div>
+            </div>
+
+            <CardContent className="p-4 space-y-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Koppel eerst je Discogs account om je order berichten te bekijken.
               </p>
-              <Button onClick={() => navigate("/mijn-discogs")}>Ga naar Mijn Discogs</Button>
+
+              <div className="grid gap-2 text-xs text-muted-foreground">
+                <div className="rounded-lg bg-muted px-3 py-2">• Bekijk en beheer ordergesprekken</div>
+                <div className="rounded-lg bg-muted px-3 py-2">• Reageer direct vanuit MusicScan</div>
+              </div>
+
+              <Button className="w-full h-11" onClick={() => navigate("/mijn-discogs")}>Ga naar Mijn Discogs</Button>
             </CardContent>
           </Card>
         </div>

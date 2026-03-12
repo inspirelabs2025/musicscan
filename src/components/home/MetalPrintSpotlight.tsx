@@ -178,7 +178,7 @@ export const MetalPrintSpotlight = () => {
 
                   <div className="flex flex-col sm:flex-row gap-4">
                     <Button asChild size="lg" className="text-lg bg-gradient-to-r from-vinyl-gold to-amber-500 hover:shadow-lg hover:scale-105 transition-all">
-                      <Link to="/art-shop">Bekijk Collectie</Link>
+                      <Link to="/shop/art-prints">Bekijk Collectie</Link>
                     </Button>
                     <Button asChild size="lg" variant="outline" className="text-lg border-2 border-vinyl-gold text-vinyl-gold hover:bg-vinyl-gold/10">
                       <Link to="/scanner">

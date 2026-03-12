@@ -185,7 +185,7 @@ export const TshirtSpotlight = () => {
                   size="lg" 
                   className="text-lg bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:scale-105 transition-all"
                 >
-                  <Link to="/tshirts">
+                  <Link to="/shop/tshirts">
                     👕 Browse T-shirts Shop
                   </Link>
                 </Button>

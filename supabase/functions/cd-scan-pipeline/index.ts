@@ -710,6 +710,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  const ipAddress = getIpFromRequest(req);
+
   try {
     // Auth
     const authHeader = req.headers.get("Authorization");

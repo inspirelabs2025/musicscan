@@ -376,9 +376,9 @@ const DiscogsMessages = () => {
                                 </span>
                               )}
                             </div>
-                            {content && <p className="text-sm whitespace-pre-wrap">{content}</p>}
+                            {content && <p className="text-sm whitespace-pre-wrap break-words">{content}</p>}
                             {msg.subject && (
-                              <p className="text-[11px] opacity-60 mt-1 italic">{msg.subject}</p>
+                              <p className="text-[11px] opacity-60 mt-1 italic break-words">{msg.subject}</p>
                             )}
                           </div>
                         </div>

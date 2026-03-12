@@ -229,37 +229,40 @@ const DiscogsMessages = () => {
           ) : (
             <div className="flex flex-col flex-1 min-h-0">
               <ScrollArea className="flex-1">
-                <div className="space-y-2 pr-2">
+                <div className="space-y-2 pr-2 min-w-0 overflow-x-hidden">
                   {orders.map((order) => (
                     <Card
                       key={order.id}
-                      className={`cursor-pointer transition-all hover:shadow-md ${
+                      className={`w-full min-w-0 overflow-hidden cursor-pointer transition-all hover:shadow-md ${
                         selectedOrder?.id === order.id
                           ? "ring-2 ring-primary border-primary"
                           : "hover:border-primary/30"
                       }`}
                       onClick={() => handleSelectOrder(order)}
                     >
-                      <CardContent className="p-3 space-y-1.5">
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="font-mono text-sm font-medium truncate">#{order.id}</span>
-                          <Badge variant="outline" className={`text-[10px] shrink-0 whitespace-nowrap ${statusColor(order.status)}`}>
+                      <CardContent className="p-3 space-y-1.5 min-w-0">
+                        <div className="flex items-start justify-between gap-2 min-w-0">
+                          <span className="font-mono text-sm font-medium truncate min-w-0 flex-1">#{order.id}</span>
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] shrink-0 max-w-[58%] truncate ${statusColor(order.status)}`}
+                          >
                             {order.status}
                           </Badge>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">
+                        <p className="text-xs text-muted-foreground truncate min-w-0">
                           Koper: {order.buyer?.username || "—"}
                         </p>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">
+                        <div className="flex items-center justify-between text-xs gap-2 min-w-0">
+                          <span className="text-muted-foreground shrink-0">
                             {order.created ? new Date(order.created).toLocaleDateString("nl-NL") : "—"}
                           </span>
-                          <span className="font-semibold">
+                          <span className="font-semibold shrink-0">
                             {order.total?.currency} {order.total?.value?.toFixed(2)}
                           </span>
                         </div>
                         {order.items?.[0] && (
-                          <p className="text-[11px] text-muted-foreground truncate">
+                          <p className="text-[11px] text-muted-foreground truncate min-w-0">
                             {order.items[0].release?.description}
                           </p>
                         )}

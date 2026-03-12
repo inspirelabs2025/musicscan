@@ -35,24 +35,56 @@ function useRecentScanActions(limit: number, sourceFilter: string, searchTerm: s
     queryFn: async () => {
       const results: ScanAction[] = [];
       const shouldFetch = (src: string) => sourceFilter === "all" || sourceFilter === src;
-      const perSource = sourceFilter === "all" ? Math.ceil(limit / 5) : limit;
-
-      const buildSearch = (query: any, term: string) => {
-        if (term) return query.or(`artist.ilike.%${term}%,title.ilike.%${term}%`);
-        return query;
-      };
 
       const promises: Promise<void>[] = [];
 
-      // AI scan results (saved)
-      if (shouldFetch("ai") || shouldFetch("all")) {
+      // Primary source: scan_activity_log (all scan actions including attempts)
+      if (shouldFetch("activity") || sourceFilter === "all") {
+        promises.push((async () => {
+          let q = supabase
+            .from("scan_activity_log")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(limit);
+          if (searchTerm) q = q.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,function_name.ilike.%${searchTerm}%`);
+          if (sourceFilter !== "all" && sourceFilter !== "activity") {
+            const typeMap: Record<string, string> = {
+              ai: "cd_scan", cd: "cd_pipeline", vinyl: "vinyl_scan",
+              chat: "scan_chat", chat_photo: "scan_chat_photo"
+            };
+            if (typeMap[sourceFilter]) q = q.eq("action_type", typeMap[sourceFilter]);
+          }
+          const { data } = await q;
+          (data || []).forEach(r => results.push({
+            id: r.id,
+            created_at: r.created_at,
+            user_id: r.user_id || "",
+            artist: r.artist,
+            title: r.title,
+            source: r.action_type as any,
+            status: r.status,
+            condition_grade: null,
+            discogs_id: r.discogs_id,
+            discogs_url: r.discogs_id ? `https://www.discogs.com/release/${r.discogs_id}` : null,
+            calculated_advice_price: null,
+            image_count: r.image_count,
+            media_type: r.media_type,
+            function_name: r.function_name,
+            error_message: r.error_message,
+            duration_ms: r.duration_ms,
+          }));
+        })());
+      }
+
+      // Also fetch saved results for historical data (before logging was added)
+      if (shouldFetch("ai") || (sourceFilter === "all")) {
         promises.push((async () => {
           let q = supabase
             .from("ai_scan_results")
             .select("id, created_at, user_id, artist, title, status, condition_grade, discogs_id, discogs_url, media_type, error_message")
             .order("created_at", { ascending: false })
-            .limit(perSource);
-          if (searchTerm) q = buildSearch(q, searchTerm);
+            .limit(Math.ceil(limit / 3));
+          if (searchTerm) q = q.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%`);
           const { data } = await q;
           (data || []).forEach(r => results.push({
             ...r, source: "ai", calculated_advice_price: null,
@@ -61,93 +93,64 @@ function useRecentScanActions(limit: number, sourceFilter: string, searchTerm: s
         })());
       }
 
-      // CD scans (saved)
-      if (shouldFetch("cd") || shouldFetch("all")) {
+      if (shouldFetch("cd") || (sourceFilter === "all")) {
         promises.push((async () => {
           let q = supabase
             .from("cd_scan")
             .select("id, created_at, user_id, artist, title, condition_grade, discogs_id, discogs_url, calculated_advice_price")
             .order("created_at", { ascending: false })
-            .limit(perSource);
-          if (searchTerm) q = buildSearch(q, searchTerm);
+            .limit(Math.ceil(limit / 3));
+          if (searchTerm) q = q.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%`);
           const { data } = await q;
           (data || []).forEach(r => results.push({ ...r, source: "cd", status: "saved" }));
         })());
       }
 
-      // Vinyl scans (saved)
-      if (shouldFetch("vinyl") || shouldFetch("all")) {
+      if (shouldFetch("vinyl") || (sourceFilter === "all")) {
         promises.push((async () => {
           let q = supabase
             .from("vinyl2_scan")
             .select("id, created_at, user_id, artist, title, condition_grade, discogs_id, discogs_url, calculated_advice_price")
             .order("created_at", { ascending: false })
-            .limit(perSource);
-          if (searchTerm) q = buildSearch(q, searchTerm);
+            .limit(Math.ceil(limit / 3));
+          if (searchTerm) q = q.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%`);
           const { data } = await q;
           (data || []).forEach(r => results.push({ ...r, source: "vinyl", status: "saved" }));
         })());
       }
 
-      // Batch uploads (scan attempts/uploads)
-      if (shouldFetch("upload") || shouldFetch("all")) {
+      // Batch uploads
+      if (shouldFetch("upload") || (sourceFilter === "all")) {
         promises.push((async () => {
           let q = supabase
             .from("batch_uploads")
             .select("id, created_at, user_id, status, media_type, image_count, condition_grade, error_message")
             .order("created_at", { ascending: false })
-            .limit(perSource);
+            .limit(Math.ceil(limit / 5));
           const { data } = await q;
           (data || []).forEach(r => results.push({
-            id: r.id,
-            created_at: r.created_at,
-            user_id: r.user_id,
-            artist: null,
-            title: null,
-            source: "upload",
-            status: r.status,
-            condition_grade: r.condition_grade,
-            discogs_id: null,
-            discogs_url: null,
-            calculated_advice_price: null,
-            image_count: r.image_count,
-            media_type: r.media_type,
-            error_message: r.error_message,
-          }));
-        })());
-      }
-
-      // AI usage log (API calls for scanning)
-      if (shouldFetch("ai_call") || shouldFetch("all")) {
-        promises.push((async () => {
-          let q = supabase
-            .from("ai_usage_log")
-            .select("id, created_at, function_name, status, model, duration_ms, error_message, has_images, image_count, total_tokens, estimated_cost_usd")
-            .order("created_at", { ascending: false })
-            .limit(perSource);
-          const { data } = await q;
-          (data || []).forEach(r => results.push({
-            id: r.id,
-            created_at: r.created_at,
-            user_id: "",
-            artist: null,
-            title: r.function_name,
-            source: "ai_call",
-            status: r.status,
-            condition_grade: null,
-            discogs_id: null,
-            discogs_url: null,
-            calculated_advice_price: null,
-            function_name: r.function_name,
-            error_message: r.error_message,
-            image_count: r.image_count,
+            id: r.id, created_at: r.created_at, user_id: r.user_id,
+            artist: null, title: null, source: "upload", status: r.status,
+            condition_grade: r.condition_grade, discogs_id: null, discogs_url: null,
+            calculated_advice_price: null, image_count: r.image_count,
+            media_type: r.media_type, error_message: r.error_message,
           }));
         })());
       }
 
       await Promise.all(promises);
-      results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      return results.slice(0, limit);
+      
+      // Deduplicate: prefer activity log entries over saved results with same timestamp
+      const seen = new Set<string>();
+      const deduped = results.filter(r => {
+        const key = `${r.created_at}-${r.user_id}-${r.artist}-${r.title}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      
+      deduped.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return deduped.slice(0, limit);
     },
     refetchInterval: 30000,
   });

@@ -76,7 +76,7 @@ const CollectionCard = ({ item, onExportSingle, onClick, t }: { item: Collection
           </div>
         )}
         
-        <Button variant="outline" size="sm" className="w-full mt-2 text-xs h-7" onClick={(e) => { e.stopPropagation(); onClick(); }}>
+        <Button size="sm" className="w-full mt-2 text-xs h-7" onClick={(e) => { e.stopPropagation(); onClick(); }}>
           <ExternalLink className="w-3 h-3 mr-1" />
           Open
         </Button>

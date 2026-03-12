@@ -335,11 +335,11 @@ const RecentScans = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Alle acties</SelectItem>
-            <SelectItem value="ai">AI Scans</SelectItem>
-            <SelectItem value="cd">CD Scans</SelectItem>
-            <SelectItem value="vinyl">Vinyl Scans</SelectItem>
+            <SelectItem value="ai">AI Scans (opgeslagen)</SelectItem>
+            <SelectItem value="cd">CD Scans (opgeslagen)</SelectItem>
+            <SelectItem value="vinyl">Vinyl Scans (opgeslagen)</SelectItem>
             <SelectItem value="upload">Uploads</SelectItem>
-            <SelectItem value="ai_call">AI Calls</SelectItem>
+            <SelectItem value="activity">Scan Activiteit (log)</SelectItem>
           </SelectContent>
         </Select>
         <Select value={String(limit)} onValueChange={v => setLimit(Number(v))}>

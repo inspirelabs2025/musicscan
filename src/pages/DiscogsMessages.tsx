@@ -185,24 +185,24 @@ const DiscogsMessages = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl">
+    <div className="container mx-auto px-4 py-6 max-w-7xl overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+      <div className="flex items-start gap-3 mb-6">
+        <Button variant="ghost" size="icon" className="shrink-0 mt-1" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <MessageSquare className="w-6 h-6 text-primary" />
-            Discogs Messages
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary shrink-0" />
+            <span className="truncate">Discogs Messages</span>
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground truncate">
             Order berichten voor {connection?.discogs_username}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => fetchOrders(page)} disabled={loadingOrders}>
+        <Button size="sm" className="shrink-0" onClick={() => fetchOrders(page)} disabled={loadingOrders}>
           <RefreshCw className={`w-4 h-4 mr-1 ${loadingOrders ? "animate-spin" : ""}`} />
-          Ververs
+          <span className="hidden sm:inline">Ververs</span>
         </Button>
       </div>
 

@@ -108,15 +108,15 @@ const MijnDiscogs = () => {
       <h1 className="text-3xl font-bold mb-6">{t.title}</h1>
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="collection" className="gap-2">
-            <Disc3 className="w-4 h-4" /> {t.collection}
+        <TabsList className="mb-6 w-full flex overflow-x-auto no-scrollbar">
+          <TabsTrigger value="collection" className="gap-2 flex-1 min-w-0">
+            <Disc3 className="w-4 h-4 flex-shrink-0" /> <span className="truncate">{t.collection}</span>
           </TabsTrigger>
-          <TabsTrigger value="wantlist" className="gap-2">
-            <Heart className="w-4 h-4" /> {t.wantlist}
+          <TabsTrigger value="wantlist" className="gap-2 flex-1 min-w-0">
+            <Heart className="w-4 h-4 flex-shrink-0" /> <span className="truncate">{t.wantlist}</span>
           </TabsTrigger>
-          <TabsTrigger value="inventory" className="gap-2">
-            <ShoppingBag className="w-4 h-4" /> {t.marketplace}
+          <TabsTrigger value="inventory" className="gap-2 flex-1 min-w-0">
+            <ShoppingBag className="w-4 h-4 flex-shrink-0" /> <span className="truncate">{t.marketplace}</span>
           </TabsTrigger>
         </TabsList>
 

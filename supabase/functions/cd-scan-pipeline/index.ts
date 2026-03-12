@@ -962,11 +962,21 @@ serve(async (req) => {
       }
     }
 
+    // Log scan activity
+    await logScanActivity({
+      user_id: user?.id, action_type: 'cd_pipeline', function_name: 'cd-scan-pipeline', status: 'completed',
+      artist: finalArtist, title: finalTitle, media_type: 'cd',
+      image_count: imageUrls?.length || 0, duration_ms: Date.now() - startTime,
+      discogs_id: result.releaseId || null, ip_address: ipAddress,
+      metadata: { confidence: result.confidence, match_status: result.status, version: PIPELINE_VERSION }
+    });
+
     return new Response(JSON.stringify(responseBody), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error(`❌ [${PIPELINE_VERSION}] Error:`, error);
+    await logScanActivity({ user_id: getUserIdFromRequest(req), action_type: 'cd_pipeline', function_name: 'cd-scan-pipeline', status: 'failed', error_message: error.message, ip_address: ipAddress, duration_ms: Date.now() - startTime });
     return new Response(JSON.stringify({ success: false, error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

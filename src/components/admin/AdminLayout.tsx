@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import { Helmet } from "react-helmet";
 import { PanelLeftOpen } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
@@ -11,9 +10,6 @@ interface AdminLayoutProps {
 export function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <SidebarProvider defaultOpen={true}>
-      <Helmet>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
       <div className="flex min-h-screen w-full">
         <AdminSidebar />
         <div className="flex-1 flex flex-col overflow-auto w-full">

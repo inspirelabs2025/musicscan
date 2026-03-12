@@ -9,8 +9,7 @@
 /singles/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/singles/:splat 200
 /artists/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/artists/:splat 200
 /artist-spotlight/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/artist-spotlight/:splat 200
-# Legacy product pages → redirect to art shop (products were removed)
-/product/* /art-shop 301!
+/product/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/product/:splat 200
 /anekdotes/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/anekdotes/:splat 200
 /nieuws/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/nieuws/:splat 200
 /new-release/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/new-release/:splat 200
@@ -19,7 +18,7 @@
 # Block direct access to SSR proxy URLs - redirect to clean URL
 /universal-ssr-proxy/plaat-verhaal/:slug /plaat-verhaal/:slug 301
 /universal-ssr-proxy/muziek-verhaal/:slug /muziek-verhaal/:slug 301
-/universal-ssr-proxy/product/:slug /art-shop 301
+/universal-ssr-proxy/product/:slug /product/:slug 301
 /universal-ssr-proxy/* / 301
 
 # Podcast RSS Feed redirects for SEO-friendly URLs
@@ -38,7 +37,7 @@
 /sitemap-llm.xml https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/generate-llm-sitemap 200
 
 # Trailing slash normalization - 301 redirect to non-trailing-slash
-/product/:slug/ /art-shop 301
+/product/:slug/ /product/:slug 301
 /singles/:slug/ /singles/:slug 301
 /artists/:slug/ /artists/:slug 301
 /muziek-verhaal/:slug/ /muziek-verhaal/:slug 301

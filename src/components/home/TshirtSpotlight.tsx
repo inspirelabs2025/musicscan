@@ -27,7 +27,7 @@ export const TshirtSpotlight = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold">👕 Draag je Favoriete Album</h2>
-            <Link to="/tshirts">
+            <Link to="/shop/tshirts">
               <Button variant="ghost" size="sm" className="text-primary">
                 Meer <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
@@ -185,7 +185,7 @@ export const TshirtSpotlight = () => {
                   size="lg" 
                   className="text-lg bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:scale-105 transition-all"
                 >
-                  <Link to="/tshirts">
+                  <Link to="/shop/tshirts">
                     👕 Browse T-shirts Shop
                   </Link>
                 </Button>

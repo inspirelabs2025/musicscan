@@ -1,9 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { AdminLayout } from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Disc, Music, Brain, ExternalLink, User, Calendar, Image as ImageIcon } from "lucide-react";
+import { Loader2, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { useState } from "react";
@@ -17,54 +16,65 @@ interface RecentScan {
   user_id: string;
   artist: string | null;
   title: string | null;
-  media_type: string;
-  status: string;
-  source_table: string;
+  source: "ai" | "cd" | "vinyl";
+  status: string | null;
   condition_grade: string | null;
   discogs_id: number | null;
   discogs_url: string | null;
-  confidence_score: number | null;
-  label: string | null;
-  photo_urls: string[] | null;
   calculated_advice_price: number | null;
-  user_email?: string;
 }
 
 function useRecentScans(limit: number, sourceFilter: string, searchTerm: string) {
   return useQuery({
     queryKey: ["admin-recent-scans", limit, sourceFilter, searchTerm],
     queryFn: async () => {
-      let query = supabase
-        .from("unified_scans")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(limit);
+      const results: RecentScan[] = [];
 
-      if (sourceFilter && sourceFilter !== "all") {
-        query = query.eq("source_table", sourceFilter);
+      const shouldFetch = (src: string) => sourceFilter === "all" || sourceFilter === src;
+
+      const buildSearch = (query: any, term: string) => {
+        if (term) return query.or(`artist.ilike.%${term}%,title.ilike.%${term}%`);
+        return query;
+      };
+
+      const perSource = sourceFilter === "all" ? Math.ceil(limit / 3) : limit;
+
+      if (shouldFetch("ai")) {
+        let q = supabase
+          .from("ai_scan_results")
+          .select("id, created_at, user_id, artist, title, status, condition_grade, discogs_id, discogs_url")
+          .order("created_at", { ascending: false })
+          .limit(perSource);
+        if (searchTerm) q = buildSearch(q, searchTerm);
+        const { data } = await q;
+        (data || []).forEach(r => results.push({ ...r, source: "ai", calculated_advice_price: null }));
       }
 
-      if (searchTerm) {
-        query = query.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%`);
+      if (shouldFetch("cd")) {
+        let q = supabase
+          .from("cd_scan")
+          .select("id, created_at, user_id, artist, title, condition_grade, discogs_id, discogs_url, calculated_advice_price")
+          .order("created_at", { ascending: false })
+          .limit(perSource);
+        if (searchTerm) q = buildSearch(q, searchTerm);
+        const { data } = await q;
+        (data || []).forEach(r => results.push({ ...r, source: "cd", status: null }));
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-
-      // Get unique user IDs and fetch emails
-      const userIds = [...new Set((data || []).map(s => s.user_id))];
-      const { data: profiles } = await supabase.rpc("get_user_scan_counts");
-      const emailMap: Record<string, string> = {};
-      if (profiles) {
-        (profiles as any[]).forEach(p => {
-          emailMap[p.user_id] = p.email || "Unknown";
-        });
+      if (shouldFetch("vinyl")) {
+        let q = supabase
+          .from("vinyl2_scan")
+          .select("id, created_at, user_id, artist, title, condition_grade, discogs_id, discogs_url, calculated_advice_price")
+          .order("created_at", { ascending: false })
+          .limit(perSource);
+        if (searchTerm) q = buildSearch(q, searchTerm);
+        const { data } = await q;
+        (data || []).forEach(r => results.push({ ...r, source: "vinyl", status: null }));
       }
 
-      return (data || []).map(scan => ({
-        ...scan,
-        user_email: emailMap[scan.user_id] || scan.user_id.slice(0, 8) + "...",
-      })) as RecentScan[];
+      // Sort combined results by date descending
+      results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return results.slice(0, limit);
     },
     refetchInterval: 30000,
   });
@@ -78,16 +88,27 @@ function useQuickStats() {
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-      const [todayResult, weekResult, totalResult] = await Promise.all([
-        supabase.from("unified_scans").select("id", { count: "exact", head: true }).gte("created_at", today),
-        supabase.from("unified_scans").select("id", { count: "exact", head: true }).gte("created_at", weekAgo),
-        supabase.from("unified_scans").select("id", { count: "exact", head: true }),
-      ]);
+      const countQuery = async (table: "ai_scan_results" | "cd_scan" | "vinyl2_scan", gte?: string) => {
+        let q = supabase.from(table).select("id", { count: "exact", head: true });
+        if (gte) q = q.gte("created_at", gte);
+        const { count } = await q;
+        return count || 0;
+      };
+
+      const [aiToday, cdToday, vinylToday, aiWeek, cdWeek, vinylWeek, aiTotal, cdTotal, vinylTotal] =
+        await Promise.all([
+          countQuery("ai_scan_results", today), countQuery("cd_scan", today), countQuery("vinyl2_scan", today),
+          countQuery("ai_scan_results", weekAgo), countQuery("cd_scan", weekAgo), countQuery("vinyl2_scan", weekAgo),
+          countQuery("ai_scan_results"), countQuery("cd_scan"), countQuery("vinyl2_scan"),
+        ]);
 
       return {
-        today: todayResult.count || 0,
-        thisWeek: weekResult.count || 0,
-        total: totalResult.count || 0,
+        today: aiToday + cdToday + vinylToday,
+        thisWeek: aiWeek + cdWeek + vinylWeek,
+        total: aiTotal + cdTotal + vinylTotal,
+        ai: aiTotal,
+        cd: cdTotal,
+        vinyl: vinylTotal,
       };
     },
   });
@@ -95,28 +116,19 @@ function useQuickStats() {
 
 const sourceLabel = (s: string) => {
   switch (s) {
-    case "ai_scan_results": return "AI Scan";
-    case "cd_scan": return "CD";
-    case "vinyl2_scan": return "Vinyl";
+    case "ai": return "AI Scan";
+    case "cd": return "CD";
+    case "vinyl": return "Vinyl";
     default: return s;
   }
 };
 
-const sourceBadgeVariant = (s: string) => {
+const sourceBadgeClass = (s: string) => {
   switch (s) {
-    case "ai_scan_results": return "bg-emerald-500/10 text-emerald-700 border-emerald-500/20";
-    case "cd_scan": return "bg-blue-500/10 text-blue-700 border-blue-500/20";
-    case "vinyl2_scan": return "bg-purple-500/10 text-purple-700 border-purple-500/20";
+    case "ai": return "bg-emerald-500/10 text-emerald-700 border-emerald-500/20";
+    case "cd": return "bg-blue-500/10 text-blue-700 border-blue-500/20";
+    case "vinyl": return "bg-purple-500/10 text-purple-700 border-purple-500/20";
     default: return "";
-  }
-};
-
-const statusBadge = (status: string) => {
-  switch (status) {
-    case "completed": return "bg-emerald-500/10 text-emerald-700";
-    case "failed": return "bg-destructive/10 text-destructive";
-    case "pending": return "bg-yellow-500/10 text-yellow-700";
-    default: return "bg-muted text-muted-foreground";
   }
 };
 
@@ -129,150 +141,160 @@ const RecentScans = () => {
   const { data: stats } = useQuickStats();
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Laatste Scans</h1>
-          <p className="text-muted-foreground text-sm">Overzicht van alle recente scans over alle tabellen</p>
-        </div>
+    <div className="p-6 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Laatste Scans</h1>
+        <p className="text-muted-foreground text-sm">Overzicht van alle recente scans</p>
+      </div>
 
-        {/* Quick stats */}
-        <div className="grid grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="pt-4 pb-3 px-4">
-              <p className="text-xs text-muted-foreground">Vandaag</p>
-              <p className="text-2xl font-bold">{stats?.today ?? "—"}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 pb-3 px-4">
-              <p className="text-xs text-muted-foreground">Deze week</p>
-              <p className="text-2xl font-bold">{stats?.thisWeek ?? "—"}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 pb-3 px-4">
-              <p className="text-xs text-muted-foreground">Totaal</p>
-              <p className="text-2xl font-bold">{stats?.total ?? "—"}</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters */}
-        <div className="flex gap-3 items-center">
-          <Input
-            placeholder="Zoek op artiest of titel..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="max-w-xs"
-          />
-          <Select value={sourceFilter} onValueChange={setSourceFilter}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle bronnen</SelectItem>
-              <SelectItem value="ai_scan_results">AI Scans</SelectItem>
-              <SelectItem value="cd_scan">CD Scans</SelectItem>
-              <SelectItem value="vinyl2_scan">Vinyl Scans</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={String(limit)} onValueChange={v => setLimit(Number(v))}>
-            <SelectTrigger className="w-[100px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="25">25</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-              <SelectItem value="200">200</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Table */}
+      {/* Quick stats */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card>
-          <CardContent className="p-0">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[140px]">Datum</TableHead>
-                      <TableHead>Artiest</TableHead>
-                      <TableHead>Titel</TableHead>
-                      <TableHead>Bron</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Conditie</TableHead>
-                      <TableHead>Prijs</TableHead>
-                      <TableHead>Gebruiker</TableHead>
-                      <TableHead>Discogs</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {scans?.map(scan => (
-                      <TableRow key={`${scan.source_table}-${scan.id}`}>
-                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                          {format(new Date(scan.created_at), "dd MMM HH:mm", { locale: nl })}
-                        </TableCell>
-                        <TableCell className="font-medium max-w-[150px] truncate">
-                          {scan.artist || "—"}
-                        </TableCell>
-                        <TableCell className="max-w-[180px] truncate">
-                          {scan.title || "—"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={`text-xs ${sourceBadgeVariant(scan.source_table)}`}>
-                            {sourceLabel(scan.source_table)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className={`text-xs ${statusBadge(scan.status)}`}>
-                            {scan.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          {scan.condition_grade || "—"}
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          {scan.calculated_advice_price
-                            ? `€${scan.calculated_advice_price.toFixed(2)}`
-                            : "—"}
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground max-w-[120px] truncate">
-                          {scan.user_email}
-                        </TableCell>
-                        <TableCell>
-                          {scan.discogs_url ? (
-                            <a href={scan.discogs_url} target="_blank" rel="noopener noreferrer"
-                              className="text-primary hover:underline">
-                              <ExternalLink className="h-3.5 w-3.5" />
-                            </a>
-                          ) : scan.discogs_id ? (
-                            <span className="text-xs text-muted-foreground">{scan.discogs_id}</span>
-                          ) : "—"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {scans?.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                          Geen scans gevonden
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+          <CardContent className="pt-4 pb-3 px-4">
+            <p className="text-xs text-muted-foreground">Vandaag</p>
+            <p className="text-2xl font-bold">{stats?.today ?? "—"}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3 px-4">
+            <p className="text-xs text-muted-foreground">Deze week</p>
+            <p className="text-2xl font-bold">{stats?.thisWeek ?? "—"}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3 px-4">
+            <p className="text-xs text-muted-foreground">Totaal</p>
+            <p className="text-2xl font-bold">{stats?.total ?? "—"}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3 px-4">
+            <p className="text-xs text-muted-foreground">AI Scans</p>
+            <p className="text-2xl font-bold text-emerald-600">{stats?.ai ?? "—"}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3 px-4">
+            <p className="text-xs text-muted-foreground">CD Scans</p>
+            <p className="text-2xl font-bold text-blue-600">{stats?.cd ?? "—"}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3 px-4">
+            <p className="text-xs text-muted-foreground">Vinyl Scans</p>
+            <p className="text-2xl font-bold text-purple-600">{stats?.vinyl ?? "—"}</p>
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <Input
+          placeholder="Zoek op artiest of titel..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="max-w-xs"
+        />
+        <Select value={sourceFilter} onValueChange={setSourceFilter}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Alle bronnen</SelectItem>
+            <SelectItem value="ai">AI Scans</SelectItem>
+            <SelectItem value="cd">CD Scans</SelectItem>
+            <SelectItem value="vinyl">Vinyl Scans</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={String(limit)} onValueChange={v => setLimit(Number(v))}>
+          <SelectTrigger className="w-[100px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="25">25</SelectItem>
+            <SelectItem value="50">50</SelectItem>
+            <SelectItem value="100">100</SelectItem>
+            <SelectItem value="200">200</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Table */}
+      <Card>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[140px]">Datum</TableHead>
+                    <TableHead>Artiest</TableHead>
+                    <TableHead>Titel</TableHead>
+                    <TableHead>Bron</TableHead>
+                    <TableHead>Conditie</TableHead>
+                    <TableHead>Prijs</TableHead>
+                    <TableHead>Gebruiker</TableHead>
+                    <TableHead>Discogs</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {scans?.map(scan => (
+                    <TableRow key={`${scan.source}-${scan.id}`}>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {format(new Date(scan.created_at), "dd MMM HH:mm", { locale: nl })}
+                      </TableCell>
+                      <TableCell className="font-medium max-w-[150px] truncate">
+                        {scan.artist || "—"}
+                      </TableCell>
+                      <TableCell className="max-w-[180px] truncate">
+                        {scan.title || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`text-xs ${sourceBadgeClass(scan.source)}`}>
+                          {sourceLabel(scan.source)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {scan.condition_grade || "—"}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {scan.calculated_advice_price
+                          ? `€${scan.calculated_advice_price.toFixed(2)}`
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground max-w-[120px] truncate">
+                        {scan.user_id.slice(0, 8)}...
+                      </TableCell>
+                      <TableCell>
+                        {scan.discogs_url ? (
+                          <a href={scan.discogs_url} target="_blank" rel="noopener noreferrer"
+                            className="text-primary hover:underline">
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        ) : scan.discogs_id ? (
+                          <span className="text-xs text-muted-foreground">{scan.discogs_id}</span>
+                        ) : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {scans?.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        Geen scans gevonden
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

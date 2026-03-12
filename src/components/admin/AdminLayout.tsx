@@ -16,7 +16,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </Helmet>
       <div className="flex min-h-screen w-full">
         <AdminSidebar />
-        <div className="flex-1 flex flex-col overflow-auto w-full min-w-0">
+        <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden w-full min-w-0">
           <div className="h-10 flex items-center border-b px-2 shrink-0">
             <SidebarTrigger className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
               <PanelLeftOpen className="h-5 w-5" />

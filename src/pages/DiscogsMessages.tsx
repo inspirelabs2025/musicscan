@@ -210,7 +210,7 @@ const DiscogsMessages = () => {
       <div className="flex gap-4 h-[calc(100vh-220px)] min-w-0 w-full">
 
         {/* LEFT: Orders list — hidden on mobile when order selected */}
-        <div className={`flex flex-col w-full lg:w-80 xl:w-96 shrink-0 ${selectedOrder ? "hidden lg:flex" : "flex"}`}>
+        <div className={`flex flex-col w-full min-w-0 lg:w-80 xl:w-96 lg:shrink-0 ${selectedOrder ? "hidden lg:flex" : "flex"}`}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold">Orders <span className="text-xs text-muted-foreground">({orders.length})</span></h2>
           </div>

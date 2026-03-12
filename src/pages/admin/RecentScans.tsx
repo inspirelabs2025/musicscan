@@ -129,7 +129,7 @@ const RecentScans = () => {
   const { data: stats } = useQuickStats();
 
   return (
-    <AdminLayout currentPage="recent-scans">
+    <AdminLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Laatste Scans</h1>

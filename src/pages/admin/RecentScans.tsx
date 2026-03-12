@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ExternalLink } from "lucide-react";
+import { Loader2, ExternalLink, Camera, Brain, Disc, Music, Upload, AlertCircle, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { useState } from "react";
@@ -10,69 +10,142 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-interface RecentScan {
+interface ScanAction {
   id: string;
   created_at: string;
   user_id: string;
   artist: string | null;
   title: string | null;
-  source: "ai" | "cd" | "vinyl";
+  source: "ai" | "cd" | "vinyl" | "upload" | "ai_call";
   status: string | null;
   condition_grade: string | null;
   discogs_id: number | null;
   discogs_url: string | null;
   calculated_advice_price: number | null;
+  // Extra fields for actions
+  image_count?: number | null;
+  media_type?: string | null;
+  function_name?: string | null;
+  error_message?: string | null;
 }
 
-function useRecentScans(limit: number, sourceFilter: string, searchTerm: string) {
+function useRecentScanActions(limit: number, sourceFilter: string, searchTerm: string) {
   return useQuery({
-    queryKey: ["admin-recent-scans", limit, sourceFilter, searchTerm],
+    queryKey: ["admin-recent-scan-actions", limit, sourceFilter, searchTerm],
     queryFn: async () => {
-      const results: RecentScan[] = [];
-
+      const results: ScanAction[] = [];
       const shouldFetch = (src: string) => sourceFilter === "all" || sourceFilter === src;
+      const perSource = sourceFilter === "all" ? Math.ceil(limit / 5) : limit;
 
       const buildSearch = (query: any, term: string) => {
         if (term) return query.or(`artist.ilike.%${term}%,title.ilike.%${term}%`);
         return query;
       };
 
-      const perSource = sourceFilter === "all" ? Math.ceil(limit / 3) : limit;
+      const promises: Promise<void>[] = [];
 
-      if (shouldFetch("ai")) {
-        let q = supabase
-          .from("ai_scan_results")
-          .select("id, created_at, user_id, artist, title, status, condition_grade, discogs_id, discogs_url")
-          .order("created_at", { ascending: false })
-          .limit(perSource);
-        if (searchTerm) q = buildSearch(q, searchTerm);
-        const { data } = await q;
-        (data || []).forEach(r => results.push({ ...r, source: "ai", calculated_advice_price: null }));
+      // AI scan results (saved)
+      if (shouldFetch("ai") || shouldFetch("all")) {
+        promises.push((async () => {
+          let q = supabase
+            .from("ai_scan_results")
+            .select("id, created_at, user_id, artist, title, status, condition_grade, discogs_id, discogs_url, media_type, error_message")
+            .order("created_at", { ascending: false })
+            .limit(perSource);
+          if (searchTerm) q = buildSearch(q, searchTerm);
+          const { data } = await q;
+          (data || []).forEach(r => results.push({
+            ...r, source: "ai", calculated_advice_price: null,
+            media_type: r.media_type, error_message: r.error_message,
+          }));
+        })());
       }
 
-      if (shouldFetch("cd")) {
-        let q = supabase
-          .from("cd_scan")
-          .select("id, created_at, user_id, artist, title, condition_grade, discogs_id, discogs_url, calculated_advice_price")
-          .order("created_at", { ascending: false })
-          .limit(perSource);
-        if (searchTerm) q = buildSearch(q, searchTerm);
-        const { data } = await q;
-        (data || []).forEach(r => results.push({ ...r, source: "cd", status: null }));
+      // CD scans (saved)
+      if (shouldFetch("cd") || shouldFetch("all")) {
+        promises.push((async () => {
+          let q = supabase
+            .from("cd_scan")
+            .select("id, created_at, user_id, artist, title, condition_grade, discogs_id, discogs_url, calculated_advice_price")
+            .order("created_at", { ascending: false })
+            .limit(perSource);
+          if (searchTerm) q = buildSearch(q, searchTerm);
+          const { data } = await q;
+          (data || []).forEach(r => results.push({ ...r, source: "cd", status: "saved" }));
+        })());
       }
 
-      if (shouldFetch("vinyl")) {
-        let q = supabase
-          .from("vinyl2_scan")
-          .select("id, created_at, user_id, artist, title, condition_grade, discogs_id, discogs_url, calculated_advice_price")
-          .order("created_at", { ascending: false })
-          .limit(perSource);
-        if (searchTerm) q = buildSearch(q, searchTerm);
-        const { data } = await q;
-        (data || []).forEach(r => results.push({ ...r, source: "vinyl", status: null }));
+      // Vinyl scans (saved)
+      if (shouldFetch("vinyl") || shouldFetch("all")) {
+        promises.push((async () => {
+          let q = supabase
+            .from("vinyl2_scan")
+            .select("id, created_at, user_id, artist, title, condition_grade, discogs_id, discogs_url, calculated_advice_price")
+            .order("created_at", { ascending: false })
+            .limit(perSource);
+          if (searchTerm) q = buildSearch(q, searchTerm);
+          const { data } = await q;
+          (data || []).forEach(r => results.push({ ...r, source: "vinyl", status: "saved" }));
+        })());
       }
 
-      // Sort combined results by date descending
+      // Batch uploads (scan attempts/uploads)
+      if (shouldFetch("upload") || shouldFetch("all")) {
+        promises.push((async () => {
+          let q = supabase
+            .from("batch_uploads")
+            .select("id, created_at, user_id, status, media_type, image_count, condition_grade, error_message")
+            .order("created_at", { ascending: false })
+            .limit(perSource);
+          const { data } = await q;
+          (data || []).forEach(r => results.push({
+            id: r.id,
+            created_at: r.created_at,
+            user_id: r.user_id,
+            artist: null,
+            title: null,
+            source: "upload",
+            status: r.status,
+            condition_grade: r.condition_grade,
+            discogs_id: null,
+            discogs_url: null,
+            calculated_advice_price: null,
+            image_count: r.image_count,
+            media_type: r.media_type,
+            error_message: r.error_message,
+          }));
+        })());
+      }
+
+      // AI usage log (API calls for scanning)
+      if (shouldFetch("ai_call") || shouldFetch("all")) {
+        promises.push((async () => {
+          let q = supabase
+            .from("ai_usage_log")
+            .select("id, created_at, function_name, status, model, duration_ms, error_message, has_images, image_count, total_tokens, estimated_cost_usd")
+            .order("created_at", { ascending: false })
+            .limit(perSource);
+          const { data } = await q;
+          (data || []).forEach(r => results.push({
+            id: r.id,
+            created_at: r.created_at,
+            user_id: "",
+            artist: null,
+            title: r.function_name,
+            source: "ai_call",
+            status: r.status,
+            condition_grade: null,
+            discogs_id: null,
+            discogs_url: null,
+            calculated_advice_price: null,
+            function_name: r.function_name,
+            error_message: r.error_message,
+            image_count: r.image_count,
+          }));
+        })());
+      }
+
+      await Promise.all(promises);
       results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       return results.slice(0, limit);
     },
@@ -88,27 +161,32 @@ function useQuickStats() {
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-      const countQuery = async (table: "ai_scan_results" | "cd_scan" | "vinyl2_scan", gte?: string) => {
+      const countQuery = async (table: "ai_scan_results" | "cd_scan" | "vinyl2_scan" | "batch_uploads" | "ai_usage_log", gte?: string) => {
         let q = supabase.from(table).select("id", { count: "exact", head: true });
         if (gte) q = q.gte("created_at", gte);
         const { count } = await q;
         return count || 0;
       };
 
-      const [aiToday, cdToday, vinylToday, aiWeek, cdWeek, vinylWeek, aiTotal, cdTotal, vinylTotal] =
+      const [aiToday, cdToday, vinylToday, uploadsToday, aiCallsToday,
+             aiWeek, cdWeek, vinylWeek, uploadsWeek, aiCallsWeek,
+             aiTotal, cdTotal, vinylTotal, uploadsTotal, aiCallsTotal] =
         await Promise.all([
           countQuery("ai_scan_results", today), countQuery("cd_scan", today), countQuery("vinyl2_scan", today),
+          countQuery("batch_uploads", today), countQuery("ai_usage_log", today),
           countQuery("ai_scan_results", weekAgo), countQuery("cd_scan", weekAgo), countQuery("vinyl2_scan", weekAgo),
+          countQuery("batch_uploads", weekAgo), countQuery("ai_usage_log", weekAgo),
           countQuery("ai_scan_results"), countQuery("cd_scan"), countQuery("vinyl2_scan"),
+          countQuery("batch_uploads"), countQuery("ai_usage_log"),
         ]);
 
       return {
         today: aiToday + cdToday + vinylToday,
         thisWeek: aiWeek + cdWeek + vinylWeek,
         total: aiTotal + cdTotal + vinylTotal,
-        ai: aiTotal,
-        cd: cdTotal,
-        vinyl: vinylTotal,
+        ai: aiTotal, cd: cdTotal, vinyl: vinylTotal,
+        uploads: { today: uploadsToday, week: uploadsWeek, total: uploadsTotal },
+        aiCalls: { today: aiCallsToday, week: aiCallsWeek, total: aiCallsTotal },
       };
     },
   });
@@ -117,8 +195,10 @@ function useQuickStats() {
 const sourceLabel = (s: string) => {
   switch (s) {
     case "ai": return "AI Scan";
-    case "cd": return "CD";
-    case "vinyl": return "Vinyl";
+    case "cd": return "CD Scan";
+    case "vinyl": return "Vinyl Scan";
+    case "upload": return "Upload";
+    case "ai_call": return "AI Call";
     default: return s;
   }
 };
@@ -128,7 +208,38 @@ const sourceBadgeClass = (s: string) => {
     case "ai": return "bg-emerald-500/10 text-emerald-700 border-emerald-500/20";
     case "cd": return "bg-blue-500/10 text-blue-700 border-blue-500/20";
     case "vinyl": return "bg-purple-500/10 text-purple-700 border-purple-500/20";
+    case "upload": return "bg-amber-500/10 text-amber-700 border-amber-500/20";
+    case "ai_call": return "bg-rose-500/10 text-rose-700 border-rose-500/20";
     default: return "";
+  }
+};
+
+const SourceIcon = ({ source }: { source: string }) => {
+  switch (source) {
+    case "ai": return <Brain className="h-3.5 w-3.5" />;
+    case "cd": return <Disc className="h-3.5 w-3.5" />;
+    case "vinyl": return <Music className="h-3.5 w-3.5" />;
+    case "upload": return <Upload className="h-3.5 w-3.5" />;
+    case "ai_call": return <Camera className="h-3.5 w-3.5" />;
+    default: return null;
+  }
+};
+
+const StatusIcon = ({ status }: { status: string | null }) => {
+  if (!status) return <span className="text-muted-foreground">—</span>;
+  switch (status) {
+    case "completed":
+    case "saved":
+    case "success":
+      return <span className="flex items-center gap-1 text-emerald-600"><CheckCircle2 className="h-3.5 w-3.5" />{status}</span>;
+    case "processing":
+    case "pending":
+      return <span className="flex items-center gap-1 text-amber-600"><Clock className="h-3.5 w-3.5" />{status}</span>;
+    case "failed":
+    case "error":
+      return <span className="flex items-center gap-1 text-destructive"><XCircle className="h-3.5 w-3.5" />{status}</span>;
+    default:
+      return <span className="flex items-center gap-1 text-muted-foreground"><AlertCircle className="h-3.5 w-3.5" />{status}</span>;
   }
 };
 
@@ -137,52 +248,66 @@ const RecentScans = () => {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: scans, isLoading } = useRecentScans(limit, sourceFilter, searchTerm);
+  const { data: scans, isLoading } = useRecentScanActions(limit, sourceFilter, searchTerm);
   const { data: stats } = useQuickStats();
 
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Laatste Scans</h1>
-        <p className="text-muted-foreground text-sm">Overzicht van alle recente scans</p>
+        <h1 className="text-2xl font-bold">Scan Activiteit</h1>
+        <p className="text-muted-foreground text-sm">Alle scan-acties inclusief uploads, AI calls en opgeslagen resultaten</p>
       </div>
 
       {/* Quick stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
         <Card>
-          <CardContent className="pt-4 pb-3 px-4">
-            <p className="text-xs text-muted-foreground">Vandaag</p>
-            <p className="text-2xl font-bold">{stats?.today ?? "—"}</p>
+          <CardContent className="pt-3 pb-2 px-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Vandaag</p>
+            <p className="text-xl font-bold">{stats?.today ?? "—"}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-4 pb-3 px-4">
-            <p className="text-xs text-muted-foreground">Deze week</p>
-            <p className="text-2xl font-bold">{stats?.thisWeek ?? "—"}</p>
+          <CardContent className="pt-3 pb-2 px-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Week</p>
+            <p className="text-xl font-bold">{stats?.thisWeek ?? "—"}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-4 pb-3 px-4">
-            <p className="text-xs text-muted-foreground">Totaal</p>
-            <p className="text-2xl font-bold">{stats?.total ?? "—"}</p>
+          <CardContent className="pt-3 pb-2 px-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Totaal</p>
+            <p className="text-xl font-bold">{stats?.total ?? "—"}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-4 pb-3 px-4">
-            <p className="text-xs text-muted-foreground">AI Scans</p>
-            <p className="text-2xl font-bold text-emerald-600">{stats?.ai ?? "—"}</p>
+          <CardContent className="pt-3 pb-2 px-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">AI Scans</p>
+            <p className="text-xl font-bold text-emerald-600">{stats?.ai ?? "—"}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-4 pb-3 px-4">
-            <p className="text-xs text-muted-foreground">CD Scans</p>
-            <p className="text-2xl font-bold text-blue-600">{stats?.cd ?? "—"}</p>
+          <CardContent className="pt-3 pb-2 px-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">CD</p>
+            <p className="text-xl font-bold text-blue-600">{stats?.cd ?? "—"}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-4 pb-3 px-4">
-            <p className="text-xs text-muted-foreground">Vinyl Scans</p>
-            <p className="text-2xl font-bold text-purple-600">{stats?.vinyl ?? "—"}</p>
+          <CardContent className="pt-3 pb-2 px-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Vinyl</p>
+            <p className="text-xl font-bold text-purple-600">{stats?.vinyl ?? "—"}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-3 pb-2 px-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Uploads</p>
+            <p className="text-xl font-bold text-amber-600">{stats?.uploads?.total ?? "—"}</p>
+            <p className="text-[10px] text-muted-foreground">{stats?.uploads?.today ?? 0} vandaag</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-3 pb-2 px-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">AI Calls</p>
+            <p className="text-xl font-bold text-rose-600">{stats?.aiCalls?.total ?? "—"}</p>
+            <p className="text-[10px] text-muted-foreground">{stats?.aiCalls?.today ?? 0} vandaag</p>
           </CardContent>
         </Card>
       </div>
@@ -200,10 +325,12 @@ const RecentScans = () => {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Alle bronnen</SelectItem>
+            <SelectItem value="all">Alle acties</SelectItem>
             <SelectItem value="ai">AI Scans</SelectItem>
             <SelectItem value="cd">CD Scans</SelectItem>
             <SelectItem value="vinyl">Vinyl Scans</SelectItem>
+            <SelectItem value="upload">Uploads</SelectItem>
+            <SelectItem value="ai_call">AI Calls</SelectItem>
           </SelectContent>
         </Select>
         <Select value={String(limit)} onValueChange={v => setLimit(Number(v))}>
@@ -231,10 +358,11 @@ const RecentScans = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[140px]">Datum</TableHead>
-                    <TableHead>Artiest</TableHead>
-                    <TableHead>Titel</TableHead>
-                    <TableHead>Bron</TableHead>
+                    <TableHead className="w-[130px]">Datum</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Artiest / Functie</TableHead>
+                    <TableHead>Titel / Details</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Conditie</TableHead>
                     <TableHead>Prijs</TableHead>
                     <TableHead>Gebruiker</TableHead>
@@ -247,16 +375,30 @@ const RecentScans = () => {
                       <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                         {format(new Date(scan.created_at), "dd MMM HH:mm", { locale: nl })}
                       </TableCell>
-                      <TableCell className="font-medium max-w-[150px] truncate">
-                        {scan.artist || "—"}
-                      </TableCell>
-                      <TableCell className="max-w-[180px] truncate">
-                        {scan.title || "—"}
-                      </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={`text-xs ${sourceBadgeClass(scan.source)}`}>
+                        <Badge variant="outline" className={`text-xs gap-1 ${sourceBadgeClass(scan.source)}`}>
+                          <SourceIcon source={scan.source} />
                           {sourceLabel(scan.source)}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium max-w-[150px] truncate">
+                        {scan.source === "upload"
+                          ? `${scan.media_type || "?"} (${scan.image_count || 0} foto's)`
+                          : scan.source === "ai_call"
+                          ? scan.function_name || "—"
+                          : scan.artist || "—"}
+                      </TableCell>
+                      <TableCell className="max-w-[180px] truncate">
+                        {scan.source === "upload"
+                          ? scan.error_message || "Batch upload"
+                          : scan.source === "ai_call"
+                          ? scan.error_message
+                            ? <span className="text-destructive text-xs">{scan.error_message.slice(0, 60)}</span>
+                            : `${scan.image_count || 0} images`
+                          : scan.title || "—"}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        <StatusIcon status={scan.status} />
                       </TableCell>
                       <TableCell className="text-xs">
                         {scan.condition_grade || "—"}
@@ -266,8 +408,8 @@ const RecentScans = () => {
                           ? `€${scan.calculated_advice_price.toFixed(2)}`
                           : "—"}
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground max-w-[120px] truncate">
-                        {scan.user_id.slice(0, 8)}...
+                      <TableCell className="text-xs text-muted-foreground max-w-[100px] truncate">
+                        {scan.user_id ? `${scan.user_id.slice(0, 8)}...` : "—"}
                       </TableCell>
                       <TableCell>
                         {scan.discogs_url ? (
@@ -283,8 +425,8 @@ const RecentScans = () => {
                   ))}
                   {scans?.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        Geen scans gevonden
+                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                        Geen scan-acties gevonden
                       </TableCell>
                     </TableRow>
                   )}

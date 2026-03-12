@@ -372,8 +372,8 @@ const RecentScans = () => {
                     <TableHead>Artiest / Functie</TableHead>
                     <TableHead>Titel / Details</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Duur</TableHead>
                     <TableHead>Conditie</TableHead>
-                    <TableHead>Prijs</TableHead>
                     <TableHead>Gebruiker</TableHead>
                     <TableHead>Discogs</TableHead>
                   </TableRow>

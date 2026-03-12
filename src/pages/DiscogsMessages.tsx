@@ -207,7 +207,7 @@ const DiscogsMessages = () => {
       </div>
 
       {/* Split layout: always 2 columns on desktop, stacked on mobile */}
-      <div className="flex gap-4 h-[calc(100vh-220px)]">
+      <div className="flex gap-4 h-[calc(100vh-220px)] min-w-0 w-full">
 
         {/* LEFT: Orders list — hidden on mobile when order selected */}
         <div className={`flex flex-col w-full lg:w-80 xl:w-96 shrink-0 ${selectedOrder ? "hidden lg:flex" : "flex"}`}>

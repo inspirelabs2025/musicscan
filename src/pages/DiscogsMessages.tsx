@@ -42,6 +42,7 @@ const DiscogsMessages = () => {
   const { toast } = useToast();
   const { isConnected, isLoading: connLoading, connection } = useDiscogsConnection();
   const isMobile = useIsMobile();
+  const [orders, setOrders] = useState<DiscogsOrder[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<DiscogsOrder | null>(null);
   const [messages, setMessages] = useState<DiscogsMessage[]>([]);

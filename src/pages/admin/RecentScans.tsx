@@ -391,31 +391,25 @@ const RecentScans = () => {
                         </Badge>
                       </TableCell>
                       <TableCell className="font-medium max-w-[150px] truncate">
-                        {scan.source === "upload"
+                        {scan.function_name && !scan.artist
+                          ? scan.function_name
+                          : scan.source === "upload"
                           ? `${scan.media_type || "?"} (${scan.image_count || 0} foto's)`
-                          : scan.source === "ai_call"
-                          ? scan.function_name || "—"
                           : scan.artist || "—"}
                       </TableCell>
                       <TableCell className="max-w-[180px] truncate">
-                        {scan.source === "upload"
-                          ? scan.error_message || "Batch upload"
-                          : scan.source === "ai_call"
-                          ? scan.error_message
-                            ? <span className="text-destructive text-xs">{scan.error_message.slice(0, 60)}</span>
-                            : `${scan.image_count || 0} images`
-                          : scan.title || "—"}
+                        {scan.error_message
+                          ? <span className="text-destructive text-xs">{scan.error_message.slice(0, 60)}</span>
+                          : scan.title || (scan.image_count ? `${scan.image_count} foto's` : "—")}
                       </TableCell>
                       <TableCell className="text-xs">
                         <StatusIcon status={scan.status} />
                       </TableCell>
-                      <TableCell className="text-xs">
-                        {scan.condition_grade || "—"}
+                      <TableCell className="text-xs text-muted-foreground">
+                        {scan.duration_ms ? `${(scan.duration_ms / 1000).toFixed(1)}s` : "—"}
                       </TableCell>
                       <TableCell className="text-xs">
-                        {scan.calculated_advice_price
-                          ? `€${scan.calculated_advice_price.toFixed(2)}`
-                          : "—"}
+                        {scan.condition_grade || "—"}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground max-w-[100px] truncate">
                         {scan.user_id ? `${scan.user_id.slice(0, 8)}...` : "—"}

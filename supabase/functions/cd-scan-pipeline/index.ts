@@ -6,6 +6,7 @@
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { logScanActivity, getUserIdFromRequest, getIpFromRequest } from "../_shared/scan-activity-logger.ts";
 
 const PIPELINE_VERSION = "cd-scan-pipeline-v1.0";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;

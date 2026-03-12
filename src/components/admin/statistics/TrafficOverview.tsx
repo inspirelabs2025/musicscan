@@ -72,15 +72,15 @@ export function TrafficOverview({ days }: TrafficOverviewProps) {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
       {stats.map((stat) => (
-        <Card key={stat.label}>
-          <CardContent className="p-4">
+        <Card key={stat.label} className="min-w-0">
+          <CardContent className="p-3">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-              <span className="text-xs">{stat.label}</span>
+              <stat.icon className={`h-4 w-4 shrink-0 ${stat.color}`} />
+              <span className="text-xs truncate">{stat.label}</span>
             </div>
-            <p className="text-2xl font-bold">{stat.value.toLocaleString()}</p>
+            <p className="text-xl font-bold">{stat.value.toLocaleString()}</p>
             {stat.subtitle && (
               <p className="text-xs text-muted-foreground">{stat.subtitle}</p>
             )}

@@ -108,6 +108,10 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  const userId = getUserIdFromRequest(req);
+  const ipAddress = getIpFromRequest(req);
+
   try {
     // Rate tracking (non-blocking, alert-only)
     await checkScanRate(req, undefined, "chat");
@@ -118,6 +122,14 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
+
+    // Log scan-chat activity
+    const hasPhotos = photoUrls?.length > 0;
+    logScanActivity({
+      user_id: userId, action_type: hasPhotos ? 'scan_chat_photo' : 'scan_chat',
+      function_name: 'scan-chat', status: 'started', media_type: mediaType || null,
+      image_count: photoUrls?.length || 0, ip_address: ipAddress,
+    });
 
     // Load system prompt from database (with knowledge sources)
     const systemPrompt = await loadAgentPrompt(language || 'nl');
@@ -185,6 +197,7 @@ serve(async (req) => {
     if (!response.ok) {
       if (response.status === 429) {
         await logCreditAlert('scan-chat', 'rate_limit');
+        await logScanActivity({ user_id: userId, action_type: 'scan_chat', function_name: 'scan-chat', status: 'failed', error_message: 'Rate limit', ip_address: ipAddress, duration_ms: Date.now() - startTime });
         return new Response(
           JSON.stringify({ error: "Rate limit bereikt, probeer het later opnieuw." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -192,6 +205,7 @@ serve(async (req) => {
       }
       if (response.status === 402) {
         await logCreditAlert('scan-chat', 'credit_depleted');
+        await logScanActivity({ user_id: userId, action_type: 'scan_chat', function_name: 'scan-chat', status: 'failed', error_message: 'Credits depleted', ip_address: ipAddress, duration_ms: Date.now() - startTime });
         return new Response(
           JSON.stringify({ error: "Tegoed op, voeg credits toe aan je workspace." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -199,17 +213,26 @@ serve(async (req) => {
       }
       const text = await response.text();
       console.error("[scan-chat] AI gateway error:", response.status, text);
+      await logScanActivity({ user_id: userId, action_type: 'scan_chat', function_name: 'scan-chat', status: 'failed', error_message: `AI gateway ${response.status}`, ip_address: ipAddress, duration_ms: Date.now() - startTime });
       return new Response(
         JSON.stringify({ error: "AI gateway error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // Log completion (non-blocking)
+    logScanActivity({
+      user_id: userId, action_type: hasPhotos ? 'scan_chat_photo' : 'scan_chat',
+      function_name: 'scan-chat', status: 'completed', media_type: mediaType || null,
+      image_count: photoUrls?.length || 0, ip_address: ipAddress, duration_ms: Date.now() - startTime,
+    });
+
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
     console.error("[scan-chat] error:", e);
+    await logScanActivity({ user_id: userId, action_type: 'scan_chat', function_name: 'scan-chat', status: 'failed', error_message: e instanceof Error ? e.message : 'Unknown error', ip_address: ipAddress, duration_ms: Date.now() - startTime });
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

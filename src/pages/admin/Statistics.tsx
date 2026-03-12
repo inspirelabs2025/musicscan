@@ -163,7 +163,7 @@ export default function Statistics() {
           <TrafficOverview days={days} />
 
           <Tabs defaultValue="clean" className="space-y-4">
-            <TabsList className="grid grid-cols-8 w-full max-w-5xl">
+            <TabsList className="flex flex-wrap gap-1 w-full">
               <TabsTrigger value="clean">🛡️ Clean</TabsTrigger>
               <TabsTrigger value="sources">Bronnen</TabsTrigger>
               <TabsTrigger value="content">Content</TabsTrigger>

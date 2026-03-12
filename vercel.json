@@ -6,7 +6,8 @@
   "redirects": [
     { "source": "/art-prints", "destination": "/shop", "permanent": true },
     { "source": "/blog/:slug", "destination": "/plaat-verhaal/:slug", "permanent": true },
-    { "source": "/product/:slug/", "destination": "/product/:slug", "permanent": true },
+    { "source": "/product/:slug", "destination": "/art-shop", "permanent": true },
+    { "source": "/product/:slug/", "destination": "/art-shop", "permanent": true },
     { "source": "/singles/:slug/", "destination": "/singles/:slug", "permanent": true },
     { "source": "/artists/:slug/", "destination": "/artists/:slug", "permanent": true },
     { "source": "/muziek-verhaal/:slug/", "destination": "/muziek-verhaal/:slug", "permanent": true },
@@ -42,17 +43,6 @@
         }
       ],
       "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/plaat-verhaal/:slug"
-    },
-    {
-      "source": "/product/:slug",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": "(?i).*(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot|bot|crawler|spider).*"
-        }
-      ],
-      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/product/:slug"
     },
     {
       "source": "/muziek-verhaal/:slug",

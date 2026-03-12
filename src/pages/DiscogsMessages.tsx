@@ -275,7 +275,7 @@ const DiscogsMessages = () => {
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 pt-2">
                   <Button
-                    variant="outline" size="icon" className="h-8 w-8"
+                    size="icon" className="h-8 w-8"
                     onClick={() => fetchOrders(page - 1)}
                     disabled={page <= 1 || loadingOrders}
                   >
@@ -283,7 +283,7 @@ const DiscogsMessages = () => {
                   </Button>
                   <span className="text-sm text-muted-foreground">{page} / {totalPages}</span>
                   <Button
-                    variant="outline" size="icon" className="h-8 w-8"
+                    size="icon" className="h-8 w-8"
                     onClick={() => fetchOrders(page + 1)}
                     disabled={page >= totalPages || loadingOrders}
                   >

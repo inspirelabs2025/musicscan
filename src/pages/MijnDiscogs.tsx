@@ -152,13 +152,13 @@ const MijnDiscogs = () => {
 
             {data?.pagination && data.pagination.pages > 1 && (
               <div className="flex items-center justify-center gap-4 mt-8">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+                <Button size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
                   <ChevronLeft className="w-4 h-4 mr-1" /> {t.previous}
                 </Button>
-                <span className="text-sm text-muted-foreground">
-                  {t.pageOf} {data.pagination.page} {t.of} {data.pagination.pages} ({data.pagination.items} {t.items})
+                <span className="text-sm text-muted-foreground text-center">
+                  {data.pagination.page}/{data.pagination.pages} ({data.pagination.items})
                 </span>
-                <Button variant="outline" size="sm" disabled={page >= data.pagination.pages} onClick={() => setPage(p => p + 1)}>
+                <Button size="sm" disabled={page >= data.pagination.pages} onClick={() => setPage(p => p + 1)}>
                   {t.next} <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>

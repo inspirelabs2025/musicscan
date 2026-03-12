@@ -185,7 +185,7 @@ const DiscogsMessages = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl overflow-x-hidden">
+    <div className="px-4 py-6 w-full max-w-7xl mx-auto" style={{ maxWidth: '100vw', overflowX: 'hidden', boxSizing: 'border-box' }}>
       {/* Header */}
       <div className="flex items-start gap-3 mb-6">
         <Button variant="ghost" size="icon" className="shrink-0 mt-1" onClick={() => navigate(-1)}>
@@ -207,10 +207,10 @@ const DiscogsMessages = () => {
       </div>
 
       {/* Split layout: always 2 columns on desktop, stacked on mobile */}
-      <div className="flex gap-4 h-[calc(100vh-220px)]">
+      <div className="flex gap-4 h-[calc(100vh-220px)] min-w-0 w-full">
 
         {/* LEFT: Orders list — hidden on mobile when order selected */}
-        <div className={`flex flex-col w-full lg:w-80 xl:w-96 shrink-0 ${selectedOrder ? "hidden lg:flex" : "flex"}`}>
+        <div className={`flex flex-col w-full min-w-0 lg:w-80 xl:w-96 lg:shrink-0 ${selectedOrder ? "hidden lg:flex" : "flex"}`}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold">Orders <span className="text-xs text-muted-foreground">({orders.length})</span></h2>
           </div>
@@ -229,40 +229,37 @@ const DiscogsMessages = () => {
           ) : (
             <div className="flex flex-col flex-1 min-h-0">
               <ScrollArea className="flex-1">
-                <div className="space-y-2 pr-2 min-w-0 overflow-x-hidden">
+                <div className="space-y-2 pr-2">
                   {orders.map((order) => (
                     <Card
                       key={order.id}
-                      className={`w-full min-w-0 overflow-hidden cursor-pointer transition-all hover:shadow-md ${
+                      className={`cursor-pointer transition-all hover:shadow-md overflow-hidden ${
                         selectedOrder?.id === order.id
                           ? "ring-2 ring-primary border-primary"
                           : "hover:border-primary/30"
                       }`}
                       onClick={() => handleSelectOrder(order)}
                     >
-                      <CardContent className="p-3 space-y-1.5 min-w-0">
-                        <div className="flex items-start justify-between gap-2 min-w-0">
-                          <span className="font-mono text-sm font-medium truncate min-w-0 flex-1">#{order.id}</span>
-                          <Badge
-                            variant="outline"
-                            className={`text-[10px] shrink-0 max-w-[58%] truncate ${statusColor(order.status)}`}
-                          >
+                      <CardContent className="p-3 space-y-1.5 min-w-0 overflow-hidden">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="font-mono text-sm font-medium truncate">#{order.id}</span>
+                          <Badge variant="outline" className={`text-[10px] shrink-0 whitespace-nowrap ${statusColor(order.status)}`}>
                             {order.status}
                           </Badge>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate min-w-0">
+                        <p className="text-xs text-muted-foreground truncate">
                           Koper: {order.buyer?.username || "—"}
                         </p>
-                        <div className="flex items-center justify-between text-xs gap-2 min-w-0">
-                          <span className="text-muted-foreground shrink-0">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">
                             {order.created ? new Date(order.created).toLocaleDateString("nl-NL") : "—"}
                           </span>
-                          <span className="font-semibold shrink-0">
+                          <span className="font-semibold">
                             {order.total?.currency} {order.total?.value?.toFixed(2)}
                           </span>
                         </div>
                         {order.items?.[0] && (
-                          <p className="text-[11px] text-muted-foreground truncate min-w-0">
+                          <p className="text-[11px] text-muted-foreground truncate">
                             {order.items[0].release?.description}
                           </p>
                         )}
@@ -275,7 +272,7 @@ const DiscogsMessages = () => {
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 pt-2">
                   <Button
-                    size="icon" className="h-8 w-8"
+                    variant="outline" size="icon" className="h-8 w-8"
                     onClick={() => fetchOrders(page - 1)}
                     disabled={page <= 1 || loadingOrders}
                   >
@@ -283,7 +280,7 @@ const DiscogsMessages = () => {
                   </Button>
                   <span className="text-sm text-muted-foreground">{page} / {totalPages}</span>
                   <Button
-                    size="icon" className="h-8 w-8"
+                    variant="outline" size="icon" className="h-8 w-8"
                     onClick={() => fetchOrders(page + 1)}
                     disabled={page >= totalPages || loadingOrders}
                   >
@@ -309,17 +306,17 @@ const DiscogsMessages = () => {
             <Card className="flex-1 flex flex-col min-h-0">
               {/* Header */}
               <CardHeader className="pb-3 border-b shrink-0">
-                <div className="flex items-center justify-between gap-2 min-w-0">
-                  <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
                     <Button
-                      variant="ghost" size="icon" className="h-8 w-8 lg:hidden shrink-0"
+                      variant="ghost" size="icon" className="h-8 w-8 lg:hidden"
                       onClick={() => setSelectedOrder(null)}
                     >
                       <ArrowLeft className="w-4 h-4" />
                     </Button>
-                    <CardTitle className="text-base truncate">Order #{selectedOrder.id}</CardTitle>
+                    <CardTitle className="text-base">Order #{selectedOrder.id}</CardTitle>
                   </div>
-                  <Badge variant="outline" className={`max-w-[58%] truncate shrink-0 ${statusColor(selectedOrder.status)}`}>
+                  <Badge variant="outline" className={statusColor(selectedOrder.status)}>
                     {selectedOrder.status}
                   </Badge>
                 </div>
@@ -376,9 +373,9 @@ const DiscogsMessages = () => {
                                 </span>
                               )}
                             </div>
-                            {content && <p className="text-sm whitespace-pre-wrap break-words">{content}</p>}
+                            {content && <p className="text-sm whitespace-pre-wrap">{content}</p>}
                             {msg.subject && (
-                              <p className="text-[11px] opacity-60 mt-1 italic break-words">{msg.subject}</p>
+                              <p className="text-[11px] opacity-60 mt-1 italic">{msg.subject}</p>
                             )}
                           </div>
                         </div>

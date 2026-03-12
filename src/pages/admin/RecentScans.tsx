@@ -314,9 +314,9 @@ const RecentScans = () => {
         </Card>
         <Card>
           <CardContent className="pt-3 pb-2 px-3">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">AI Calls</p>
-            <p className="text-xl font-bold text-rose-600">{stats?.aiCalls?.total ?? "—"}</p>
-            <p className="text-[10px] text-muted-foreground">{stats?.aiCalls?.today ?? 0} vandaag</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Acties</p>
+            <p className="text-xl font-bold text-rose-600">{stats?.activity?.total ?? "—"}</p>
+            <p className="text-[10px] text-muted-foreground">{stats?.activity?.today ?? 0} vandaag</p>
           </CardContent>
         </Card>
       </div>

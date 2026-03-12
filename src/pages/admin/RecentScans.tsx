@@ -165,32 +165,32 @@ function useQuickStats() {
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-      const countQuery = async (table: "ai_scan_results" | "cd_scan" | "vinyl2_scan" | "batch_uploads" | "ai_usage_log", gte?: string) => {
+      const countQuery = async (table: "ai_scan_results" | "cd_scan" | "vinyl2_scan" | "batch_uploads" | "scan_activity_log", gte?: string) => {
         let q = supabase.from(table).select("id", { count: "exact", head: true });
         if (gte) q = q.gte("created_at", gte);
         const { count } = await q;
         return count || 0;
       };
 
-      const [aiToday, cdToday, vinylToday, uploadsToday, aiCallsToday,
-             aiWeek, cdWeek, vinylWeek, uploadsWeek, aiCallsWeek,
-             aiTotal, cdTotal, vinylTotal, uploadsTotal, aiCallsTotal] =
+      const [aiToday, cdToday, vinylToday, uploadsToday, activityToday,
+             aiWeek, cdWeek, vinylWeek, uploadsWeek, activityWeek,
+             aiTotal, cdTotal, vinylTotal, uploadsTotal, activityTotal] =
         await Promise.all([
           countQuery("ai_scan_results", today), countQuery("cd_scan", today), countQuery("vinyl2_scan", today),
-          countQuery("batch_uploads", today), countQuery("ai_usage_log", today),
+          countQuery("batch_uploads", today), countQuery("scan_activity_log", today),
           countQuery("ai_scan_results", weekAgo), countQuery("cd_scan", weekAgo), countQuery("vinyl2_scan", weekAgo),
-          countQuery("batch_uploads", weekAgo), countQuery("ai_usage_log", weekAgo),
+          countQuery("batch_uploads", weekAgo), countQuery("scan_activity_log", weekAgo),
           countQuery("ai_scan_results"), countQuery("cd_scan"), countQuery("vinyl2_scan"),
-          countQuery("batch_uploads"), countQuery("ai_usage_log"),
+          countQuery("batch_uploads"), countQuery("scan_activity_log"),
         ]);
 
       return {
-        today: aiToday + cdToday + vinylToday,
-        thisWeek: aiWeek + cdWeek + vinylWeek,
-        total: aiTotal + cdTotal + vinylTotal,
+        today: activityToday || (aiToday + cdToday + vinylToday),
+        thisWeek: activityWeek || (aiWeek + cdWeek + vinylWeek),
+        total: activityTotal || (aiTotal + cdTotal + vinylTotal),
         ai: aiTotal, cd: cdTotal, vinyl: vinylTotal,
         uploads: { today: uploadsToday, week: uploadsWeek, total: uploadsTotal },
-        aiCalls: { today: aiCallsToday, week: aiCallsWeek, total: aiCallsTotal },
+        activity: { today: activityToday, week: activityWeek, total: activityTotal },
       };
     },
   });

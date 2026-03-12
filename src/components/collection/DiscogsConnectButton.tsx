@@ -18,7 +18,7 @@ export const DiscogsConnectButton = () => {
 
   if (isLoading) {
     return (
-      <Button variant="outline" size="sm" disabled>
+      <Button size="sm" disabled>
         <Loader2 className="w-4 h-4 animate-spin mr-2" />
         {s.loading}
       </Button>

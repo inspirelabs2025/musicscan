@@ -199,32 +199,37 @@ function useQuickStats() {
 const sourceLabel = (s: string) => {
   switch (s) {
     case "ai": return "AI Scan";
-    case "cd": return "CD Scan";
-    case "vinyl": return "Vinyl Scan";
+    case "cd": case "cd_scan": return "CD Scan";
+    case "vinyl": case "vinyl_scan": return "Vinyl Scan";
     case "upload": return "Upload";
     case "ai_call": return "AI Call";
+    case "cd_pipeline": return "CD Pipeline";
+    case "scan_chat": return "Chat";
+    case "scan_chat_photo": return "Chat + Foto";
     default: return s;
   }
 };
 
 const sourceBadgeClass = (s: string) => {
   switch (s) {
-    case "ai": return "bg-emerald-500/10 text-emerald-700 border-emerald-500/20";
-    case "cd": return "bg-blue-500/10 text-blue-700 border-blue-500/20";
-    case "vinyl": return "bg-purple-500/10 text-purple-700 border-purple-500/20";
+    case "ai": case "cd_scan": return "bg-emerald-500/10 text-emerald-700 border-emerald-500/20";
+    case "cd": case "cd_pipeline": return "bg-blue-500/10 text-blue-700 border-blue-500/20";
+    case "vinyl": case "vinyl_scan": return "bg-purple-500/10 text-purple-700 border-purple-500/20";
     case "upload": return "bg-amber-500/10 text-amber-700 border-amber-500/20";
     case "ai_call": return "bg-rose-500/10 text-rose-700 border-rose-500/20";
+    case "scan_chat": case "scan_chat_photo": return "bg-cyan-500/10 text-cyan-700 border-cyan-500/20";
     default: return "";
   }
 };
 
 const SourceIcon = ({ source }: { source: string }) => {
   switch (source) {
-    case "ai": return <Brain className="h-3.5 w-3.5" />;
-    case "cd": return <Disc className="h-3.5 w-3.5" />;
-    case "vinyl": return <Music className="h-3.5 w-3.5" />;
+    case "ai": case "cd_scan": return <Brain className="h-3.5 w-3.5" />;
+    case "cd": case "cd_pipeline": return <Disc className="h-3.5 w-3.5" />;
+    case "vinyl": case "vinyl_scan": return <Music className="h-3.5 w-3.5" />;
     case "upload": return <Upload className="h-3.5 w-3.5" />;
     case "ai_call": return <Camera className="h-3.5 w-3.5" />;
+    case "scan_chat": case "scan_chat_photo": return <Brain className="h-3.5 w-3.5" />;
     default: return null;
   }
 };

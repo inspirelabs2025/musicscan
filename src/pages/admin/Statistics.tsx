@@ -93,15 +93,14 @@ export default function Statistics() {
     <AdminGuard>
       <AdminLayout>
         <div className="p-4 space-y-4 overflow-x-hidden">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-6">
-              <div>
-                <h1 className="text-3xl font-bold">📊 Statistieken Dashboard</h1>
-                <p className="text-muted-foreground mt-1">
-                  Gedetailleerde analytics met admin views uitgesloten
-                </p>
-              </div>
-              {/* Quick period buttons - next to title */}
+          <div className="space-y-3">
+            <div>
+              <h1 className="text-2xl font-bold">📊 Statistieken Dashboard</h1>
+              <p className="text-sm text-muted-foreground">
+                Gedetailleerde analytics met admin views uitgesloten
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
               <div className="hidden md:flex items-center gap-1 bg-muted rounded-lg p-1">
                 {(['today', 'week', 'month', 'quarter'] as TimePeriod[]).map((p) => (
                   <Button
@@ -116,7 +115,6 @@ export default function Statistics() {
                 ))}
               </div>
               
-              {/* Dropdown for more options */}
               <Select value={period} onValueChange={(v) => setPeriod(v as TimePeriod)}>
                 <SelectTrigger className="w-[140px] h-8">
                   <SelectValue>{getPeriodLabel()}</SelectValue>
@@ -135,7 +133,6 @@ export default function Statistics() {
                 </SelectContent>
               </Select>
 
-              {/* Custom date range picker */}
               <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button

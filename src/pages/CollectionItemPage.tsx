@@ -223,7 +223,7 @@ export default function CollectionItemPage() {
                 </Button>
               )}
               {isConnected && item.discogs_id && item.discogs_id > 0 && (
-                <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)}>
+                <Button size="sm" onClick={() => setShowExportDialog(true)}>
                   <Upload className="w-4 h-4 mr-1" />
                   Exporteer naar Discogs
                 </Button>

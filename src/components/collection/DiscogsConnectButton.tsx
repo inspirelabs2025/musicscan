@@ -44,7 +44,6 @@ export const DiscogsConnectButton = () => {
 
   return (
     <Button
-      variant="outline"
       size="sm"
       onClick={() => connect()}
       disabled={isConnecting}

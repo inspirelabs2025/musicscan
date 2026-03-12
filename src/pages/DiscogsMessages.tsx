@@ -241,9 +241,9 @@ const DiscogsMessages = () => {
                       onClick={() => handleSelectOrder(order)}
                     >
                       <CardContent className="p-3 space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono text-sm font-medium">#{order.id}</span>
-                          <Badge variant="outline" className={`text-[10px] ${statusColor(order.status)}`}>
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="font-mono text-sm font-medium truncate">#{order.id}</span>
+                          <Badge variant="outline" className={`text-[10px] shrink-0 whitespace-nowrap ${statusColor(order.status)}`}>
                             {order.status}
                           </Badge>
                         </div>

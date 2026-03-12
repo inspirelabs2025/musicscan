@@ -8,6 +8,7 @@ import { Loader2, ArrowLeft, Send, MessageSquare, Package, RefreshCw, ChevronLef
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useDiscogsConnection } from "@/hooks/useDiscogsConnection";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DiscogsOrder {
@@ -40,7 +41,7 @@ const DiscogsMessages = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isConnected, isLoading: connLoading, connection } = useDiscogsConnection();
-
+  const isMobile = useIsMobile();
   const [orders, setOrders] = useState<DiscogsOrder[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<DiscogsOrder | null>(null);
@@ -171,47 +172,56 @@ const DiscogsMessages = () => {
 
   if (!isConnected) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-2xl text-center space-y-4">
-        <MessageSquare className="w-16 h-16 mx-auto text-muted-foreground" />
-        <h1 className="text-2xl font-bold">Discogs Messages</h1>
-        <p className="text-muted-foreground">
-          Koppel eerst je Discogs account om je order berichten te bekijken.
-        </p>
-        <Button onClick={() => navigate("/mijn-discogs")}>
-          Ga naar Mijn Discogs
-        </Button>
+      <div className="w-full py-6" style={{ maxWidth: "100vw", overflowX: "clip" }}>
+        <div className="mx-auto w-full" style={{ maxWidth: "1280px", paddingInline: "16px", boxSizing: "border-box" }}>
+          <Card className="mx-auto max-w-xl rounded-2xl">
+            <CardContent className="px-5 py-8 text-center space-y-4">
+              <MessageSquare className="w-14 h-14 mx-auto text-muted-foreground" />
+              <h1 className="text-2xl font-bold">Discogs Messages</h1>
+              <p className="text-muted-foreground">
+                Koppel eerst je Discogs account om je order berichten te bekijken.
+              </p>
+              <Button onClick={() => navigate("/mijn-discogs")}>Ga naar Mijn Discogs</Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="py-6 w-full overflow-hidden" style={{ maxWidth: '100vw' }}>
-      <div className="px-4 max-w-7xl mx-auto w-full overflow-hidden">
+    <div className="w-full py-6" style={{ maxWidth: "100vw", overflowX: "clip" }}>
+      <div className="mx-auto w-full" style={{ maxWidth: "1280px", paddingInline: "16px", boxSizing: "border-box" }}>
         {/* Header */}
-        <div className="flex items-center gap-2 mb-4 overflow-hidden">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4 min-w-0 overflow-hidden">
           <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate(-1)}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="min-w-0 flex-1 overflow-hidden">
-            <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
+            <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2 min-w-0">
               <MessageSquare className="w-5 h-5 text-primary shrink-0" />
               <span className="truncate">Discogs Messages</span>
             </h1>
-            <p className="text-xs text-muted-foreground truncate">
-              {connection?.discogs_username || 'Orders'}
-            </p>
+            <p className="text-xs text-muted-foreground truncate">{connection?.discogs_username || "Orders"}</p>
           </div>
-          <Button size="sm" className="shrink-0" onClick={() => fetchOrders(page)} disabled={loadingOrders}>
+          <Button size="icon" className="h-9 w-9 shrink-0" onClick={() => fetchOrders(page)} disabled={loadingOrders}>
             <RefreshCw className={`w-4 h-4 ${loadingOrders ? "animate-spin" : ""}`} />
           </Button>
         </div>
 
-        {/* Split layout */}
-        <div className="flex gap-4 h-[calc(100vh-220px)] overflow-hidden">
-
-          {/* LEFT: Orders list */}
-          <div className={`flex flex-col overflow-hidden lg:w-80 xl:w-96 lg:shrink-0 ${selectedOrder ? "hidden lg:flex" : "flex w-full"}`}>
-            <div className="flex items-center justify-between mb-3">
+        {/* Content layout */}
+        <div className={isMobile ? "flex flex-col gap-3 min-h-[calc(100dvh-170px)] overflow-hidden" : "flex gap-4 h-[calc(100vh-220px)] overflow-hidden"}>
+          {/* Orders list */}
+          <div
+            className={`flex flex-col min-h-0 overflow-hidden ${
+              isMobile
+                ? selectedOrder
+                  ? "hidden"
+                  : "w-full"
+                : `${selectedOrder ? "hidden lg:flex" : "flex w-full"} lg:w-80 xl:w-96 lg:shrink-0`
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2.5">
               <h2 className="font-semibold text-sm">Orders ({orders.length})</h2>
             </div>
 
@@ -220,7 +230,7 @@ const DiscogsMessages = () => {
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
             ) : orders.length === 0 ? (
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden rounded-2xl">
                 <CardContent className="py-8 text-center text-muted-foreground">
                   <Package className="w-10 h-10 mx-auto mb-2 opacity-50" />
                   <p>Geen orders gevonden</p>
@@ -229,39 +239,39 @@ const DiscogsMessages = () => {
             ) : (
               <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
                 <ScrollArea className="flex-1">
-                  <div className="space-y-2 pr-2">
+                  <div className="space-y-2 pr-1">
                     {orders.map((order) => (
                       <Card
                         key={order.id}
-                        className={`cursor-pointer transition-all hover:shadow-md overflow-hidden ${
-                          selectedOrder?.id === order.id
-                            ? "ring-2 ring-primary border-primary"
-                            : "hover:border-primary/30"
+                        className={`cursor-pointer transition-all hover:shadow-md overflow-hidden rounded-2xl ${
+                          selectedOrder?.id === order.id ? "ring-2 ring-primary border-primary" : "hover:border-primary/30"
                         }`}
                         onClick={() => handleSelectOrder(order)}
                       >
-                        <CardContent className="p-3 overflow-hidden">
+                        <CardContent className="p-3 overflow-hidden min-w-0">
                           <div className="flex items-center justify-between gap-2 min-w-0">
                             <span className="font-mono text-xs font-medium truncate min-w-0 flex-1">#{order.id}</span>
-                            <Badge variant="outline" className={`text-[10px] shrink-0 max-w-[48%] truncate ${statusColor(order.status)}`}>
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] shrink-0 max-w-[50%] truncate ${statusColor(order.status)}`}
+                            >
                               {order.status}
                             </Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground truncate mt-1">
-                            Koper: {order.buyer?.username || "—"}
-                          </p>
-                          <div className="flex items-center justify-between text-xs mt-1">
-                            <span className="text-muted-foreground">
+
+                          <p className="text-xs text-muted-foreground truncate mt-1">Koper: {order.buyer?.username || "—"}</p>
+
+                          <div className="flex items-center justify-between text-xs mt-1 gap-2 min-w-0">
+                            <span className="text-muted-foreground truncate">
                               {order.created ? new Date(order.created).toLocaleDateString("nl-NL") : "—"}
                             </span>
-                            <span className="font-semibold">
+                            <span className="font-semibold shrink-0">
                               {order.total?.currency} {order.total?.value?.toFixed(2)}
                             </span>
                           </div>
+
                           {order.items?.[0] && (
-                            <p className="text-[11px] text-muted-foreground truncate mt-1">
-                              {order.items[0].release?.description}
-                            </p>
+                            <p className="text-[11px] text-muted-foreground truncate mt-1">{order.items[0].release?.description}</p>
                           )}
                         </CardContent>
                       </Card>
@@ -272,15 +282,19 @@ const DiscogsMessages = () => {
                 {totalPages > 1 && (
                   <div className="flex items-center justify-center gap-2 pt-2">
                     <Button
-                      size="icon" className="h-8 w-8"
+                      size="icon"
+                      className="h-8 w-8"
                       onClick={() => fetchOrders(page - 1)}
                       disabled={page <= 1 || loadingOrders}
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
-                    <span className="text-sm text-muted-foreground">{page} / {totalPages}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {page} / {totalPages}
+                    </span>
                     <Button
-                      size="icon" className="h-8 w-8"
+                      size="icon"
+                      className="h-8 w-8"
                       onClick={() => fetchOrders(page + 1)}
                       disabled={page >= totalPages || loadingOrders}
                     >
@@ -292,10 +306,18 @@ const DiscogsMessages = () => {
             )}
           </div>
 
-          {/* RIGHT: Messages panel */}
-          <div className={`flex-1 min-w-0 overflow-hidden ${selectedOrder ? "flex" : "hidden lg:flex"} flex-col`}>
+          {/* Messages panel */}
+          <div
+            className={`min-w-0 overflow-hidden flex-col ${
+              isMobile
+                ? selectedOrder
+                  ? "flex flex-1"
+                  : "hidden"
+                : `${selectedOrder ? "flex" : "hidden lg:flex"} flex-1`
+            }`}
+          >
             {!selectedOrder ? (
-              <Card className="flex-1 flex items-center justify-center overflow-hidden">
+              <Card className="flex-1 flex items-center justify-center overflow-hidden rounded-2xl">
                 <div className="text-center text-muted-foreground p-4">
                   <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p className="font-medium">Selecteer een order</p>
@@ -303,27 +325,37 @@ const DiscogsMessages = () => {
                 </div>
               </Card>
             ) : (
-              <Card className="flex-1 flex flex-col min-h-0 overflow-hidden">
-                {/* Header */}
+              <Card className="flex-1 flex flex-col min-h-0 overflow-hidden rounded-2xl">
                 <CardHeader className="pb-3 border-b shrink-0 overflow-hidden">
                   <div className="flex items-center justify-between gap-2 min-w-0 overflow-hidden">
                     <div className="flex items-center gap-2 min-w-0 overflow-hidden">
                       <Button
-                        variant="ghost" size="icon" className="h-8 w-8 shrink-0 lg:hidden"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0 lg:hidden"
                         onClick={() => setSelectedOrder(null)}
                       >
                         <ArrowLeft className="w-4 h-4" />
                       </Button>
                       <CardTitle className="text-sm truncate min-w-0">Order #{selectedOrder.id}</CardTitle>
                     </div>
-                    <Badge variant="outline" className={`shrink-0 text-[10px] max-w-[45%] truncate ${statusColor(selectedOrder.status)}`}>
+                    <Badge
+                      variant="outline"
+                      className={`shrink-0 text-[10px] max-w-[46%] truncate ${statusColor(selectedOrder.status)}`}
+                    >
                       {selectedOrder.status}
                     </Badge>
                   </div>
+
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground min-w-0">
-                    <span className="truncate max-w-full">Koper: <strong>{selectedOrder.buyer?.username}</strong></span>
-                    <span className="shrink-0">{selectedOrder.total?.currency} {selectedOrder.total?.value?.toFixed(2)}</span>
+                    <span className="truncate max-w-full">
+                      Koper: <strong>{selectedOrder.buyer?.username}</strong>
+                    </span>
+                    <span className="shrink-0">
+                      {selectedOrder.total?.currency} {selectedOrder.total?.value?.toFixed(2)}
+                    </span>
                   </div>
+
                   {selectedOrder.items?.[0] && (
                     <p className="text-xs text-muted-foreground truncate max-w-full">
                       📦 {selectedOrder.items[0].release?.description}
@@ -331,7 +363,6 @@ const DiscogsMessages = () => {
                   )}
                 </CardHeader>
 
-                {/* Messages thread */}
                 <ScrollArea className="flex-1 p-3 sm:p-4">
                   {loadingMessages ? (
                     <div className="flex justify-center py-8">
@@ -350,10 +381,11 @@ const DiscogsMessages = () => {
                           msg.actor?.username === connection?.discogs_username;
                         const senderName = msg.from?.username || msg.actor?.username || "Systeem";
                         const content = msg.message || msg.original || "";
+
                         return (
                           <div key={i} className={`flex w-full min-w-0 ${isMe ? "justify-end" : "justify-start"}`}>
                             <div
-                              className={`w-fit max-w-[92%] sm:max-w-[80%] rounded-xl px-3 py-2 overflow-hidden ${
+                              className={`w-fit max-w-[96%] sm:max-w-[80%] rounded-xl px-3 py-2 overflow-hidden ${
                                 isMe ? "bg-primary text-primary-foreground" : "bg-muted"
                               }`}
                             >
@@ -370,11 +402,11 @@ const DiscogsMessages = () => {
                                   </span>
                                 )}
                               </div>
+
                               {content && (
-                                <p className="text-sm whitespace-pre-wrap break-all [overflow-wrap:anywhere]">
-                                  {content}
-                                </p>
+                                <p className="text-sm whitespace-pre-wrap break-all [overflow-wrap:anywhere]">{content}</p>
                               )}
+
                               {msg.subject && (
                                 <p className="text-[11px] opacity-60 mt-1 italic break-all [overflow-wrap:anywhere]">
                                   {msg.subject}
@@ -388,7 +420,6 @@ const DiscogsMessages = () => {
                   )}
                 </ScrollArea>
 
-                {/* Compose */}
                 <div className="p-2.5 sm:p-3 border-t shrink-0 space-y-2 overflow-hidden">
                   <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[10px] text-muted-foreground overflow-hidden">
                     <span className="shrink-0">🎵</span>
@@ -396,7 +427,8 @@ const DiscogsMessages = () => {
                       Auto: <span className="text-primary/80 font-medium">Sent via MusicScan</span>
                     </span>
                   </div>
-                  <div className="flex items-end gap-2 min-w-0">
+
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end min-w-0">
                     <Textarea
                       placeholder="Typ je bericht..."
                       value={newMessage}
@@ -412,7 +444,7 @@ const DiscogsMessages = () => {
                     <Button
                       onClick={sendMessage}
                       disabled={sending || !newMessage.trim()}
-                      className="h-10 px-3 shrink-0"
+                      className="h-10 w-full sm:w-auto sm:px-3 shrink-0"
                     >
                       {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     </Button>

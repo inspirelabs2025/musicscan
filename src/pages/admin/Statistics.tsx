@@ -92,16 +92,16 @@ export default function Statistics() {
   return (
     <AdminGuard>
       <AdminLayout>
-        <div className="p-4 space-y-4 overflow-x-hidden">
-          <div className="space-y-3">
-            <div>
+        <div className="p-3 md:p-4 space-y-4 overflow-x-hidden w-full min-w-0">
+          <div className="space-y-3 min-w-0">
+            <div className="min-w-0">
               <h1 className="text-2xl font-bold">📊 Statistieken Dashboard</h1>
               <p className="text-sm text-muted-foreground">
                 Gedetailleerde analytics met admin views uitgesloten
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="hidden md:flex items-center gap-1 bg-muted rounded-lg p-1">
+            <div className="flex w-full flex-wrap items-center gap-2">
+              <div className="hidden lg:flex items-center gap-1 bg-muted rounded-lg p-1">
                 {(['today', 'week', 'month', 'quarter'] as TimePeriod[]).map((p) => (
                   <Button
                     key={p}
@@ -114,9 +114,9 @@ export default function Statistics() {
                   </Button>
                 ))}
               </div>
-              
+
               <Select value={period} onValueChange={(v) => setPeriod(v as TimePeriod)}>
-                <SelectTrigger className="w-[140px] h-8">
+                <SelectTrigger className="h-8 w-full sm:w-[180px] md:w-[200px] max-w-full">
                   <SelectValue>{getPeriodLabel()}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -138,7 +138,7 @@ export default function Statistics() {
                   <Button
                     variant={period === 'custom' ? 'secondary' : 'outline'}
                     size="sm"
-                    className={cn('h-8 w-8', period === 'custom' && 'ring-2 ring-primary')}
+                    className={cn('h-8 w-8 shrink-0', period === 'custom' && 'ring-2 ring-primary')}
                   >
                     <CalendarIcon className="h-4 w-4" />
                   </Button>
@@ -159,16 +159,16 @@ export default function Statistics() {
 
           <TrafficOverview days={days} />
 
-          <Tabs defaultValue="clean" className="space-y-4">
-            <TabsList className="flex flex-wrap gap-1 w-full">
-              <TabsTrigger value="clean">🛡️ Clean</TabsTrigger>
-              <TabsTrigger value="sources">Bronnen</TabsTrigger>
-              <TabsTrigger value="content">Content</TabsTrigger>
-              <TabsTrigger value="devices">Devices</TabsTrigger>
-              <TabsTrigger value="time">Tijd</TabsTrigger>
-              <TabsTrigger value="facebook">Facebook</TabsTrigger>
-              <TabsTrigger value="podcasts">🎙️ Podcasts</TabsTrigger>
-              <TabsTrigger value="growth">Groei</TabsTrigger>
+          <Tabs defaultValue="clean" className="space-y-4 min-w-0">
+            <TabsList className="!flex !h-auto w-full flex-wrap justify-start gap-1">
+              <TabsTrigger value="clean" className="text-xs sm:text-sm">🛡️ Clean</TabsTrigger>
+              <TabsTrigger value="sources" className="text-xs sm:text-sm">Bronnen</TabsTrigger>
+              <TabsTrigger value="content" className="text-xs sm:text-sm">Content</TabsTrigger>
+              <TabsTrigger value="devices" className="text-xs sm:text-sm">Devices</TabsTrigger>
+              <TabsTrigger value="time" className="text-xs sm:text-sm">Tijd</TabsTrigger>
+              <TabsTrigger value="facebook" className="text-xs sm:text-sm">Facebook</TabsTrigger>
+              <TabsTrigger value="podcasts" className="text-xs sm:text-sm">🎙️ Podcasts</TabsTrigger>
+              <TabsTrigger value="growth" className="text-xs sm:text-sm">Groei</TabsTrigger>
             </TabsList>
 
             <TabsContent value="clean" className="space-y-4">

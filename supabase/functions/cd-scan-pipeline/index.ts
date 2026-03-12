@@ -6,6 +6,7 @@
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { logScanActivity, getUserIdFromRequest, getIpFromRequest } from "../_shared/scan-activity-logger.ts";
 
 const PIPELINE_VERSION = "cd-scan-pipeline-v1.0";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
@@ -709,6 +710,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  const ipAddress = getIpFromRequest(req);
+
   try {
     // Auth
     const authHeader = req.headers.get("Authorization");
@@ -958,11 +962,21 @@ serve(async (req) => {
       }
     }
 
+    // Log scan activity
+    await logScanActivity({
+      user_id: user?.id, action_type: 'cd_pipeline', function_name: 'cd-scan-pipeline', status: 'completed',
+      artist: finalArtist, title: finalTitle, media_type: 'cd',
+      image_count: imageUrls?.length || 0, duration_ms: Date.now() - startTime,
+      discogs_id: result.releaseId || null, ip_address: ipAddress,
+      metadata: { confidence: result.confidence, match_status: result.status, version: PIPELINE_VERSION }
+    });
+
     return new Response(JSON.stringify(responseBody), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error(`❌ [${PIPELINE_VERSION}] Error:`, error);
+    await logScanActivity({ user_id: getUserIdFromRequest(req), action_type: 'cd_pipeline', function_name: 'cd-scan-pipeline', status: 'failed', error_message: error.message, ip_address: ipAddress, duration_ms: Date.now() - startTime });
     return new Response(JSON.stringify({ success: false, error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

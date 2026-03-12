@@ -1,6 +1,7 @@
 // V6.0 - Two-Pass Verification System to prevent AI hallucination
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { logScanActivity, getUserIdFromRequest, getIpFromRequest } from "../_shared/scan-activity-logger.ts";
 
 const VINYL_FUNCTION_VERSION = "V6.0-TWO-PASS-VERIFICATION";
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -274,6 +275,10 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  const userId = getUserIdFromRequest(req);
+  const ipAddress = getIpFromRequest(req);
+
   try {
     const body = await req.json().catch(() => ({} as any));
 
@@ -297,6 +302,7 @@ serve(async (req) => {
     console.log(`📸 [${VINYL_FUNCTION_VERSION}] Received ${imageUrls?.length || 0} images (source: ${sourceField})`);
 
     if (!imageUrls || imageUrls.length < 3) {
+      await logScanActivity({ user_id: userId, action_type: 'vinyl_scan', function_name: 'analyze-vinyl-images', status: 'failed', image_count: 0, error_message: 'Not enough images', ip_address: ipAddress, duration_ms: Date.now() - startTime });
       return new Response(
         JSON.stringify({ error: 'At least 3 images required', expected: 'imageUrls[] (or imageBase64[])' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -340,6 +346,15 @@ serve(async (req) => {
 
     console.log('✅ Final result:', JSON.stringify(finalResult));
 
+    // Log successful scan activity
+    await logScanActivity({
+      user_id: userId, action_type: 'vinyl_scan', function_name: 'analyze-vinyl-images', status: 'completed',
+      artist: finalResult.artist, title: finalResult.title, media_type: 'vinyl',
+      image_count: imageUrls.length, duration_ms: Date.now() - startTime,
+      discogs_id: finalResult.discogs_id, ip_address: ipAddress,
+      metadata: { confidence: finalResult.confidence?.overall, version: VINYL_FUNCTION_VERSION }
+    });
+
     return new Response(
       JSON.stringify(finalResult),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -347,6 +362,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Error:', error);
+    await logScanActivity({ user_id: userId, action_type: 'vinyl_scan', function_name: 'analyze-vinyl-images', status: 'failed', error_message: error.message, ip_address: ipAddress, duration_ms: Date.now() - startTime });
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

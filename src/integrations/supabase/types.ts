@@ -7013,6 +7013,60 @@ export type Database = {
           },
         ]
       }
+      scan_activity_log: {
+        Row: {
+          action_type: string
+          artist: string | null
+          created_at: string
+          discogs_id: number | null
+          duration_ms: number | null
+          error_message: string | null
+          function_name: string
+          id: string
+          image_count: number | null
+          ip_address: string | null
+          media_type: string | null
+          metadata: Json | null
+          status: string
+          title: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          artist?: string | null
+          created_at?: string
+          discogs_id?: number | null
+          duration_ms?: number | null
+          error_message?: string | null
+          function_name: string
+          id?: string
+          image_count?: number | null
+          ip_address?: string | null
+          media_type?: string | null
+          metadata?: Json | null
+          status?: string
+          title?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          artist?: string | null
+          created_at?: string
+          discogs_id?: number | null
+          duration_ms?: number | null
+          error_message?: string | null
+          function_name?: string
+          id?: string
+          image_count?: number | null
+          ip_address?: string | null
+          media_type?: string | null
+          metadata?: Json | null
+          status?: string
+          title?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       scan_extractions: {
         Row: {
           confidence: number | null

@@ -16,7 +16,7 @@ interface ScanAction {
   user_id: string;
   artist: string | null;
   title: string | null;
-  source: "ai" | "cd" | "vinyl" | "upload" | "ai_call";
+  source: string;
   status: string | null;
   condition_grade: string | null;
   discogs_id: number | null;
@@ -27,6 +27,7 @@ interface ScanAction {
   media_type?: string | null;
   function_name?: string | null;
   error_message?: string | null;
+  duration_ms?: number | null;
 }
 
 function useRecentScanActions(limit: number, sourceFilter: string, searchTerm: string) {

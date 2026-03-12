@@ -1,6 +1,7 @@
 // V3.0 - Two-Pass Verification System to prevent AI hallucination
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { logScanActivity, getUserIdFromRequest, getIpFromRequest } from "../_shared/scan-activity-logger.ts";
 
 const CD_FUNCTION_VERSION = "V3.0-TWO-PASS-VERIFICATION";
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');

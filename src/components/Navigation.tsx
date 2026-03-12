@@ -100,7 +100,7 @@ export function Navigation() {
 
   const communityMenuItems = [
     { title: t('nav.fanwall'), url: "/fanwall", icon: Images },
-    { title: t('nav.myLikes'), url: "/my/liked", icon: Heart },
+    { title: t('nav.myLikes'), url: "/liked-photos", icon: Heart },
     { title: t('nav.myQuizzes'), url: "/mijn-quizzen", icon: Trophy },
     { title: t('nav.forum'), url: "/forum", icon: MessageCircle },
     { title: t('nav.social'), url: "/social", icon: Users },

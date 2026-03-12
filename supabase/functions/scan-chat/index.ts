@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { logCreditAlert } from "../_shared/credit-alert.ts";
+import { logScanActivity, getUserIdFromRequest, getIpFromRequest } from "../_shared/scan-activity-logger.ts";
 import { checkScanRate } from "../_shared/rate-check.ts";
 
 const corsHeaders = {

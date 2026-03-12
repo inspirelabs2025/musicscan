@@ -185,239 +185,236 @@ const DiscogsMessages = () => {
   }
 
   return (
-    <div className="px-4 py-6 w-full max-w-7xl mx-auto" style={{ maxWidth: '100vw', overflowX: 'hidden', boxSizing: 'border-box' }}>
-      {/* Header */}
-      <div className="flex items-start gap-3 mb-6">
-        <Button variant="ghost" size="icon" className="shrink-0 mt-1" onClick={() => navigate(-1)}>
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary shrink-0" />
-            <span className="truncate">Discogs Messages</span>
-          </h1>
-          <p className="text-sm text-muted-foreground truncate">
-            Order berichten voor {connection?.discogs_username}
-          </p>
+    <div className="py-6 w-full overflow-hidden" style={{ maxWidth: '100vw' }}>
+      <div className="px-4 max-w-7xl mx-auto w-full overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-4 overflow-hidden">
+          <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate(-1)}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-primary shrink-0" />
+              <span className="truncate">Discogs Messages</span>
+            </h1>
+            <p className="text-xs text-muted-foreground truncate">
+              {connection?.discogs_username || 'Orders'}
+            </p>
+          </div>
+          <Button size="sm" className="shrink-0" onClick={() => fetchOrders(page)} disabled={loadingOrders}>
+            <RefreshCw className={`w-4 h-4 ${loadingOrders ? "animate-spin" : ""}`} />
+          </Button>
         </div>
-        <Button size="sm" className="shrink-0" onClick={() => fetchOrders(page)} disabled={loadingOrders}>
-          <RefreshCw className={`w-4 h-4 mr-1 ${loadingOrders ? "animate-spin" : ""}`} />
-          <span className="hidden sm:inline">Ververs</span>
-        </Button>
-      </div>
 
-      {/* Split layout: always 2 columns on desktop, stacked on mobile */}
-      <div className="flex gap-4 h-[calc(100vh-220px)] min-w-0 w-full">
+        {/* Split layout */}
+        <div className="flex gap-4 h-[calc(100vh-220px)] overflow-hidden">
 
-        {/* LEFT: Orders list — hidden on mobile when order selected */}
-        <div className={`flex flex-col w-full min-w-0 lg:w-80 xl:w-96 lg:shrink-0 ${selectedOrder ? "hidden lg:flex" : "flex"}`}>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold">Orders <span className="text-xs text-muted-foreground">({orders.length})</span></h2>
+          {/* LEFT: Orders list */}
+          <div className={`flex flex-col overflow-hidden lg:w-80 xl:w-96 lg:shrink-0 ${selectedOrder ? "hidden lg:flex" : "flex w-full"}`}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-sm">Orders ({orders.length})</h2>
+            </div>
+
+            {loadingOrders ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : orders.length === 0 ? (
+              <Card className="overflow-hidden">
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  <Package className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                  <p>Geen orders gevonden</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                <ScrollArea className="flex-1">
+                  <div className="space-y-2 pr-2">
+                    {orders.map((order) => (
+                      <Card
+                        key={order.id}
+                        className={`cursor-pointer transition-all hover:shadow-md overflow-hidden ${
+                          selectedOrder?.id === order.id
+                            ? "ring-2 ring-primary border-primary"
+                            : "hover:border-primary/30"
+                        }`}
+                        onClick={() => handleSelectOrder(order)}
+                      >
+                        <CardContent className="p-3 overflow-hidden">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-mono text-xs font-medium truncate min-w-0">#{order.id}</span>
+                            <Badge variant="outline" className={`text-[10px] shrink-0 ${statusColor(order.status)}`}>
+                              {order.status}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate mt-1">
+                            Koper: {order.buyer?.username || "—"}
+                          </p>
+                          <div className="flex items-center justify-between text-xs mt-1">
+                            <span className="text-muted-foreground">
+                              {order.created ? new Date(order.created).toLocaleDateString("nl-NL") : "—"}
+                            </span>
+                            <span className="font-semibold">
+                              {order.total?.currency} {order.total?.value?.toFixed(2)}
+                            </span>
+                          </div>
+                          {order.items?.[0] && (
+                            <p className="text-[11px] text-muted-foreground truncate mt-1">
+                              {order.items[0].release?.description}
+                            </p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </ScrollArea>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 pt-2">
+                    <Button
+                      size="icon" className="h-8 w-8"
+                      onClick={() => fetchOrders(page - 1)}
+                      disabled={page <= 1 || loadingOrders}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span className="text-sm text-muted-foreground">{page} / {totalPages}</span>
+                    <Button
+                      size="icon" className="h-8 w-8"
+                      onClick={() => fetchOrders(page + 1)}
+                      disabled={page >= totalPages || loadingOrders}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {loadingOrders ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            </div>
-          ) : orders.length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
-                <Package className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                <p>Geen orders gevonden</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="flex flex-col flex-1 min-h-0">
-              <ScrollArea className="flex-1">
-                <div className="space-y-2 pr-2">
-                  {orders.map((order) => (
-                    <Card
-                      key={order.id}
-                      className={`cursor-pointer transition-all hover:shadow-md overflow-hidden ${
-                        selectedOrder?.id === order.id
-                          ? "ring-2 ring-primary border-primary"
-                          : "hover:border-primary/30"
-                      }`}
-                      onClick={() => handleSelectOrder(order)}
-                    >
-                      <CardContent className="p-3 space-y-1.5 min-w-0 overflow-hidden">
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="font-mono text-sm font-medium truncate">#{order.id}</span>
-                          <Badge variant="outline" className={`text-[10px] shrink-0 whitespace-nowrap ${statusColor(order.status)}`}>
-                            {order.status}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground truncate">
-                          Koper: {order.buyer?.username || "—"}
-                        </p>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">
-                            {order.created ? new Date(order.created).toLocaleDateString("nl-NL") : "—"}
-                          </span>
-                          <span className="font-semibold">
-                            {order.total?.currency} {order.total?.value?.toFixed(2)}
-                          </span>
-                        </div>
-                        {order.items?.[0] && (
-                          <p className="text-[11px] text-muted-foreground truncate">
-                            {order.items[0].release?.description}
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
+          {/* RIGHT: Messages panel */}
+          <div className={`flex-1 min-w-0 overflow-hidden ${selectedOrder ? "flex" : "hidden lg:flex"} flex-col`}>
+            {!selectedOrder ? (
+              <Card className="flex-1 flex items-center justify-center overflow-hidden">
+                <div className="text-center text-muted-foreground p-4">
+                  <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p className="font-medium">Selecteer een order</p>
+                  <p className="text-sm">Klik op een order om de berichten te bekijken</p>
                 </div>
-              </ScrollArea>
-
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-2">
-                  <Button
-                    variant="outline" size="icon" className="h-8 w-8"
-                    onClick={() => fetchOrders(page - 1)}
-                    disabled={page <= 1 || loadingOrders}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <span className="text-sm text-muted-foreground">{page} / {totalPages}</span>
-                  <Button
-                    variant="outline" size="icon" className="h-8 w-8"
-                    onClick={() => fetchOrders(page + 1)}
-                    disabled={page >= totalPages || loadingOrders}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT: Messages panel */}
-        <div className={`flex-1 min-w-0 ${selectedOrder ? "flex" : "hidden lg:flex"} flex-col`}>
-          {!selectedOrder ? (
-            <Card className="flex-1 flex items-center justify-center">
-              <div className="text-center text-muted-foreground">
-                <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p className="font-medium">Selecteer een order</p>
-                <p className="text-sm">Klik op een order om de berichten te bekijken</p>
-              </div>
-            </Card>
-          ) : (
-            <Card className="flex-1 flex flex-col min-h-0">
-              {/* Header */}
-              <CardHeader className="pb-3 border-b shrink-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost" size="icon" className="h-8 w-8 lg:hidden"
-                      onClick={() => setSelectedOrder(null)}
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                    </Button>
-                    <CardTitle className="text-base">Order #{selectedOrder.id}</CardTitle>
+              </Card>
+            ) : (
+              <Card className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                {/* Header */}
+                <CardHeader className="pb-3 border-b shrink-0 overflow-hidden">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Button
+                        variant="ghost" size="icon" className="h-8 w-8 shrink-0 lg:hidden"
+                        onClick={() => setSelectedOrder(null)}
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                      </Button>
+                      <CardTitle className="text-sm truncate">Order #{selectedOrder.id}</CardTitle>
+                    </div>
+                    <Badge variant="outline" className={`shrink-0 text-[10px] ${statusColor(selectedOrder.status)}`}>
+                      {selectedOrder.status}
+                    </Badge>
                   </div>
-                  <Badge variant="outline" className={statusColor(selectedOrder.status)}>
-                    {selectedOrder.status}
-                  </Badge>
-                </div>
-                <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                  <span>Koper: <strong>{selectedOrder.buyer?.username}</strong></span>
-                  <span>{selectedOrder.total?.currency} {selectedOrder.total?.value?.toFixed(2)}</span>
-                  {selectedOrder.created && (
-                    <span>{new Date(selectedOrder.created).toLocaleDateString("nl-NL")}</span>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    <span className="truncate">Koper: <strong>{selectedOrder.buyer?.username}</strong></span>
+                    <span>{selectedOrder.total?.currency} {selectedOrder.total?.value?.toFixed(2)}</span>
+                  </div>
+                  {selectedOrder.items?.[0] && (
+                    <p className="text-xs text-muted-foreground truncate">
+                      📦 {selectedOrder.items[0].release?.description}
+                    </p>
                   )}
-                </div>
-                {selectedOrder.items?.[0] && (
-                  <p className="text-xs text-muted-foreground">
-                    📦 {selectedOrder.items[0].release?.description}
-                  </p>
-                )}
-              </CardHeader>
+                </CardHeader>
 
-              {/* Messages thread */}
-              <ScrollArea className="flex-1 p-4">
-                {loadingMessages ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  </div>
-                ) : messages.length === 0 ? (
-                  <div className="text-center text-muted-foreground py-8">
-                    <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                    <p>Nog geen berichten in deze order</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {messages.map((msg, i) => {
-                      const isMe =
-                        msg.from?.username === connection?.discogs_username ||
-                        msg.actor?.username === connection?.discogs_username;
-                      const senderName = msg.from?.username || msg.actor?.username || "Systeem";
-                      const content = msg.message || msg.original || "";
-                      return (
-                        <div key={i} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                          <div
-                            className={`max-w-[80%] rounded-xl px-4 py-2.5 ${
-                              isMe ? "bg-primary text-primary-foreground" : "bg-muted"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[11px] font-semibold opacity-80">{senderName}</span>
-                              {msg.timestamp && (
-                                <span className="text-[10px] opacity-60">
-                                  {new Date(msg.timestamp).toLocaleString("nl-NL", {
-                                    day: "numeric",
-                                    month: "short",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
-                                </span>
+                {/* Messages thread */}
+                <ScrollArea className="flex-1 p-4">
+                  {loadingMessages ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-8">
+                      <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                      <p>Nog geen berichten</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {messages.map((msg, i) => {
+                        const isMe =
+                          msg.from?.username === connection?.discogs_username ||
+                          msg.actor?.username === connection?.discogs_username;
+                        const senderName = msg.from?.username || msg.actor?.username || "Systeem";
+                        const content = msg.message || msg.original || "";
+                        return (
+                          <div key={i} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                            <div
+                              className={`max-w-[85%] rounded-xl px-3 py-2 overflow-hidden ${
+                                isMe ? "bg-primary text-primary-foreground" : "bg-muted"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-[11px] font-semibold opacity-80 truncate">{senderName}</span>
+                                {msg.timestamp && (
+                                  <span className="text-[10px] opacity-60 shrink-0">
+                                    {new Date(msg.timestamp).toLocaleString("nl-NL", {
+                                      day: "numeric",
+                                      month: "short",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </span>
+                                )}
+                              </div>
+                              {content && <p className="text-sm whitespace-pre-wrap break-words overflow-hidden">{content}</p>}
+                              {msg.subject && (
+                                <p className="text-[11px] opacity-60 mt-1 italic truncate">{msg.subject}</p>
                               )}
                             </div>
-                            {content && <p className="text-sm whitespace-pre-wrap">{content}</p>}
-                            {msg.subject && (
-                              <p className="text-[11px] opacity-60 mt-1 italic">{msg.subject}</p>
-                            )}
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </ScrollArea>
+                        );
+                      })}
+                    </div>
+                  )}
+                </ScrollArea>
 
-              {/* Compose */}
-              <div className="p-3 border-t shrink-0 space-y-2">
-                {/* Promo banner preview */}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/8 border border-primary/20 text-[11px] text-muted-foreground">
-                  <span className="text-base">🎵</span>
-                  <span className="flex-1 truncate italic">
-                    Auto-appended: <span className="text-primary/80 font-medium">Sent via MusicScan — www.musicscan.app</span>
-                  </span>
+                {/* Compose */}
+                <div className="p-3 border-t shrink-0 space-y-2 overflow-hidden">
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[10px] text-muted-foreground overflow-hidden">
+                    <span className="shrink-0">🎵</span>
+                    <span className="truncate italic">
+                      Auto: <span className="text-primary/80 font-medium">Sent via MusicScan</span>
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Textarea
+                      placeholder="Typ je bericht..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      className="min-h-[60px] resize-none flex-1 min-w-0"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          sendMessage();
+                        }
+                      }}
+                    />
+                    <Button
+                      onClick={sendMessage}
+                      disabled={sending || !newMessage.trim()}
+                      className="self-end shrink-0"
+                    >
+                      {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Textarea
-                    placeholder="Typ je bericht..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    className="min-h-[60px] resize-none"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        sendMessage();
-                      }
-                    }}
-                  />
-                  <Button
-                    onClick={sendMessage}
-                    disabled={sending || !newMessage.trim()}
-                    className="self-end"
-                  >
-                    {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          )}
+              </Card>
+            )}
+          </div>
         </div>
       </div>
     </div>

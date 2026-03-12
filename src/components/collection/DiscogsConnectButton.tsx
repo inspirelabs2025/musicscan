@@ -28,7 +28,7 @@ export const DiscogsConnectButton = () => {
   if (isConnected && connection) {
     return (
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" asChild>
+        <Button size="sm" asChild>
           <a
             href={`https://www.discogs.com/user/${connection.discogs_username}`}
             target="_blank"

@@ -14,16 +14,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <Helmet>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
-      <div className="flex min-h-screen w-full">
+      <div style={{ display: 'flex', minHeight: '100vh', width: '100%', overflow: 'hidden' }}>
         <AdminSidebar />
-        <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden w-full min-w-0">
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflowX: 'hidden', overflowY: 'auto', maxWidth: '100%' }}>
           <div className="h-10 flex items-center border-b px-2 shrink-0">
             <SidebarTrigger className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
               <PanelLeftOpen className="h-5 w-5" />
               <span className="text-sm">Menu</span>
             </SidebarTrigger>
           </div>
-          <main className="flex-1 w-full max-w-none">
+          <main style={{ flex: 1, width: '100%', minWidth: 0, overflow: 'hidden' }}>
             {children}
           </main>
         </div>

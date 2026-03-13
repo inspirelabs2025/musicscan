@@ -90,7 +90,7 @@ export default function TimeMachineManager() {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full min-w-0 p-4 space-y-6">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>Fout bij laden van Time Machine events: {error.message}</AlertDescription>

@@ -92,7 +92,7 @@ export default function Statistics() {
   return (
     <AdminGuard>
       <AdminLayout>
-        <div style={{ padding: '12px', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }} className="space-y-4">
+        <div className="w-full min-w-0 p-4 space-y-4">
           <div className="space-y-3 min-w-0">
             <div className="min-w-0">
               <h1 className="text-2xl font-bold">📊 Statistieken Dashboard</h1>

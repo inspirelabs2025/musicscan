@@ -162,6 +162,28 @@
       }
     }
     </script>
+    <!-- PathSignals Scan Event Tracking -->
+    <script>
+    (function() {
+      var ENDPOINT = "https://ssiikzzewkqypxlofbnp.supabase.co/functions/v1/ingest-scan-event";
+      function getClientId() {
+        var id = localStorage.getItem("ps_client_id");
+        if (!id) {
+          id = "ps_" + Math.random().toString(36).substr(2, 9) + "_" + Date.now();
+          localStorage.setItem("ps_client_id", id);
+        }
+        return id;
+      }
+      function sendScanEvent(eventName, extra) {
+        var payload = { client_id: getClientId(), event_name: eventName, page_url: window.location.href, timestamp: new Date().toISOString() };
+        if (extra) { if (extra.scan_type) payload.scan_type = extra.scan_type; if (extra.scan_result) payload.scan_result = extra.scan_result; }
+        fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).catch(function() {});
+      }
+      window.PathSignals = window.PathSignals || {};
+      window.PathSignals.scanStart = function(extra) { sendScanEvent("scan_start", extra); };
+      window.PathSignals.scanComplete = function(extra) { sendScanEvent("scan_complete", extra); };
+    })();
+    </script>
   </head>
 
   <body>

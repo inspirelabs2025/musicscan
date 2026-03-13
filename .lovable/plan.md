@@ -1,101 +1,54 @@
 
-# Audit Resultaat: Verkeerd Project Gekoppeld aan Domein
 
-## De Kern van het Probleem
+## Problem Analysis
 
-Na een volledige audit is de oorzaak 100% duidelijk vastgesteld:
+At 944px viewport, the admin sidebar takes 256px (16rem), leaving only **688px** for page content. Multiple issues cause overflow:
 
-**www.musicscan.app en musicscan.lovable.app wijzen naar een ANDER, OUDER Lovable project.**
+1. **AdminLayout `<main>` has `overflow: hidden`** -- clips content instead of allowing it to be visible or scroll
+2. **Many admin pages use `container mx-auto`** which adds its own max-width/padding on top of the already constrained space
+3. **Grid layouts assume wider viewports** -- e.g., `grid-cols-4`, `md:grid-cols-3` break at 688px
+4. **Tab rows don't wrap** -- 8 tabs in a single row overflow at 688px
+5. **Header controls on Statistics** are in one row with `gap-6`
 
-Dit project (waar we alle wijzigingen maken) heeft als published URL:
-- `https://musicscan.lovable.app` (verwacht)
+## Plan
 
-Maar in werkelijkheid serveert `musicscan.lovable.app` de oude "Vinyl Scanner" applicatie met het menu "Home / Price Check / Forum". Dat is een compleet andere app — niet de MusicScan die we hier bouwen.
+### 1. Fix AdminLayout overflow strategy
+Change `<main>` from `overflow: hidden` to `overflow: visible` (or `overflow-x: auto`). The parent already handles scrolling. Hidden clips content silently -- the root cause of "nothing changes."
 
-Dit huidige project heeft als preview URL:
-- `https://id-preview--0638cdc3-ae41-4fe5-9a88-2b2d34d360f4.lovable.app`
-
-Alle code-wijzigingen die gedaan zijn (Discogs Messages, Mobile Nav, promo banner, etc.) zijn aanwezig in DEZE codebase, maar komen nooit op de live site terecht omdat het verkeerde project published staat.
-
-## Wat er Fout is Gegaan
-
-Er zijn hoogstwaarschijnlijk twee Lovable projecten:
-
-```text
-Project A (OUD) — "Vinyl Scanner"
-  Published als: musicscan.lovable.app
-  Domein: www.musicscan.app → wijst naar Project A
-
-Project B (DIT project) — "MusicScan"
-  Preview: id-preview--0638cdc3-...lovable.app
-  Published URL: (losgekoppeld of fout geconfigureerd)
-  Domein: NIET gekoppeld
+### 2. Replace `container mx-auto` on admin pages with simple padding
+Across all admin pages that use `<AdminLayout>`, replace:
 ```
-
-Alle wijzigingen zijn in Project B gemaakt, maar de wereld ziet Project A.
-
-## De Oplossing: 3 Stappen
-
-### Stap 1 — Koppel het domein los van het oude project
-
-In het OUDE Lovable project (Vinyl Scanner):
-1. Ga naar **Settings → Domains**
-2. Verwijder de koppeling met `www.musicscan.app`
-
-### Stap 2 — Publiceer dit project correct
-
-In DIT Lovable project (de nieuwe MusicScan):
-1. Klik op de **Publish** knop rechtsboven in Lovable
-2. Wacht tot de build klaar is
-3. Verifieer dat `musicscan.lovable.app` nu de NIEUWE versie toont
-
-### Stap 3 — Koppel het domein aan dit project
-
-In DIT Lovable project:
-1. Ga naar **Settings → Domains**
-2. Voeg `www.musicscan.app` toe
-3. Volg de DNS-instructies (als de CNAME al klopt, werkt het direct)
-
-## Aanvullende Code Fix: Zorg dat de app altijd de nieuwste versie laadt
-
-Naast de deployment-fix voeg ik ook een **cache-busting mechanisme** toe in de code zodat gebruikers nooit een verouderde versie zien:
-
-### 1. `index.html` — Voeg cache-control meta tags toe
-```html
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+<div className="container mx-auto py-8 px-4">
 ```
-
-### 2. `public/_headers` — Verstevig de cache headers voor Netlify/Vercel
+with:
 ```
-/*
-  Cache-Control: no-cache, no-store, must-revalidate
-  Pragma: no-cache
-  Expires: 0
-
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable
+<div className="p-4 space-y-6 w-full min-w-0">
 ```
+This applies to: `MainAdmin.tsx`, `CronjobMonitorPage.tsx`, `SEOMonitoring.tsx`, `EmailNotificationsPage.tsx`, `SEOKeywords.tsx`, `SinglesImporterPage.tsx`, and similar pages using `container mx-auto`.
 
-### 3. `vercel.json` — Cache headers zijn al correct aanwezig
-De `vercel.json` heeft al de juiste `no-store` headers voor `/index.html` en alle routes behalve `/assets`. Dit is correct.
+### 3. Fix Statistics page specifically
+- Stack title and controls vertically
+- Ensure `TabsList` wraps with `flex flex-wrap`
+- Reduce grid columns in `TrafficOverview` (max 3 on this width)
+- Use `w-full min-w-0` on all container divs
 
-## Wat ik in de Code Zal Aanpassen
+### 4. Responsive grid adjustments for admin components
+- `TrafficOverview`: `grid-cols-2 sm:grid-cols-3` (remove `lg:grid-cols-4`)
+- `GrowthMetrics`: `grid-cols-2 sm:grid-cols-3` (remove `lg:grid-cols-5`)
+- All admin card grids: cap at 3 columns max since content area is only 688px
+- `TabsList` in `EmailNotificationsPage`: change from `grid-cols-6` to `flex flex-wrap`
 
-Omdat de deployment-fix buiten mijn bereik valt (dat moet jij doen in de Lovable interface), focus ik op het verstevigen van de code zodat browsers altijd de nieuwste versie laden:
+### 5. Pages to update (all admin pages with container/grid issues)
+- `AdminLayout.tsx` -- main overflow fix
+- `Statistics.tsx` -- header + tabs
+- `MainAdmin.tsx` -- container + grid
+- `CronjobMonitorPage.tsx` -- container
+- `SEOMonitoring.tsx` -- container + tabs
+- `EmailNotificationsPage.tsx` -- grid-cols-6 tabs
+- `SEOKeywords.tsx` -- container
+- `SinglesImporterPage.tsx` -- container
+- `TrafficOverview.tsx` -- grid columns
+- `GrowthMetrics.tsx` -- grid columns
 
-1. **`index.html`** — Cache-busting meta tags toevoegen
-2. **`public/_headers`** — Uitbreiden met alle routes
-3. **`src/hooks/useVersionCheck.ts`** — Lichtgewicht version-check reactiveren die de pagina herlaadt als er een nieuwe build is
+The key insight: previous fixes added `overflow: hidden` everywhere thinking it would prevent overflow -- but it just **hid** the overflow, making content unreadable. The correct fix is to make content actually fit within 688px by using responsive grids and removing fixed-width containers.
 
-## Jouw Actieplan (Dit Kun Jij Alleen Doen)
-
-De belangrijkste stap ligt buiten de code:
-
-1. **Zoek het oude Lovable project op** (de "Vinyl Scanner" app) — dit is waarschijnlijk een ander project in jouw Lovable workspace
-2. **Ontkoppel daar het domein** `www.musicscan.app`
-3. **Klik hier in dit project op "Publish"** (de blauwe knop rechtsboven)
-4. **Koppel hier het domein** `www.musicscan.app` via Settings → Domains
-
-Zodra je dit doet, zal de live site direct de nieuwste versie tonen — inclusief de Discogs Messages pagina, de promo banner, en alle andere wijzigingen.

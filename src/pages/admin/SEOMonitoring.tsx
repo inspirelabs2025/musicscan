@@ -19,7 +19,7 @@ export default function SEOMonitoring() {
   useWebVitals();
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>

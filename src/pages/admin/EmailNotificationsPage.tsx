@@ -21,7 +21,7 @@ const EmailNotificationsPage = () => {
         </div>
 
         <Tabs defaultValue="newsletter" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="flex flex-wrap h-auto gap-1 w-full">
             <TabsTrigger value="newsletter" className="flex items-center gap-2">
               <Inbox className="h-4 w-4" />
               Newsletter

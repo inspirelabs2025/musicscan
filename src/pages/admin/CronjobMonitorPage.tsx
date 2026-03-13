@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 
 export default function CronjobMonitorPage() {
   return (
-    <div className="container mx-auto py-8 px-4 space-y-6">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>

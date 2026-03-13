@@ -8,7 +8,7 @@ export function GrowthMetrics() {
 
   if (isLoading) {
     return (
-       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {Array(5).fill(0).map((_, i) => (
           <Card key={i}>
             <CardContent className="p-6">

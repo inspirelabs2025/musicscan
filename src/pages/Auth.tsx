@@ -126,6 +126,50 @@ const Auth = () => {
         if (typeof window !== 'undefined' && (window as any).fbq) {
           (window as any).fbq('track', 'CompleteRegistration');
         }
+
+        // GA4: log sign_up event for volume comparison
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'sign_up', {
+            method: 'email',
+            page_location: window.location.href,
+          });
+        }
+
+        // CAPI: stuur signup-event naar PathSignals send-capi
+        try {
+          const now = Date.now();
+          const getCookie = (name: string) =>
+            document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'))?.[
+              1
+            ] ?? '';
+          const urlParams = new URLSearchParams(window.location.search);
+
+          await fetch(
+            'https://ssiikzzewkqypxlofbnp.supabase.co/functions/v1/send-capi',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                event_name: 'Lead',
+                event_time_s: Math.floor(now / 1000),
+                event_time_ms: now,
+                event_id: `mscan_signup_${crypto.randomUUID()}`,
+                page_url: window.location.href,
+                fbclid: urlParams.get('fbclid') ?? '',
+                fbc: getCookie('_fbc'),
+                fbp: getCookie('_fbp'),
+                value: 0,
+                currency: 'EUR',
+                user: {
+                  email: email.trim().toLowerCase(),
+                },
+              }),
+            }
+          );
+        } catch (capiErr) {
+          console.warn('[CAPI] send-capi signup failed:', capiErr);
+        }
+
         navigate('/welkom');
       }
     } catch (err) {

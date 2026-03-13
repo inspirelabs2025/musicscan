@@ -448,7 +448,7 @@ const DiscogsLookup = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>

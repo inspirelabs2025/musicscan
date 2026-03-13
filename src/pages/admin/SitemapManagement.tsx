@@ -120,7 +120,7 @@ export default function SitemapManagement() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>

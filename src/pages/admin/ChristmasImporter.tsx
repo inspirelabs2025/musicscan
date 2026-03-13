@@ -197,7 +197,7 @@ export default function ChristmasImporter() {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Gift className="w-8 h-8 text-red-500" />

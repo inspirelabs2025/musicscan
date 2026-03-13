@@ -196,7 +196,7 @@ export default function CreateArtistFanwall() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <div className="max-w-3xl mx-auto">
         <div className="mb-6">
           <Button

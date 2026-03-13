@@ -46,7 +46,7 @@ export default function GenerateSeed() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">FanWall Seed Generator</h1>

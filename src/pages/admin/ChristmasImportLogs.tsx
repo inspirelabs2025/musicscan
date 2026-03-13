@@ -143,7 +143,7 @@ export default function ChristmasImportLogs() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">🎄 Christmas Import Logs</h1>
         <p className="text-sm text-muted-foreground">

@@ -160,7 +160,7 @@ const ArtistStoriesGenerator = () => {
     : 0;
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">

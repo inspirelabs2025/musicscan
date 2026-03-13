@@ -109,7 +109,7 @@ const BulkPosterUpload = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <Button
         variant="ghost"
         onClick={() => navigate('/admin/photo-stylizer')}

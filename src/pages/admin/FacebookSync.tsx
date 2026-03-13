@@ -576,7 +576,7 @@ export default function FacebookSync() {
 
   return (
     <AdminLayout>
-      <div className="container mx-auto py-8 space-y-6">
+      <div className="w-full min-w-0 p-4 space-y-6">
         {/* Hero Section - Clear Purpose */}
         <div className="text-center space-y-4 pb-6 border-b">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#1877F2]/10 mb-4">

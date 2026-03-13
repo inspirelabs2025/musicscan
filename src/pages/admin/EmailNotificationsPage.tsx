@@ -12,7 +12,7 @@ import { EmailTemplateCustomizer } from '@/components/admin/email/EmailTemplateC
 const EmailNotificationsPage = () => {
   return (
     <AdminGuard>
-      <div className="container mx-auto py-8 space-y-6">
+      <div className="w-full min-w-0 p-4 space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Email & Communicatie Beheer</h1>
           <p className="text-muted-foreground">

@@ -236,7 +236,7 @@ export default function InstagramAdmin() {
 
   return (
     <AdminLayout>
-      <div className="container mx-auto py-8 space-y-6">
+      <div className="w-full min-w-0 p-4 space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
             <Instagram className="h-8 w-8 text-pink-500" />

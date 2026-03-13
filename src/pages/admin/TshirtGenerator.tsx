@@ -47,7 +47,7 @@ const TshirtGenerator = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <div>
         <h1 className="text-4xl font-bold mb-2">👕 T-Shirts of Sound Generator</h1>
         <p className="text-muted-foreground">

@@ -77,7 +77,7 @@ export default function TimeMachineManager() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 space-y-6">
+      <div className="w-full min-w-0 p-4 space-y-6">
         <Skeleton className="h-12 w-64" />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map(i => (
@@ -90,7 +90,7 @@ export default function TimeMachineManager() {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full min-w-0 p-4 space-y-6">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>Fout bij laden van Time Machine events: {error.message}</AlertDescription>
@@ -100,7 +100,7 @@ export default function TimeMachineManager() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-4xl font-bold mb-2">🕰️ Time Machine Manager</h1>

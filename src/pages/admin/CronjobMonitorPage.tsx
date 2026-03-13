@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 
 export default function CronjobMonitorPage() {
   return (
-    <div className="container mx-auto py-8 px-4 space-y-6">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -31,7 +31,7 @@ export default function CronjobMonitorPage() {
       </div>
 
       <Tabs defaultValue="command-center" className="space-y-6">
-        <TabsList>
+        <TabsList className="flex flex-wrap h-auto gap-1">
           <TabsTrigger value="command-center">Command Center</TabsTrigger>
           <TabsTrigger value="legacy-dashboard">Legacy Dashboard</TabsTrigger>
           <TabsTrigger value="legacy-monitor">Legacy Monitor</TabsTrigger>

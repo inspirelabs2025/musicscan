@@ -12,7 +12,7 @@ import { EmailTemplateCustomizer } from '@/components/admin/email/EmailTemplateC
 const EmailNotificationsPage = () => {
   return (
     <AdminGuard>
-      <div className="container mx-auto py-8 space-y-6">
+      <div className="w-full min-w-0 p-4 space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Email & Communicatie Beheer</h1>
           <p className="text-muted-foreground">
@@ -21,7 +21,7 @@ const EmailNotificationsPage = () => {
         </div>
 
         <Tabs defaultValue="newsletter" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="flex flex-wrap h-auto gap-1 w-full">
             <TabsTrigger value="newsletter" className="flex items-center gap-2">
               <Inbox className="h-4 w-4" />
               Newsletter

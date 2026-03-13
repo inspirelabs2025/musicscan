@@ -23,7 +23,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <span className="text-sm">Menu</span>
             </SidebarTrigger>
           </div>
-          <main style={{ flex: 1, width: '100%', minWidth: 0, overflow: 'hidden' }}>
+          <main style={{ flex: 1, width: '100%', minWidth: 0, overflowX: 'auto', overflowY: 'visible' }}>
             {children}
           </main>
         </div>

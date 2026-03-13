@@ -166,7 +166,7 @@ export default function StatusDashboard() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8 px-4 space-y-6">
+      <div className="w-full min-w-0 p-4 space-y-6">
         <Skeleton className="h-8 w-64" />
         <div className="grid gap-4">
           <Skeleton className="h-24 w-full" />
@@ -177,7 +177,7 @@ export default function StatusDashboard() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 space-y-6">
+    <div className="w-full min-w-0 p-4 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

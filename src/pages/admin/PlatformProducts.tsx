@@ -132,7 +132,7 @@ export default function PlatformProducts() {
 
   if (!user) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full min-w-0 p-4 space-y-6">
         <Card className="p-6">
           <p className="text-center text-muted-foreground">
             Je moet ingelogd zijn als admin om producten te beheren.
@@ -143,7 +143,7 @@ export default function PlatformProducts() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>

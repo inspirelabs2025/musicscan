@@ -42,7 +42,7 @@ const SketchArtGenerator = () => {
   const isFormValid = formData.discogs_id || (formData.artist && formData.title);
 
   return (
-    <div className="container mx-auto p-6 max-w-2xl">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>

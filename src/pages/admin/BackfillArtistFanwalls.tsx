@@ -37,7 +37,7 @@ export default function BackfillArtistFanwalls() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Artist FanWall Backfill</h1>
         

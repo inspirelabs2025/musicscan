@@ -19,7 +19,7 @@ export default function SEOMonitoring() {
   useWebVitals();
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="w-full min-w-0 p-4 space-y-6">
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -43,7 +43,7 @@ export default function SEOMonitoring() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex flex-wrap h-auto gap-1">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="google">Google Index</TabsTrigger>
           <TabsTrigger value="sitemaps">Sitemaps</TabsTrigger>

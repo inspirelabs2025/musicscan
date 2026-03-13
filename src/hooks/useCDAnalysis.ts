@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useWakeLock } from '@/hooks/useWakeLock';
+import { trackScanStart, trackScanComplete } from '@/utils/scanAnalytics';
 
 // Convert File to base64 data URL
 const fileToBase64 = (file: File): Promise<string> => {
@@ -71,10 +72,11 @@ export const useCDAnalysis = () => {
     }
 
     setIsAnalyzing(true);
-    
+    trackScanStart('cd');
+
     // Request wake lock to keep screen on during analysis
     await wakeLock.request();
-    
+
     try {
       // Convert Files to base64 data URLs
       console.log('📸 Converting CD images for analysis...');
@@ -135,7 +137,8 @@ export const useCDAnalysis = () => {
 
       console.log('📦 Transformed data:', JSON.stringify(transformedData));
       setAnalysisResult(transformedData);
-      
+      trackScanComplete('cd', analysis.artist || analysis.title ? 'found' : 'not_found');
+
       const releaseInfo = data.discogs_id ? ` (Release ID: ${data.discogs_id})` : '';
       const confidenceInfo = data.confidence?.verified === false ? ' ⚠️ Niet zeker' : '';
       toast({
@@ -148,7 +151,8 @@ export const useCDAnalysis = () => {
     } catch (error: any) {
       console.error('❌ CD Analysis failed:', error);
       setAnalysisResult(null);
-      
+      trackScanComplete('cd', 'not_found');
+
       let errorMessage = "Er is een fout opgetreden tijdens de CD analyse";
       let errorTitle = "Analyse Mislukt";
       

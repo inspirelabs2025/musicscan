@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { preprocessImagesClient, ClientPreprocessResult } from '@/utils/clientImagePreprocess';
+import { trackScanStart, trackScanComplete } from '@/utils/scanAnalytics';
 
 // Check if input is a File object
 const isFile = (input: any): input is File => {
@@ -109,10 +110,11 @@ export const useVinylAnalysis = () => {
     }
 
     setIsAnalyzing(true);
-    
+    trackScanStart('vinyl');
+
     // Request wake lock to keep screen on during analysis
     await wakeLock.request();
-    
+
     try {
       // STEP 1: Client-side preprocessing (fast, <500ms)
       console.log('📸 Step 1: Client-side preprocessing...');
@@ -219,7 +221,8 @@ export const useVinylAnalysis = () => {
 
       console.log('📦 Transformed data:', JSON.stringify(transformedData));
       setAnalysisResult(transformedData);
-      
+      trackScanComplete('vinyl', analysis.artist || analysis.title ? 'found' : 'not_found');
+
       const confidenceInfo = data.confidence?.verified === false ? ' ⚠️ Niet zeker' : '';
       toast({
         title: "OCR Analyse Voltooid! 🎉",
@@ -231,7 +234,8 @@ export const useVinylAnalysis = () => {
     } catch (error: any) {
       console.error('❌ Analysis error:', error);
       setAnalysisResult(null);
-      
+      trackScanComplete('vinyl', 'not_found');
+
       const isTimeout = error.message?.includes('timeout');
       const errorMessage = isTimeout 
         ? "Analyse duurde te lang. Probeer opnieuw of controleer je internetverbinding."

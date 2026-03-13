@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { trackScanStart, trackScanComplete, type ScanType } from '@/utils/scanAnalytics';
 
 export type MediaType = 'vinyl' | 'cd' | null;
 export type ScanMode = 'collection' | 'shop' | 'quick';
@@ -164,8 +165,10 @@ export function useUnifiedScan() {
   const startAnalysis = useCallback(async () => {
     if (!state.mediaType || state.files.length === 0) return;
 
+    const scanType = state.mediaType as ScanType;
     abortControllerRef.current = new AbortController();
     setState(prev => ({ ...prev, status: 'analyzing', error: null }));
+    trackScanStart(scanType);
 
     try {
       // Convert files to base64
@@ -205,6 +208,7 @@ export function useUnifiedScan() {
             title: 'Probeer handmatig zoeken',
           },
         }));
+        trackScanComplete(scanType, 'not_found');
         toast({
           title: 'Analyse voltooid',
           description: 'Geen album info gevonden - probeer handmatig te zoeken',
@@ -245,6 +249,7 @@ export function useUnifiedScan() {
         };
 
         setState(prev => ({ ...prev, status: 'complete', result }));
+        trackScanComplete(scanType, 'found');
 
         toast({
           title: 'Gevonden!',
@@ -262,6 +267,7 @@ export function useUnifiedScan() {
             barcode: analysis.barcode,
           },
         }));
+        trackScanComplete(scanType, 'not_found');
 
         toast({
           title: 'Geen exacte match',
@@ -274,6 +280,7 @@ export function useUnifiedScan() {
 
       console.error('Unified scan error:', error);
       setState(prev => ({ ...prev, status: 'error', error: error.message }));
+      trackScanComplete(scanType, 'not_found');
 
       toast({
         title: 'Scan mislukt',

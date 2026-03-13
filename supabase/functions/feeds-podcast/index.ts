@@ -72,6 +72,9 @@ serve(async (req) => {
     const siteUrl = "https://www.musicscan.app";
     const feedUrl = `${siteUrl}/feeds/podcast/${podcastSlug}.xml`;
 
+    // Ensure artwork URL uses JPG/PNG format (convert .webp references)
+    const channelArtwork = ensureCompatibleArtwork(podcast.artwork_url);
+
     const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" 
   xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
@@ -83,24 +86,27 @@ serve(async (req) => {
     <link>${siteUrl}/podcast/${podcastSlug}</link>
     <description>${escapeXml(podcast.description || "")}</description>
     <language>${podcast.language || "nl"}</language>
-    <copyright>© ${new Date().getFullYear()} MusicScan</copyright>
+    <copyright>&#xA9; ${new Date().getFullYear()} MusicScan</copyright>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <generator>MusicScan Podcast Platform</generator>
     <atom:link href="${feedUrl}" rel="self" type="application/rss+xml"/>
+    <itunes:new-feed-url>${feedUrl}</itunes:new-feed-url>
     
     <itunes:author>${escapeXml(podcast.author || "MusicScan")}</itunes:author>
     <itunes:summary>${escapeXml(podcast.description || "")}</itunes:summary>
     <itunes:type>episodic</itunes:type>
     <itunes:owner>
       <itunes:name>${escapeXml(podcast.owner_name || "MusicScan")}</itunes:name>
-      <itunes:email>${podcast.owner_email || "podcast@musicscan.app"}</itunes:email>
+      <itunes:email>${podcast.owner_email || "rogiervisser76@gmail.com"}</itunes:email>
     </itunes:owner>
     <itunes:explicit>${podcast.explicit ? "yes" : "no"}</itunes:explicit>
     <itunes:category text="${escapeXml(podcast.category || "Music")}"/>
-    ${podcast.artwork_url ? `<itunes:image href="${podcast.artwork_url}"/>` : ""}
-    ${podcast.artwork_url ? `<image><url>${podcast.artwork_url}</url><title>${escapeXml(podcast.name)}</title><link>${siteUrl}/podcast/${podcastSlug}</link></image>` : ""}
+    ${channelArtwork ? `<itunes:image href="${channelArtwork}"/>` : `<itunes:image href="${siteUrl}/podcast-cover-default.jpg"/>`}
+    ${channelArtwork ? `<image><url>${channelArtwork}</url><title>${escapeXml(podcast.name)}</title><link>${siteUrl}/podcast/${podcastSlug}</link></image>` : ""}
     
-    ${(episodes || []).map((episode: any) => `
+    ${(episodes || []).map((episode: any) => {
+      const episodeArtwork = ensureCompatibleArtwork(episode.artwork_url) || channelArtwork;
+      return `
     <item>
       <title>${escapeXml(episode.title)}</title>
       <description><![CDATA[${episode.description || ""}]]></description>
@@ -111,12 +117,13 @@ serve(async (req) => {
       <itunes:title>${escapeXml(episode.title)}</itunes:title>
       <itunes:summary>${escapeXml(episode.description || "")}</itunes:summary>
       <itunes:duration>${formatDuration(episode.audio_duration_seconds)}</itunes:duration>
-      <itunes:explicit>${podcast.explicit ? "yes" : "no"}</itunes:explicit>
+      <itunes:explicit>${episode.explicit !== undefined ? (episode.explicit ? "yes" : "no") : (podcast.explicit ? "yes" : "no")}</itunes:explicit>
       <itunes:episodeType>${episode.episode_type || "full"}</itunes:episodeType>
       ${episode.season_number ? `<itunes:season>${episode.season_number}</itunes:season>` : ""}
       ${episode.episode_number ? `<itunes:episode>${episode.episode_number}</itunes:episode>` : ""}
-      ${episode.artwork_url ? `<itunes:image href="${episode.artwork_url}"/>` : podcast.artwork_url ? `<itunes:image href="${podcast.artwork_url}"/>` : ""}
-    </item>`).join("\n")}
+      ${episodeArtwork ? `<itunes:image href="${episodeArtwork}"/>` : ""}
+    </item>`;
+    }).join("\n")}
   </channel>
 </rss>`;
 
@@ -156,4 +163,32 @@ function formatDuration(seconds: number | null): string {
     return `${hours}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   }
   return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+/**
+ * Ensures artwork URLs use Spotify/Apple-compatible formats (JPG/PNG).
+ * Converts .webp URLs to JPEG by using Supabase image transformation.
+ * Supabase render/image endpoint auto-converts WebP to JPEG.
+ */
+function ensureCompatibleArtwork(url: string | null): string | null {
+  if (!url) return null;
+  
+  // If already JPG/PNG, return as-is
+  if (url.match(/\.(jpg|jpeg|png)(\?.*)?$/i)) {
+    return url;
+  }
+  
+  // For Supabase storage WebP images, use the render/image transformer.
+  // Replace /object/public/ with /render/image/public/ — Supabase
+  // automatically serves WebP as JPEG through this endpoint.
+  if (url.includes("supabase.co/storage/v1/object/public/") && url.match(/\.webp(\?.*)?$/i)) {
+    const baseUrl = url.split("?")[0];
+    return baseUrl.replace(
+      "/storage/v1/object/public/",
+      "/storage/v1/render/image/public/"
+    ) + "?width=3000&height=3000";
+  }
+  
+  // For other WebP URLs, return as-is (may need manual conversion)
+  return url;
 }

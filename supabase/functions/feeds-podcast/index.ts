@@ -101,8 +101,8 @@ serve(async (req) => {
     </itunes:owner>
     <itunes:explicit>${podcast.explicit ? "yes" : "no"}</itunes:explicit>
     <itunes:category text="${escapeXml(podcast.category || "Music")}"/>
-    ${channelArtwork ? `<itunes:image href="${channelArtwork}"/>` : `<itunes:image href="${siteUrl}/podcast-cover-default.jpg"/>`}
-    ${channelArtwork ? `<image><url>${channelArtwork}</url><title>${escapeXml(podcast.name)}</title><link>${siteUrl}/podcast/${podcastSlug}</link></image>` : ""}
+    ${channelArtwork ? `<itunes:image href="${escapeXml(channelArtwork)}"/>` : `<itunes:image href="${siteUrl}/podcast-cover-default.jpg"/>`}
+    ${channelArtwork ? `<image><url>${escapeXml(channelArtwork)}</url><title>${escapeXml(podcast.name)}</title><link>${siteUrl}/podcast/${podcastSlug}</link></image>` : ""}
     
     ${(episodes || []).map((episode: any) => {
       const episodeArtwork = ensureCompatibleArtwork(episode.artwork_url) || channelArtwork;
@@ -113,7 +113,7 @@ serve(async (req) => {
       <link>${siteUrl}/podcast/${podcastSlug}/${episode.slug || episode.id}</link>
       <guid isPermaLink="false">${episode.id}</guid>
       <pubDate>${new Date(episode.published_at || episode.created_at).toUTCString()}</pubDate>
-      <enclosure url="${episode.audio_url}" length="${episode.audio_file_size || 0}" type="audio/mpeg"/>
+      <enclosure url="${escapeXml(episode.audio_url)}" length="${episode.audio_file_size || 0}" type="audio/mpeg"/>
       <itunes:title>${escapeXml(episode.title)}</itunes:title>
       <itunes:summary>${escapeXml(episode.description || "")}</itunes:summary>
       <itunes:duration>${formatDuration(episode.audio_duration_seconds)}</itunes:duration>
@@ -121,7 +121,7 @@ serve(async (req) => {
       <itunes:episodeType>${episode.episode_type || "full"}</itunes:episodeType>
       ${episode.season_number ? `<itunes:season>${episode.season_number}</itunes:season>` : ""}
       ${episode.episode_number ? `<itunes:episode>${episode.episode_number}</itunes:episode>` : ""}
-      ${episodeArtwork ? `<itunes:image href="${episodeArtwork}"/>` : ""}
+      ${episodeArtwork ? `<itunes:image href="${escapeXml(episodeArtwork)}"/>` : ""}
     </item>`;
     }).join("\n")}
   </channel>

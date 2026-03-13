@@ -31,7 +31,7 @@ export default function CronjobMonitorPage() {
       </div>
 
       <Tabs defaultValue="command-center" className="space-y-6">
-        <TabsList>
+        <TabsList className="flex flex-wrap h-auto gap-1">
           <TabsTrigger value="command-center">Command Center</TabsTrigger>
           <TabsTrigger value="legacy-dashboard">Legacy Dashboard</TabsTrigger>
           <TabsTrigger value="legacy-monitor">Legacy Monitor</TabsTrigger>

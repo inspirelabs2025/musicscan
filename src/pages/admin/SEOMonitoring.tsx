@@ -43,7 +43,7 @@ export default function SEOMonitoring() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex flex-wrap h-auto gap-1">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="google">Google Index</TabsTrigger>
           <TabsTrigger value="sitemaps">Sitemaps</TabsTrigger>

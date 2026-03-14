@@ -15,7 +15,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
-      <div className="flex min-h-screen w-full overflow-hidden bg-muted/25">
+      <div className="flex min-h-screen w-full overflow-hidden bg-background">
         <AdminSidebar />
 
         <div className="flex min-w-0 flex-1 flex-col">
@@ -30,7 +30,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             </span>
           </div>
 
-          <main className="min-w-0 flex-1 overflow-x-hidden">
+          <main className="min-w-0 flex-1 overflow-x-hidden bg-background">
             <div className="mx-auto w-full max-w-[1500px]">{children}</div>
           </main>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+
 import { AdminGuard } from '@/components/admin/AdminGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -571,7 +571,7 @@ export default function Top2000Importer() {
 
   return (
     <AdminGuard>
-      <AdminLayout>
+      <div className="space-y-6">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -1440,7 +1440,7 @@ export default function Top2000Importer() {
             </TabsContent>
           </Tabs>
         </div>
-      </AdminLayout>
+      </div>
     </AdminGuard>
   );
 }

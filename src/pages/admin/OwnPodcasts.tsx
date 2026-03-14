@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -360,7 +360,7 @@ export default function OwnPodcasts() {
 
 
   return (
-    <AdminLayout>
+    <>
       <div className="w-full min-w-0 p-4 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -1106,6 +1106,6 @@ export default function OwnPodcasts() {
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout>
+    </>
   );
 }

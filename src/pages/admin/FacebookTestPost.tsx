@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Facebook, Send, Settings, Eye, EyeOff } from "lucide-react";
-import { AdminLayout } from "@/components/admin/AdminLayout";
+
 
 const FacebookTestPost = () => {
   const [page2Token, setPage2Token] = useState("");
@@ -121,16 +121,16 @@ const FacebookTestPost = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
+      <>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
         </div>
-      </AdminLayout>
+      </>
     );
   }
 
   return (
-    <AdminLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -255,7 +255,7 @@ const FacebookTestPost = () => {
           </Card>
         </div>
       </div>
-    </AdminLayout>
+    </>
   );
 };
 

@@ -123,8 +123,7 @@ export default function PhotoModeration() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="w-full min-w-0 p-4 space-y-6">
+    <div className="w-full min-w-0 p-4 space-y-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Photo Moderatie</h1>
           <p className="text-muted-foreground">
@@ -223,7 +222,6 @@ export default function PhotoModeration() {
             <p className="text-muted-foreground">Geen foto's in de moderatie queue</p>
           </Card>
         )}
-      </div>
     </div>
   );
 }

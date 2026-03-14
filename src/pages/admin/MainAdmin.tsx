@@ -29,7 +29,7 @@ import {
   Wrench,
   PenTool,
 } from "lucide-react";
-import { AdminLayout } from "@/components/admin/AdminLayout";
+
 import { PageviewStatsWidget } from "@/components/admin/PageviewStatsWidget";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -379,7 +379,7 @@ export default function MainAdmin() {
   }, []);
 
   return (
-    <AdminLayout>
+    <>
       <div className="min-h-[calc(100vh-3rem)] w-full space-y-6 bg-background px-4 py-5 md:px-8 md:py-8">
         <section className="rounded-2xl border border-border/70 bg-card p-6 md:p-8">
           <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">MusicScan beheer</p>
@@ -511,6 +511,6 @@ export default function MainAdmin() {
           </aside>
         </div>
       </div>
-    </AdminLayout>
+    </>
   );
 }

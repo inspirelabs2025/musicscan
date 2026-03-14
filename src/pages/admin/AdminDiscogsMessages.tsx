@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AdminLayout } from "@/components/admin/AdminLayout";
+
 import { AdminGuard } from "@/components/admin/AdminGuard";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -145,7 +145,7 @@ export default function AdminDiscogsMessages() {
 
   return (
     <AdminGuard>
-      <AdminLayout>
+      <div className="p-4 md:p-6 space-y-6">
         <div className="p-4 md:p-6 space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -323,7 +323,7 @@ export default function AdminDiscogsMessages() {
             </div>
           )}
         </div>
-      </AdminLayout>
+      </div>
     </AdminGuard>
   );
 }

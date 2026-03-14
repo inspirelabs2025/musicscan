@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { Helmet } from 'react-helmet';
+
 import { createBrowserRouter, Navigate, Outlet, useParams } from 'react-router-dom';
 
 const FanwallSlugRedirect = () => {
@@ -7,13 +7,12 @@ const FanwallSlugRedirect = () => {
   return <Navigate to={`/fan-wall/${slug}`} replace />;
 };
 
-const AdminNoIndex = () => (
-  <>
-    <Helmet>
-      <meta name="robots" content="noindex, nofollow" />
-    </Helmet>
+import { AdminLayout } from './components/admin/AdminLayout';
+
+const AdminLayoutWrapper = () => (
+  <AdminLayout>
     <Outlet />
-  </>
+  </AdminLayout>
 );
 
 import App from './App';
@@ -349,7 +348,7 @@ export const router = createBrowserRouter([
       // Admin — noindex layout prevents search engines from indexing admin pages
       {
         path: 'admin',
-        element: <AdminNoIndex />,
+        element: <AdminLayoutWrapper />,
         children: [
           { index: true, element: wrap(AdminMainAdmin) },
           { path: 'dashboard', element: wrap(SuperAdminDashboard) },

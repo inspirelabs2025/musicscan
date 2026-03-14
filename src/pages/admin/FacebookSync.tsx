@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AdminLayout } from "@/components/admin/AdminLayout";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -575,7 +575,7 @@ export default function FacebookSync() {
   const isConfigured = savedCredentials?.hasToken && savedCredentials?.hasSecret && savedCredentials?.hasPageId;
 
   return (
-    <AdminLayout>
+    <>
       <div className="w-full min-w-0 p-4 space-y-6">
         {/* Hero Section - Clear Purpose */}
         <div className="text-center space-y-4 pb-6 border-b">
@@ -1438,6 +1438,6 @@ export default function FacebookSync() {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
+    </>
   );
 }

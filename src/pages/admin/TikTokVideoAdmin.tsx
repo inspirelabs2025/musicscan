@@ -11,7 +11,7 @@ import { Loader2, RefreshCw, Video, CheckCircle, XCircle, Clock, Play, ExternalL
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+
 import { useClientVideoGenerator, VideoStyle, ZoomEffect } from '@/hooks/useClientVideoGenerator';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -267,7 +267,7 @@ export default function TikTokVideoAdmin() {
   };
 
   return (
-    <AdminLayout>
+    <>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -905,6 +905,6 @@ export default function TikTokVideoAdmin() {
         </DialogContent>
       </Dialog>
     </div>
-    </AdminLayout>
+    </>
   );
 }

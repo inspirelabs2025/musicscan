@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react";
 import { useArtistSpotlights, useDeleteSpotlight, useUpdateSpotlight } from "@/hooks/useArtistSpotlight";
 import { useToast } from "@/hooks/use-toast";
-import { AdminLayout } from "@/components/admin/AdminLayout";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
@@ -90,7 +90,7 @@ const ArtistSpotlights = () => {
   };
 
   return (
-    <AdminLayout>
+    <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -226,7 +226,7 @@ const ArtistSpotlights = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
+    </>
   );
 };
 

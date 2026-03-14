@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AdminLayout } from "@/components/admin/AdminLayout";
+
 import { AdminGuard } from "@/components/admin/AdminGuard";
 import { useAdminAlbumReviews } from "@/hooks/useAdminAlbumReviews";
 import { AdminAlbumReviewForm } from "@/components/admin/reviews/AdminAlbumReviewForm";
@@ -47,7 +47,7 @@ export default function AdminAlbumReviews() {
     const reviewToEdit = reviews?.find(r => r.id === editingId);
     return (
       <AdminGuard>
-        <AdminLayout>
+        <div className="p-6">
           <div className="p-6">
             <div className="mb-6">
               <h1 className="text-3xl font-bold">
@@ -64,14 +64,14 @@ export default function AdminAlbumReviews() {
               isSubmitting={createReview.isPending || updateReview.isPending}
             />
           </div>
-        </AdminLayout>
+        </div>
       </AdminGuard>
     );
   }
 
   return (
     <AdminGuard>
-      <AdminLayout>
+      <div className="p-6">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Album Reviews</h1>
@@ -176,7 +176,7 @@ export default function AdminAlbumReviews() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </AdminLayout>
+      </div>
     </AdminGuard>
   );
 }

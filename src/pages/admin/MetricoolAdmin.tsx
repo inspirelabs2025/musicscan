@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+
 import { AdminGuard } from '@/components/admin/AdminGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -253,7 +253,7 @@ export default function MetricoolAdmin() {
 
   return (
     <AdminGuard>
-      <AdminLayout>
+      <div className="p-6 space-y-6">
         <div className="p-6 space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -557,7 +557,7 @@ export default function MetricoolAdmin() {
             </TabsContent>
           </Tabs>
         </div>
-      </AdminLayout>
+      </div>
     </AdminGuard>
   );
 }

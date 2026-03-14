@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+
 import { AdminGuard } from '@/components/admin/AdminGuard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,6 @@ const AdminYearOverview: React.FC = () => {
 
   return (
     <AdminGuard>
-      <AdminLayout>
         <div className="p-6 space-y-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -115,7 +114,7 @@ const AdminYearOverview: React.FC = () => {
             <Card><CardContent className="py-10 text-center"><p className="text-muted-foreground">Klik op "Genereer Overzicht" om te starten.</p></CardContent></Card>
           )}
         </div>
-      </AdminLayout>
+      
     </AdminGuard>
   );
 };

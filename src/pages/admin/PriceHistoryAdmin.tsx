@@ -6,8 +6,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 
 export default function PriceHistoryAdmin() {
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="w-full min-w-0 p-4 space-y-6">
         <Breadcrumb className="mb-4">
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -67,7 +66,6 @@ export default function PriceHistoryAdmin() {
             </div>
           </CardContent>
         </Card>
-      </div>
     </div>
   );
 }

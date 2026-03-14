@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+
 import { 
   Bell, Plus, Pencil, Trash2, 
   Clock, MousePointerClick, ArrowUpFromLine, FileText,
@@ -358,7 +358,7 @@ export default function PopupManager() {
   };
 
   return (
-    <AdminLayout>
+    <>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -689,6 +689,6 @@ export default function PopupManager() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </AdminLayout>
+    </>
   );
 }

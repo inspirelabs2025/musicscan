@@ -199,24 +199,18 @@ export function AdminSidebar() {
 
   return (
     <Sidebar collapsible="offcanvas" className="border-r border-border/40">
-      {/* Header */}
-      <SidebarHeader className="border-b border-border/40 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shadow-sm">
-            <span className="text-primary-foreground text-xs font-bold">M</span>
-          </div>
-          {!collapsed && (
-            <div className="flex flex-col">
+      {/* Search & Branding */}
+      {!collapsed && (
+        <div className="px-3 pt-14 pb-2 space-y-3 shrink-0 border-b border-border/40">
+          <div className="flex items-center gap-2 px-1">
+            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shadow-sm shrink-0">
+              <span className="text-primary-foreground text-xs font-bold">M</span>
+            </div>
+            <div className="flex flex-col min-w-0">
               <span className="text-sm font-semibold tracking-tight leading-tight">Admin Panel</span>
               <span className="text-[10px] text-muted-foreground leading-tight">MusicScan</span>
             </div>
-          )}
-        </div>
-      </SidebarHeader>
-
-      {/* Search */}
-      {!collapsed && (
-        <div className="px-3 py-3">
+          </div>
           <div className="relative admin-sidebar-search">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <input
@@ -227,11 +221,6 @@ export function AdminSidebar() {
               className="w-full h-8 pl-8 pr-3 rounded-md border border-border/60 bg-muted/30 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 transition-colors"
             />
           </div>
-        </div>
-      )}
-
-      {!collapsed && (
-        <div className="px-3 pb-2">
           <AdminCreditAlertBanner />
         </div>
       )}

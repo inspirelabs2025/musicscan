@@ -91,7 +91,7 @@ export default function Statistics() {
 
   return (
     <AdminGuard>
-      <AdminLayout>
+      <div className="w-full min-w-0 p-4 space-y-4">
         <div className="w-full min-w-0 p-4 space-y-4">
           <div className="space-y-3 min-w-0">
             <div className="min-w-0">

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+
 import { AdminGuard } from '@/components/admin/AdminGuard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

@@ -1,118 +1,194 @@
-import { useEffect } from "react";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
-import { useAuth } from "./hooks/useAuth";
-import { Login } from "./pages/Auth/Login";
-import { Register } from "./pages/Auth/Register";
-import { Dashboard } from "./pages/Dashboard";
-import { Project } from "./pages/Project";
-import { Landing } from "./pages/Landing";
-import { Settings } from "./pages/Settings";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { Toaster } from "./components/ui/sonner";
+import { Fragment, Suspense, lazy, useEffect, useState } from "react";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider, useAuth } from "./AuthContext";
+import SuspenseLoader from "@/components/SuspenseLoader";
+import { supabase } from "./supabaseClient";
 import { toast } from "sonner";
-import { Lifebuoy } from "lucide-react";
+import Confetti from "react-confetti";
+import { useWindowSize } from "@/hooks/useWindowSize";
+
+const AuthenticatedLayout = lazy(() => import("./_auth/AuthenticatedLayout"));
+const AuthLayout = lazy(() => import("./_auth/AuthLayout"));
+const SignInPage = lazy(() => import("./_auth/pages/SignInPage"));
+const VerifyOtpPage = lazy(() => import("./_auth/pages/VerifyOtpPage"));
+const CompleteProfilePage = lazy(
+  () => import("./_auth/pages/CompleteProfilePage")
+);
+const OnboardingPage = lazy(() => import("./_auth/pages/OnboardingPage"));
+
+const RootLayout = lazy(() => import("./_root/RootLayout"));
+const HomePage = lazy(() => import("./_root/pages/HomePage"));
+const ProfilePage = lazy(() => import("./_root/pages/ProfilePage"));
+const SettingsPage = lazy(() => import("./_root/pages/SettingsPage"));
+const FeedPage = lazy(() => import("./_root/pages/FeedPage"));
+const NotFoundPage = lazy(() => import("./_root/pages/NotFoundPage"));
+
+const ProjectLayout = lazy(() => import("./_project/ProjectLayout"));
+const ProjectDashboardPage = lazy(
+  () => import("./_project/pages/ProjectDashboardPage")
+);
+const ChatPage = lazy(() => import("./_project/pages/ChatPage"));
+const TasksPage = lazy(() => import("./_project/pages/TasksPage"));
+const MembersPage = lazy(() => import("./_project/pages/MembersPage"));
+const ProjectSettingsPage = lazy(
+  () => import("./_project/pages/ProjectSettingsPage")
+);
+
+const FeedbackBoard = lazy(() => import("./_root/pages/FeedbackBoard"));
+
+function AppRoutes() {
+  const { session, isLoading, userProfile, project } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [showConfetti, setShowConfetti] = useState(false);
+  const { width, height } = useWindowSize();
+
+  useEffect(() => {
+    const checkNewUserOnboarding = async () => {
+      if (
+        session &&
+        userProfile &&
+        !userProfile.onboarded &&
+        location.pathname !== "/onboarding"
+      ) {
+        // If session exists, profile exists, but user is not onboarded, redirect to onboarding.
+        navigate("/onboarding");
+      } else if (
+        session &&
+        userProfile &&
+        userProfile.onboarded &&
+        location.pathname.startsWith("/auth")
+      ) {
+        // If session exists, profile exists, user is onboarded, and they are on auth route, redirect to home.
+        navigate("/");
+      }
+    };
+    if (!isLoading) {
+      checkNewUserOnboarding();
+    }
+  }, [session, isLoading, userProfile, location.pathname, navigate]);
+
+  // Handle email confirmation for new users and show confetti
+  useEffect(() => {
+    const handleAuthChange = async () => {
+      const currentUser = await supabase.auth.getUser();
+      if (currentUser?.data?.user && session) {
+        const { data: profiles, error } = await supabase
+          .from("profiles")
+          .select("onboarded")
+          .eq("id", currentUser.data.user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching profile:", error);
+          return;
+        }
+
+        // Check if it's a *newly confirmed* user who just completed onboarding to show confetti
+        if (
+          profiles?.onboarded &&
+          session.user.created_at === session.user.last_sign_in_at &&
+          location.pathname === "/"
+        ) {
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 15000); // Confetti for 15 seconds
+        }
+
+        // Customer success nudge: Chat feature for new projects
+        if(project && project.id && location.pathname.startsWith(`/project/${project.id}`)){ // Only check if inside a project
+          const { count: chatMessageCount, error: chatError } = await supabase
+            .from('project_chat_messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('project_id', project.id);
+
+          if (chatError) {
+            console.error("Error fetching chat messages:", chatError);
+            return;
+          }
+
+          // If a new user (first sign in) and no chat messages, show a nudge
+          if (chatMessageCount === 0 && session.user.created_at === session.user.last_sign_in_at) {
+            toast.info("💬 Heb je de chat al geprobeerd?", {
+              description: "Er zijn pas 0 chatberichten in je project. Probeer de chatfunctie om sneller antwoorden te krijgen!",
+              duration: 15000, // Show for 15 seconds
+              action: {
+                label: "Open Chat",
+                onClick: () => navigate(`/project/${project.id}/chat`),
+              },
+              onDismiss: () => localStorage.setItem(`chat-nudge-shown-${project.id}`, 'true'),
+              onAutoClose: () => localStorage.setItem(`chat-nudge-shown-${project.id}`, 'true'),
+            });
+          }
+        }
+      }
+    };
+
+    // Only run this effect if session is available and the userProfile is loaded
+    if (session && userProfile) {
+      handleAuthChange();
+    }
+
+  }, [session, userProfile, navigate, project, location.pathname]);
+
+  if (isLoading) {
+    return <SuspenseLoader />;
+  }
+
+  return (
+    <Fragment>
+      {showConfetti && <Confetti width={width} height={height} recycle={false} />} {2}
+      <main className="flex h-full">
+        <Suspense fallback={<SuspenseLoader />}>
+          <Routes>
+            {/* Public and Auth routes */}
+            <Route element={<AuthLayout />}>
+              <Route path="/auth/sign-in" element={<SignInPage />} />
+              <Route path="/auth/verify-otp" element={<VerifyOtpPage />} />
+              <Route
+                path="/auth/complete-profile"
+                element={<CompleteProfilePage />}
+              />
+            </Route>
+
+            {/* Onboarding route (special case, requires session but no full layout) */}
+            <Route element={<AuthenticatedLayout />}>
+              <Route path="/onboarding" element={<OnboardingPage />} />
+            </Route>
+
+            {/* Private routes requiring authentication */}
+            <Route element={<RootLayout />}>
+              <Route index element={<HomePage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/feed" element={<FeedPage />} />
+              <Route path="/feedback" element={<FeedbackBoard />} />
+            </Route>
+
+            {/* Project-specific routes */}
+            <Route path="/project/:projectId" element={<ProjectLayout />}>
+              <Route index element={<ProjectDashboardPage />} />
+              <Route path="chat" element={<ChatPage />} />
+              <Route path="tasks" element={<TasksPage />} />
+              <Route path="members" element={<MembersPage />} />
+              <Route path="settings" element={<ProjectSettingsPage />} />
+            </Route>
+
+            {/* Catch-all for 404 */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </main>
+      <Toaster richColors />
+    </Fragment>
+  );
+}
 
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <AppRoutes />
     </AuthProvider>
-  );
-}
-
-function AppContent() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    if (user) {
-      if (location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/") {
-        navigate("/dashboard");
-      }
-    } else {
-      if (location.pathname === "/dashboard" || location.pathname.startsWith("/project/") || location.pathname === "/settings") {
-        navigate("/login");
-      } else if (location.pathname !== "/" && location.pathname !== "/login" && location.pathname !== "/register") {
-        // If not logged in and trying to access an invalid path, redirect to landing
-        navigate("/");
-      }
-    }
-  }, [user, navigate, location.pathname]);
-
-  useEffect(() => {
-    // Customer success nudge: Chat feature. Show only once after login.
-    const hasSeenChatNudge = localStorage.getItem('hasSeenChatNudge');
-    if (user && !hasSeenChatNudge) {
-      // Check if the user has sent 0 chat messages
-      // This would typically involve a backend API call or state management to get chat message count
-      // For this example, we'll simulate it, assuming a new user has 0 messages.
-      const userChatMessagesCount = 0; // Replace with actual logic to fetch user's chat message count
-
-      if (userChatMessagesCount === 0) {
-        toast.info(
-          <div className="flex items-center gap-2">
-            <Lifebuoy className="h-5 w-5" />
-            <div>
-              <p className="font-semibold">Heb je de chat al geprobeerd?</p>
-              <p className="text-sm text-muted-foreground">Er zijn pas 0 chatberichten in je project. Probeer de chatfunctie om sneller antwoorden te krijgen!</p>
-            </div>
-          </div>,
-          {
-            id: 'chat-nudge',
-            duration: 10000,
-            action: {
-              label: 'Naar chat',
-              onClick: () => {
-                // Simulate navigation to a chat feature or open chat modal
-                console.log('Navigating to chat...');
-                // For a real app, you might navigate to a specific project's chat or open a global chat window
-                // navigate('/dashboard?openChat=true');
-              },
-            },
-            // Prevent the toast from closing on click if an action button is present
-            closeButton: true,
-          }
-        );
-        localStorage.setItem('hasSeenChatNudge', 'true');
-      }
-    }
-  }, [user]);
-
-  return (
-    <>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/project/:projectId/*"
-          element={
-            <ProtectedRoute>
-              <Project />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-      <Toaster />
-    </>
   );
 }
 

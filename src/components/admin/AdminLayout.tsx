@@ -14,18 +14,24 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <Helmet>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
-      <div style={{ display: 'flex', minHeight: '100vh', width: '100%', overflow: 'hidden' }}>
+
+      <div className="flex min-h-screen w-full overflow-hidden bg-muted/25">
         <AdminSidebar />
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflowX: 'hidden', overflowY: 'auto', maxWidth: '100%' }}>
-          {/* Slim top bar with menu trigger */}
-          <div className="h-12 flex items-center border-b border-border/60 px-4 shrink-0 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
-            <SidebarTrigger className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="sticky top-0 z-20 flex h-12 items-center border-b border-border/60 bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+            <SidebarTrigger className="flex items-center gap-2 rounded-md px-2 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
               <PanelLeft className="h-4 w-4" />
               <span className="text-sm font-medium">Menu</span>
             </SidebarTrigger>
+            <div className="mx-3 h-4 w-px bg-border/70" />
+            <span className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+              Admin Workspace
+            </span>
           </div>
-          <main style={{ flex: 1, width: '100%', minWidth: 0, overflowX: 'auto', overflowY: 'visible' }}>
-            {children}
+
+          <main className="min-w-0 flex-1 overflow-x-hidden">
+            <div className="mx-auto w-full max-w-[1500px]">{children}</div>
           </main>
         </div>
       </div>

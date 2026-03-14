@@ -397,7 +397,6 @@ export default function LyricPosterGenerator() {
             )}
           </div>
         </div>
-      </div>
     </div>
   );
 }

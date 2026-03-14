@@ -222,7 +222,6 @@ export default function PhotoModeration() {
             <p className="text-muted-foreground">Geen foto's in de moderatie queue</p>
           </Card>
         )}
-      </div>
     </div>
   );
 }

@@ -1,51 +1,13 @@
+import { useState, useMemo } from 'react';
 import { AdminCreditAlertBanner } from './AdminCreditAlertBanner';
 import { 
-  LayoutDashboard, 
-  Package, 
-  LayoutGrid,
-  Wand2,
-  Music,
-  Globe,
-  Wrench,
-  TestTube,
-  ChevronDown,
-  Clock,
-  ShoppingBag,
-  ShoppingCart,
-  Palette,
-  Database,
-  BarChart3,
-  FileText,
-  Settings,
-  PenTool,
-  Brush,
-  Image,
-  AlertCircle,
-  RefreshCw,
-  Link as LinkIcon,
-  Users,
-  Disc,
-  Newspaper,
-  Shield,
-  BookOpen,
-  MessageSquare,
-  Mail,
-  Sparkles,
-  Facebook,
-  Instagram,
-  Server,
-  CloudUpload,
-  Bell,
-  Mic,
-  Send,
-  Video,
-  Cog,
-  ListMusic,
-  Crown,
-  Bot,
-  Cpu,
-  PanelLeftClose,
-  PanelLeftOpen
+  LayoutDashboard, Package, LayoutGrid, Wand2, Music, Globe,
+  Wrench, ChevronRight, Clock, ShoppingBag, ShoppingCart, Palette,
+  Database, BarChart3, FileText, Settings, PenTool, Brush, Image,
+  RefreshCw, Link as LinkIcon, Users, Disc, Newspaper, BookOpen,
+  MessageSquare, Mail, Sparkles, Facebook, Instagram, Server,
+  CloudUpload, Bell, Mic, Send, Video, Cog, ListMusic, Crown,
+  Bot, Cpu, Search
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -54,12 +16,9 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -67,6 +26,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 const menuItems = [
   {
     title: "Dashboard",
+    icon: LayoutDashboard,
     items: [
       { title: "Overview", url: "/admin", icon: LayoutDashboard, end: true },
       { title: "System Overview", url: "/admin/system-overview", icon: Server },
@@ -77,13 +37,15 @@ const menuItems = [
     ]
   },
   {
-    title: "User Management",
+    title: "Users",
+    icon: Users,
     items: [
       { title: "Manage Users", url: "/admin/users", icon: Users },
     ]
   },
   {
     title: "Products & Shop",
+    icon: ShoppingBag,
     items: [
       { title: "All Products", url: "/admin/products", icon: LayoutGrid },
       { title: "Platform Products", url: "/admin/platform-products", icon: Package },
@@ -93,7 +55,8 @@ const menuItems = [
     ]
   },
   {
-    title: "Content Generators",
+    title: "Generators",
+    icon: Wand2,
     items: [
       { title: "Media Library", url: "/admin/media-library", icon: CloudUpload },
       { title: "Art Generator", url: "/admin/art-generator", icon: Palette },
@@ -111,7 +74,8 @@ const menuItems = [
     ]
   },
   {
-    title: "Content Management",
+    title: "Content",
+    icon: BookOpen,
     items: [
       { title: "Master Artists", url: "/admin/master-artists", icon: Crown },
       { title: "Verhalen", url: "/admin/album-reviews", icon: BookOpen },
@@ -128,6 +92,7 @@ const menuItems = [
   },
   {
     title: "SEO & Analytics",
+    icon: BarChart3,
     items: [
       { title: "Statistieken", url: "/admin/statistics", icon: BarChart3 },
       { title: "AI Kostenmonitor", url: "/admin/ai-costs", icon: Cpu },
@@ -138,6 +103,7 @@ const menuItems = [
   },
   {
     title: "Maintenance",
+    icon: Wrench,
     items: [
       { title: "Fix Blog Slugs", url: "/admin/fix-blog-slugs", icon: LinkIcon },
       { title: "Fix Product Titles", url: "/admin/fix-product-titles", icon: Settings },
@@ -151,12 +117,14 @@ const menuItems = [
   },
   {
     title: "Marketing",
+    icon: Bell,
     items: [
       { title: "Popup Beheer", url: "/admin/popups", icon: Bell },
     ]
   },
   {
     title: "Integraties",
+    icon: Cog,
     items: [
       { title: "Render Queue", url: "/admin/render-queue", icon: Cog },
       { title: "TikTok Videos", url: "/admin/tiktok-videos", icon: Video },
@@ -168,18 +136,19 @@ const menuItems = [
   },
   {
     title: "Testing",
+    icon: Disc,
     defaultOpen: false,
-      items: [
-        { title: "Music News", url: "/admin/test/music-news", icon: Newspaper },
-        { title: "News Update", url: "/admin/test/news-update", icon: RefreshCw },
-        { title: "Blog Regeneration", url: "/admin/test/blog-regeneration", icon: FileText },
-        { title: "Discogs Flow", url: "/admin/test/discogs-flow", icon: Disc },
-        { title: "Discogs Blog Gen", url: "/admin/test/discogs-blog-generation", icon: FileText },
-        { title: "Discogs ID Finder", url: "/admin/test/discogs-id", icon: Database },
-        { title: "Album Cover Backfill", url: "/admin/test/album-cover-backfill", icon: Image },
-        { title: "Base64 Image Cleanup", url: "/admin/test/base64-image-cleanup", icon: Image },
-        { title: "Anekdote Generatie", url: "/admin/test/anecdote-generation", icon: BookOpen },
-      ]
+    items: [
+      { title: "Music News", url: "/admin/test/music-news", icon: Newspaper },
+      { title: "News Update", url: "/admin/test/news-update", icon: RefreshCw },
+      { title: "Blog Regeneration", url: "/admin/test/blog-regeneration", icon: FileText },
+      { title: "Discogs Flow", url: "/admin/test/discogs-flow", icon: Disc },
+      { title: "Discogs Blog Gen", url: "/admin/test/discogs-blog-generation", icon: FileText },
+      { title: "Discogs ID Finder", url: "/admin/test/discogs-id", icon: Database },
+      { title: "Album Cover Backfill", url: "/admin/test/album-cover-backfill", icon: Image },
+      { title: "Base64 Image Cleanup", url: "/admin/test/base64-image-cleanup", icon: Image },
+      { title: "Anekdote Generatie", url: "/admin/test/anecdote-generation", icon: BookOpen },
+    ]
   }
 ];
 
@@ -188,6 +157,7 @@ export function AdminSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const currentPath = location.pathname;
+  const [searchQuery, setSearchQuery] = useState("");
 
   const isActive = (path: string, end?: boolean) => {
     if (end) return currentPath === path;
@@ -198,40 +168,79 @@ export function AdminSidebar() {
     return items.some(item => currentPath.startsWith(item.url));
   };
 
+  // Filter menu items based on search
+  const filteredMenuItems = useMemo(() => {
+    if (!searchQuery.trim()) return menuItems;
+    const q = searchQuery.toLowerCase();
+    return menuItems
+      .map(section => ({
+        ...section,
+        items: section.items.filter(item => 
+          item.title.toLowerCase().includes(q)
+        )
+      }))
+      .filter(section => section.items.length > 0);
+  }, [searchQuery]);
+
   return (
-    <Sidebar collapsible="offcanvas">
-      <div className="sticky top-0 z-10 flex items-center justify-between px-3 py-3 border-b bg-sidebar shrink-0">
-        <h2 className="text-lg font-semibold">Admin</h2>
-        <SidebarTrigger className="p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" />
+    <Sidebar collapsible="offcanvas" className="border-r border-border/40">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 h-12 border-b border-border/40 shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
+            <span className="text-primary-foreground text-xs font-bold">M</span>
+          </div>
+          {!collapsed && (
+            <span className="text-sm font-semibold tracking-tight">MusicScan Admin</span>
+          )}
+        </div>
       </div>
 
+      {/* Search */}
       {!collapsed && (
-        <div className="px-3 pt-3">
+        <div className="px-3 py-3">
+          <div className="relative admin-sidebar-search">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Zoek pagina..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-8 pl-8 pr-3 rounded-md border border-border/60 bg-muted/30 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 transition-colors"
+            />
+          </div>
+        </div>
+      )}
+
+      {!collapsed && (
+        <div className="px-3 pb-2">
           <AdminCreditAlertBanner />
         </div>
       )}
 
-      <SidebarContent>
-        {menuItems.map((section) => {
-          const isExpanded = isGroupActive(section.items);
+      <SidebarContent className="px-1">
+        {filteredMenuItems.map((section) => {
+          const groupActive = isGroupActive(section.items);
           const defaultOpen = section.defaultOpen !== false;
+          const SectionIcon = section.icon;
           
           return (
             <Collapsible
               key={section.title}
-              defaultOpen={defaultOpen || isExpanded}
+              defaultOpen={defaultOpen || groupActive}
               className="group/collapsible"
             >
-              <SidebarGroup>
+              <SidebarGroup className="py-0.5">
                 <CollapsibleTrigger asChild>
-                  <SidebarGroupLabel className="cursor-pointer hover:bg-sidebar-accent/50 rounded-md">
+                  <button className="flex items-center w-full gap-2 px-3 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground/70 hover:text-muted-foreground transition-colors rounded-md">
+                    <SectionIcon className="h-3 w-3 shrink-0" />
                     {!collapsed && (
                       <>
-                        <span>{section.title}</span>
-                        <ChevronDown className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+                        <span className="flex-1 text-left">{section.title}</span>
+                        <ChevronRight className="h-3 w-3 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                       </>
                     )}
-                  </SidebarGroupLabel>
+                  </button>
                 </CollapsibleTrigger>
 
                 <CollapsibleContent>
@@ -244,9 +253,10 @@ export function AdminSidebar() {
                             <SidebarMenuButton asChild isActive={active}>
                               <Link
                                 to={item.url}
-                                className="flex items-center gap-3"
+                                data-active={active}
+                                className="admin-sidebar-item flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px]"
                               >
-                                <item.icon className="h-4 w-4 shrink-0" />
+                                <item.icon className="h-3.5 w-3.5 shrink-0" />
                                 {!collapsed && <span className="truncate">{item.title}</span>}
                               </Link>
                             </SidebarMenuButton>

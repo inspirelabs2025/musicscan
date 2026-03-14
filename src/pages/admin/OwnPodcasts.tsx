@@ -360,7 +360,7 @@ export default function OwnPodcasts() {
 
 
   return (
-    <AdminLayout>
+    <>
       <div className="w-full min-w-0 p-4 space-y-6">
         <div className="flex items-center justify-between">
           <div>

@@ -47,7 +47,7 @@ export default function AdminAlbumReviews() {
     const reviewToEdit = reviews?.find(r => r.id === editingId);
     return (
       <AdminGuard>
-        <AdminLayout>
+        <div className="p-6">
           <div className="p-6">
             <div className="mb-6">
               <h1 className="text-3xl font-bold">

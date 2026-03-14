@@ -235,7 +235,7 @@ export default function InstagramAdmin() {
   };
 
   return (
-    <AdminLayout>
+    <>
       <div className="w-full min-w-0 p-4 space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">

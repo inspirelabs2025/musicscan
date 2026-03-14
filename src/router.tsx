@@ -7,13 +7,12 @@ const FanwallSlugRedirect = () => {
   return <Navigate to={`/fan-wall/${slug}`} replace />;
 };
 
-const AdminNoIndex = () => (
-  <>
-    <Helmet>
-      <meta name="robots" content="noindex, nofollow" />
-    </Helmet>
+import { AdminLayout } from './components/admin/AdminLayout';
+
+const AdminLayoutWrapper = () => (
+  <AdminLayout>
     <Outlet />
-  </>
+  </AdminLayout>
 );
 
 import App from './App';

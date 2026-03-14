@@ -198,10 +198,10 @@ export function AdminSidebar() {
   }, [searchQuery]);
 
   return (
-    <Sidebar collapsible="offcanvas" className="border-r border-border/40">
+    <Sidebar collapsible="icon" className="border-r border-border/40">
       {/* Search & Branding */}
       {!collapsed && (
-        <div className="px-3 pt-14 pb-2 space-y-3 shrink-0 border-b border-border/40">
+        <div className="px-3 pt-4 pb-2 space-y-3 shrink-0 border-b border-border/40">
           <div className="flex items-center gap-2 px-1">
             <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shadow-sm shrink-0">
               <span className="text-primary-foreground text-xs font-bold">M</span>

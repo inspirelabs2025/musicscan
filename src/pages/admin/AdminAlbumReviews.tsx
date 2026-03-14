@@ -64,7 +64,7 @@ export default function AdminAlbumReviews() {
               isSubmitting={createReview.isPending || updateReview.isPending}
             />
           </div>
-        </AdminLayout>
+        </div>
       </AdminGuard>
     );
   }

@@ -348,7 +348,7 @@ export const router = createBrowserRouter([
       // Admin — noindex layout prevents search engines from indexing admin pages
       {
         path: 'admin',
-        element: <AdminNoIndex />,
+        element: <AdminLayoutWrapper />,
         children: [
           { index: true, element: wrap(AdminMainAdmin) },
           { path: 'dashboard', element: wrap(SuperAdminDashboard) },

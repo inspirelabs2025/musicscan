@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+
 import { 
   Bell, Plus, Pencil, Trash2, 
   Clock, MousePointerClick, ArrowUpFromLine, FileText,

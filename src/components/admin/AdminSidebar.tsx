@@ -199,16 +199,19 @@ export function AdminSidebar() {
   return (
     <Sidebar collapsible="offcanvas" className="border-r border-border/40">
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 h-12 border-b border-border/40 shrink-0 sticky top-0 z-10 bg-sidebar">
+      <SidebarHeader className="border-b border-border/40 px-4 py-3">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shadow-sm">
             <span className="text-primary-foreground text-xs font-bold">M</span>
           </div>
           {!collapsed && (
-            <span className="text-sm font-semibold tracking-tight">Admin Panel</span>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold tracking-tight leading-tight">Admin Panel</span>
+              <span className="text-[10px] text-muted-foreground leading-tight">MusicScan</span>
+            </div>
           )}
         </div>
-      </div>
+      </SidebarHeader>
 
       {/* Search */}
       {!collapsed && (

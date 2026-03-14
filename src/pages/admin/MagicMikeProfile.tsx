@@ -267,7 +267,7 @@ export default function MagicMikeProfile() {
   }
 
   return (
-    <AdminLayout>
+    <>
       <div className="p-6 space-y-6 max-w-5xl">
         <div className="flex items-center gap-3">
           <Bot className="w-8 h-8 text-primary" />

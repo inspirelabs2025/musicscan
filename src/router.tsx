@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { Helmet } from 'react-helmet';
+
 import { createBrowserRouter, Navigate, Outlet, useParams } from 'react-router-dom';
 
 const FanwallSlugRedirect = () => {

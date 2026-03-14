@@ -71,8 +71,6 @@ export default function LyricPosterGenerator() {
 
   return (
     <div className="w-full min-w-0 p-4 space-y-6">
-      
-      <div className="w-full min-w-0 p-4 space-y-6">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
             <Music className="h-8 w-8" />

@@ -255,7 +255,7 @@ const FacebookTestPost = () => {
           </Card>
         </div>
       </div>
-    </AdminLayout>
+    </>
   );
 };
 

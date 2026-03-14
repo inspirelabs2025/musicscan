@@ -815,6 +815,6 @@ export default function FacebookAdmin() {
           </TabsContent>
         </Tabs>
       </div>
-    </AdminLayout>
+    </>
   );
 }

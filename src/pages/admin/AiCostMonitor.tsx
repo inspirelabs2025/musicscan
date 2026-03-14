@@ -289,6 +289,6 @@ await logAiUsage({
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
+    </>
   );
 }

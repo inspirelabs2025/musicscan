@@ -511,6 +511,6 @@ export default function MainAdmin() {
           </aside>
         </div>
       </div>
-    </AdminLayout>
+    </>
   );
 }

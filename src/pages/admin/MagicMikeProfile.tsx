@@ -503,7 +503,7 @@ export default function MagicMikeProfile() {
           </TabsContent>
         </Tabs>
       </div>
-    </AdminLayout>
+    </>
   );
 }
 

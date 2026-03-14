@@ -905,6 +905,6 @@ export default function TikTokVideoAdmin() {
         </DialogContent>
       </Dialog>
     </div>
-    </AdminLayout>
+    </>
   );
 }

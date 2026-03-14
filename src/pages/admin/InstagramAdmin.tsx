@@ -437,6 +437,6 @@ export default function InstagramAdmin() {
           </TabsContent>
         </Tabs>
       </div>
-    </AdminLayout>
+    </>
   );
 }

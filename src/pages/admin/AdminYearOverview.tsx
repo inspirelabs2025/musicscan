@@ -37,7 +37,6 @@ const AdminYearOverview: React.FC = () => {
 
   return (
     <AdminGuard>
-      <AdminLayout>
         <div className="p-6 space-y-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>

@@ -1106,6 +1106,6 @@ export default function OwnPodcasts() {
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout>
+    </>
   );
 }

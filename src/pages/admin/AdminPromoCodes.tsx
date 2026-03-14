@@ -179,7 +179,7 @@ const AdminPromoCodes = () => {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
+    </>
   );
 };
 

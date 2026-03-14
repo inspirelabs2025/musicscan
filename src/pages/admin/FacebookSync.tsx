@@ -1438,6 +1438,6 @@ export default function FacebookSync() {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
+    </>
   );
 }

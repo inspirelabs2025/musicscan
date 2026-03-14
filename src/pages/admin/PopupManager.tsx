@@ -689,6 +689,6 @@ export default function PopupManager() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </AdminLayout>
+    </>
   );
 }

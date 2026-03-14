@@ -114,7 +114,7 @@ const AdminYearOverview: React.FC = () => {
             <Card><CardContent className="py-10 text-center"><p className="text-muted-foreground">Klik op "Genereer Overzicht" om te starten.</p></CardContent></Card>
           )}
         </div>
-      </AdminLayout>
+      
     </AdminGuard>
   );
 };

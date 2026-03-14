@@ -323,7 +323,7 @@ export default function AdminDiscogsMessages() {
             </div>
           )}
         </div>
-      </AdminLayout>
+      </div>
     </AdminGuard>
   );
 }

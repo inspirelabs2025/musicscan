@@ -1440,7 +1440,7 @@ export default function Top2000Importer() {
             </TabsContent>
           </Tabs>
         </div>
-      </AdminLayout>
+      </div>
     </AdminGuard>
   );
 }

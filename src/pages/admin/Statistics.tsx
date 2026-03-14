@@ -208,7 +208,7 @@ export default function Statistics() {
             </TabsContent>
           </Tabs>
         </div>
-      </AdminLayout>
+      </div>
     </AdminGuard>
   );
 }

@@ -557,7 +557,7 @@ export default function MetricoolAdmin() {
             </TabsContent>
           </Tabs>
         </div>
-      </AdminLayout>
+      </div>
     </AdminGuard>
   );
 }

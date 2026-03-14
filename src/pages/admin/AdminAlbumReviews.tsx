@@ -176,7 +176,7 @@ export default function AdminAlbumReviews() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </AdminLayout>
+      </div>
     </AdminGuard>
   );
 }

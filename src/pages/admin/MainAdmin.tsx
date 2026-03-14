@@ -29,7 +29,7 @@ import {
   Wrench,
   PenTool,
 } from "lucide-react";
-import { AdminLayout } from "@/components/admin/AdminLayout";
+
 import { PageviewStatsWidget } from "@/components/admin/PageviewStatsWidget";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

@@ -575,7 +575,7 @@ export default function FacebookSync() {
   const isConfigured = savedCredentials?.hasToken && savedCredentials?.hasSecret && savedCredentials?.hasPageId;
 
   return (
-    <AdminLayout>
+    <>
       <div className="w-full min-w-0 p-4 space-y-6">
         {/* Hero Section - Clear Purpose */}
         <div className="text-center space-y-4 pb-6 border-b">

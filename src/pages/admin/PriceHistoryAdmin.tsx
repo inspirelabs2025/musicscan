@@ -66,7 +66,6 @@ export default function PriceHistoryAdmin() {
             </div>
           </CardContent>
         </Card>
-      </div>
     </div>
   );
 }

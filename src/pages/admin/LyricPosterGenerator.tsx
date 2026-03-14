@@ -70,8 +70,7 @@ export default function LyricPosterGenerator() {
   const isFormValid = artist && song && lyrics && highlightLines && licenseConfirmed;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <div className="w-full min-w-0 p-4 space-y-6">
       
       <div className="w-full min-w-0 p-4 space-y-6">
         <div className="mb-8">

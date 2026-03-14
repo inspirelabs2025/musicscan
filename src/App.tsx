@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { Toaster } from "./components/ui/toaster";
 import { Providers } from "./providers";
 import { AINudge } from "./components/ai-nudge";
@@ -10,18 +10,20 @@ import { usePageTracking } from "./hooks/usePageTracking";
 
 function App() {
   usePageTracking();
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
 
   return (
     <Providers>
       <GlobalCanonical />
-      <StickyHeader />
-      <main className="pt-14 pb-16 md:pb-0">
+      {!isAdmin && <StickyHeader />}
+      <main className={isAdmin ? "" : "pt-14 pb-16 md:pb-0"}>
         <Outlet />
         <Toaster />
-        <AINudge />
-        <FloatingMikeChat />
+        {!isAdmin && <AINudge />}
+        {!isAdmin && <FloatingMikeChat />}
       </main>
-      <MobileBottomNav />
+      {!isAdmin && <MobileBottomNav />}
     </Providers>
   );
 }

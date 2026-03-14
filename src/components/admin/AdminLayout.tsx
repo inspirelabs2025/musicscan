@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Helmet } from "react-helmet";
-import { PanelLeftOpen } from "lucide-react";
+import { PanelLeft } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 
@@ -17,10 +17,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div style={{ display: 'flex', minHeight: '100vh', width: '100%', overflow: 'hidden' }}>
         <AdminSidebar />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflowX: 'hidden', overflowY: 'auto', maxWidth: '100%' }}>
-          <div className="h-10 flex items-center border-b px-2 shrink-0">
-            <SidebarTrigger className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
-              <PanelLeftOpen className="h-5 w-5" />
-              <span className="text-sm">Menu</span>
+          {/* Slim top bar with menu trigger */}
+          <div className="h-12 flex items-center border-b border-border/60 px-4 shrink-0 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+            <SidebarTrigger className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+              <PanelLeft className="h-4 w-4" />
+              <span className="text-sm font-medium">Menu</span>
             </SidebarTrigger>
           </div>
           <main style={{ flex: 1, width: '100%', minWidth: 0, overflowX: 'auto', overflowY: 'visible' }}>

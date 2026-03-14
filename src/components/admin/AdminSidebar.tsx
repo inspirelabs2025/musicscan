@@ -23,7 +23,21 @@ import {
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-const menuItems = [
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: typeof LayoutDashboard;
+  end?: boolean;
+}
+
+interface MenuSection {
+  title: string;
+  icon: typeof LayoutDashboard;
+  defaultOpen?: boolean;
+  items: MenuItem[];
+}
+
+const menuItems: MenuSection[] = [
   {
     title: "Dashboard",
     icon: LayoutDashboard,

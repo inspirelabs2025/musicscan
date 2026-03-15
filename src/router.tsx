@@ -189,7 +189,7 @@ const AdminFacebookSync = lazy(() => import('./pages/admin/FacebookSync'));
 const AdminInstagramAdmin = lazy(() => import('./pages/admin/InstagramAdmin'));
 const AdminPromoCodes = lazy(() => import('./pages/admin/AdminPromoCodes'));
 const AdminSEOKeywords = lazy(() => import('./pages/admin/SEOKeywords'));
-const AdminYearOverview = lazy(() => import('./pages/admin/AdminYearOverview'));
+
 const AdminRenderJobs = lazy(() => import('./pages/admin/RenderJobsPage'));
 const AdminFacebookTestPost = lazy(() => import('./pages/admin/FacebookTestPost'));
 const AdminTestAnecdote = lazy(() => import('./pages/admin/TestAnecdoteGeneration'));

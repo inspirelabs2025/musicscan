@@ -389,8 +389,6 @@ export const router = createBrowserRouter([
           { path: 'auto-comments', element: wrap(AdminAutoComments) },
           { path: 'magic-mike', element: wrap(AdminMagicMikeProfile) },
           
-          { path: 'ai-costs', element: wrap(AdminAiCostMonitor) },
-          { path: 'seo-monitoring', element: wrap(AdminSEOMonitoring) },
           { path: 'sitemap-management', element: wrap(AdminSitemapManagement) },
           { path: 'price-history', element: wrap(AdminPriceHistory) },
           { path: 'fix-blog-slugs', element: wrap(AdminFixBlogSlugs) },

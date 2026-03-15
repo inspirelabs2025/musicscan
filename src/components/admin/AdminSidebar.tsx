@@ -31,7 +31,6 @@ const menuItems: MenuSection[] = [
     title: "Dashboard",
     icon: LayoutDashboard,
     items: [
-      { title: "Overview", url: "/admin", icon: LayoutDashboard, end: true },
       { title: "Recente Scans", url: "/admin/recent-scans", icon: Disc },
       { title: "Email & Notifications", url: "/admin/email-notifications", icon: Mail },
     ]

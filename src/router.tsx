@@ -167,7 +167,7 @@ const AdminDiscogsMessages = lazy(() => import('./pages/admin/AdminDiscogsMessag
 const AdminPhotoModeration = lazy(() => import('./pages/admin/PhotoModeration'));
 const AdminAutoComments = lazy(() => import('./pages/admin/AutoComments'));
 const AdminMagicMikeProfile = lazy(() => import('./pages/admin/MagicMikeProfile'));
-const AdminStatistics = lazy(() => import('./pages/admin/Statistics'));
+
 const AdminAiCostMonitor = lazy(() => import('./pages/admin/AiCostMonitor'));
 const AdminSEOMonitoring = lazy(() => import('./pages/admin/SEOMonitoring'));
 const AdminSitemapManagement = lazy(() => import('./pages/admin/SitemapManagement'));

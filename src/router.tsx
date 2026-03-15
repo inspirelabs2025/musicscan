@@ -168,8 +168,6 @@ const AdminPhotoModeration = lazy(() => import('./pages/admin/PhotoModeration'))
 const AdminAutoComments = lazy(() => import('./pages/admin/AutoComments'));
 const AdminMagicMikeProfile = lazy(() => import('./pages/admin/MagicMikeProfile'));
 
-const AdminAiCostMonitor = lazy(() => import('./pages/admin/AiCostMonitor'));
-const AdminSEOMonitoring = lazy(() => import('./pages/admin/SEOMonitoring'));
 const AdminSitemapManagement = lazy(() => import('./pages/admin/SitemapManagement'));
 const AdminPriceHistory = lazy(() => import('./pages/admin/PriceHistoryAdmin'));
 const AdminFixBlogSlugs = lazy(() => import('./pages/admin/FixBlogSlugs'));

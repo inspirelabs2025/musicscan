@@ -14,7 +14,6 @@ import {
   Calendar, 
   Rss,
   ExternalLink,
-  Music2,
   BookOpen
 } from 'lucide-react';
 import { format } from 'date-fns';

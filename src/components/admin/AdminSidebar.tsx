@@ -32,10 +32,7 @@ const menuItems: MenuSection[] = [
     icon: LayoutDashboard,
     items: [
       { title: "Overview", url: "/admin", icon: LayoutDashboard, end: true },
-      { title: "System Overview", url: "/admin/system-overview", icon: Server },
-      { title: "SuperAdmin Stats", url: "/admin/dashboard", icon: BarChart3 },
       { title: "Recente Scans", url: "/admin/recent-scans", icon: Disc },
-      { title: "Cronjob Monitor", url: "/admin/cronjob-monitor", icon: Clock },
       { title: "Email & Notifications", url: "/admin/email-notifications", icon: Mail },
     ]
   },
@@ -97,7 +94,6 @@ const menuItems: MenuSection[] = [
     title: "SEO & Analytics",
     icon: BarChart3,
     items: [
-      { title: "Statistieken", url: "/admin/statistics", icon: BarChart3 },
       { title: "AI Kostenmonitor", url: "/admin/ai-costs", icon: Cpu },
       { title: "SEO Monitoring", url: "/admin/seo-monitoring", icon: Globe },
       { title: "Sitemap Management", url: "/admin/sitemap-management", icon: FileText },

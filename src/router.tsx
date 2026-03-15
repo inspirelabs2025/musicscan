@@ -126,16 +126,16 @@ const NLMuziekFeitDetail = lazy(() => import('./pages/NLMuziekFeitDetail'));
 const DanceHouseFeitDetail = lazy(() => import('./pages/DanceHouseFeitDetail'));
 const FilmmuziekFeitDetail = lazy(() => import('./pages/FilmmuziekFeitDetail'));
 const MusicNews = lazy(() => import('./pages/MusicNews'));
-const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
+
 const CollectionItemPage = lazy(() => import('./pages/CollectionItemPage'));
 
 
 // Admin pages
 const AdminMainAdmin = lazy(() => import('./pages/admin/MainAdmin'));
 const AdminStatusDashboard = lazy(() => import('./pages/admin/StatusDashboard'));
-const AdminSystemOverview = lazy(() => import('./pages/admin/SystemOverview'));
+
 const AdminRecentScans = lazy(() => import('./pages/admin/RecentScans'));
-const AdminCronjobMonitor = lazy(() => import('./pages/admin/CronjobMonitorPage'));
+
 const AdminEmailNotifications = lazy(() => import('./pages/admin/EmailNotificationsPage'));
 const AdminUserManagement = lazy(() => import('./pages/admin/UserManagement'));
 const AdminAllProducts = lazy(() => import('./pages/admin/AllProducts'));
@@ -167,7 +167,7 @@ const AdminDiscogsMessages = lazy(() => import('./pages/admin/AdminDiscogsMessag
 const AdminPhotoModeration = lazy(() => import('./pages/admin/PhotoModeration'));
 const AdminAutoComments = lazy(() => import('./pages/admin/AutoComments'));
 const AdminMagicMikeProfile = lazy(() => import('./pages/admin/MagicMikeProfile'));
-const AdminStatistics = lazy(() => import('./pages/admin/Statistics'));
+
 const AdminAiCostMonitor = lazy(() => import('./pages/admin/AiCostMonitor'));
 const AdminSEOMonitoring = lazy(() => import('./pages/admin/SEOMonitoring'));
 const AdminSitemapManagement = lazy(() => import('./pages/admin/SitemapManagement'));
@@ -189,7 +189,7 @@ const AdminFacebookSync = lazy(() => import('./pages/admin/FacebookSync'));
 const AdminInstagramAdmin = lazy(() => import('./pages/admin/InstagramAdmin'));
 const AdminPromoCodes = lazy(() => import('./pages/admin/AdminPromoCodes'));
 const AdminSEOKeywords = lazy(() => import('./pages/admin/SEOKeywords'));
-const AdminYearOverview = lazy(() => import('./pages/admin/AdminYearOverview'));
+
 const AdminRenderJobs = lazy(() => import('./pages/admin/RenderJobsPage'));
 const AdminFacebookTestPost = lazy(() => import('./pages/admin/FacebookTestPost'));
 const AdminTestAnecdote = lazy(() => import('./pages/admin/TestAnecdoteGeneration'));
@@ -354,11 +354,11 @@ export const router = createBrowserRouter([
         element: <AdminLayoutWrapper />,
         children: [
           { index: true, element: wrap(AdminMainAdmin) },
-          { path: 'dashboard', element: wrap(SuperAdminDashboard) },
+          
           { path: 'status', element: wrap(AdminStatusDashboard) },
-          { path: 'system-overview', element: wrap(AdminSystemOverview) },
+          
           { path: 'recent-scans', element: wrap(AdminRecentScans) },
-          { path: 'cronjob-monitor', element: wrap(AdminCronjobMonitor) },
+          
           { path: 'email-notifications', element: wrap(AdminEmailNotifications) },
           { path: 'users', element: wrap(AdminUserManagement) },
           { path: 'products', element: wrap(AdminAllProducts) },
@@ -390,7 +390,7 @@ export const router = createBrowserRouter([
           { path: 'photo-moderation', element: wrap(AdminPhotoModeration) },
           { path: 'auto-comments', element: wrap(AdminAutoComments) },
           { path: 'magic-mike', element: wrap(AdminMagicMikeProfile) },
-          { path: 'statistics', element: wrap(AdminStatistics) },
+          
           { path: 'ai-costs', element: wrap(AdminAiCostMonitor) },
           { path: 'seo-monitoring', element: wrap(AdminSEOMonitoring) },
           { path: 'sitemap-management', element: wrap(AdminSitemapManagement) },
@@ -412,7 +412,7 @@ export const router = createBrowserRouter([
           { path: 'instagram-admin', element: wrap(AdminInstagramAdmin) },
           { path: 'promo-codes', element: wrap(AdminPromoCodes) },
           { path: 'seo-keywords', element: wrap(AdminSEOKeywords) },
-          { path: 'year-overview', element: wrap(AdminYearOverview) },
+          
           { path: 'render-jobs', element: wrap(AdminRenderJobs) },
           { path: 'facebook-test-post', element: wrap(AdminFacebookTestPost) },
           { path: 'test/anecdote', element: wrap(AdminTestAnecdote) },

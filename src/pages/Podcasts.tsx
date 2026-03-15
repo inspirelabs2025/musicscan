@@ -153,6 +153,15 @@ export default function Podcasts() {
 
         <OwnPodcastSection />
 
+        <div className="mb-8">
+          <Link to="/podcasts/het-verhaal-achter-de-podcast">
+            <Button variant="outline" className="gap-2">
+              <BookOpen className="w-4 h-4" />
+              Het Verhaal Achter de Podcast
+            </Button>
+          </Link>
+        </div>
+
         {individualEpisodes && individualEpisodes.filter(ep => ep.is_featured).length > 0 && (
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-4">{p.featuredEpisodes}</h2>

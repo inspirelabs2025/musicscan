@@ -12,6 +12,9 @@ import { IndividualEpisodeCard } from '@/components/podcast/IndividualEpisodeCar
 import { RSSEpisodeCard } from '@/components/podcast/RSSEpisodeCard';
 import { OwnPodcastSection } from '@/components/podcast/OwnPodcastSection';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Link } from 'react-router-dom';
+import { BookOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function Podcasts() {
   const { tr } = useLanguage();
@@ -149,6 +152,15 @@ export default function Podcasts() {
         </p>
 
         <OwnPodcastSection />
+
+        <div className="mb-8">
+          <Link to="/podcasts/het-verhaal-achter-de-podcast">
+            <Button variant="outline" className="gap-2">
+              <BookOpen className="w-4 h-4" />
+              Het Verhaal Achter de Podcast
+            </Button>
+          </Link>
+        </div>
 
         {individualEpisodes && individualEpisodes.filter(ep => ep.is_featured).length > 0 && (
           <div className="mb-8">

@@ -115,6 +115,7 @@ const DiscogsMessages = lazy(() => import('./pages/DiscogsMessages'));
 const SpotifyProfile = lazy(() => import('./pages/SpotifyProfile'));
 const SpotifyCallback = lazy(() => import('./pages/SpotifyCallback'));
 const DePlaatEnHetVerhaal = lazy(() => import('./pages/DePlaatEnHetVerhaal'));
+const PodcastVerhalen = lazy(() => import('./pages/PodcastVerhalen'));
 const PlaatVerhaal = lazy(() => import('./pages/PlaatVerhaal').then(m => ({ default: m.PlaatVerhaal })));
 const QuickPriceCheck = lazy(() => import('./pages/QuickPriceCheck'));
 const ShopOrProductRouter = lazy(() => import('./pages/ShopOrProductRouter'));
@@ -315,6 +316,7 @@ export const router = createBrowserRouter([
       { path: 'album/:slug', element: wrap(AlbumDetail) },
       { path: 'echo', element: wrap(Echo) },
       { path: 'podcasts', element: wrap(Podcasts) },
+      { path: 'podcasts/het-verhaal-achter-de-podcast', element: wrap(PodcastVerhalen) },
       { path: 'podcasts/:slug', element: wrap(PodcastDetail) },
       { path: 'tijdmachine', element: wrap(TimeMachine) },
       { path: 'tijdmachine/:slug', element: wrap(TimeMachineStory) },

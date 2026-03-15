@@ -40,7 +40,7 @@ export const ScannerHero = () => {
           </h1>
           
           <h2 className="text-lg md:text-xl lg:text-2xl text-white/80 max-w-2xl mx-auto mb-10">
-            Ontdek de Waarde van je Platen
+            Ontdek de Waarde van je Platen en CD's
           </h2>
           
           {/* Big Scanner Button */}

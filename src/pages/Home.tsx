@@ -101,13 +101,6 @@ const Home = () => {
 
       <div className="py-2" />
 
-      {/* Podcast */}
-      <Suspense fallback={<SectionFallback />}>
-        <MagicMikePodcastSection />
-      </Suspense>
-
-      <div className="py-2" />
-
       {/* Sectie 4: Ontdek op Genre */}
       <Suspense fallback={<SectionFallback />}>
         <GenresSection />

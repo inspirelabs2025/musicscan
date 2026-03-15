@@ -354,7 +354,7 @@ export const router = createBrowserRouter([
         element: <AdminLayoutWrapper />,
         children: [
           { index: true, element: wrap(AdminMainAdmin) },
-          { path: 'dashboard', element: wrap(SuperAdminDashboard) },
+          
           { path: 'status', element: wrap(AdminStatusDashboard) },
           { path: 'system-overview', element: wrap(AdminSystemOverview) },
           { path: 'recent-scans', element: wrap(AdminRecentScans) },

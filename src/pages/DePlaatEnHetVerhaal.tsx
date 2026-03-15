@@ -14,7 +14,6 @@ import {
   Calendar, 
   Rss,
   ExternalLink,
-  Music2,
   BookOpen
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -57,21 +56,6 @@ export default function DePlaatEnHetVerhaal() {
     enabled: !!podcast?.id
   });
 
-  // Fetch related blog posts (about podcasts/vinyl)
-  const { data: relatedBlogs } = useQuery({
-    queryKey: ['podcast-related-blogs'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('id, slug, album_cover_url, yaml_frontmatter, created_at')
-        .eq('is_published', true)
-        .order('created_at', { ascending: false })
-        .limit(6);
-      
-      if (error) throw error;
-      return data || [];
-    }
-  });
 
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return '--:--';
@@ -311,54 +295,45 @@ export default function DePlaatEnHetVerhaal() {
             )}
           </section>
 
-          {/* Related Blog Posts */}
-          {relatedBlogs && relatedBlogs.length > 0 && (
-            <section className="py-12 border-t">
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h2 className="text-3xl font-bold flex items-center gap-2">
-                    <BookOpen className="h-8 w-8 text-primary" />
-                    Gerelateerde Verhalen
-                  </h2>
-                  <p className="text-muted-foreground mt-1">
-                    Lees meer over de albums die we bespreken
-                  </p>
-                </div>
-                <Button variant="outline" asChild>
-                  <Link to="/verhalen">Alle Verhalen</Link>
-                </Button>
+          {/* Podcast Verhalen */}
+          <section className="py-12 border-t">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-3xl font-bold flex items-center gap-2">
+                  <BookOpen className="h-8 w-8 text-primary" />
+                  De Verhalen Achter de Podcast
+                </h2>
+                <p className="text-muted-foreground mt-1">
+                  De muzikale reis achter elke aflevering
+                </p>
               </div>
+              <Button variant="outline" asChild>
+                <Link to="/podcasts/het-verhaal-achter-de-podcast">Alle Verhalen</Link>
+              </Button>
+            </div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {relatedBlogs.map((blog) => {
-                  const frontmatter = blog.yaml_frontmatter as any;
-                  return (
-                    <Card key={blog.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                      <Link to={`/plaat-verhaal/${blog.slug}`}>
-                        <div className="aspect-square overflow-hidden bg-muted">
-                          {blog.album_cover_url ? (
-                            <img 
-                              src={blog.album_cover_url} 
-                              alt={frontmatter?.title || 'Album'}
-                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Music2 className="h-16 w-16 text-muted-foreground" />
-                            </div>
-                          )}
-                        </div>
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold line-clamp-1">{frontmatter?.title || 'Album Verhaal'}</h3>
-                          <p className="text-sm text-muted-foreground">{frontmatter?.artist}</p>
-                        </CardContent>
-                      </Link>
-                    </Card>
-                  );
-                })}
-              </div>
-            </section>
-          )}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* S1E6 – Winter in Hamburg */}
+              <Card className="overflow-hidden hover:shadow-lg transition-shadow hover:border-primary/50">
+                <Link to="/podcasts/het-verhaal-achter-de-podcast">
+                  <div className="aspect-square overflow-hidden bg-muted">
+                    <img
+                      src="https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/vinyl_images/artwork/171a607b-87fa-4847-a2b5-33cbafcc0b22-official.png"
+                      alt="Frank Boeijen Groep – Zeg Me Dat Het Niet Zo Is"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <CardContent className="p-4">
+                    <Badge variant="outline" className="text-xs mb-2">S1E6</Badge>
+                    <h3 className="font-semibold line-clamp-2">Winter in Hamburg — Frank Boeijen</h3>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      Van Nijmegen naar Hamburg, via Rob de Nijs, Liesbeth List, The Beatles, The Doors en Elton John.
+                    </p>
+                  </CardContent>
+                </Link>
+              </Card>
+            </div>
+          </section>
         </div>
       </main>
     </>

@@ -16,6 +16,7 @@ const useNavLinks = () => {
     { label: language === 'nl' ? 'Verhalen' : 'Stories', href: '/verhalen' },
     { label: 'Shop', href: '/shop' },
     { label: 'Quiz', href: '/quizzen' },
+    { label: 'Podcasts', href: '/podcasts' },
     { label: 'Magic Mike', href: '/echo' },
   ];
 };

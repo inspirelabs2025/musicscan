@@ -94,7 +94,6 @@ const menuItems: MenuSection[] = [
     title: "SEO & Analytics",
     icon: BarChart3,
     items: [
-      { title: "Statistieken", url: "/admin/statistics", icon: BarChart3 },
       { title: "AI Kostenmonitor", url: "/admin/ai-costs", icon: Cpu },
       { title: "SEO Monitoring", url: "/admin/seo-monitoring", icon: Globe },
       { title: "Sitemap Management", url: "/admin/sitemap-management", icon: FileText },

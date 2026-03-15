@@ -221,6 +221,7 @@ export const router = createBrowserRouter([
       { path: 'singles', element: wrap(Singles) },
       { path: 'singles/:slug', element: wrap(SingleDetail) },
       { path: 'muziek-verhaal/:slug', element: wrap(MuziekVerhaal) },
+      { path: 'plaat-verhaal/:slug', element: wrap(PlaatVerhaal) },
       { path: 'anekdotes', element: wrap(AnecdotesOverview) },
       { path: 'anekdotes/:slug', element: wrap(AnecdoteDetail) },
       { path: 'nieuws', element: wrap(Nieuws) },

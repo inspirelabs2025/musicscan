@@ -1,47 +1,81 @@
-import React from 'react';
-import { MessageSquareText } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { MessageSquare, X } from 'lucide-react';
+import { Button } from './button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
+import { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 interface ChatNudgeProps {
-  chatMessageCount: number;
-  onDismiss?: () => void;
+  messageCount: number;
+  onClose?: () => void;
+  onInitiateChat?: () => void;
+  className?: string;
 }
 
-export const ChatNudge: React.FC<ChatNudgeProps> = ({ chatMessageCount, onDismiss }) => {
-  if (chatMessageCount > 0) {
-    return null; // Don't show nudge if there are already chat messages
+export function ChatNudge({
+  messageCount,
+  onClose,
+  onInitiateChat,
+  className
+}: ChatNudgeProps) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (messageCount === 0) {
+      // Check if the nudge has been dismissed before in this session
+      const dismissed = sessionStorage.getItem('chatNudgeDismissed');
+      if (!dismissed) {
+        setIsVisible(true);
+      }
+    }
+  }, [messageCount]);
+
+  const handleDismiss = () => {
+    setIsVisible(false);
+    sessionStorage.setItem('chatNudgeDismissed', 'true');
+    onClose?.();
+  };
+
+  const handleInitiateChat = () => {
+    setIsVisible(false);
+    sessionStorage.setItem('chatNudgeDismissed', 'true'); // Dismiss after interaction as well
+    onInitiateChat?.();
+  };
+
+  if (!isVisible) {
+    return null;
   }
 
   return (
-    <Card className="w-full max-w-sm mx-auto shadow-lg hover:shadow-xl transition-shadow duration-300">
-      <CardHeader className="flex flex-row items-center space-x-4">
-        <MessageSquareText className="h-8 w-8 text-primary" />
-        <div>
-          <CardTitle>Chat al geprobeerd?</CardTitle>
-          <CardDescription>Sneller antwoord krijgen?</CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground">
-          Er zijn pas {chatMessageCount} chatberichten in je project. Het gebruik van de chatfunctie kan je helpen om sneller antwoorden te krijgen en efficiënter samen te werken.
-        </p>
-        <div className="mt-4 flex justify-end">
-          {onDismiss && (
-            <button
-              onClick={onDismiss}
-              className="text-sm text-muted-foreground hover:text-foreground underline"
-            >
-              Begrepen
-            </button>
-          )}
-          <a
-            href="/chat"
-            className="ml-2 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2"
+    <div className={cn(
+      "fixed bottom-4 right-4 z-50 animate-fade-in",
+      className
+    )}>
+      <Card className="w-[350px] shadow-lg">
+        <CardHeader className="relative pb-3">
+          <MessageSquare className="absolute top-4 left-4 h-6 w-6 text-primary" />
+          <CardTitle className="ml-10 text-lg">Heb je de chat al geprobeerd?</CardTitle>
+          <button
+            onClick={handleDismiss}
+            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+            aria-label="Sluit melding"
           >
-            Ga naar chat
-          </a>
-        </div>
-      </CardContent>
-    </Card>
+            <X className="h-4 w-4" />
+          </button>
+        </CardHeader>
+        <CardContent className="pt-2">
+          <CardDescription>
+            Er zijn nog geen chatberichten in je project. Probeer de chatfunctie om sneller antwoorden te krijgen op al je vragen en sneller te communiceren met je team!
+          </CardDescription>
+        </CardContent>
+        <CardFooter className="flex justify-end gap-2">
+          <Button variant="outline" onClick={handleDismiss} size="sm">
+            Nee, bedankt
+          </Button>
+          <Button onClick={handleInitiateChat} size="sm">
+            Start Chat
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
   );
-};
+}

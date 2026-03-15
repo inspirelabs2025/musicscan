@@ -361,7 +361,7 @@ export default function OwnPodcasts() {
 
   return (
     <>
-      <div className="w-full min-w-0 p-4 space-y-6 text-foreground">
+      <div className="w-full min-w-0 p-4 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Eigen Podcasts</h1>

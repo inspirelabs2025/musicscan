@@ -390,7 +390,7 @@ export const router = createBrowserRouter([
           { path: 'photo-moderation', element: wrap(AdminPhotoModeration) },
           { path: 'auto-comments', element: wrap(AdminAutoComments) },
           { path: 'magic-mike', element: wrap(AdminMagicMikeProfile) },
-          { path: 'statistics', element: wrap(AdminStatistics) },
+          
           { path: 'ai-costs', element: wrap(AdminAiCostMonitor) },
           { path: 'seo-monitoring', element: wrap(AdminSEOMonitoring) },
           { path: 'sitemap-management', element: wrap(AdminSitemapManagement) },

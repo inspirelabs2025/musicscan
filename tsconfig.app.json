@@ -27,6 +27,7 @@
     "useDefineForClassFields": true
   },
   "include": [
-    "src"
+    "src",
+    "src/types/global.d.ts" // Add this line
   ]
 }

@@ -135,7 +135,7 @@ const AdminMainAdmin = lazy(() => import('./pages/admin/MainAdmin'));
 const AdminStatusDashboard = lazy(() => import('./pages/admin/StatusDashboard'));
 
 const AdminRecentScans = lazy(() => import('./pages/admin/RecentScans'));
-const AdminCronjobMonitor = lazy(() => import('./pages/admin/CronjobMonitorPage'));
+
 const AdminEmailNotifications = lazy(() => import('./pages/admin/EmailNotificationsPage'));
 const AdminUserManagement = lazy(() => import('./pages/admin/UserManagement'));
 const AdminAllProducts = lazy(() => import('./pages/admin/AllProducts'));

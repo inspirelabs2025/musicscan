@@ -115,6 +115,7 @@ const DiscogsMessages = lazy(() => import('./pages/DiscogsMessages'));
 const SpotifyProfile = lazy(() => import('./pages/SpotifyProfile'));
 const SpotifyCallback = lazy(() => import('./pages/SpotifyCallback'));
 const DePlaatEnHetVerhaal = lazy(() => import('./pages/DePlaatEnHetVerhaal'));
+const PodcastVerhalen = lazy(() => import('./pages/PodcastVerhalen'));
 const PlaatVerhaal = lazy(() => import('./pages/PlaatVerhaal').then(m => ({ default: m.PlaatVerhaal })));
 const QuickPriceCheck = lazy(() => import('./pages/QuickPriceCheck'));
 const ShopOrProductRouter = lazy(() => import('./pages/ShopOrProductRouter'));

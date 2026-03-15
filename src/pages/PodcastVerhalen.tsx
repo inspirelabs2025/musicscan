@@ -60,7 +60,7 @@ function EpisodeStoryCard({ ep }: { ep: PodcastEpisodeStory }) {
             <Badge className="bg-primary text-primary-foreground font-mono text-xs">
               S{ep.season}E{ep.episode}
             </Badge>
-            <h3 className="text-lg font-bold text-card-foreground">{ep.title}</h3>
+            <h3 className="text-lg font-bold text-card-dark-foreground">{ep.title}</h3>
           </div>
           <Button size="sm" asChild>
             <a href={ep.podcastUrl} target="_blank" rel="noopener noreferrer">

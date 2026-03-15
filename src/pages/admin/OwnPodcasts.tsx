@@ -364,7 +364,7 @@ export default function OwnPodcasts() {
       <div className="w-full min-w-0 p-4 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Eigen Podcasts</h1>
+            <h1 className="text-3xl font-bold text-foreground">Eigen Podcasts</h1>
             <p className="text-muted-foreground">
               Beheer je eigen podcasts en genereer RSS feeds voor Spotify
             </p>

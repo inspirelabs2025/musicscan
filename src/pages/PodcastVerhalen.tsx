@@ -73,12 +73,12 @@ function EpisodeStoryCard({ ep }: { ep: PodcastEpisodeStory }) {
 
         {/* Body */}
         <div className="px-6 py-5 space-y-4">
-          <p className="text-card-foreground/90 leading-relaxed">{ep.summary}</p>
+          <p className="text-card-dark-foreground/90 leading-relaxed">{ep.summary}</p>
 
           {ep.highlight && (
             <div className="flex items-start gap-2 bg-primary/10 rounded-lg px-4 py-3">
               <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-              <p className="text-sm text-card-foreground/80">{ep.highlight}</p>
+              <p className="text-sm text-card-dark-foreground/80">{ep.highlight}</p>
             </div>
           )}
 

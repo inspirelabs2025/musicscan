@@ -65,6 +65,13 @@ const Home = () => {
       {/* Hero */}
       <ScannerHero />
 
+      {/* Podcast */}
+      <Suspense fallback={<SectionFallback />}>
+        <MagicMikePodcastSection />
+      </Suspense>
+
+      <div className="py-2" />
+
       {/* Sectie 1: Populaire Singles */}
       <Suspense fallback={<SectionFallback />}>
         <PopularSinglesSection />
@@ -99,11 +106,6 @@ const Home = () => {
       </Suspense>
 
       <div className="py-2" />
-
-      {/* Sectie 6: Magic Mike & Podcasts */}
-      <Suspense fallback={<SectionFallback />}>
-        <MagicMikePodcastSection />
-      </Suspense>
 
       {/* Sectie 7: Shop */}
       <Suspense fallback={null}>

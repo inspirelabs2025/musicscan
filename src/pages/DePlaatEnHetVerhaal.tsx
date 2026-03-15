@@ -57,21 +57,6 @@ export default function DePlaatEnHetVerhaal() {
     enabled: !!podcast?.id
   });
 
-  // Fetch related blog posts (about podcasts/vinyl)
-  const { data: relatedBlogs } = useQuery({
-    queryKey: ['podcast-related-blogs'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('id, slug, album_cover_url, yaml_frontmatter, created_at')
-        .eq('is_published', true)
-        .order('created_at', { ascending: false })
-        .limit(6);
-      
-      if (error) throw error;
-      return data || [];
-    }
-  });
 
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return '--:--';

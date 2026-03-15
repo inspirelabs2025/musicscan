@@ -12,6 +12,9 @@ import { IndividualEpisodeCard } from '@/components/podcast/IndividualEpisodeCar
 import { RSSEpisodeCard } from '@/components/podcast/RSSEpisodeCard';
 import { OwnPodcastSection } from '@/components/podcast/OwnPodcastSection';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Link } from 'react-router-dom';
+import { BookOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function Podcasts() {
   const { tr } = useLanguage();

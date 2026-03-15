@@ -317,6 +317,7 @@ export const router = createBrowserRouter([
       { path: 'echo', element: wrap(Echo) },
       { path: 'podcasts', element: wrap(Podcasts) },
       { path: 'podcasts/:slug', element: wrap(PodcastDetail) },
+      { path: 'podcasts/het-verhaal-achter-de-podcast', element: wrap(PodcastVerhalen) },
       { path: 'tijdmachine', element: wrap(TimeMachine) },
       { path: 'tijdmachine/:slug', element: wrap(TimeMachineStory) },
       { path: 'de-plaat-en-het-verhaal', element: wrap(DePlaatEnHetVerhaal) },

@@ -412,7 +412,7 @@ export const router = createBrowserRouter([
           { path: 'instagram-admin', element: wrap(AdminInstagramAdmin) },
           { path: 'promo-codes', element: wrap(AdminPromoCodes) },
           { path: 'seo-keywords', element: wrap(AdminSEOKeywords) },
-          { path: 'year-overview', element: wrap(AdminYearOverview) },
+          
           { path: 'render-jobs', element: wrap(AdminRenderJobs) },
           { path: 'facebook-test-post', element: wrap(AdminFacebookTestPost) },
           { path: 'test/anecdote', element: wrap(AdminTestAnecdote) },

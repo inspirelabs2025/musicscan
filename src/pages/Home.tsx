@@ -12,6 +12,7 @@ const ArtistsSection = lazy(() => import('@/components/home/sections/ArtistsSect
 const StoriesSection = lazy(() => import('@/components/home/sections/StoriesSection').then(m => ({ default: m.StoriesSection })));
 const GenresSection = lazy(() => import('@/components/home/sections/GenresSection').then(m => ({ default: m.GenresSection })));
 const CommunitySection = lazy(() => import('@/components/home/sections/CommunitySection').then(m => ({ default: m.CommunitySection })));
+const MagicMikeSection = lazy(() => import('@/components/home/sections/MagicMikeSection').then(m => ({ default: m.MagicMikeSection })));
 const MagicMikePodcastSection = lazy(() => import('@/components/home/sections/MagicMikePodcastSection').then(m => ({ default: m.MagicMikePodcastSection })));
 const ProductBanner = lazy(() => import('@/components/home/ProductBanner').then(m => ({ default: m.ProductBanner })));
 const MobileInstallBanner = lazy(() => import('@/components/MobileInstallBanner').then(m => ({ default: m.MobileInstallBanner })));
@@ -86,7 +87,14 @@ const Home = () => {
 
       <div className="py-2" />
 
-      {/* Magic Mike & Podcast */}
+      {/* Magic Mike */}
+      <Suspense fallback={<SectionFallback />}>
+        <MagicMikeSection />
+      </Suspense>
+
+      <div className="py-2" />
+
+      {/* Podcast */}
       <Suspense fallback={<SectionFallback />}>
         <MagicMikePodcastSection />
       </Suspense>

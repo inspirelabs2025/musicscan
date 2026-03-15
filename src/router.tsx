@@ -133,7 +133,7 @@ const CollectionItemPage = lazy(() => import('./pages/CollectionItemPage'));
 // Admin pages
 const AdminMainAdmin = lazy(() => import('./pages/admin/MainAdmin'));
 const AdminStatusDashboard = lazy(() => import('./pages/admin/StatusDashboard'));
-const AdminSystemOverview = lazy(() => import('./pages/admin/SystemOverview'));
+
 const AdminRecentScans = lazy(() => import('./pages/admin/RecentScans'));
 const AdminCronjobMonitor = lazy(() => import('./pages/admin/CronjobMonitorPage'));
 const AdminEmailNotifications = lazy(() => import('./pages/admin/EmailNotificationsPage'));

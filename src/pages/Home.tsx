@@ -65,6 +65,13 @@ const Home = () => {
       {/* Hero */}
       <ScannerHero />
 
+      {/* Podcast */}
+      <Suspense fallback={<SectionFallback />}>
+        <MagicMikePodcastSection />
+      </Suspense>
+
+      <div className="py-2" />
+
       {/* Sectie 1: Populaire Singles */}
       <Suspense fallback={<SectionFallback />}>
         <PopularSinglesSection />

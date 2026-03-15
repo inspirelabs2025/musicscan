@@ -126,7 +126,7 @@ const NLMuziekFeitDetail = lazy(() => import('./pages/NLMuziekFeitDetail'));
 const DanceHouseFeitDetail = lazy(() => import('./pages/DanceHouseFeitDetail'));
 const FilmmuziekFeitDetail = lazy(() => import('./pages/FilmmuziekFeitDetail'));
 const MusicNews = lazy(() => import('./pages/MusicNews'));
-const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
+
 const CollectionItemPage = lazy(() => import('./pages/CollectionItemPage'));
 
 

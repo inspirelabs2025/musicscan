@@ -90,32 +90,121 @@ function ArtistLink({ name, slug }: { name: string; slug?: string }) {
   return <span className="font-semibold text-card-dark-foreground">{name}</span>;
 }
 
+const PAGE_URL = 'https://www.musicscan.app/podcasts/het-verhaal-achter-de-podcast';
+const PAGE_TITLE = 'Het Verhaal Achter Winter in Hamburg - Frank Boeijen | De Plaat en het Verhaal Podcast | MusicScan';
+const PAGE_DESC = 'Ontdek de muzikale reis achter de podcast aflevering over Winter in Hamburg van Frank Boeijen. Van Nijmegen naar Hamburg, via Rob de Nijs, Liesbeth List, The Beatles, The Animals, The Doors en Elton John. Beluister S1E6 van De Plaat en het Verhaal.';
+const OG_IMAGE = ARTWORK.frankBoeijenZeg.url;
+const ARTISTS_TAGS = ['Frank Boeijen', 'Rob de Nijs', 'Liesbeth List', 'Charles Aznavour', 'Whitney Houston', 'Ilse de Lange', 'Keane', 'The Beatles', 'The Animals', 'The Doors', 'Elton John', 'Bob Dylan', 'Neil Young'];
+
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: PAGE_TITLE,
+    description: PAGE_DESC,
+    image: OG_IMAGE,
+    url: PAGE_URL,
+    datePublished: '2025-06-01',
+    dateModified: '2025-06-15',
+    author: { '@type': 'Organization', name: 'MusicScan', url: 'https://www.musicscan.app' },
+    publisher: {
+      '@type': 'Organization',
+      name: 'MusicScan',
+      url: 'https://www.musicscan.app',
+      logo: { '@type': 'ImageObject', url: 'https://www.musicscan.app/og-image.png' },
+    },
+    mainEntityOfPage: PAGE_URL,
+    articleSection: 'Muziek',
+    keywords: 'Frank Boeijen, Winter in Hamburg, Welkom in Utopia, podcast, muziekverhaal, Rob de Nijs, Liesbeth List, The Beatles Hamburg, The Doors, Keane, Elton John, De Plaat en het Verhaal, MusicScan, Nederlandse muziek, Top 2000',
+    inLanguage: 'nl',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.musicscan.app' },
+      { '@type': 'ListItem', position: 2, name: 'Podcasts', item: 'https://www.musicscan.app/podcasts' },
+      { '@type': 'ListItem', position: 3, name: 'Het Verhaal Achter de Podcast', item: PAGE_URL },
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'PodcastEpisode',
+    name: 'Winter in Hamburg – Frank Boeijen',
+    description: PAGE_DESC,
+    url: 'https://www.deplaathetverhaal.nl/episodes/episode/3f2840e9/podcast-winter-in-hamburg-van-frank-boeijen-groep',
+    episodeNumber: 6,
+    partOfSeason: { '@type': 'PodcastSeason', seasonNumber: 1 },
+    partOfSeries: { '@type': 'PodcastSeries', name: 'De Plaat en het Verhaal', url: 'https://www.deplaathetverhaal.nl' },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'Waar gaat Winter in Hamburg over?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Winter in Hamburg is een nummer van Frank Boeijen van het album Welkom in Utopia (1987). De zanger is gedurende de winter met zijn geliefde op vakantie in Hamburg. De song staat sinds 2009 in de NPO Radio 2 Top 2000.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Wie is Frank Boeijen?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Frank Boeijen is een Nederlandse zanger, dichter en componist uit Nijmegen. Hij richtte de Frank Boeijen Groep op die elf albums uitbracht met hits als Linda, Zwart-Wit en Zeg me dat het niet zo is.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Welke artiesten komen in deze podcast aflevering aan bod?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'In deze aflevering komen onder andere Frank Boeijen, Rob de Nijs, Liesbeth List, Charles Aznavour, Whitney Houston, Ilse de Lange, Keane, The Beatles, The Animals, The Doors en Elton John aan bod.',
+        },
+      },
+    ],
+  },
+];
+
 export default function PodcastVerhalen() {
   return (
     <>
       <Helmet>
-        <title>Het Verhaal Achter de Podcast | MusicScan</title>
-        <meta
-          name="description"
-          content="De muzikale reis van Frank Boeijen's Winter in Hamburg — via Rob de Nijs, Liesbeth List, The Beatles in Hamburg, naar The Doors en Elton John."
-        />
-        <link rel="canonical" href="https://www.musicscan.app/podcasts/het-verhaal-achter-de-podcast" />
-        <meta property="og:title" content="Het Verhaal Achter de Podcast | MusicScan" />
-        <meta
-          property="og:description"
-          content="De muzikale reis van Frank Boeijen's Winter in Hamburg — via Rob de Nijs, Liesbeth List, The Beatles in Hamburg, naar The Doors en Elton John."
-        />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Article',
-            name: 'Het Verhaal Achter de Podcast – Winter in Hamburg',
-            description:
-              'De muzikale reis van Frank Boeijen\'s Winter in Hamburg — via Rob de Nijs, Liesbeth List, The Beatles in Hamburg, naar The Doors en Elton John.',
-            url: 'https://www.musicscan.app/podcasts/het-verhaal-achter-de-podcast',
-            publisher: { '@type': 'Organization', name: 'MusicScan' },
-          })}
-        </script>
+        <title>{PAGE_TITLE}</title>
+        <meta name="description" content={PAGE_DESC} />
+        <meta name="keywords" content="Frank Boeijen, Winter in Hamburg, Welkom in Utopia, podcast, muziekverhaal, Rob de Nijs, Liesbeth List, The Beatles Hamburg, The Doors, Keane, Elton John, De Plaat en het Verhaal, MusicScan, Nederlandse muziek, Top 2000" />
+        <link rel="canonical" href={PAGE_URL} />
+        <link rel="alternate" hrefLang="nl" href={PAGE_URL} />
+
+        {/* Open Graph */}
+        <meta property="og:title" content={PAGE_TITLE} />
+        <meta property="og:description" content={PAGE_DESC} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={PAGE_URL} />
+        <meta property="og:image" content={OG_IMAGE} />
+        <meta property="og:locale" content="nl_NL" />
+        <meta property="og:site_name" content="MusicScan" />
+        <meta property="article:published_time" content="2025-06-01" />
+        <meta property="article:modified_time" content="2025-06-15" />
+        <meta property="article:author" content="MusicScan" />
+        <meta property="article:section" content="Muziek" />
+        {ARTISTS_TAGS.map((a) => (
+          <meta key={a} property="article:tag" content={a} />
+        ))}
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={PAGE_TITLE} />
+        <meta name="twitter:description" content={PAGE_DESC} />
+        <meta name="twitter:image" content={OG_IMAGE} />
+
+        {/* Structured Data */}
+        {structuredData.map((sd, i) => (
+          <script key={i} type="application/ld+json">{JSON.stringify(sd)}</script>
+        ))}
       </Helmet>
 
       <div className="min-h-screen">

@@ -168,8 +168,6 @@ const AdminPhotoModeration = lazy(() => import('./pages/admin/PhotoModeration'))
 const AdminAutoComments = lazy(() => import('./pages/admin/AutoComments'));
 const AdminMagicMikeProfile = lazy(() => import('./pages/admin/MagicMikeProfile'));
 
-const AdminAiCostMonitor = lazy(() => import('./pages/admin/AiCostMonitor'));
-const AdminSEOMonitoring = lazy(() => import('./pages/admin/SEOMonitoring'));
 const AdminSitemapManagement = lazy(() => import('./pages/admin/SitemapManagement'));
 const AdminPriceHistory = lazy(() => import('./pages/admin/PriceHistoryAdmin'));
 const AdminFixBlogSlugs = lazy(() => import('./pages/admin/FixBlogSlugs'));
@@ -391,8 +389,6 @@ export const router = createBrowserRouter([
           { path: 'auto-comments', element: wrap(AdminAutoComments) },
           { path: 'magic-mike', element: wrap(AdminMagicMikeProfile) },
           
-          { path: 'ai-costs', element: wrap(AdminAiCostMonitor) },
-          { path: 'seo-monitoring', element: wrap(AdminSEOMonitoring) },
           { path: 'sitemap-management', element: wrap(AdminSitemapManagement) },
           { path: 'price-history', element: wrap(AdminPriceHistory) },
           { path: 'fix-blog-slugs', element: wrap(AdminFixBlogSlugs) },

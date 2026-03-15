@@ -57,14 +57,6 @@ const adminPages: AdminPage[] = [
     badge: "Live",
   },
   {
-    title: "SEO Monitoring",
-    description: "Bekijk SEO gezondheid, sitemaps en IndexNow status",
-    path: "/admin/seo-monitoring",
-    icon: Globe,
-    category: "monitoring",
-    status: "ok",
-  },
-  {
     title: "Price History Admin",
     description: "Beheer prijshistorie data en verzamel nieuwe prijzen",
     path: "/admin/price-history",

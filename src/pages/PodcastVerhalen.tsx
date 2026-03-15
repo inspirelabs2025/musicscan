@@ -60,7 +60,7 @@ function EpisodeStoryCard({ ep }: { ep: PodcastEpisodeStory }) {
             <Badge className="bg-primary text-primary-foreground font-mono text-xs">
               S{ep.season}E{ep.episode}
             </Badge>
-            <h3 className="text-lg font-bold text-card-foreground">{ep.title}</h3>
+            <h3 className="text-lg font-bold text-card-dark-foreground">{ep.title}</h3>
           </div>
           <Button size="sm" asChild>
             <a href={ep.podcastUrl} target="_blank" rel="noopener noreferrer">
@@ -73,12 +73,12 @@ function EpisodeStoryCard({ ep }: { ep: PodcastEpisodeStory }) {
 
         {/* Body */}
         <div className="px-6 py-5 space-y-4">
-          <p className="text-card-foreground/90 leading-relaxed">{ep.summary}</p>
+          <p className="text-card-dark-foreground/90 leading-relaxed">{ep.summary}</p>
 
           {ep.highlight && (
             <div className="flex items-start gap-2 bg-primary/10 rounded-lg px-4 py-3">
               <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-              <p className="text-sm text-card-foreground/80">{ep.highlight}</p>
+              <p className="text-sm text-card-dark-foreground/80">{ep.highlight}</p>
             </div>
           )}
 

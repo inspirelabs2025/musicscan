@@ -356,7 +356,7 @@ export const router = createBrowserRouter([
           { index: true, element: wrap(AdminMainAdmin) },
           
           { path: 'status', element: wrap(AdminStatusDashboard) },
-          { path: 'system-overview', element: wrap(AdminSystemOverview) },
+          
           { path: 'recent-scans', element: wrap(AdminRecentScans) },
           { path: 'cronjob-monitor', element: wrap(AdminCronjobMonitor) },
           { path: 'email-notifications', element: wrap(AdminEmailNotifications) },

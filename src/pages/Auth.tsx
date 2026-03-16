@@ -66,6 +66,21 @@ const Auth = () => {
     }
   };
 
+  const handleFacebookSignIn = async () => {
+    setIsFacebookLoading(true);
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'facebook',
+        options: { redirectTo: `${window.location.origin}/dashboard` },
+      });
+      if (error) { setError(error.message); setIsFacebookLoading(false); }
+    } catch (err) {
+      setError('Facebook login mislukt. Probeer het opnieuw.');
+      setIsFacebookLoading(false);
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);

@@ -332,7 +332,10 @@ const Auth = () => {
             </TabsContent>
             
             <TabsContent value="signup" className="space-y-4">
-              <GoogleButton label={t.registerWithGoogle} />
+              <div className="space-y-2">
+                <GoogleButton label={t.registerWithGoogle} />
+                <FacebookButton label="Registreren met Facebook" />
+              </div>
               <OrSeparator />
 
               <form onSubmit={handleSignUp} className="space-y-4">

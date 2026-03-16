@@ -277,7 +277,10 @@ const Auth = () => {
             </TabsList>
             
             <TabsContent value="signin" className="space-y-4">
-              <GoogleButton label={t.continueWithGoogle} />
+              <div className="space-y-2">
+                <GoogleButton label={t.continueWithGoogle} />
+                <FacebookButton label="Doorgaan met Facebook" />
+              </div>
               <OrSeparator />
 
               <form onSubmit={handleSignIn} className="space-y-4">

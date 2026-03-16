@@ -55,8 +55,7 @@ export default {
 					'dark-foreground': 'hsl(var(--card-dark-foreground))',
 					purple: 'hsl(var(--card-purple))',
 					'purple-foreground': 'hsl(var(--card-purple-foreground))'
-				}
-				,
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',

@@ -33,6 +33,7 @@ const Auth = () => {
   const [firstName, setFirstName] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isFacebookLoading, setIsFacebookLoading] = useState(false);
 
   useEffect(() => {
     if (user && !loading) {

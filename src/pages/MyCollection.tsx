@@ -158,7 +158,7 @@ export default function MyCollection() {
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-2xl font-bold">{t.title}</h1>
+              <h1 className="text-2xl font-bold text-foreground">{t.title}</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {items.length} {t.items}{totalValue > 0 ? ` · ${t.totalValue} €${totalValue.toFixed(2)}` : ''}
               </p>
@@ -207,7 +207,7 @@ export default function MyCollection() {
             </div>
             <div className="flex gap-3">
               <Select value={mediaFilter} onValueChange={(v) => setMediaFilter(v as any)}>
-                <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-[130px] text-foreground"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t.all}</SelectItem>
                   <SelectItem value="cd">CD</SelectItem>
@@ -215,7 +215,7 @@ export default function MyCollection() {
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-                <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-[150px] text-foreground"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t.allItems}</SelectItem>
                   <SelectItem value="for_sale">{t.forSale}</SelectItem>

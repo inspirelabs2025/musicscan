@@ -58,9 +58,9 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
     <div className={`bg-gradient-to-br ${colorClasses[color as keyof typeof colorClasses]} rounded-xl p-4 border backdrop-blur-sm`}>
       <div className="flex items-center gap-2 mb-1">
         {icon}
-        <span className="text-sm text-muted-foreground">{label}</span>
+        <span className="text-sm text-foreground/70">{label}</span>
       </div>
-      <p className="text-2xl font-bold">{value}</p>
+      <p className="text-2xl font-bold text-foreground">{value}</p>
     </div>
   );
 }

@@ -207,7 +207,7 @@ export default function MyCollection() {
             </div>
             <div className="flex gap-3">
               <Select value={mediaFilter} onValueChange={(v) => setMediaFilter(v as any)}>
-                <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-[130px] text-foreground"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t.all}</SelectItem>
                   <SelectItem value="cd">CD</SelectItem>

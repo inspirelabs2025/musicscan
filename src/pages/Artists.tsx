@@ -80,7 +80,7 @@ const Artists = () => {
             <div className="max-w-3xl mx-auto text-center space-y-3">
               <div className="flex items-center justify-center gap-2">
                 <Music className="w-7 h-7 text-primary" />
-                <h1 className="text-3xl md:text-4xl font-bold">
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground">
                   {selectedCountry === 'nederland' ? a.dutchIcons : 
                    selectedCountry === 'frankrijk' ? a.frenchIcons : a.title}
                 </h1>

@@ -125,7 +125,7 @@ export function MobileBottomNav() {
               <div className="flex flex-col h-full overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-background z-10">
-                  <h2 className="text-lg font-semibold">{t('common.menu')}</h2>
+                  <h2 className="text-lg font-semibold text-foreground">{t('common.menu')}</h2>
                   <Button variant="ghost" size="sm" onClick={() => setMenuOpen(false)} className="p-1">
                     <X className="h-5 w-5" />
                   </Button>

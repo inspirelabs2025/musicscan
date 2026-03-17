@@ -158,7 +158,7 @@ export default function MyCollection() {
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-2xl font-bold">{t.title}</h1>
+              <h1 className="text-2xl font-bold text-foreground">{t.title}</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {items.length} {t.items}{totalValue > 0 ? ` · ${t.totalValue} €${totalValue.toFixed(2)}` : ''}
               </p>

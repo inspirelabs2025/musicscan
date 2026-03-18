@@ -48,7 +48,7 @@ export const AudioPlayer: React.FC = () => {
   const hasPrevTrack = currentIndex > 0;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg">
+    <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-40 bg-background border-t shadow-lg">
       <Card className="rounded-none border-0">
         <CardContent className="p-4">
           <div className="flex items-center gap-4">

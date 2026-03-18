@@ -62,7 +62,7 @@ export const MobileInstallBanner = () => {
   if (!showBanner) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-3 bg-primary/95 backdrop-blur-md text-primary-foreground safe-area-bottom animate-fade-in md:hidden">
+    <div className="fixed bottom-16 left-0 right-0 z-40 p-3 bg-primary/95 backdrop-blur-md text-primary-foreground safe-area-bottom animate-fade-in md:hidden">
       <div className="flex items-center gap-3">
         <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
           <Download className="w-5 h-5" />

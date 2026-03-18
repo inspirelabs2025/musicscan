@@ -16,6 +16,7 @@ const MagicMikeSection = lazy(() => import('@/components/home/sections/MagicMike
 const MagicMikePodcastSection = lazy(() => import('@/components/home/sections/MagicMikePodcastSection').then(m => ({ default: m.MagicMikePodcastSection })));
 const ProductBanner = lazy(() => import('@/components/home/ProductBanner').then(m => ({ default: m.ProductBanner })));
 const MobileInstallBanner = lazy(() => import('@/components/MobileInstallBanner').then(m => ({ default: m.MobileInstallBanner })));
+const AppInstallBanner = lazy(() => import('@/components/home/AppInstallBanner').then(m => ({ default: m.AppInstallBanner })));
 
 const SectionFallback = () => <div className="py-10"><Skeleton className="h-48 mx-4 rounded-xl" /></div>;
 
@@ -65,6 +66,11 @@ const Home = () => {
       </Helmet>
       {/* Hero */}
       <ScannerHero />
+
+      {/* App Install Banner (mobile only) */}
+      <Suspense fallback={null}>
+        <AppInstallBanner />
+      </Suspense>
 
       {/* Podcast */}
       <Suspense fallback={<SectionFallback />}>

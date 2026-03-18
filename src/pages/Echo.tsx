@@ -131,7 +131,7 @@ export default function Echo() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 pb-8 max-w-5xl -mt-3">
+      <div className="container mx-auto px-4 pb-24 max-w-5xl -mt-3">
         <Card className="border-2 border-echo-lavender/20 bg-card/95 backdrop-blur">
           <CardHeader>
             <Tabs value={activeMode} onValueChange={setActiveMode} className="w-full">

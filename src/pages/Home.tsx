@@ -67,6 +67,11 @@ const Home = () => {
       {/* Hero */}
       <ScannerHero />
 
+      {/* App Install Banner (mobile only) */}
+      <Suspense fallback={null}>
+        <AppInstallBanner />
+      </Suspense>
+
       {/* Podcast */}
       <Suspense fallback={<SectionFallback />}>
         <MagicMikePodcastSection />

@@ -45,6 +45,18 @@ interface HourlyStats {
   count: number;
 }
 
+interface TopPage {
+  path: string;
+  views: number;
+}
+
+interface ScanStats {
+  ai_scans: number;
+  cd_scans: number;
+  vinyl_scans: number;
+  total: number;
+}
+
 function formatDate(date: Date): string {
   return date.toLocaleDateString('nl-NL', { 
     weekday: 'long', 
@@ -64,18 +76,16 @@ function formatPercentageChange(current: number, previous: number): string {
 
 function getCountryFlag(country: string): string {
   const flags: Record<string, string> = {
-    'Netherlands': '🇳🇱',
-    'Belgium': '🇧🇪',
-    'Germany': '🇩🇪',
-    'United States': '🇺🇸',
-    'France': '🇫🇷',
-    'United Kingdom': '🇬🇧',
-    'Spain': '🇪🇸',
-    'Italy': '🇮🇹',
-    'Canada': '🇨🇦',
-    'Australia': '🇦🇺',
+    'Netherlands': '🇳🇱', 'Belgium': '🇧🇪', 'Germany': '🇩🇪',
+    'United States': '🇺🇸', 'France': '🇫🇷', 'United Kingdom': '🇬🇧',
+    'Spain': '🇪🇸', 'Italy': '🇮🇹', 'Canada': '🇨🇦', 'Australia': '🇦🇺',
   };
   return flags[country] || '🌍';
+}
+
+function prettifyPath(path: string): string {
+  if (path === '/') return 'Homepage';
+  return path.replace(/^\//, '').replace(/-/g, ' ').replace(/\//g, ' › ').slice(0, 50);
 }
 
 function generateEmailHtml(
@@ -85,11 +95,18 @@ function generateEmailHtml(
   countries: CountryStats[],
   sources: SourceStats[],
   devices: DeviceStats[],
-  peakHour: HourlyStats | null
+  peakHour: HourlyStats | null,
+  scans: ScanStats,
+  prevScans: ScanStats,
+  topPages: TopPage[],
+  newUsers: number,
+  newBlogPosts: number,
+  newOrders: number,
 ): string {
   const sessionsChange = formatPercentageChange(stats.unique_sessions, prevStats.unique_sessions);
   const pageviewsChange = formatPercentageChange(stats.real_users, prevStats.real_users);
   const datacenterChange = formatPercentageChange(stats.datacenter_hits, prevStats.datacenter_hits);
+  const scansChange = formatPercentageChange(scans.total, prevScans.total);
 
   const countriesHtml = countries.slice(0, 5).map(c => `
     <tr>
@@ -120,6 +137,14 @@ function generateEmailHtml(
     </tr>
   `).join('');
 
+  const topPagesHtml = topPages.slice(0, 10).map((p, i) => `
+    <tr>
+      <td style="padding: 6px 12px; border-bottom: 1px solid #eee; font-size: 13px; color: #666;">${i + 1}.</td>
+      <td style="padding: 6px 12px; border-bottom: 1px solid #eee; font-size: 13px;">${prettifyPath(p.path)}</td>
+      <td style="padding: 6px 12px; border-bottom: 1px solid #eee; text-align: right; font-weight: 600;">${p.views}</td>
+    </tr>
+  `).join('');
+
   const peakHourText = peakHour ? `${peakHour.hour.toString().padStart(2, '0')}:00 - ${(peakHour.hour + 1).toString().padStart(2, '0')}:00 (${peakHour.count} sessies)` : 'Geen data';
 
   return `
@@ -140,8 +165,34 @@ function generateEmailHtml(
           <tr>
             <td style="background: linear-gradient(135deg, #8B5CF6 0%, #F59E0B 100%); padding: 30px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">🎵 MusicScan</h1>
-              <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">Dagelijkse Statistieken</p>
+              <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">Dagelijks Rapport</p>
               <p style="margin: 4px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">${date}</p>
+            </td>
+          </tr>
+
+          <!-- Quick Summary Bar -->
+          <tr>
+            <td style="padding: 20px 30px; background: #1a1a2e;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="25%" style="text-align: center;">
+                    <div style="font-size: 22px; font-weight: 700; color: #8B5CF6;">${stats.unique_sessions}</div>
+                    <div style="font-size: 11px; color: #aaa;">Bezoekers</div>
+                  </td>
+                  <td width="25%" style="text-align: center;">
+                    <div style="font-size: 22px; font-weight: 700; color: #F59E0B;">${scans.total}</div>
+                    <div style="font-size: 11px; color: #aaa;">Scans</div>
+                  </td>
+                  <td width="25%" style="text-align: center;">
+                    <div style="font-size: 22px; font-weight: 700; color: #22c55e;">${newUsers}</div>
+                    <div style="font-size: 11px; color: #aaa;">Nieuwe Users</div>
+                  </td>
+                  <td width="25%" style="text-align: center;">
+                    <div style="font-size: 22px; font-weight: 700; color: #ef4444;">${newOrders}</div>
+                    <div style="font-size: 11px; color: #aaa;">Bestellingen</div>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
@@ -190,6 +241,57 @@ function generateEmailHtml(
             </td>
           </tr>
 
+          <!-- Scans Section -->
+          <tr>
+            <td style="padding: 0 30px 30px 30px;">
+              <h2 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px;">🔍 Scans Overzicht</h2>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="33%" style="padding: 5px;">
+                    <div style="background: #f8f4ff; border-radius: 8px; padding: 12px; text-align: center;">
+                      <div style="font-size: 20px; font-weight: 700; color: #8B5CF6;">${scans.ai_scans}</div>
+                      <div style="font-size: 11px; color: #666;">AI Scans</div>
+                    </div>
+                  </td>
+                  <td width="33%" style="padding: 5px;">
+                    <div style="background: #fff7ed; border-radius: 8px; padding: 12px; text-align: center;">
+                      <div style="font-size: 20px; font-weight: 700; color: #F59E0B;">${scans.cd_scans}</div>
+                      <div style="font-size: 11px; color: #666;">CD Scans</div>
+                    </div>
+                  </td>
+                  <td width="33%" style="padding: 5px;">
+                    <div style="background: #f0fdf4; border-radius: 8px; padding: 12px; text-align: center;">
+                      <div style="font-size: 20px; font-weight: 700; color: #22c55e;">${scans.vinyl_scans}</div>
+                      <div style="font-size: 11px; color: #666;">Vinyl Scans</div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 8px 0 0 0; font-size: 12px; color: #888; text-align: center;">
+                Totaal: ${scans.total} scans ${scansChange !== '—' ? `(${scansChange} t.o.v. gisteren)` : ''}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Top Pages -->
+          <tr>
+            <td style="padding: 0 30px 30px 30px;">
+              <h2 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px;">🏆 Top 10 Pagina's</h2>
+              <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #eee; border-radius: 8px; overflow: hidden;">
+                <thead>
+                  <tr style="background: #f9f9f9;">
+                    <th style="padding: 8px 12px; text-align: left; font-weight: 600; font-size: 12px; color: #666; width: 30px;">#</th>
+                    <th style="padding: 8px 12px; text-align: left; font-weight: 600; font-size: 12px; color: #666;">Pagina</th>
+                    <th style="padding: 8px 12px; text-align: right; font-weight: 600; font-size: 12px; color: #666;">Views</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${topPagesHtml || '<tr><td colspan="3" style="padding: 12px; text-align: center; color: #999;">Geen data</td></tr>'}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+
           <!-- Traffic Sources -->
           <tr>
             <td style="padding: 0 30px 30px 30px;">
@@ -229,6 +331,29 @@ function generateEmailHtml(
                         ${devicesHtml}
                       </tbody>
                     </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Content Stats -->
+          <tr>
+            <td style="padding: 0 30px 30px 30px;">
+              <h2 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px;">📝 Content & Conversies</h2>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="50%" style="padding: 5px;">
+                    <div style="background: #f8f4ff; border-radius: 8px; padding: 12px; text-align: center;">
+                      <div style="font-size: 20px; font-weight: 700; color: #8B5CF6;">${newBlogPosts}</div>
+                      <div style="font-size: 11px; color: #666;">Nieuwe Verhalen</div>
+                    </div>
+                  </td>
+                  <td width="50%" style="padding: 5px;">
+                    <div style="background: #fff7ed; border-radius: 8px; padding: 12px; text-align: center;">
+                      <div style="font-size: 20px; font-weight: 700; color: #F59E0B;">${newOrders}</div>
+                      <div style="font-size: 11px; color: #666;">Bestellingen</div>
+                    </div>
                   </td>
                 </tr>
               </table>
@@ -284,117 +409,142 @@ const handler = async (req: Request): Promise<Response> => {
     const dayBeforeStart = dayBefore.toISOString().split('T')[0];
     const dayBeforeEnd = dayBefore.toISOString().split('T')[0];
 
-    console.log(`Fetching stats for: ${yesterdayStart} (comparing to ${dayBeforeStart})`);
+    const yesterdayISO = yesterday.toISOString();
+    const todayISO = now.toISOString().split('T')[0] + 'T00:00:00.000Z';
+    const dayBeforeISO = dayBefore.toISOString();
 
-    // Fetch yesterday's stats
-    const { data: statsData, error: statsError } = await supabase.rpc('get_clean_analytics_stats', {
-      p_start_date: yesterdayStart,
-      p_end_date: yesterdayEnd
-    });
+    console.log(`📊 Fetching stats for: ${yesterdayStart} (comparing to ${dayBeforeStart})`);
 
-    if (statsError) {
-      console.error('Stats error:', statsError);
-      throw statsError;
-    }
-
-    // Fetch day before stats for comparison
-    const { data: prevStatsData } = await supabase.rpc('get_clean_analytics_stats', {
-      p_start_date: dayBeforeStart,
-      p_end_date: dayBeforeEnd
-    });
-
-    // Fetch countries
-    const { data: countriesData } = await supabase.rpc('get_clean_analytics_countries', {
-      p_start_date: yesterdayStart,
-      p_end_date: yesterdayEnd
-    });
-
-    // Fetch sources
-    const { data: sourcesData } = await supabase.rpc('get_clean_analytics_sources', {
-      p_start_date: yesterdayStart,
-      p_end_date: yesterdayEnd
-    });
-
-    // Fetch devices
-    const { data: devicesData } = await supabase.rpc('get_clean_analytics_devices', {
-      p_start_date: yesterdayStart,
-      p_end_date: yesterdayEnd
-    });
-
-    // Fetch hourly for peak hour
-    const { data: hourlyData } = await supabase.rpc('get_clean_analytics_hourly', {
-      p_start_date: yesterdayStart,
-      p_end_date: yesterdayEnd
-    });
+    // Parallel fetch all data
+    const [
+      statsResult,
+      prevStatsResult,
+      countriesResult,
+      sourcesResult,
+      devicesResult,
+      hourlyResult,
+      aiScansResult,
+      cdScansResult,
+      vinylScansResult,
+      prevAiScansResult,
+      prevCdScansResult,
+      prevVinylScansResult,
+      topPagesResult,
+      newUsersResult,
+      newBlogPostsResult,
+      newOrdersResult,
+    ] = await Promise.all([
+      supabase.rpc('get_clean_analytics_stats', { p_start_date: yesterdayStart, p_end_date: yesterdayEnd }),
+      supabase.rpc('get_clean_analytics_stats', { p_start_date: dayBeforeStart, p_end_date: dayBeforeEnd }),
+      supabase.rpc('get_clean_analytics_countries', { p_start_date: yesterdayStart, p_end_date: yesterdayEnd }),
+      supabase.rpc('get_clean_analytics_sources', { p_start_date: yesterdayStart, p_end_date: yesterdayEnd }),
+      supabase.rpc('get_clean_analytics_devices', { p_start_date: yesterdayStart, p_end_date: yesterdayEnd }),
+      supabase.rpc('get_clean_analytics_hourly', { p_start_date: yesterdayStart, p_end_date: yesterdayEnd }),
+      // Scans yesterday
+      supabase.from('ai_scan_results').select('id', { count: 'exact', head: true }).gte('created_at', yesterdayISO).lt('created_at', todayISO),
+      supabase.from('cd_scan').select('id', { count: 'exact', head: true }).gte('created_at', yesterdayISO).lt('created_at', todayISO),
+      supabase.from('vinyl2_scan').select('id', { count: 'exact', head: true }).gte('created_at', yesterdayISO).lt('created_at', todayISO),
+      // Scans day before
+      supabase.from('ai_scan_results').select('id', { count: 'exact', head: true }).gte('created_at', dayBeforeISO).lt('created_at', yesterdayISO),
+      supabase.from('cd_scan').select('id', { count: 'exact', head: true }).gte('created_at', dayBeforeISO).lt('created_at', yesterdayISO),
+      supabase.from('vinyl2_scan').select('id', { count: 'exact', head: true }).gte('created_at', dayBeforeISO).lt('created_at', yesterdayISO),
+      // Top pages from clean_analytics
+      supabase.from('clean_analytics').select('path').gte('created_at', yesterdayISO).lt('created_at', todayISO).eq('is_datacenter', false).not('path', 'is', null),
+      // New users
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', yesterdayISO).lt('created_at', todayISO),
+      // New blog posts
+      supabase.from('blog_posts').select('id', { count: 'exact', head: true }).gte('created_at', yesterdayISO).lt('created_at', todayISO),
+      // Orders
+      supabase.from('orders').select('id', { count: 'exact', head: true }).gte('created_at', yesterdayISO).lt('created_at', todayISO),
+    ]);
 
     // Process stats
-    const stats: AnalyticsStats = statsData || {
-      total_hits: 0,
-      real_users: 0,
-      datacenter_hits: 0,
-      purity_score: 0,
-      avg_real_score: 0,
-      unique_sessions: 0,
-      pages_per_session: 0
+    const stats: AnalyticsStats = statsResult.data || {
+      total_hits: 0, real_users: 0, datacenter_hits: 0, purity_score: 0,
+      avg_real_score: 0, unique_sessions: 0, pages_per_session: 0
+    };
+    const prevStats: AnalyticsStats = prevStatsResult.data || {
+      total_hits: 0, real_users: 0, datacenter_hits: 0, purity_score: 0,
+      avg_real_score: 0, unique_sessions: 0, pages_per_session: 0
     };
 
-    const prevStats: AnalyticsStats = prevStatsData || {
-      total_hits: 0,
-      real_users: 0,
-      datacenter_hits: 0,
-      purity_score: 0,
-      avg_real_score: 0,
-      unique_sessions: 0,
-      pages_per_session: 0
-    };
+    const countries: CountryStats[] = countriesResult.data || [];
+    const sources: SourceStats[] = sourcesResult.data || [];
+    const devices: DeviceStats[] = devicesResult.data || [];
 
-    const countries: CountryStats[] = countriesData || [];
-    const sources: SourceStats[] = sourcesData || [];
-    const devices: DeviceStats[] = devicesData || [];
-    
-    // Find peak hour
-    const peakHour: HourlyStats | null = hourlyData?.length > 0 
-      ? hourlyData.reduce((max: HourlyStats, h: HourlyStats) => h.count > max.count ? h : max, hourlyData[0])
+    const peakHour: HourlyStats | null = hourlyResult.data?.length > 0
+      ? hourlyResult.data.reduce((max: HourlyStats, h: HourlyStats) => h.count > max.count ? h : max, hourlyResult.data[0])
       : null;
+
+    // Scans
+    const scans: ScanStats = {
+      ai_scans: aiScansResult.count || 0,
+      cd_scans: cdScansResult.count || 0,
+      vinyl_scans: vinylScansResult.count || 0,
+      total: (aiScansResult.count || 0) + (cdScansResult.count || 0) + (vinylScansResult.count || 0),
+    };
+    const prevScans: ScanStats = {
+      ai_scans: prevAiScansResult.count || 0,
+      cd_scans: prevCdScansResult.count || 0,
+      vinyl_scans: prevVinylScansResult.count || 0,
+      total: (prevAiScansResult.count || 0) + (prevCdScansResult.count || 0) + (prevVinylScansResult.count || 0),
+    };
+
+    // Top pages - aggregate from raw data
+    const pathCounts: Record<string, number> = {};
+    if (topPagesResult.data) {
+      for (const row of topPagesResult.data) {
+        if (row.path) {
+          pathCounts[row.path] = (pathCounts[row.path] || 0) + 1;
+        }
+      }
+    }
+    const topPages: TopPage[] = Object.entries(pathCounts)
+      .map(([path, views]) => ({ path, views }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 10);
+
+    const newUsers = newUsersResult.count || 0;
+    const newBlogPosts = newBlogPostsResult.count || 0;
+    const newOrders = newOrdersResult.count || 0;
+
+    console.log(`📊 Stats: ${stats.unique_sessions} sessions, ${scans.total} scans, ${topPages.length} pages tracked`);
 
     // Generate email HTML
     const dateStr = formatDate(yesterday);
-    const emailHtml = generateEmailHtml(dateStr, stats, prevStats, countries, sources, devices, peakHour);
+    const emailHtml = generateEmailHtml(dateStr, stats, prevStats, countries, sources, devices, peakHour, scans, prevScans, topPages, newUsers, newBlogPosts, newOrders);
 
     // Send email
     const emailResponse = await resend.emails.send({
       from: "MusicScan <noreply@musicscan.nl>",
       to: [adminEmail],
-      subject: `📊 MusicScan Stats - ${dateStr}`,
+      subject: `📊 MusicScan Rapport - ${dateStr}`,
       html: emailHtml,
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    console.log("✅ Email sent successfully:", emailResponse);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: `Daily stats email sent to ${adminEmail}`,
         stats: {
           date: yesterdayStart,
           sessions: stats.unique_sessions,
           pageviews: stats.real_users,
-          purity: stats.purity_score
+          scans: scans.total,
+          topPages: topPages.length,
+          newUsers,
+          newOrders,
         }
       }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error: any) {
-    console.error("Error sending daily stats email:", error);
+    console.error("❌ Error sending daily stats email:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 };

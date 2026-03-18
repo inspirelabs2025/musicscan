@@ -20,7 +20,7 @@ export function QuizHubHero() {
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-700 to-blue-700 dark:from-primary dark:via-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
             {q.title}
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{q.subtitle}</p>

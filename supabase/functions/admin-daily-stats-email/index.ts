@@ -458,15 +458,15 @@ const handler = async (req: Request): Promise<Response> => {
       supabase.from('orders').select('id', { count: 'exact', head: true }).gte('created_at', yesterdayISO).lt('created_at', todayISO),
     ]);
 
-    // Process stats
-    const stats: AnalyticsStats = statsResult.data || {
+    // Process stats - RPC may return array or single object
+    const defaultStats = {
       total_hits: 0, real_users: 0, datacenter_hits: 0, purity_score: 0,
       avg_real_score: 0, unique_sessions: 0, pages_per_session: 0
     };
-    const prevStats: AnalyticsStats = prevStatsResult.data || {
-      total_hits: 0, real_users: 0, datacenter_hits: 0, purity_score: 0,
-      avg_real_score: 0, unique_sessions: 0, pages_per_session: 0
-    };
+    const rawStats = statsResult.data;
+    const stats: AnalyticsStats = (Array.isArray(rawStats) ? rawStats[0] : rawStats) || defaultStats;
+    const rawPrev = prevStatsResult.data;
+    const prevStats: AnalyticsStats = (Array.isArray(rawPrev) ? rawPrev[0] : rawPrev) || defaultStats;
 
     const countries: CountryStats[] = countriesResult.data || [];
     const sources: SourceStats[] = sourcesResult.data || [];

@@ -48,7 +48,7 @@ export default function QuizHub() {
           {user && (
             <div className="flex justify-end">
               <Link to="/mijn-quizzen">
-                <Button variant="outline" className="gap-2">
+                <Button className="gap-2">
                   <BarChart3 className="w-4 h-4" />
                   {tr.quiz.myQuizzesScores}
                 </Button>

@@ -134,8 +134,8 @@ const Dashboard = () => {
                     </div>
                     <span>{t.dashboard.myCollection}</span>
                   </Link>
-                  <button onClick={() => window.dispatchEvent(new Event('open-magic-mike'))} className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.03] group cursor-pointer" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', backdropFilter: 'blur(4px)' }}>
-                    <div className="p-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }}>
+                  <button onClick={() => window.dispatchEvent(new Event('open-magic-mike'))} className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.03] group cursor-pointer" style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(255,255,255,0.95)', color: 'hsl(270 60% 30%)', backdropFilter: 'blur(4px)' }}>
+                    <div className="p-2.5 rounded-full" style={{ background: 'rgba(120,60,180,0.15)' }}>
                       <MessageSquare className="w-6 h-6 group-hover:animate-pulse" />
                     </div>
                     <span>{t.dashboard.chat}</span>

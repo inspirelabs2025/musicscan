@@ -1,6 +1,7 @@
 import { AdminGuard } from '@/components/admin/AdminGuard';
 import { EmailDigestControl } from '@/components/admin/email/EmailDigestControl';
 import { WeeklyDiscussionControl } from '@/components/admin/email/WeeklyDiscussionControl';
+import { DailyStatsEmailControl } from '@/components/admin/email/DailyStatsEmailControl';
 import { NotificationStatsOverview } from '@/components/admin/email/NotificationStatsOverview';
 import { UserEmailPreferences } from '@/components/admin/email/UserEmailPreferences';
 import { EmailLogsTable } from '@/components/admin/email/EmailLogsTable';

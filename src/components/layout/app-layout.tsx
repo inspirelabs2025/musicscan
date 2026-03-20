@@ -1,0 +1,61 @@
+import { Outlet, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
+import { Header } from './header';
+import { Menu } from './menu';
+import { cn } from '@/lib/utils';
+import { Toaster } from 'sonner';
+import { ScrollArea } from '../ui/scroll-area';
+import { ReactNode, useEffect } from 'react';
+import { useMenu } from '@/hooks/useMenu';
+import { useTheme } from '@/hooks/useTheme';
+import { AINudge } from '@/components/ainudge';
+
+interface AppLayoutProps {
+	children?: ReactNode;
+	showMenu?: boolean;
+	showSearch?: boolean;
+}
+
+export function AppLayout({ children, showMenu = true, showSearch = true }: AppLayoutProps) {
+	const location = useLocation();
+	const { toggleMenu } = useMenu();
+	const { theme } = useTheme();
+
+	// Close menu when route changes	
+	useEffect(() => {
+		toggleMenu(false);
+	}, [location, toggleMenu]);
+
+	return (
+		<div
+			className={cn(
+				'grid min-h-screen w-full lg:grid-cols-[280px_1fr]',
+				{ 'bg-card-dark text-card-dark-foreground': theme === 'dark' },
+				{ 'bg-card-purple text-card-purple-foreground': theme === 'purple' }
+			)}
+		>
+			<Helmet>
+				<title>Melodify</title>
+				<meta
+					name="description"
+					content="Melodify: De beste app om jouw muziek te creëren, distribueren en te promoten."
+				/>
+			</Helmet>
+
+			{showMenu && <Menu />}
+
+			<div className="flex flex-col">
+				<Header showSearch={showSearch} />
+				<ScrollArea className="flex-1">
+					<main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+						{children || <Outlet />}
+						<div className="fixed bottom-4 right-4 z-50">
+							<AINudge />
+						</div>
+					</main>
+				</ScrollArea>
+			</div>
+			<Toaster />
+		</div>
+	);
+}

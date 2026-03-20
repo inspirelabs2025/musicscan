@@ -1,51 +1,57 @@
-import { X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { MessageSquareText, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CHAT_NUDGE_LOCAL_STORAGE_KEY } from '@/lib/constants';
 
 interface ChatNudgeProps {
-  hasChatMessages: boolean;
+  messageCount: number;
 }
 
-export function ChatNudge({ hasChatMessages }: ChatNudgeProps) {
+const ChatNudge: React.FC<ChatNudgeProps> = ({ messageCount }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const dismissed = localStorage.getItem(CHAT_NUDGE_LOCAL_STORAGE_KEY);
-    if (!hasChatMessages && !dismissed) {
+    // Only show the nudge if there are 0 messages
+    // In a real application, this count would come from a database query
+    if (messageCount === 0) {
       setIsVisible(true);
     }
-  }, [hasChatMessages]);
-
-  const handleDismiss = () => {
-    setIsVisible(false);
-    localStorage.setItem(CHAT_NUDGE_LOCAL_STORAGE_KEY, 'true');
-  };
+  }, [messageCount]);
 
   if (!isVisible) {
     return null;
   }
 
+  const handleClose = () => {
+    setIsVisible(false);
+    // Optionally, persist this state (e.g., in localStorage) to prevent showing again
+    // localStorage.setItem('chat-nudge-dismissed', 'true');
+  };
+
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
-        transition={{ duration: 0.3 }}
-        className="fixed bottom-4 right-4 z-50 flex items-center gap-4 rounded-lg bg-primary p-4 shadow-lg md:bottom-8 md:right-8"
-      >
-        <p className="text-sm text-primary-foreground">
-          💬 Heb je de chat al geprobeerd? Er zijn pas 0 chatberichten in je project. Probeer de chatfunctie om sneller antwoorden te krijgen!
-        </p>
-        <button
-          onClick={handleDismiss}
-          className="text-primary-foreground/70 hover:text-primary-foreground focus:outline-none"
-          aria-label="Dismiss chat nudge"
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0, y: 50, scale: 0.8 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 50, scale: 0.8 }}
+          transition={{ type: 'spring', damping: 10, stiffness: 100 }}
+          className="fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-lg bg-primary p-4 shadow-lg"
         >
-          <X className="h-4 w-4" />
-        </button>
-      </motion.div>
+          <MessageSquareText className="h-6 w-6 text-primary-foreground" />
+          <p className="text-sm font-medium text-primary-foreground">
+            Heb je de chat al geprobeerd? Probeer de chatfunctie om sneller antwoorden te krijgen!
+          </p>
+          <button
+            onClick={handleClose}
+            className="text-primary-foreground/80 hover:text-primary-foreground focus:outline-none"
+            aria-label="Sluit melding"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </motion.div>
+      )}
     </AnimatePresence>
   );
-}
+};
+
+export default ChatNudge;

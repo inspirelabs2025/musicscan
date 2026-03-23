@@ -361,7 +361,7 @@ const Auth = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">{t.confirmPassword}</Label>
-                  <Input id="confirm-password" type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={isSubmitting} minLength={6} />
+                  <Input id="confirm-password" type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={isSubmitting} minLength={6} className="text-base" />
                 </div>
 
                 <div className="space-y-2">

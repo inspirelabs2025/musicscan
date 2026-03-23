@@ -157,7 +157,7 @@ const Dashboard = () => {
               <BarChart3 className="w-6 h-6 text-vinyl-purple" />
               {t.dashboard.yourMusicDNA}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <StatCard title={t.dashboard.totalCollection} value={statsLoading ? "..." : `${scanStats?.totalScans || 0}`} subtitle={t.dashboard.albumsDiscovered} icon={Disc} />
               <StatCard title={t.dashboard.collectionValue} value={collectionLoading ? "..." : `€${collectionStats?.totalValue ? Math.round(collectionStats.totalValue) : 0}`} subtitle={t.dashboard.estimatedTotal} icon={TrendingUp} />
               <StatCard title={t.dashboard.thisMonth} value={statsLoading ? "..." : `${scanStats?.totalScans || 0}`} subtitle={t.dashboard.newScans} icon={Camera} />

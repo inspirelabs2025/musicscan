@@ -31,42 +31,16 @@ const DEFAULT_TEMPLATES: EmailTemplate[] = [
     name: "Promotie / Nieuwe Producten",
     subject_nl: "Nieuwe items beschikbaar bij MusicScan!",
     subject_en: "New items available at MusicScan!",
-    body_nl: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #7c3aed; font-size: 24px;">Hallo {{username}},</h1>
-  <p style="font-size: 16px; line-height: 1.6; color: #333;">Bedankt voor je eerdere aankoop bij ons op Discogs!</p>
-  <p style="font-size: 16px; line-height: 1.6; color: #333;">We hebben weer nieuwe items toegevoegd aan onze collectie. Bekijk ons volledige aanbod op:</p>
-  <p style="text-align: center; margin: 30px 0;">
-    <a href="https://musicscan.app/shop" style="background-color: #7c3aed; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold;">Bekijk Shop</a>
-  </p>
-  <p style="font-size: 14px; color: #666;">Met vriendelijke groet,<br/>MusicScan Team</p>
-</div>`,
-    body_en: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #7c3aed; font-size: 24px;">Hi {{username}},</h1>
-  <p style="font-size: 16px; line-height: 1.6; color: #333;">Thank you for your previous purchase from us on Discogs!</p>
-  <p style="font-size: 16px; line-height: 1.6; color: #333;">We've added new items to our collection. Check out our full catalog at:</p>
-  <p style="text-align: center; margin: 30px 0;">
-    <a href="https://musicscan.app/shop" style="background-color: #7c3aed; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold;">Visit Shop</a>
-  </p>
-  <p style="font-size: 14px; color: #666;">Best regards,<br/>MusicScan Team</p>
-</div>`,
+    body_nl: `<h1>Hallo {{username}},</h1><p>Bedankt voor je eerdere aankoop bij ons op Discogs!</p><p>We hebben weer nieuwe items toegevoegd aan onze collectie. Bekijk ons volledige aanbod op:</p><p><a href="https://musicscan.app/shop"><strong>Bekijk Shop</strong></a></p><p>Met vriendelijke groet,<br/>MusicScan Team</p>`,
+    body_en: `<h1>Hi {{username}},</h1><p>Thank you for your previous purchase from us on Discogs!</p><p>We've added new items to our collection. Check out our full catalog at:</p><p><a href="https://musicscan.app/shop"><strong>Visit Shop</strong></a></p><p>Best regards,<br/>MusicScan Team</p>`,
   },
   {
     id: "review",
     name: "Review Verzoek",
     subject_nl: "Hoe bevalt je aankoop?",
     subject_en: "How's your purchase?",
-    body_nl: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #7c3aed; font-size: 24px;">Hallo {{username}},</h1>
-  <p style="font-size: 16px; line-height: 1.6; color: #333;">We hopen dat je blij bent met je aankoop! Als je even de tijd hebt, zou je ons willen beoordelen op Discogs?</p>
-  <p style="font-size: 16px; line-height: 1.6; color: #333;">Je feedback helpt andere kopers en helpt ons om onze service te verbeteren.</p>
-  <p style="font-size: 14px; color: #666;">Bedankt!<br/>MusicScan Team</p>
-</div>`,
-    body_en: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #7c3aed; font-size: 24px;">Hi {{username}},</h1>
-  <p style="font-size: 16px; line-height: 1.6; color: #333;">We hope you're enjoying your purchase! If you have a moment, would you mind leaving us a review on Discogs?</p>
-  <p style="font-size: 16px; line-height: 1.6; color: #333;">Your feedback helps other buyers and helps us improve our service.</p>
-  <p style="font-size: 14px; color: #666;">Thank you!<br/>MusicScan Team</p>
-</div>`,
+    body_nl: `<h1>Hallo {{username}},</h1><p>We hopen dat je blij bent met je aankoop! Als je even de tijd hebt, zou je ons willen beoordelen op Discogs?</p><p>Je feedback helpt andere kopers en helpt ons om onze service te verbeteren.</p><p>Bedankt!<br/>MusicScan Team</p>`,
+    body_en: `<h1>Hi {{username}},</h1><p>We hope you're enjoying your purchase! If you have a moment, would you mind leaving us a review on Discogs?</p><p>Your feedback helps other buyers and helps us improve our service.</p><p>Thank you!<br/>MusicScan Team</p>`,
   },
   {
     id: "custom",

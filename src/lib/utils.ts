@@ -29,3 +29,12 @@ export function normalizeFullUrl(pathname: string): string {
   const clean = pathname.replace(/\/+$/, '') || '/';
   return `${base}${clean}`;
 }
+
+export function extractDiscogsIdFromUrl(url: string | null | undefined): number | null {
+  if (!url) return null;
+  const match = url.match(/\/release\/(\d+)/);
+  if (match) return parseInt(match[1], 10);
+  const match2 = url.match(/\/master\/(\d+)/);
+  if (match2) return parseInt(match2[1], 10);
+  return null;
+}

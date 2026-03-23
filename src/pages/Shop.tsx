@@ -220,7 +220,7 @@ const Shop = () => {
         {hasMore && (
           <div className="flex justify-center mt-6">
             <Link to={category.link}>
-              <Button variant="outline" className="gap-2">{tr.common.viewAll} <ChevronRight className="w-4 h-4" /></Button>
+              <Button variant="outline" className="gap-2 min-h-[44px]">{tr.common.viewAll} <ChevronRight className="w-4 h-4" /></Button>
             </Link>
           </div>
         )}

@@ -215,7 +215,7 @@ export default function MyCollection() {
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-                <SelectTrigger className="w-[150px] text-foreground"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-[150px] text-foreground min-h-[44px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t.allItems}</SelectItem>
                   <SelectItem value="for_sale">{t.forSale}</SelectItem>

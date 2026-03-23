@@ -17,9 +17,9 @@ export default function ChatPage() {
             <input
               type="text"
               placeholder="Typ je bericht..."
-              className="flex-grow p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex-grow p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-base text-foreground min-h-[44px]"
             />
-            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
+            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 min-h-[44px] font-medium">
               Verzend
             </button>
           </div>

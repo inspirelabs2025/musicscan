@@ -638,9 +638,9 @@ const Scanner = () => {
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg relative">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold bg-clip-text text-transparent">
-            🎯 Scanner Dashboard
-          </h1>
-          <Button variant="ghost" onClick={signOut} className="flex items-center gap-2 hover-scale">
+             🎯 Scanner Dashboard
+           </h1>
+           <Button variant="ghost" onClick={signOut} className="flex items-center gap-2 hover-scale text-foreground min-h-[44px]">
             <LogOut className="w-4 h-4" />
             ✨ Uitloggen
           </Button>

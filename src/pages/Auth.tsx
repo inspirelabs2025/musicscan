@@ -286,7 +286,7 @@ const Auth = () => {
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signin-email">{t.email}</Label>
-                  <Input id="signin-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isSubmitting} />
+                  <Input id="signin-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isSubmitting} className="text-base" />
                 </div>
                 
                 <div className="space-y-2">

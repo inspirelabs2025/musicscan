@@ -125,7 +125,7 @@ export default function Marketplace() {
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
             <Select value={filterBy} onValueChange={(value: FilterOption) => setFilterBy(value)}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-full sm:w-[140px] text-foreground min-h-[44px]">
                 <SelectValue placeholder={m.allItems} />
               </SelectTrigger>
               <SelectContent>

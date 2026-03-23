@@ -86,8 +86,8 @@ export default function Marketplace() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Store className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">{m.title}</h1>
+            <Store className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{m.title}</h1>
           </div>
           <p className="text-lg text-muted-foreground mb-6">{m.subtitle}</p>
           
@@ -121,11 +121,11 @@ export default function Marketplace() {
           </div>
         </div>
 
-        <div className="flex flex-row gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
             <Select value={filterBy} onValueChange={(value: FilterOption) => setFilterBy(value)}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-full sm:w-[140px] text-foreground min-h-[44px]">
                 <SelectValue placeholder={m.allItems} />
               </SelectTrigger>
               <SelectContent>
@@ -139,7 +139,7 @@ export default function Marketplace() {
           <div className="flex items-center gap-2">
             <ArrowUpDown className="h-4 w-4" />
             <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px] text-foreground min-h-[44px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -153,7 +153,7 @@ export default function Marketplace() {
             </Select>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-muted-foreground ml-auto">
+          <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground ml-auto">
             <Grid3x3 className="h-4 w-4" />
             {filteredItems.length} {m.ofItems} {items.length} {tr.common.items}
           </div>
@@ -166,7 +166,7 @@ export default function Marketplace() {
             <p className="text-muted-foreground">{m.noItemsDesc}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {sortedItems.map((item) => (
               <ShopItemCard 
                 key={`${item.media_type}-${item.id}`} 

@@ -94,7 +94,7 @@ const Dashboard = () => {
           <div className="text-center mb-8 animate-fade-in">
             <div className="flex items-center justify-center gap-3 mb-4">
               <Sparkles className="w-8 h-8 text-vinyl-purple animate-pulse" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold bg-clip-text text-transparent">
                 {t.dashboard.welcomeBack}
               </h1>
               <Sparkles className="w-8 h-8 text-vinyl-gold animate-pulse delay-300" />
@@ -121,24 +121,24 @@ const Dashboard = () => {
                   <Zap className="w-5 h-5" style={{ color: 'hsl(45 100% 60%)' }} />
                   <span className="font-extrabold tracking-wide">{t.dashboard.quickActions}</span>
                 </h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <Link to="/ai-scan-v2" className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-bold text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-xl group" style={{ background: 'linear-gradient(135deg, hsl(45 100% 55%), hsl(45 100% 50%))', color: 'black' }}>
-                    <div className="p-2.5 rounded-full" style={{ background: 'rgba(0,0,0,0.12)' }}>
-                      <Camera className="w-6 h-6 group-hover:animate-pulse" />
+                <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                  <Link to="/ai-scan-v2" className="flex flex-col items-center justify-center gap-1.5 sm:gap-2 h-20 sm:h-24 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-xl group" style={{ background: 'linear-gradient(135deg, hsl(45 100% 55%), hsl(45 100% 50%))', color: 'black' }}>
+                    <div className="p-2 sm:p-2.5 rounded-full" style={{ background: 'rgba(0,0,0,0.12)' }}>
+                      <Camera className="w-5 h-5 sm:w-6 sm:h-6 group-hover:animate-pulse" />
                     </div>
-                    <span>{t.dashboard.scanNow}</span>
+                    <span className="text-center leading-tight">{t.dashboard.scanNow}</span>
                   </Link>
-                  <Link to="/mijn-collectie" className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-bold text-sm transition-all duration-300 hover:scale-[1.03] group" style={{ background: 'hsl(0 0% 100%)', border: '2px solid hsl(270 40% 85%)', color: 'hsl(270 50% 20%)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                    <div className="p-2.5 rounded-full" style={{ background: 'rgba(120,60,180,0.15)' }}>
-                      <Search className="w-6 h-6 group-hover:animate-pulse" />
+                  <Link to="/mijn-collectie" className="flex flex-col items-center justify-center gap-1.5 sm:gap-2 h-20 sm:h-24 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 hover:scale-[1.03] group" style={{ background: 'hsl(0 0% 100%)', border: '2px solid hsl(270 40% 85%)', color: 'hsl(270 50% 20%)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                    <div className="p-2 sm:p-2.5 rounded-full" style={{ background: 'rgba(120,60,180,0.15)' }}>
+                      <Search className="w-5 h-5 sm:w-6 sm:h-6 group-hover:animate-pulse" />
                     </div>
-                    <span>{t.dashboard.myCollection}</span>
+                    <span className="text-center leading-tight">{t.dashboard.myCollection}</span>
                   </Link>
-                  <button onClick={() => window.dispatchEvent(new Event('open-magic-mike'))} className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-bold text-sm transition-all duration-300 hover:scale-[1.03] group cursor-pointer" style={{ background: 'hsl(0 0% 100%)', border: '2px solid hsl(270 40% 85%)', color: 'hsl(270 50% 20%)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                    <div className="p-2.5 rounded-full" style={{ background: 'rgba(120,60,180,0.15)' }}>
-                      <MessageSquare className="w-6 h-6 group-hover:animate-pulse" />
+                  <button onClick={() => window.dispatchEvent(new Event('open-magic-mike'))} className="flex flex-col items-center justify-center gap-1.5 sm:gap-2 h-20 sm:h-24 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 hover:scale-[1.03] group cursor-pointer" style={{ background: 'hsl(0 0% 100%)', border: '2px solid hsl(270 40% 85%)', color: 'hsl(270 50% 20%)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                    <div className="p-2 sm:p-2.5 rounded-full" style={{ background: 'rgba(120,60,180,0.15)' }}>
+                      <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 group-hover:animate-pulse" />
                     </div>
-                    <span>{t.dashboard.chat}</span>
+                    <span className="text-center leading-tight">{t.dashboard.chat}</span>
                   </button>
                 </div>
               </div>
@@ -157,7 +157,7 @@ const Dashboard = () => {
               <BarChart3 className="w-6 h-6 text-vinyl-purple" />
               {t.dashboard.yourMusicDNA}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <StatCard title={t.dashboard.totalCollection} value={statsLoading ? "..." : `${scanStats?.totalScans || 0}`} subtitle={t.dashboard.albumsDiscovered} icon={Disc} />
               <StatCard title={t.dashboard.collectionValue} value={collectionLoading ? "..." : `€${collectionStats?.totalValue ? Math.round(collectionStats.totalValue) : 0}`} subtitle={t.dashboard.estimatedTotal} icon={TrendingUp} />
               <StatCard title={t.dashboard.thisMonth} value={statsLoading ? "..." : `${scanStats?.totalScans || 0}`} subtitle={t.dashboard.newScans} icon={Camera} />
@@ -171,7 +171,7 @@ const Dashboard = () => {
               <Sparkles className="w-6 h-6 text-vinyl-purple" />
               {t.dashboard.commandCenter}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <EchoWidget />
               <AIInsightsWidget />
               <ChatWidget />
@@ -263,8 +263,8 @@ const Dashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-purple/10">
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+                  <Button asChild variant="outline" className="h-14 sm:h-16 flex flex-col gap-1 sm:gap-2 hover:bg-vinyl-purple/10 text-foreground min-h-[44px]">
                     <Link to="/collection-overview"><TrendingUp className="w-5 h-5" /><span className="text-xs">{t.dashboard.overview}</span></Link>
                   </Button>
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-gold/10">

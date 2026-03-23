@@ -87,8 +87,8 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 0 0% 96%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
@@ -153,6 +153,14 @@ All colors MUST be HSL.
   .bg-grid-pattern {
     background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0);
     background-size: 20px 20px;
+  }
+
+  /* Safe area for iPhone notch / bottom nav */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
   }
   
   .animate-float {

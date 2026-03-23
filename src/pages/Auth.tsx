@@ -262,7 +262,7 @@ const Auth = () => {
         <title>{t.metaTitle}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted">
+      <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-background to-muted">
         <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">{t.title}</CardTitle>
@@ -286,13 +286,13 @@ const Auth = () => {
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signin-email">{t.email}</Label>
-                  <Input id="signin-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isSubmitting} />
+                  <Input id="signin-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isSubmitting} className="text-base" />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="signin-password">{t.password}</Label>
                   <div className="relative">
-                    <Input id="signin-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required disabled={isSubmitting} />
+                    <Input id="signin-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required disabled={isSubmitting} className="text-base" />
                     <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2" onClick={() => setShowPassword(!showPassword)}>
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
@@ -321,7 +321,7 @@ const Auth = () => {
                   </Alert>
                 )}
                 
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full min-h-[44px]" disabled={isSubmitting}>
                   {isSubmitting ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t.signingIn}</>) : t.signIn}
                 </Button>
                 
@@ -341,18 +341,18 @@ const Auth = () => {
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signup-firstname">{t.firstName}</Label>
-                  <Input id="signup-firstname" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required disabled={isSubmitting} />
+                  <Input id="signup-firstname" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required disabled={isSubmitting} className="text-base" />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">{t.email}</Label>
-                  <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isSubmitting} />
+                  <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isSubmitting} className="text-base" />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">{t.password}</Label>
                   <div className="relative">
-                    <Input id="signup-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required disabled={isSubmitting} minLength={6} />
+                    <Input id="signup-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required disabled={isSubmitting} minLength={6} className="text-base" />
                     <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2" onClick={() => setShowPassword(!showPassword)}>
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
@@ -361,7 +361,7 @@ const Auth = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">{t.confirmPassword}</Label>
-                  <Input id="confirm-password" type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={isSubmitting} minLength={6} />
+                  <Input id="confirm-password" type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={isSubmitting} minLength={6} className="text-base" />
                 </div>
 
                 <div className="space-y-2">
@@ -376,7 +376,7 @@ const Auth = () => {
                   </Alert>
                 )}
                 
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                <Button type="submit" className="w-full min-h-[44px]" disabled={isSubmitting}>
                   {isSubmitting ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t.signingUp}</>) : t.signUp}
                 </Button>
               </form>
@@ -393,7 +393,7 @@ const Auth = () => {
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="reset-email">{t.email}</Label>
-                  <Input id="reset-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isSubmitting} />
+                  <Input id="reset-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isSubmitting} className="text-base" />
                 </div>
                 
                 {error && (
@@ -402,7 +402,7 @@ const Auth = () => {
                   </Alert>
                 )}
                 
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                <Button type="submit" className="w-full min-h-[44px]" disabled={isSubmitting}>
                   {isSubmitting ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t.sending}</>) : t.sendResetLink}
                 </Button>
                 

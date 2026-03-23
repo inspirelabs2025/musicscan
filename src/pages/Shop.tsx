@@ -212,7 +212,7 @@ const Shop = () => {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-3 sm:gap-4">
           {displayProducts.map((product, index) => (
             <ProductCard key={product.id} product={product} index={index} categoryKey={category.key} />
           ))}
@@ -220,7 +220,7 @@ const Shop = () => {
         {hasMore && (
           <div className="flex justify-center mt-6">
             <Link to={category.link}>
-              <Button variant="outline" className="gap-2">{tr.common.viewAll} <ChevronRight className="w-4 h-4" /></Button>
+              <Button variant="outline" className="gap-2 min-h-[44px]">{tr.common.viewAll} <ChevronRight className="w-4 h-4" /></Button>
             </Link>
           </div>
         )}

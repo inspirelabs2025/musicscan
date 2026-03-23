@@ -110,7 +110,7 @@ export default function FanWall() {
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2 text-foreground">{f.title}</h1>
+            <h1 className="text-2xl sm:text-4xl font-bold mb-2 text-foreground">{f.title}</h1>
             <p className="text-muted-foreground">{f.subtitle}</p>
           </div>
 
@@ -138,7 +138,7 @@ export default function FanWall() {
                   <SelectItem value="poster">Poster</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={() => navigate("/upload")} className="gap-2">
+              <Button onClick={() => navigate("/upload")} className="gap-2 min-h-[44px] w-full sm:w-auto">
                 <Upload className="h-4 w-4" />
                 Upload
               </Button>

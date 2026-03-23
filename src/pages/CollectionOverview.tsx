@@ -128,17 +128,17 @@ export default function CollectionOverview() {
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                <Button 
+                  <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => navigate(-1)} 
-                  className="w-fit bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale"
+                  className="w-fit bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale text-foreground min-h-[44px]"
                 >
                    <ArrowLeft className="h-4 w-4 mr-2" />
                    {tr.common.back}
                  </Button>
                  <div className="text-center sm:text-left">
-                   <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-vinyl-purple to-vinyl-gold bg-clip-text text-transparent animate-fade-in">
+                   <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-vinyl-purple to-vinyl-gold bg-clip-text text-transparent animate-fade-in">
                      {tr.collection.overview}
                    </h1>
                    <p className="text-sm sm:text-base text-muted-foreground animate-fade-in animation-delay-200">
@@ -146,10 +146,10 @@ export default function CollectionOverview() {
                    </p>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col gap-2">
                 <Button 
                   onClick={() => navigate('/ai-analysis')}
-                  className="group relative bg-gradient-to-r from-vinyl-purple to-primary hover:from-vinyl-purple/90 hover:to-primary/90 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-white/20 overflow-hidden"
+                  className="group relative bg-gradient-to-r from-vinyl-purple to-primary hover:from-vinyl-purple/90 hover:to-primary/90 text-white font-semibold px-4 sm:px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-white/20 overflow-hidden min-h-[44px] w-full sm:w-auto"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <Brain className="h-5 w-5 mr-2 relative z-10" />
@@ -157,7 +157,7 @@ export default function CollectionOverview() {
                  </Button>
                  <Button
                   onClick={() => navigate('/collection-chat')}
-                  className="group relative bg-gradient-to-r from-vinyl-gold to-yellow-500 hover:from-vinyl-gold/90 hover:to-yellow-500/90 text-black font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-yellow-300/30 overflow-hidden"
+                  className="group relative bg-gradient-to-r from-vinyl-gold to-yellow-500 hover:from-vinyl-gold/90 hover:to-yellow-500/90 text-black font-semibold px-4 sm:px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-yellow-300/30 overflow-hidden min-h-[44px] w-full sm:w-auto"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <Music2 className="h-5 w-5 mr-2 relative z-10" />
@@ -166,7 +166,7 @@ export default function CollectionOverview() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="group w-fit sm:w-auto bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale"
+                  className="group w-full sm:w-auto bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale text-foreground min-h-[44px]"
                 >
                   <Download className="h-4 w-4 mr-2 group-hover:animate-bounce" />
                    <span className="hidden sm:inline">{tr.collection.exportData}</span>

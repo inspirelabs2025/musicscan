@@ -121,7 +121,7 @@ export default function Marketplace() {
           </div>
         </div>
 
-        <div className="flex flex-row gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
             <Select value={filterBy} onValueChange={(value: FilterOption) => setFilterBy(value)}>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BellIcon, LightbulbIcon, XIcon } from 'lucide-react';
 import { Button } from './button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
-import { trackEvent as useTrackEvent } from '@/lib/analytics';
+import { trackEvent } from '@/lib/analytics';
 
 interface AINudgeProps {
   aiUsageCount: number;

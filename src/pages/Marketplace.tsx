@@ -139,7 +139,7 @@ export default function Marketplace() {
           <div className="flex items-center gap-2">
             <ArrowUpDown className="h-4 w-4" />
             <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px] text-foreground min-h-[44px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

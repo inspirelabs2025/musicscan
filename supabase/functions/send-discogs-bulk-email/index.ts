@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
             from: `MusicScan <${ADMIN_EMAIL}>`,
             to: [send.buyer_email],
             subject: campaign.subject,
-            html: campaign.html_content,
+            html: wrapHtml(campaign.html_content, send.buyer_username || 'Buyer'),
           }),
         })
 

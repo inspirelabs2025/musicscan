@@ -134,11 +134,11 @@ const Dashboard = () => {
                     </div>
                     <span className="text-center leading-tight">{t.dashboard.myCollection}</span>
                   </Link>
-                  <button onClick={() => window.dispatchEvent(new Event('open-magic-mike'))} className="flex flex-col items-center justify-center gap-2 h-24 rounded-xl font-bold text-sm transition-all duration-300 hover:scale-[1.03] group cursor-pointer" style={{ background: 'hsl(0 0% 100%)', border: '2px solid hsl(270 40% 85%)', color: 'hsl(270 50% 20%)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                    <div className="p-2.5 rounded-full" style={{ background: 'rgba(120,60,180,0.15)' }}>
-                      <MessageSquare className="w-6 h-6 group-hover:animate-pulse" />
+                  <button onClick={() => window.dispatchEvent(new Event('open-magic-mike'))} className="flex flex-col items-center justify-center gap-1.5 sm:gap-2 h-20 sm:h-24 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 hover:scale-[1.03] group cursor-pointer" style={{ background: 'hsl(0 0% 100%)', border: '2px solid hsl(270 40% 85%)', color: 'hsl(270 50% 20%)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                    <div className="p-2 sm:p-2.5 rounded-full" style={{ background: 'rgba(120,60,180,0.15)' }}>
+                      <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 group-hover:animate-pulse" />
                     </div>
-                    <span>{t.dashboard.chat}</span>
+                    <span className="text-center leading-tight">{t.dashboard.chat}</span>
                   </button>
                 </div>
               </div>

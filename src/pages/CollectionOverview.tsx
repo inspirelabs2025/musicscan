@@ -128,11 +128,11 @@ export default function CollectionOverview() {
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                <Button 
+                  <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => navigate(-1)} 
-                  className="w-fit bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale"
+                  className="w-fit bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale text-foreground min-h-[44px]"
                 >
                    <ArrowLeft className="h-4 w-4 mr-2" />
                    {tr.common.back}

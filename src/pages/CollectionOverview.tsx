@@ -149,7 +149,7 @@ export default function CollectionOverview() {
               <div className="flex flex-col gap-2">
                 <Button 
                   onClick={() => navigate('/ai-analysis')}
-                  className="group relative bg-gradient-to-r from-vinyl-purple to-primary hover:from-vinyl-purple/90 hover:to-primary/90 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-white/20 overflow-hidden"
+                  className="group relative bg-gradient-to-r from-vinyl-purple to-primary hover:from-vinyl-purple/90 hover:to-primary/90 text-white font-semibold px-4 sm:px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-white/20 overflow-hidden min-h-[44px] w-full sm:w-auto"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <Brain className="h-5 w-5 mr-2 relative z-10" />

@@ -157,7 +157,7 @@ export default function CollectionOverview() {
                  </Button>
                  <Button
                   onClick={() => navigate('/collection-chat')}
-                  className="group relative bg-gradient-to-r from-vinyl-gold to-yellow-500 hover:from-vinyl-gold/90 hover:to-yellow-500/90 text-black font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-yellow-300/30 overflow-hidden"
+                  className="group relative bg-gradient-to-r from-vinyl-gold to-yellow-500 hover:from-vinyl-gold/90 hover:to-yellow-500/90 text-black font-semibold px-4 sm:px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-yellow-300/30 overflow-hidden min-h-[44px] w-full sm:w-auto"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <Music2 className="h-5 w-5 mr-2 relative z-10" />

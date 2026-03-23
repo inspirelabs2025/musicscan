@@ -146,7 +146,7 @@ export default function CollectionOverview() {
                    </p>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col gap-2">
                 <Button 
                   onClick={() => navigate('/ai-analysis')}
                   className="group relative bg-gradient-to-r from-vinyl-purple to-primary hover:from-vinyl-purple/90 hover:to-primary/90 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-white/20 overflow-hidden"

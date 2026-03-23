@@ -86,8 +86,8 @@ export default function Marketplace() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Store className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">{m.title}</h1>
+            <Store className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{m.title}</h1>
           </div>
           <p className="text-lg text-muted-foreground mb-6">{m.subtitle}</p>
           

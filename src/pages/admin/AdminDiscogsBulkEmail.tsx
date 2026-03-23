@@ -322,13 +322,26 @@ export default function AdminDiscogsBulkEmail() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium mb-1 block">HTML Inhoud</label>
-                    <Textarea
-                      value={body}
-                      onChange={(e) => setBody(e.target.value)}
-                      placeholder="Email HTML body..."
-                      className="min-h-[300px] font-mono text-sm"
-                    />
+                    <label className="text-sm font-medium mb-1 block">Inhoud</label>
+                    <div className="[&_.ql-container]:min-h-[250px] [&_.ql-editor]:min-h-[250px] [&_.ql-toolbar]:rounded-t-md [&_.ql-container]:rounded-b-md [&_.ql-container]:border-border [&_.ql-toolbar]:border-border">
+                      <ReactQuill
+                        theme="snow"
+                        value={body}
+                        onChange={setBody}
+                        modules={{
+                          toolbar: [
+                            [{ header: [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline'],
+                            [{ color: [] }, { background: [] }],
+                            [{ align: [] }],
+                            [{ list: 'ordered' }, { list: 'bullet' }],
+                            ['link', 'image'],
+                            ['clean'],
+                          ],
+                        }}
+                        placeholder="Typ je email bericht..."
+                      />
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap gap-3">

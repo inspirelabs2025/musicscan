@@ -88,6 +88,12 @@ Deno.serve(async (req) => {
     let failedCount = 0
     const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL') || 'noreply@musicscan.app'
 
+    // Wrap content in email-safe HTML wrapper
+    const wrapHtml = (content: string, username: string) => {
+      const personalizedContent = content.replace(/\{\{username\}\}/g, username)
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body style="margin:0;padding:0;background-color:#f4f4f5;font-family:Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:30px 20px;"><div style="background:#ffffff;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">${personalizedContent}</div><p style="text-align:center;font-size:12px;color:#999;margin-top:20px;">MusicScan &bull; <a href="https://musicscan.app" style="color:#7c3aed;">musicscan.app</a></p></div></body></html>`
+    }
+
     for (const send of sends) {
       try {
         // Rate limit: 200ms between sends
@@ -105,7 +111,7 @@ Deno.serve(async (req) => {
             from: `MusicScan <${ADMIN_EMAIL}>`,
             to: [send.buyer_email],
             subject: campaign.subject,
-            html: campaign.html_content,
+            html: wrapHtml(campaign.html_content, send.buyer_username || 'Buyer'),
           }),
         })
 

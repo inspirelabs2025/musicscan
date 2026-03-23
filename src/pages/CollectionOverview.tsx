@@ -138,7 +138,7 @@ export default function CollectionOverview() {
                    {tr.common.back}
                  </Button>
                  <div className="text-center sm:text-left">
-                   <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-vinyl-purple to-vinyl-gold bg-clip-text text-transparent animate-fade-in">
+                   <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-vinyl-purple to-vinyl-gold bg-clip-text text-transparent animate-fade-in">
                      {tr.collection.overview}
                    </h1>
                    <p className="text-sm sm:text-base text-muted-foreground animate-fade-in animation-delay-200">

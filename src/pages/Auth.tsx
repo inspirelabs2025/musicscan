@@ -393,7 +393,7 @@ const Auth = () => {
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="reset-email">{t.email}</Label>
-                  <Input id="reset-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isSubmitting} />
+                  <Input id="reset-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isSubmitting} className="text-base" />
                 </div>
                 
                 {error && (

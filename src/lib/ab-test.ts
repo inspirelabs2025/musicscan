@@ -31,3 +31,7 @@ export const aiNudgeABTestConfig: ABTestConfig = {
   defaultVariant: 'control',
   expiryDays: 90,
 };
+
+export function useAINudgeVariant(): string {
+  return getABTestVariant(aiNudgeABTestConfig);
+}

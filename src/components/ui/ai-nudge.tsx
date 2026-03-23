@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BellIcon, LightbulbIcon, XIcon } from 'lucide-react';
 import { Button } from './button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
-import { useTrackEvent } from '@/lib/analytics';
+import { trackEvent } from '@/lib/analytics';
 
 interface AINudgeProps {
   aiUsageCount: number;
@@ -10,7 +10,6 @@ interface AINudgeProps {
 
 export const AINudge: React.FC<AINudgeProps> = ({ aiUsageCount }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const trackEvent = useTrackEvent();
 
   useEffect(() => {
     const hasDismissed = localStorage.getItem('ai_nudge_dismissed');
@@ -18,7 +17,7 @@ export const AINudge: React.FC<AINudgeProps> = ({ aiUsageCount }) => {
       setIsVisible(true);
       trackEvent('ai_nudge_shown');
     }
-  }, [aiUsageCount, trackEvent]);
+  }, [aiUsageCount]);
 
   const handleDismiss = () => {
     setIsVisible(false);

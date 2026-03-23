@@ -23,3 +23,9 @@ export function getCookie(name: string): string | null {
   }
   return null;
 }
+
+export function normalizeFullUrl(pathname: string): string {
+  const base = 'https://www.musicscan.app';
+  const clean = pathname.replace(/\/+$/, '') || '/';
+  return `${base}${clean}`;
+}

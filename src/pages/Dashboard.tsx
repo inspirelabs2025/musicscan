@@ -264,7 +264,7 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-purple/10">
+                  <Button asChild variant="outline" className="h-14 sm:h-16 flex flex-col gap-1 sm:gap-2 hover:bg-vinyl-purple/10 text-foreground min-h-[44px]">
                     <Link to="/collection-overview"><TrendingUp className="w-5 h-5" /><span className="text-xs">{t.dashboard.overview}</span></Link>
                   </Button>
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-gold/10">

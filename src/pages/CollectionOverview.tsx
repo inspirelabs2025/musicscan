@@ -166,7 +166,7 @@ export default function CollectionOverview() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="group w-fit sm:w-auto bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale"
+                  className="group w-full sm:w-auto bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale text-foreground min-h-[44px]"
                 >
                   <Download className="h-4 w-4 mr-2 group-hover:animate-bounce" />
                    <span className="hidden sm:inline">{tr.collection.exportData}</span>

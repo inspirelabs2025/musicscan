@@ -138,7 +138,7 @@ export default function FanWall() {
                   <SelectItem value="poster">Poster</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={() => navigate("/upload")} className="gap-2">
+              <Button onClick={() => navigate("/upload")} className="gap-2 min-h-[44px] w-full sm:w-auto">
                 <Upload className="h-4 w-4" />
                 Upload
               </Button>

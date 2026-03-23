@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export default function ChatPage() {
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto px-4 py-4">
       <Card>
         <CardHeader>
           <CardTitle>Chat</CardTitle>

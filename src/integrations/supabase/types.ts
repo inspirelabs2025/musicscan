@@ -2386,6 +2386,92 @@ export type Database = {
         }
         Relationships: []
       }
+      discogs_bulk_email_campaigns: {
+        Row: {
+          country_filter: string | null
+          created_at: string
+          created_by: string | null
+          failed_count: number
+          html_content: string
+          id: string
+          language: string
+          recipient_count: number
+          sent_at: string | null
+          sent_count: number
+          status: string
+          subject: string
+        }
+        Insert: {
+          country_filter?: string | null
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number
+          html_content: string
+          id?: string
+          language?: string
+          recipient_count?: number
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject: string
+        }
+        Update: {
+          country_filter?: string | null
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number
+          html_content?: string
+          id?: string
+          language?: string
+          recipient_count?: number
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject?: string
+        }
+        Relationships: []
+      }
+      discogs_bulk_email_sends: {
+        Row: {
+          buyer_email: string
+          buyer_username: string | null
+          campaign_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          buyer_email: string
+          buyer_username?: string | null
+          campaign_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          buyer_email?: string
+          buyer_username?: string | null
+          campaign_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discogs_bulk_email_sends_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "discogs_bulk_email_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discogs_import_log: {
         Row: {
           artist: string

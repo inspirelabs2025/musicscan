@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Sidebar } from './sidebar';
+import Sidebar from './Sidebar';
 import { MobileHeader } from './mobile-header';
 import { Toaster } from '@/components/ui/sonner';
 import { trackEvent } from '@/lib/analytics';

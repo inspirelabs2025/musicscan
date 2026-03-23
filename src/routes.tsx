@@ -8,7 +8,7 @@ const LoginPage = lazy(() => import('@/pages/login'));
 const RegisterPage = lazy(() => import('@/pages/register'));
 
 // Authenticated Pages
-const DashboardPage = lazy(() => import('@/pages/dashboard'));
+const DashboardPage = lazy(() => import('@/pages/Dashboard'));
 
 // AI Features Page (New)
 const AIFeaturesPage = lazy(() => import('@/pages/ai-features'));

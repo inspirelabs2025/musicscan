@@ -153,7 +153,7 @@ export default function Marketplace() {
             </Select>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-muted-foreground ml-auto">
+          <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground ml-auto">
             <Grid3x3 className="h-4 w-4" />
             {filteredItems.length} {m.ofItems} {items.length} {tr.common.items}
           </div>

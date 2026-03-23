@@ -116,6 +116,7 @@ const menuItems: MenuSection[] = [
     icon: Bell,
     items: [
       { title: "Popup Beheer", url: "/admin/popups", icon: Bell },
+      { title: "Discogs Bulk Email", url: "/admin/discogs-bulk-email", icon: Mail },
     ]
   },
   {

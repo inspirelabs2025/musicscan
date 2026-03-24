@@ -337,6 +337,7 @@ export default function AIScanV2() {
                 Smart Scan
                 <Badge variant="secondary" className="ml-1 text-[10px] md:text-xs">BETA</Badge>
               </h1>
+              {/* SoundScan - temporarily hidden for testing
               <div className="h-6 w-px bg-border hidden md:block" />
               <button
                 onClick={() => setShowSoundScanPrompt(prev => !prev)}
@@ -345,31 +346,9 @@ export default function AIScanV2() {
                 <img src="/soundscan-logo.jpeg" alt="SoundScan" className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover" />
                 <span className="font-bold text-sm md:text-base bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">SoundScan</span>
               </button>
+              */}
             </div>
           </div>
-
-          {/* SoundScan prompt */}
-          {showSoundScanPrompt && (
-            <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 animate-fadeIn">
-             <p className="text-sm text-center text-muted-foreground">
-                🎵 {s.soundScanDesc}
-              </p>
-              <Button
-                onClick={() => {
-                  setShowSoundScanPrompt(false);
-                  if (chatRef.current) {
-                    chatRef.current.triggerListening();
-                  } else {
-                    setSoundScanTrigger(prev => prev + 1);
-                  }
-                }}
-                className="bg-amber-500 hover:bg-amber-600 text-white rounded-full px-6 gap-2"
-              >
-                <Mic className="h-4 w-4" />
-                {s.startListening}
-              </Button>
-            </div>
-          )}
 
           {/* Chat Scanner - directly rendered without tabs */}
           <div className="w-full mt-4">

@@ -10,6 +10,7 @@ import { TimeMachineProductCTA } from '@/components/timemachine/TimeMachineProdu
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ShareButtons } from '@/components/ShareButtons';
 import { useSEO } from '@/hooks/useSEO';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -93,6 +94,14 @@ export default function TimeMachineStory() {
         </Tabs>
 
         <TimeMachineProductCTA event={event} />
+
+        <div className="flex justify-center py-6">
+          <ShareButtons
+            url={`/time-machine/${slug}`}
+            title={`${event.artist_name} – ${event.venue_name}`}
+            description={event.historical_context?.substring(0, 160) || ''}
+          />
+        </div>
       </div>
     </div>
   );

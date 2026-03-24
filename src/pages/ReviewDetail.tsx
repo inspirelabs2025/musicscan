@@ -6,32 +6,15 @@ import { RatingDisplay } from "@/components/reviews/RatingDisplay";
 import { RatingBreakdown } from "@/components/reviews/RatingBreakdown";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Music, Tag, ArrowLeft, Share2, User } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Calendar, Music, Tag, ArrowLeft, User } from "lucide-react";
+import { ShareButtons } from "@/components/ShareButtons";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ReviewDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { data: review, isLoading } = usePublicAlbumReview(slug!);
-  const { toast } = useToast();
   const { tr } = useLanguage();
   const dp = tr.detailPageUI;
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: `${review?.artist_name} - ${review?.album_title}`,
-        text: review?.summary,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: dp.linkCopied,
-        description: dp.linkCopiedDesc,
-      });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -182,10 +165,11 @@ export default function ReviewDetail() {
           )}
 
           <div className="mt-12 pt-8 border-t flex justify-center">
-            <Button onClick={handleShare} size="lg" className="gap-2">
-              <Share2 className="h-4 w-4" />
-              {dp.shareReview}
-            </Button>
+            <ShareButtons
+              url={`/reviews/${slug}/`}
+              title={`${review.artist_name} - ${review.album_title}`}
+              description={review.summary}
+            />
           </div>
         </div>
       </article>

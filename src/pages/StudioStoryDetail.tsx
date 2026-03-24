@@ -14,6 +14,7 @@ import {
   Users, Music, Wrench, Youtube
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { ShareButtons } from "@/components/ShareButtons";
 
 interface StudioStory {
   id: string;
@@ -309,6 +310,14 @@ export default function StudioStoryDetail() {
                   </CardContent>
                 </Card>
               )}
+            </div>
+
+            <div className="flex justify-center py-6">
+              <ShareButtons
+                url={`/studio/${slug}`}
+                title={story.studio_name}
+                description={story.meta_description || `Het verhaal van ${story.studio_name}`}
+              />
             </div>
           </div>
         </div>

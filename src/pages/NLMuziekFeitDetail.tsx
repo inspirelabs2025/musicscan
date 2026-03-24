@@ -14,6 +14,7 @@ import {
 } from "@/data/nederlandseMuziekFeiten";
 import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { SmartArtistLinks } from "@/components/nederland/SmartArtistLink";
+import { ShareButtons } from "@/components/ShareButtons";
 
 export default function NLMuziekFeitDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -397,7 +398,12 @@ export default function NLMuziekFeitDetail() {
                     })}
                   </div>
 
-                  <div className="text-center mt-6">
+                  <div className="flex flex-col items-center gap-4 mt-6">
+                    <ShareButtons
+                      url={`/nl-muziek/${fact.slug}`}
+                      title={fact.title}
+                      description={fact.description}
+                    />
                     <Button asChild variant="outline">
                       <Link to={`/nl-muziek/jaren-${fact.decade}`}>
                         Bekijk alle {decadeInfo.name} feiten

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ShareButtons } from '@/components/ShareButtons';
 
 interface TrackInsights {
   summary: string;
@@ -340,6 +341,14 @@ export default function SpotifyTrackDetail() {
                     </CardContent>
                   </Card>
                 )}
+              </div>
+
+              <div className="flex justify-center py-4">
+                <ShareButtons
+                  url={`/spotify-track/${slug}`}
+                  title={`${artist} - ${title}`}
+                  description={album ? `Van het album ${album}` : ''}
+                />
               </div>
 
               {/* Gerelateerde content van artiest */}

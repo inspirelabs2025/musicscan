@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { enUS } from "date-fns/locale";
 import { Music2, ExternalLink, BookOpen, ShoppingBag, Calendar, Disc3, ArrowLeft } from "lucide-react";
+import { ShareButtons } from "@/components/ShareButtons";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function NewReleaseDetail() {
@@ -171,6 +172,14 @@ export default function NewReleaseDetail() {
                 </div>
               </CardContent>
             </Card>
+
+            <div className="pt-4">
+              <ShareButtons
+                url={`/new-release/${release.slug}`}
+                title={`${release.artist} - ${release.album_name}`}
+                description={`${dp.newRelease} - ${releaseDate}`}
+              />
+            </div>
           </div>
         </div>
       </main>

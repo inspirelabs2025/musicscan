@@ -18,6 +18,7 @@ import { LastUpdatedBadge } from "@/components/SEO/LastUpdatedBadge";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 import { generateAltTag } from "@/utils/generateAltTag";
+import { ShareButtons } from "@/components/ShareButtons";
 
 export default function ReleaseDetail() {
   const { releaseId } = useParams<{ releaseId: string }>();

@@ -13,25 +13,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 export default function ReviewDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { data: review, isLoading } = usePublicAlbumReview(slug!);
-  const { toast } = useToast();
   const { tr } = useLanguage();
   const dp = tr.detailPageUI;
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: `${review?.artist_name} - ${review?.album_title}`,
-        text: review?.summary,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: dp.linkCopied,
-        description: dp.linkCopiedDesc,
-      });
-    }
-  };
 
   if (isLoading) {
     return (

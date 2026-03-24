@@ -1,57 +1,55 @@
-import React, { useState, useEffect } from 'react';
-import { MessageSquareText, X } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import React from 'react';
+import { XIcon, MessageCircleIcon } from 'lucide-react';
+import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 
 interface ChatNudgeProps {
-  messageCount: number;
+  isVisible: boolean;
+  onDismiss: () => void;
+  onTryChat: () => void;
+  messageCount: number; // Prop to hold the number of messages
 }
 
-const ChatNudge: React.FC<ChatNudgeProps> = ({ messageCount }) => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    // Only show the nudge if there are 0 messages
-    // In a real application, this count would come from a database query
-    if (messageCount === 0) {
-      setIsVisible(true);
-    }
-  }, [messageCount]);
-
-  if (!isVisible) {
+export const ChatNudge: React.FC<ChatNudgeProps> = ({
+  isVisible,
+  onDismiss,
+  onTryChat,
+  messageCount
+}) => {
+  if (!isVisible || messageCount > 0) {
     return null;
   }
 
-  const handleClose = () => {
-    setIsVisible(false);
-    // Optionally, persist this state (e.g., in localStorage) to prevent showing again
-    // localStorage.setItem('chat-nudge-dismissed', 'true');
-  };
-
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.8 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 50, scale: 0.8 }}
-          transition={{ type: 'spring', damping: 10, stiffness: 100 }}
-          className="fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-lg bg-primary p-4 shadow-lg"
+    <div className="fixed bottom-4 right-4 z-50 animate-fade-in">
+      <Card className="w-[350px] shadow-lg border-2 border-primary">
+        <MessageCircleIcon className="h-10 w-10 text-primary absolute top-4 left-4" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-2 right-2 text-muted-foreground hover:bg-transparent"
+          onClick={onDismiss}
+          aria-label="Sluiten"
         >
-          <MessageSquareText className="h-6 w-6 text-primary-foreground" />
-          <p className="text-sm font-medium text-primary-foreground">
-            Heb je de chat al geprobeerd? Probeer de chatfunctie om sneller antwoorden te krijgen!
+          <XIcon className="h-5 w-5" />
+        </Button>
+        <CardHeader className="pt-4 pl-16">
+          <CardTitle className="text-lg">Heb je de chat al geprobeerd?</CardTitle>
+          <CardDescription>
+            Er zijn pas {messageCount} chatberichten in je project.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            Probeer de chatfunctie om sneller antwoorden te krijgen en direct feedback te ontvangen op je ideeën!
           </p>
-          <button
-            onClick={handleClose}
-            className="text-primary-foreground/80 hover:text-primary-foreground focus:outline-none"
-            aria-label="Sluit melding"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </CardContent>
+        <CardFooter className="flex justify-end">
+          <Button onClick={onTryChat} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            Begin met chatten
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
   );
 };
-
-export default ChatNudge;

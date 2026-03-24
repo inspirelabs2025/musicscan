@@ -10,6 +10,7 @@ import { TimeMachineProductCTA } from '@/components/timemachine/TimeMachineProdu
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ShareButtons } from '@/components/ShareButtons';
 import { useSEO } from '@/hooks/useSEO';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';

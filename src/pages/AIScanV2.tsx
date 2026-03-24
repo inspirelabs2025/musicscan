@@ -22,6 +22,7 @@ import { AIScanV2Results } from '@/components/scanner/AIScanV2Results';
 import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
 import { ScanChatTab, ScanChatTabHandle } from '@/components/scanner/ScanChatTab';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useCreditThresholdAlert } from '@/hooks/useCreditThresholdAlert';
 
 // Simple V2 components for media type and condition selection

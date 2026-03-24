@@ -337,6 +337,7 @@ export default function AIScanV2() {
                 Smart Scan
                 <Badge variant="secondary" className="ml-1 text-[10px] md:text-xs">BETA</Badge>
               </h1>
+              <LanguageSwitcher />
               {/* SoundScan - temporarily hidden for testing
               <div className="h-6 w-px bg-border hidden md:block" />
               <button

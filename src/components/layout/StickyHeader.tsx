@@ -66,7 +66,7 @@ export function StickyHeader() {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
-          {!isMobile && <LanguageSwitcher />}
+          <LanguageSwitcher />
           {!isMobile && (
             user ? (
               <Popover>

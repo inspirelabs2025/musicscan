@@ -22,6 +22,7 @@ import { nl } from "date-fns/locale";
 import { enUS } from "date-fns/locale";
 import { generateAltTag } from "@/utils/generateAltTag";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ShareButtons } from "@/components/ShareButtons";
 
 export default function AlbumDetail() {
   const { albumId } = useParams<{ albumId: string }>();

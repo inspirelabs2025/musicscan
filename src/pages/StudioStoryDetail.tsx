@@ -14,6 +14,7 @@ import {
   Users, Music, Wrench, Youtube
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { ShareButtons } from "@/components/ShareButtons";
 
 interface StudioStory {
   id: string;

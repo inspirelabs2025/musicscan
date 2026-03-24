@@ -165,10 +165,11 @@ export default function ReviewDetail() {
           )}
 
           <div className="mt-12 pt-8 border-t flex justify-center">
-            <Button onClick={handleShare} size="lg" className="gap-2">
-              <Share2 className="h-4 w-4" />
-              {dp.shareReview}
-            </Button>
+            <ShareButtons
+              url={`/reviews/${slug}/`}
+              title={`${review.artist_name} - ${review.album_title}`}
+              description={review.summary}
+            />
           </div>
         </div>
       </article>

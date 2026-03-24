@@ -398,7 +398,12 @@ export default function NLMuziekFeitDetail() {
                     })}
                   </div>
 
-                  <div className="text-center mt-6">
+                  <div className="flex flex-col items-center gap-4 mt-6">
+                    <ShareButtons
+                      url={`/nl-muziek/${fact.slug}`}
+                      title={fact.title}
+                      description={fact.description}
+                    />
                     <Button asChild variant="outline">
                       <Link to={`/nl-muziek/jaren-${fact.decade}`}>
                         Bekijk alle {decadeInfo.name} feiten

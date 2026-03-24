@@ -258,6 +258,14 @@ export default function PodcastDetail() {
             </Card>
           )}
         </section>
+
+        <div className="container flex justify-center py-8">
+          <ShareButtons
+            url={`/podcast/${podcastSlug}`}
+            title={podcast.name}
+            description={podcast.description || ''}
+          />
+        </div>
       </main>
     </div>
   );

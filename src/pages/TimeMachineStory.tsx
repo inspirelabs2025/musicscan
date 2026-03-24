@@ -94,6 +94,14 @@ export default function TimeMachineStory() {
         </Tabs>
 
         <TimeMachineProductCTA event={event} />
+
+        <div className="flex justify-center py-6">
+          <ShareButtons
+            url={`/time-machine/${slug}`}
+            title={`${event.artist_name} – ${event.venue_name}`}
+            description={event.historical_context?.substring(0, 160) || ''}
+          />
+        </div>
       </div>
     </div>
   );

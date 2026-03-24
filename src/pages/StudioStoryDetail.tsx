@@ -311,6 +311,14 @@ export default function StudioStoryDetail() {
                 </Card>
               )}
             </div>
+
+            <div className="flex justify-center py-6">
+              <ShareButtons
+                url={`/studio/${slug}`}
+                title={story.studio_name}
+                description={story.meta_description || `Het verhaal van ${story.studio_name}`}
+              />
+            </div>
           </div>
         </div>
       </div>

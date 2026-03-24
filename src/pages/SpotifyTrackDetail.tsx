@@ -343,6 +343,14 @@ export default function SpotifyTrackDetail() {
                 )}
               </div>
 
+              <div className="flex justify-center py-4">
+                <ShareButtons
+                  url={`/spotify-track/${slug}`}
+                  title={`${artist} - ${title}`}
+                  description={album ? `Van het album ${album}` : ''}
+                />
+              </div>
+
               {/* Gerelateerde content van artiest */}
               {artist && (
                 <>

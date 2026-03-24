@@ -294,6 +294,14 @@ export default function AlbumDetail() {
               </>
             )}
 
+            <div className="flex justify-center py-4">
+              <ShareButtons
+                url={`/album/${albumId}`}
+                title={`${album.artist} - ${album.title}`}
+                description={album.genre || ''}
+              />
+            </div>
+
             <Separator className="my-8" />
             <RelatedContent
               artist={album.artist}

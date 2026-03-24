@@ -172,6 +172,14 @@ export default function NewReleaseDetail() {
                 </div>
               </CardContent>
             </Card>
+
+            <div className="pt-4">
+              <ShareButtons
+                url={`/new-release/${release.slug}`}
+                title={`${release.artist} - ${release.album_name}`}
+                description={`${dp.newRelease} - ${releaseDate}`}
+              />
+            </div>
           </div>
         </div>
       </main>

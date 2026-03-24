@@ -370,6 +370,14 @@ export default function ReleaseDetail() {
               />
             )}
 
+            <div className="flex justify-center pt-4">
+              <ShareButtons
+                url={`/release/${releaseId}`}
+                title={`${release.artist} - ${release.title}`}
+                description={release.genre || ''}
+              />
+            </div>
+
             {/* Related Content - Internal Linking */}
             <RelatedContent
               artist={release.artist}

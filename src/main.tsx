@@ -28,7 +28,7 @@ if (urlParams.has('_v')) {
   sessionStorage.removeItem('musicscan_reload_count');
 }
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import './index.css'

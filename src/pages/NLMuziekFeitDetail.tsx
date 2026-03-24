@@ -14,6 +14,7 @@ import {
 } from "@/data/nederlandseMuziekFeiten";
 import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { SmartArtistLinks } from "@/components/nederland/SmartArtistLink";
+import { ShareButtons } from "@/components/ShareButtons";
 
 export default function NLMuziekFeitDetail() {
   const { slug } = useParams<{ slug: string }>();

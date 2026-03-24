@@ -6,8 +6,8 @@ import { RatingDisplay } from "@/components/reviews/RatingDisplay";
 import { RatingBreakdown } from "@/components/reviews/RatingBreakdown";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Music, Tag, ArrowLeft, Share2, User } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Calendar, Music, Tag, ArrowLeft, User } from "lucide-react";
+import { ShareButtons } from "@/components/ShareButtons";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ReviewDetail() {

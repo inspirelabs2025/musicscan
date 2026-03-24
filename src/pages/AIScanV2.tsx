@@ -22,6 +22,7 @@ import { AIScanV2Results } from '@/components/scanner/AIScanV2Results';
 import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
 import { ScanChatTab, ScanChatTabHandle } from '@/components/scanner/ScanChatTab';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useCreditThresholdAlert } from '@/hooks/useCreditThresholdAlert';
 
 // Simple V2 components for media type and condition selection
@@ -337,6 +338,7 @@ export default function AIScanV2() {
                 Smart Scan
                 <Badge variant="secondary" className="ml-1 text-[10px] md:text-xs">BETA</Badge>
               </h1>
+              <LanguageSwitcher />
               {/* SoundScan - temporarily hidden for testing
               <div className="h-6 w-px bg-border hidden md:block" />
               <button

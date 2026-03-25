@@ -1,15 +1,12 @@
-// Aggressively unregister ALL service workers and nuke ALL caches
+// Register service worker for PWA offline support
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(registration => {
-      registration.unregister().then(() => {
-        console.log('[MusicScan] Service worker unregistered:', registration.scope);
-      });
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then((registration) => {
+      console.log('[MusicScan] SW registered:', registration.scope);
+    }).catch((err) => {
+      console.log('[MusicScan] SW registration failed:', err);
     });
   });
-  if (navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-  }
 }
 if ('caches' in window) {
   caches.keys().then(names => {

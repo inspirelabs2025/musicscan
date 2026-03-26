@@ -1,63 +1,36 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'sonner';
-import LoadingSpinner from './components/LoadingSpinner';
-import RequireAuth from './components/RequireAuth';
-import { TooltipProvider } from './components/ui/tooltip';
-import { AuthProvider } from './contexts/AuthContext';
-import { ProjectProvider } from './contexts/ProjectContext';
-import { useNudgeLogic } from './hooks/useNudgeLogic';
-import { ChatNudge } from './components/chat-nudge';
-
-// Lazy load routes
-const AuthPage = lazy(() => import('./pages/AuthPage'));
-const HomePage = lazy(() => import('./pages/HomePage'));
-const ProjectPage = lazy(() => import('./pages/ProjectPage'));
-const IdeaPage = lazy(() => import('./pages/IdeaPage'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage'));
-const ErrorPage = lazy(() => import('./pages/ErrorPage'));
+import { Outlet } from "react-router-dom";
+import Nav from "./components/Nav";
+import { Sonner } from "./components/ui/sonner"; // Import Sonner
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 function App() {
-  const { isChatNudgeVisible, dismissChatNudge, handleTryChat, chatMessageCount } = useNudgeLogic();
+  // Simulate fetching chat messages count
+  // In a real application, this would come from an API or context
+  const chatMessagesCount = 0; // Replace with actual data fetching later
+
+  useEffect(() => {
+    if (chatMessagesCount === 0) {
+      toast.info("💬 Heb je de chat al geprobeerd?", {
+        description: "Er zijn pas 0 chatberichten in je project. Probeer de chatfunctie om sneller antwoorden te krijgen!",
+        action: {
+          label: "Probeer chat",
+          onClick: () => console.log("Navigate to chat"), // Replace with actual navigation to chat
+        },
+        duration: 8000,
+        id: 'chat-nudge-toast'
+      });
+    }
+  }, [chatMessagesCount]);
 
   return (
-    <Router>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster richColors />
-          <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              <Route path="/auth" element={<AuthPage />} />
-              <Route
-                path="/*"
-                element={
-                  <RequireAuth>
-                    <ProjectProvider>
-                      <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/project/:projectId/*" element={<ProjectPage />} />
-                        <Route path="/project/:projectId/idea/:ideaId" element={<IdeaPage />} />
-                        <Route path="/profile" element={<ProfilePage />} />
-                        <Route path="/settings" element={<SettingsPage />} />
-                        <Route path="*" element={<ErrorPage />} />
-                      </Routes>
-                    </ProjectProvider>
-                  </RequireAuth>
-                }
-              />
-            </Routes>
-            {/* Chat Nudge Component */}
-            <ChatNudge
-              isVisible={isChatNudgeVisible}
-              onDismiss={dismissChatNudge}
-              onTryChat={handleTryChat}
-              messageCount={chatMessageCount}
-            />
-          </Suspense>
-        </TooltipProvider>
-      </AuthProvider>
-    </Router>
+    <div className="flex flex-col h-full">
+      <Nav />
+      <main className="flex-grow overflow-auto p-4">
+        <Outlet />
+      </main>
+      <Sonner /> {/* Add Sonner component here */}
+    </div>
   );
 }
 

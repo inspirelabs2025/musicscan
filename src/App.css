@@ -1,1 +1,155 @@
-/* App-level styles - kept minimal, design system lives in index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --card-dark: 217.2 32.6% 17.5%;
+    --card-dark-foreground: 210 20% 98%;
+    --card-purple: 260 80% 50%;
+    --card-purple-foreground: 0 0% 100%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%; /* Light gray */
+    --sidebar-foreground: 222.2 47.4% 11.2%; /* Dark text */
+    --sidebar-primary: 222.2 47.4% 11.2%; /* Matches primary for active links */
+    --sidebar-primary-foreground: 210 20% 98%; /* White text for active links */
+    --sidebar-accent: 210 40% 96.1%; /* Slightly darker for hover */
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 222.2 84% 4.9%;
+
+    /* Vinyl Theme */
+    --vinyl-gold: 40 90% 50%;
+    --vinyl-silver: 210 20% 70%;
+    --vinyl-black: 220 5% 15%;
+    --vinyl-purple: 270 60% 40%;
+
+    /* Echo Theme */
+    --echo-violet: 280 60% 70%;  /* Light violet */
+    --echo-lavender: 260 70% 88%; /* Very light lavender */
+    --echo-gold: 40 100% 70%;    /* Soft gold */
+    --echo-cream: 40 100% 95%;   /* Off-white cream */
+
+    /* Christmas Theme */
+    --christmas-red: 350 80% 50%;
+    --christmas-green: 140 70% 40%;
+    --christmas-gold: 40 90% 60%;
+    --christmas-cream: 30 100% 95%;
+    --christmas-burgundy: 340 60% 30%;
+    --christmas-pine: 160 50% 25%;
+
+    /* AI Nudge */
+    --ai-nudge-background: 222.2 47.4% 11.2%; /* Dark primary background */
+    --ai-nudge-foreground: 210 20% 98%;     /* Light text */
+    --ai-nudge-border: 214.3 31.8% 91.4%;      /* Light border */
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 20% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 20% 98%;
+    --card-dark: 217.2 32.6% 17.5%;
+    --card-dark-foreground: 210 20% 98%;
+    --card-purple: 260 80% 50%;
+    --card-purple-foreground: 0 0% 100%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary: 210 20% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 20% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.4% 65.4%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 20% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    --sidebar-background: 222.2 84% 4.9%; /* Dark background */
+    --sidebar-foreground: 210 20% 98%; /* Light text */
+    --sidebar-primary: 210 20% 98%; /* White for active links */
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%; /* Dark text for active links */
+    --sidebar-accent: 217.2 32.6% 17.5%; /* Slightly lighter for hover */
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 212.7 26.8% 83.9%;
+
+    /* AI Nudge */
+    --ai-nudge-background: 210 20% 98%;     /* Light primary background */
+    --ai-nudge-foreground: 222.2 47.4% 11.2%; /* Dark text */
+    --ai-nudge-border: 217.2 32.6% 17.5%;      /* Dark border */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    min-height: 100vh;
+  }
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px; /* For vertical scrollbars */
+  height: 8px; /* For horizontal scrollbars */
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+

@@ -1,37 +1,64 @@
-import { setCookie, getCookie } from "./utils";
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-interface ABTestConfig {
-  name: string;
-  variants: string[];
-  defaultVariant: string;
-  cookieName?: string;
-  expiryDays?: number;
+type AbTestVariant = 'control' | 'nudge';
+
+interface AbTestContextType {
+  variant: AbTestVariant;
+  trackExposure: (testName: string, variant: AbTestVariant) => void;
 }
 
-// Function to get the assigned variant for a given A/B test
-export function getABTestVariant(config: ABTestConfig): string {
-  const { name, variants, defaultVariant, cookieName, expiryDays } = config;
-  const finalCookieName = cookieName || `ab_${name}`;
+const AbTestContext = createContext<AbTestContextType | undefined>(undefined);
 
-  let variant = getCookie(finalCookieName);
+export const AbTestProvider = ({ children }: { children: ReactNode }) => {
+  const [variant, setVariant] = useState<AbTestVariant>('control');
+  const testName = 'ai-nudge-test';
 
-  if (!variant || !variants.includes(variant)) {
-    // Assign a new variant if not set or invalid
-    variant = variants[Math.floor(Math.random() * variants.length)];
-    setCookie(finalCookieName, variant, expiryDays || 30);
-  }
+  useEffect(() => {
+    // Check if variant is already stored in localStorage
+    const storedVariant = localStorage.getItem(testName) as AbTestVariant;
+    if (storedVariant) {
+      setVariant(storedVariant);
+    } else {
+      // Randomly assign variant if not already assigned
+      const assignedVariant: AbTestVariant = Math.random() < 0.5 ? 'control' : 'nudge'; // 50/50 split
+      localStorage.setItem(testName, assignedVariant);
+      setVariant(assignedVariant);
+    }
+  }, []);
 
-  return variant;
-}
+  const trackExposure = (test: string, assignedVariant: AbTestVariant) => {
+    if (window.gtag) {
+      window.gtag('event', 'ab_test_exposure', {
+        event_category: 'A/B Test',
+        event_label: `${test} - ${assignedVariant}`,
+        value: 1,
+        test_name: test,
+        test_variant: assignedVariant,
+      });
+    }
+  };
 
-// Specific A/B test configuration for the AI Nudge
-export const aiNudgeABTestConfig: ABTestConfig = {
-  name: 'ai_nudge',
-  variants: ['control', 'nudge'],
-  defaultVariant: 'control',
-  expiryDays: 90,
+  return (
+    <AbTestContext.Provider value={{ variant, trackExposure }}>
+      {children}
+    </AbTestContext.Provider>
+  );
 };
 
-export function useAINudgeVariant(): string {
-  return getABTestVariant(aiNudgeABTestConfig);
-}
+export const useAbTestVariant = (testName: string = 'ai-nudge-test') => {
+  const context = useContext(AbTestContext);
+  if (context === undefined) {
+    // If AbTestProvider is not used, fallback to control
+    console.warn('useAbTestVariant must be used within an AbTestProvider. Defaulting to control variant.');
+    return { variant: 'control', trackExposure: () => {} };
+  }
+
+  useEffect(() => {
+    // Track exposure once the component mounts and variant is stable
+    if (context.variant) {
+      context.trackExposure(testName, context.variant);
+    }
+  }, [context.variant, testName, context.trackExposure]);
+
+  return { variant: context.variant };
+};

@@ -1,58 +1,86 @@
-import React, { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
-import { Button } from "./ui/button";
-import { BirdIcon } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useAIMetrics } from "@/hooks/use-ai-metrics";
-import { useAINudgeVariant } from "@/lib/ab-test";
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Bird, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useAIUsage } from '@/hooks/use-ai-usage';
+import { useAbTestVariant } from '@/lib/ab-test';
 
-export const AINudge: React.FC = () => {
-  const { user } = useAuth();
-  const { data: aiMetrics } = useAIMetrics();
-  const [isOpen, setIsOpen] = useState(false);
-  const variant = useAINudgeVariant();
+interface AINudgeProps {
+  /**
+   * The path to navigate to when the nudge is clicked.
+   */
+  aiFeaturesPath?: string;
+}
+
+const LOCAL_STORAGE_KEY = 'ai_nudge_dismissed';
+
+export function AINudge({ aiFeaturesPath = '/ai-features' }: AINudgeProps) {
+  const { hasUsedAIFeatures } = useAIUsage();
+  const { variant } = useAbTestVariant('ai-nudge-test');
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (user && aiMetrics && aiMetrics.ai_usage_count === 0 && variant === 'nudge') {
-      setIsOpen(true);
+    const dismissed = localStorage.getItem(LOCAL_STORAGE_KEY);
+    // Only show nudge if: 
+    // 1. User is in the 'nudge' variant.
+    // 2. User has not used AI features yet.
+    // 3. User has not dismissed the nudge previously.
+    if (variant === 'nudge' && !hasUsedAIFeatures && !dismissed) {
+      setIsVisible(true);
+    } else {
+      setIsVisible(false);
     }
-  }, [user, aiMetrics, variant]);
+  }, [hasUsedAIFeatures, variant]);
 
   const handleDismiss = () => {
-    setIsOpen(false);
+    localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+    setIsVisible(false);
+    if (window.gtag) {
+      window.gtag('event', 'ai_nudge_dismissed', {
+        event_category: 'AI Nudge',
+        event_label: 'Dismissed',
+      });
+    }
   };
 
-  const handleExploreClick = () => {
-    setIsOpen(false);
+  const handleNudgeClick = () => {
+    if (window.gtag) {
+      window.gtag('event', 'ai_nudge_clicked', {
+        event_category: 'AI Nudge',
+        event_label: 'Call to Action',
+      });
+    }
   };
 
-  if (!user || aiMetrics?.ai_usage_count !== 0 || variant === 'control') {
+  if (!isVisible) {
     return null;
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <BirdIcon className="h-6 w-6 text-primary" /> Slimme features beschikbaar!
-          </DialogTitle>
-          <DialogDescription className="text-muted-foreground mt-2">
-            Je hebt de slimme features nog niet gebruikt. Ontdek wat ze voor je kunnen doen!
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-between">
-          <Button variant="outline" onClick={handleDismiss} className="w-full sm:w-auto">
-            Nee, bedankt
-          </Button>
-          <Link to="/dashboard" onClick={handleExploreClick} className="w-full sm:w-auto">
-            <Button className="w-full">
-              Ontdek! <BirdIcon className="ml-2 h-4 w-4" />
+    <div className="fixed bottom-4 right-4 z-50 animate-fade-in">
+      <div
+        className="flex max-w-sm items-center space-x-4 rounded-lg border bg-current p-4 shadow-lg text-ai-nudge-foreground border-ai-nudge-border bg-ai-nudge-background"
+        role="alert"
+      >
+        <Bird className="h-6 w-6 shrink-0" />
+        <div className="flex-grow">
+          <h3 className="font-semibold">Gebruik AI voor je project!</h3>
+          <p className="text-sm opacity-90">
+            Je hebt de AI features nog maar 0x gebruikt. Ontdek wat AI voor je project kan doen!
+          </p>
+        </div>
+        <div className="flex flex-col space-y-2">
+          <Link to={aiFeaturesPath} onClick={handleNudgeClick}>
+            <Button size="sm" className="w-full">
+              Ontdek AI
             </Button>
           </Link>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <Button variant="ghost" size="icon" onClick={handleDismiss} className="self-end opacity-70 hover:opacity-100">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Sluiten</span>
+          </Button>
+        </div>
+      </div>
+    </div>
   );
-};
+}

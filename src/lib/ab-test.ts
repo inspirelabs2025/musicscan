@@ -1,64 +1,44 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useState, useEffect } from 'react';
 
-type AbTestVariant = 'control' | 'nudge';
+type ABNudgeVariant = 'control' | 'nudge';
 
-interface AbTestContextType {
-  variant: AbTestVariant;
-  trackExposure: (testName: string, variant: AbTestVariant) => void;
-}
+const AB_TEST_KEY = 'ai_nudge_ab_variant';
 
-const AbTestContext = createContext<AbTestContextType | undefined>(undefined);
-
-export const AbTestProvider = ({ children }: { children: ReactNode }) => {
-  const [variant, setVariant] = useState<AbTestVariant>('control');
-  const testName = 'ai-nudge-test';
+export function useAINudgeABTest(): ABNudgeVariant {
+  const [variant, setVariant] = useState<ABNudgeVariant>('control');
 
   useEffect(() => {
-    // Check if variant is already stored in localStorage
-    const storedVariant = localStorage.getItem(testName) as AbTestVariant;
+    // Check if a variant is already stored in localStorage
+    let storedVariant = localStorage.getItem(AB_TEST_KEY) as ABNudgeVariant;
+
     if (storedVariant) {
       setVariant(storedVariant);
     } else {
-      // Randomly assign variant if not already assigned
-      const assignedVariant: AbTestVariant = Math.random() < 0.5 ? 'control' : 'nudge'; // 50/50 split
-      localStorage.setItem(testName, assignedVariant);
-      setVariant(assignedVariant);
+      // If not, assign a random variant
+      const random = Math.random();
+      const newVariant: ABNudgeVariant = random < 0.5 ? 'control' : 'nudge'; // 50/50 split
+
+      localStorage.setItem(AB_TEST_KEY, newVariant);
+      setVariant(newVariant);
     }
   }, []);
 
-  const trackExposure = (test: string, assignedVariant: AbTestVariant) => {
-    if (window.gtag) {
-      window.gtag('event', 'ab_test_exposure', {
-        event_category: 'A/B Test',
-        event_label: `${test} - ${assignedVariant}`,
-        value: 1,
-        test_name: test,
-        test_variant: assignedVariant,
-      });
-    }
-  };
+  return variant;
+}
 
-  return (
-    <AbTestContext.Provider value={{ variant, trackExposure }}>
-      {children}
-    </AbTestContext.Provider>
-  );
-};
+// Placeholder for tracking AI usage. In a real app, this would come from a backend or analytics.
+let aiFeatureUsageCount = 0;
 
-export const useAbTestVariant = (testName: string = 'ai-nudge-test') => {
-  const context = useContext(AbTestContext);
-  if (context === undefined) {
-    // If AbTestProvider is not used, fallback to control
-    console.warn('useAbTestVariant must be used within an AbTestProvider. Defaulting to control variant.');
-    return { variant: 'control', trackExposure: () => {} };
-  }
+export function getAIFeatureUsageCount(): number {
+  // In a real application, this would fetch data from user settings, database, or analytics.
+  // For this example, we'll use a simple in-memory counter, or ideally, localStorage.
+  const storedCount = localStorage.getItem('ai_feature_usage_count');
+  return storedCount ? parseInt(storedCount, 10) : 0;
+}
 
-  useEffect(() => {
-    // Track exposure once the component mounts and variant is stable
-    if (context.variant) {
-      context.trackExposure(testName, context.variant);
-    }
-  }, [context.variant, testName, context.trackExposure]);
-
-  return { variant: context.variant };
-};
+export function incrementAIFeatureUsageCount() {
+  // In a real application, this would update a backend counter.
+  // For this example, we'll update localStorage.
+  const currentCount = getAIFeatureUsageCount();
+  localStorage.setItem('ai_feature_usage_count', (currentCount + 1).toString());
+}

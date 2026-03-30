@@ -156,13 +156,15 @@ export const useDanceHouseArtiesten = (limit = 8) => {
 
 // Verhalen hook
 export const useDanceHouseVerhalen = (limit = 6) => {
+  const { language } = useLanguage();
   return useQuery({
-    queryKey: ['dance-house-verhalen', limit],
+    queryKey: ['dance-house-verhalen', limit, language],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('music_stories')
         .select('*')
         .eq('is_published', true)
+        .eq('content_language', language)
         .or('genre.ilike.%house%,genre.ilike.%techno%,genre.ilike.%trance%,genre.ilike.%electronic%,genre.ilike.%dance%,genre.ilike.%edm%,genre.ilike.%electro%')
         .order('published_at', { ascending: false })
         .limit(limit);

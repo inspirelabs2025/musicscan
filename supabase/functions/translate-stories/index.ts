@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
       .eq("content_language", "nl")
       .not("single_name", "is", null)
       .not("story_content", "is", null)
-      .limit(50);
+      .limit(20);
 
     if (fetchError) throw fetchError;
     if (!nlStories || nlStories.length === 0) {

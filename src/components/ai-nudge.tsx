@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Bird, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAIUsage } from '@/hooks/use-ai-usage';
-import { useAbTestVariant } from '@/lib/ab-test';
+import { useAINudgeABTest } from '@/lib/ab-test';
 
 interface AINudgeProps {
   /**
@@ -16,7 +16,7 @@ const LOCAL_STORAGE_KEY = 'ai_nudge_dismissed';
 
 export function AINudge({ aiFeaturesPath = '/ai-features' }: AINudgeProps) {
   const { hasUsedAIFeatures } = useAIUsage();
-  const { variant } = useAbTestVariant('ai-nudge-test');
+  const variant = useAINudgeABTest();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {

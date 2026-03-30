@@ -65,19 +65,7 @@ export default function PodcastDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>{podcast.name} | MusicScan Podcast</title>
-        <meta name="description" content={podcast.description || `Luister naar ${podcast.name} - Een MusicScan Original Podcast`} />
-        <meta property="og:title" content={`${podcast.name} | MusicScan Podcast`} />
-        <meta property="og:description" content={podcast.description || `Luister naar ${podcast.name}`} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={podcastUrl} />
-        {podcast.artwork_url && <meta property="og:image" content={podcast.artwork_url} />}
-        <meta name="twitter:card" content="summary_large_image" />
-        <link rel="canonical" href={podcastUrl} />
-      </Helmet>
-
-      <PodcastSeriesStructuredData
+<PodcastSeriesStructuredData
         name={podcast.name}
         description={podcast.description || ''}
         author={podcast.author || 'MusicScan'}

@@ -168,36 +168,8 @@ export default function TimeMachine() {
 
   return (
     <>
-      <Helmet>
-        <title>Music Time Machine – Herleef Iconische Concerten | MusicScan</title>
-        <meta name="description" content="Ontdek legendarische concerten uit het verleden. Elk event komt tot leven met verhalen, setlists, archiefmateriaal en exclusieve limited edition posters." />
-        <meta name="keywords" content="concert posters, muziekgeschiedenis, vintage concerten, limited edition prints, concert herinneringen, muziek memorabilia, iconische concerten" />
-        <link rel="canonical" href={CANONICAL_URL} />
-        
-        {/* Open Graph */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={CANONICAL_URL} />
-        <meta property="og:title" content="Music Time Machine – Herleef Iconische Concerten | MusicScan" />
-        <meta property="og:description" content="Ontdek legendarische concerten uit het verleden met verhalen, setlists en exclusieve posters." />
-        <meta property="og:image" content="https://www.musicscan.app/og-time-machine.jpg" />
-        <meta property="og:site_name" content="MusicScan" />
-        <meta property="og:locale" content="nl_NL" />
-        
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@musicscan_app" />
-        <meta name="twitter:creator" content="@musicscan_app" />
-        <meta name="twitter:title" content="Music Time Machine – Herleef Iconische Concerten | MusicScan" />
-        <meta name="twitter:description" content="Ontdek legendarische concerten uit het verleden met verhalen en exclusieve posters." />
-        <meta name="twitter:image" content="https://www.musicscan.app/og-time-machine.jpg" />
-        
-        {/* JSON-LD Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
+      <JsonLd data={structuredData} />
+<div className="min-h-screen bg-background">
         {/* Hero Section */}
         <div className="bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10 border-b">
           <div className="container mx-auto px-4 py-16">

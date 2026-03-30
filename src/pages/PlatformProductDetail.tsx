@@ -261,30 +261,7 @@ export default function PlatformProductDetail() {
 
   return (
     <>
-      <Helmet>
-        {/* Product-specific Open Graph tags */}
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="MusicScan" />
-        <meta property="og:url" content={currentUrl} />
-        <meta property="og:title" content={`${product.artist} - ${product.title}`} />
-        <meta property="og:description" content={productDescription} />
-        <meta property="og:image" content={productImage} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="1200" />
-        <meta property="og:image:alt" content={`${product.artist} - ${product.title}`} />
-        
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${product.artist} - ${product.title}`} />
-        <meta name="twitter:description" content={productDescription} />
-        <meta name="twitter:image" content={productImage} />
-        <meta name="twitter:label1" content="Prijs" />
-        <meta name="twitter:data1" content={`€${product.price}`} />
-        <meta name="twitter:label2" content="Voorraad" />
-        <meta name="twitter:data2" content={product.stock_quantity > 0 ? "Op voorraad" : "Uitverkocht"} />
-      </Helmet>
-      
-      <div className="container mx-auto px-4 py-8">
+<div className="container mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <BreadcrumbNavigation items={[
         { name: "Home", url: "/" },
@@ -307,21 +284,7 @@ export default function PlatformProductDetail() {
 
       {/* Enhanced Social Media Meta Tags for POSTER */}
       {isPoster && (
-        <Helmet>
-          
-          {/* Pinterest Rich Pins */}
-          <meta property="og:type" content="website" />
-          <meta name="pinterest:price:amount" content={product.price.toString()} />
-          <meta name="pinterest:price:currency" content="EUR" />
-          
-          {/* Twitter Product Card */}
-          <meta name="twitter:card" content="product" />
-          <meta name="twitter:data1" content={`€${product.price}`} />
-          <meta name="twitter:label1" content="Prijs" />
-          <meta name="twitter:data2" content={product.stock_quantity > 0 ? "Op voorraad" : "Uitverkocht"} />
-          <meta name="twitter:label2" content="Beschikbaarheid" />
-        </Helmet>
-      )}
+)}
       
       <ReviewSchema
         itemName={`${product.artist ? product.artist + ' - ' : ''}${product.title}`}

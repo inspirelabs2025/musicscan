@@ -75,20 +75,8 @@ export default function NewReleaseDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>{`${release.artist} - ${release.album_name} | ${dp.newRelease} | MusicScan`}</title>
-        <meta name="description" content={`${release.album_name} - ${release.artist}. ${dp.releasedOn} ${releaseDate}.`} />
-        <meta property="og:title" content={`${release.artist} - ${release.album_name} | ${dp.newRelease}`} />
-        <meta property="og:description" content={`${dp.newRelease}: ${release.artist} - ${release.album_name}`} />
-        <meta property="og:image" content={release.image_url || ""} />
-        <meta property="og:type" content="music.album" />
-        <meta property="og:url" content={`https://www.musicscan.app/new-release/${release.slug}`} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <link rel="canonical" href={`https://www.musicscan.app/new-release/${release.slug}`} />
-        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-      </Helmet>
-
-      <BreadcrumbNavigation className="max-w-4xl mx-auto px-4 pt-4" />
+      <JsonLd data={jsonLd} />
+<BreadcrumbNavigation className="max-w-4xl mx-auto px-4 pt-4" />
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         <Button variant="ghost" asChild className="mb-6">

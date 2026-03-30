@@ -240,55 +240,7 @@ export const MuziekVerhaal: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        {/* Article-specific Open Graph tags */}
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={currentUrl} />
-        <meta property="og:title" content={story?.meta_title || story?.title} />
-        <meta property="og:description" content={storyDescription} />
-        <meta property="og:image" content={storyImage} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content={story?.title} />
-        
-        {/* Article metadata */}
-        <meta property="article:published_time" content={story?.created_at} />
-        <meta property="article:modified_time" content={story?.updated_at} />
-        {story?.artist && <meta property="article:author" content={story.artist} />}
-        {story?.genre && <meta property="article:section" content={story.genre} />}
-        {story?.tags?.map((tag) => (
-          <meta key={tag} property="article:tag" content={tag} />
-        ))}
-        
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={story?.meta_title || story?.title} />
-        <meta name="twitter:description" content={storyDescription} />
-        <meta name="twitter:image" content={storyImage} />
-        {story?.reading_time && (
-          <>
-            <meta name="twitter:label1" content="Leestijd" />
-            <meta name="twitter:data1" content={`${story.reading_time} min`} />
-          </>
-        )}
-        {story?.views_count && (
-          <>
-            <meta name="twitter:label2" content="Views" />
-            <meta name="twitter:data2" content={story.views_count.toString()} />
-          </>
-        )}
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app" },
-            { "@type": "ListItem", "position": 2, "name": "Verhalen", "item": "https://www.musicscan.app/verhalen" },
-            { "@type": "ListItem", "position": 3, "name": story.title, "item": currentUrl }
-          ]
-        })}</script>
-      </Helmet>
-      
-      <ArticleStructuredData
+<ArticleStructuredData
         title={story.title}
         description={storyDescription}
         publishDate={story.created_at}

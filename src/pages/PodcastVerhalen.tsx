@@ -173,42 +173,8 @@ const structuredData = [
 export default function PodcastVerhalen() {
   return (
     <>
-      <Helmet>
-        <title>{PAGE_TITLE}</title>
-        <meta name="description" content={PAGE_DESC} />
-        <meta name="keywords" content="Frank Boeijen, Winter in Hamburg, Welkom in Utopia, podcast, muziekverhaal, Rob de Nijs, Liesbeth List, The Beatles Hamburg, The Doors, Keane, Elton John, De Plaat en het Verhaal, MusicScan, Nederlandse muziek, Top 2000" />
-        <link rel="canonical" href={PAGE_URL} />
-        <link rel="alternate" hrefLang="nl" href={PAGE_URL} />
-
-        {/* Open Graph */}
-        <meta property="og:title" content={PAGE_TITLE} />
-        <meta property="og:description" content={PAGE_DESC} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={PAGE_URL} />
-        <meta property="og:image" content={OG_IMAGE} />
-        <meta property="og:locale" content="nl_NL" />
-        <meta property="og:site_name" content="MusicScan" />
-        <meta property="article:published_time" content="2025-06-01" />
-        <meta property="article:modified_time" content="2025-06-15" />
-        <meta property="article:author" content="MusicScan" />
-        <meta property="article:section" content="Muziek" />
-        {ARTISTS_TAGS.map((a) => (
-          <meta key={a} property="article:tag" content={a} />
-        ))}
-
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={PAGE_TITLE} />
-        <meta name="twitter:description" content={PAGE_DESC} />
-        <meta name="twitter:image" content={OG_IMAGE} />
-
-        {/* Structured Data */}
-        {structuredData.map((sd, i) => (
-          <script key={i} type="application/ld+json">{JSON.stringify(sd)}</script>
-        ))}
-      </Helmet>
-
-      <div className="min-h-screen">
+      <JsonLd data={sd} />
+<div className="min-h-screen">
         {/* Hero with album cover */}
         <section className="relative overflow-hidden bg-card-dark py-16 md:py-24">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-primary/5" />

@@ -18,13 +18,8 @@ export default function Verhalen() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>{tr.verhalen.metaTitle}</title>
-        <meta name="description" content={tr.verhalen.metaDesc} />
-        <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
-      </Helmet>
-
-      <BreadcrumbNavigation className="max-w-7xl mx-auto px-4 pt-4" />
+      <JsonLd data={breadcrumbSchema} />
+<BreadcrumbNavigation className="max-w-7xl mx-auto px-4 pt-4" />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center mb-8">

@@ -340,37 +340,7 @@ export const PlaatVerhaal: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        {/* Article-specific Open Graph tags */}
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={currentUrl} />
-        <meta property="og:title" content={frontmatter.meta_title || `${artist} - ${album}`} />
-        <meta property="og:description" content={seoDescription} />
-        <meta property="og:image" content={blogImage} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content={`${artist} - ${album} album cover`} />
-        
-        {/* Article metadata */}
-        <meta property="article:published_time" content={blog?.published_at || blog?.created_at} />
-        {artist && <meta property="article:author" content={artist} />}
-        {genre && <meta property="article:section" content={genre} />}
-        {tags[0] && <meta property="article:tag" content={tags[0]} />}
-        {tags[1] && <meta property="article:tag" content={tags[1]} />}
-        {tags[2] && <meta property="article:tag" content={tags[2]} />}
-
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={frontmatter.meta_title || `${artist} - ${album}`} />
-        <meta name="twitter:description" content={seoDescription} />
-        <meta name="twitter:image" content={blogImage} />
-        {readingTime && <meta name="twitter:label1" content="Leestijd" />}
-        {readingTime && <meta name="twitter:data1" content={`${readingTime} min`} />}
-        {price > 0 && <meta name="twitter:label2" content="Prijs" />}
-        {price > 0 && <meta name="twitter:data2" content={`€${price}`} />}
-      </Helmet>
-      
-      <ArticleStructuredData
+<ArticleStructuredData
         title={title}
         description={frontmatter.meta_description || `Het verhaal achter ${artist} - ${album}`}
         publishDate={blog.published_at || blog.created_at}

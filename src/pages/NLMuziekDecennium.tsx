@@ -51,16 +51,7 @@ export default function NLMuziekDecennium() {
 
   return (
     <>
-      <Helmet>
-        <title>{decadeInfo.name} - Nederlandse Muziekgeschiedenis | MusicScan</title>
-        <meta 
-          name="description" 
-          content={`Ontdek de belangrijkste muziekmomenten uit de ${decadeInfo.name} (${decadeInfo.years}). ${decadeInfo.description}`}
-        />
-        <link rel="canonical" href={`https://www.musicscan.app/nl-muziek/jaren-${normalizedDecade}`} />
-      </Helmet>
-
-      <div className="min-h-screen flex flex-col bg-background">
+<div className="min-h-screen flex flex-col bg-background">
         <Navigation />
         
         <main className="flex-1">

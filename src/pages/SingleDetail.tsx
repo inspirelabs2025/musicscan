@@ -219,28 +219,7 @@ export default function SingleDetail() {
 
   return (
     <>
-      <Helmet>
-        <meta property="og:type" content="music.song" />
-        <meta property="og:url" content={currentUrl} />
-        <meta property="og:title" content={seoTitle} />
-        <meta property="og:description" content={singleDescription} />
-        <meta property="og:image" content={singleImage} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content={`${single.artist} - ${single.single_name}`} />
-        <meta property="music:musician" content={single?.artist} />
-        {single?.year && <meta property="music:release_date" content={single.year.toString()} />}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={seoTitle} />
-        <meta name="twitter:description" content={singleDescription} />
-        <meta name="twitter:image" content={singleImage} />
-        {single?.reading_time && <meta name="twitter:label1" content={dp.readingTime} />}
-        {single?.reading_time && <meta name="twitter:data1" content={`${single.reading_time} min`} />}
-        {single?.views_count && <meta name="twitter:label2" content="Views" />}
-        {single?.views_count && <meta name="twitter:data2" content={single.views_count.toString()} />}
-      </Helmet>
-      
-      <MusicRecordingStructuredData
+<MusicRecordingStructuredData
         name={`${single.artist} - ${single.single_name}`}
         artist={single.artist}
         description={singleDescription}

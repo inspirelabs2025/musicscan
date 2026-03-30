@@ -52,37 +52,8 @@ const FranseMuziek = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Franse Muziek — Artiesten, Albums & Verhalen | MusicScan</title>
-        <meta 
-          name="description" 
-          content="Ontdek de rijke Franse muziekgeschiedenis: van het klassieke chanson van Édith Piaf tot de elektronische beats van Daft Punk. Verken artiesten, albums en verhalen." 
-        />
-        <meta 
-          name="keywords" 
-          content="Franse muziek, Daft Punk, Édith Piaf, French House, chanson, Air, Phoenix, David Guetta, French Touch, Serge Gainsbourg" 
-        />
-        <link rel="canonical" href="https://www.musicscan.app/frankrijk" />
-        
-        {/* Open Graph */}
-        <meta property="og:title" content="Franse Muziek - Van Édith Piaf tot Daft Punk | MusicScan" />
-        <meta property="og:description" content="Ontdek de rijke Franse muziekgeschiedenis: van chanson tot French house." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.musicscan.app/frankrijk" />
-        <meta property="og:locale" content="nl_NL" />
-        
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Franse Muziek - Van Édith Piaf tot Daft Punk" />
-        <meta name="twitter:description" content="Ontdek de rijke Franse muziekgeschiedenis bij MusicScan." />
-        
-        {/* Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
-      </Helmet>
-
-      <main className="min-h-screen bg-background">
+      <JsonLd data={structuredData} />
+<main className="min-h-screen bg-background">
         <FrankrijkHero />
         <FranseMuziekQuiz />
         <DecenniumSliderFR />

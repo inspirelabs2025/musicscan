@@ -101,13 +101,7 @@ export default function StudioStoryDetail() {
 
   return (
     <>
-      <Helmet>
-        <title>{story.meta_title || `${story.studio_name} | MusicScan`}</title>
-        <meta name="description" content={story.meta_description || `Ontdek het verhaal van ${story.studio_name}`} />
-        <link rel="canonical" href={`https://www.musicscan.app/studio-stories/${story.slug}`} />
-      </Helmet>
-
-      <StudioStructuredData
+<StudioStructuredData
         name={story.studio_name}
         description={story.meta_description || `Ontdek het verhaal van ${story.studio_name}`}
         image={story.artwork_url || undefined}

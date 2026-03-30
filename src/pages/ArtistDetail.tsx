@@ -145,22 +145,7 @@ const ArtistDetail = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{story.meta_title || `${story.artist_name}: Biografie, Muziek & Verhaal | MusicScan`}</title>
-        <meta name="description" content={storyDescription} />
-        <meta property="og:title" content={story.meta_title || `${story.artist_name}: Biografie & Carrièreverhaal`} />
-        <meta property="og:description" content={storyDescription} />
-        <meta property="og:image" content={storyImage} />
-        <meta property="og:url" content={currentUrl} />
-        <meta property="og:type" content="article" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={story.meta_title || `${story.artist_name}: Biografie & Carrièreverhaal`} />
-        <meta name="twitter:description" content={storyDescription} />
-        <meta name="twitter:image" content={storyImage} />
-        <link rel="canonical" href={currentUrl} />
-      </Helmet>
-
-      <MusicGroupStructuredData
+<MusicGroupStructuredData
         name={story.artist_name}
         description={storyDescription}
         image={storyImage}

@@ -82,24 +82,8 @@ export default function AnecdotesOverview() {
 
   return (
     <>
-      <Helmet>
-        <title>{a.metaTitle}</title>
-        <meta name="description" content={a.metaDesc} />
-        <link rel="canonical" href={CANONICAL_URL} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={CANONICAL_URL} />
-        <meta property="og:title" content={a.metaTitle} />
-        <meta property="og:description" content={a.metaDesc} />
-        <meta property="og:image" content="https://www.musicscan.app/og-anekdotes.jpg" />
-        <meta property="og:site_name" content="MusicScan" />
-        <meta property="og:locale" content={language === 'nl' ? 'nl_NL' : 'en_US'} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={a.metaTitle} />
-        <meta name="twitter:description" content={a.metaDesc} />
-        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
+      <JsonLd data={structuredData} />
+<div className="min-h-screen bg-background">
         <BreadcrumbNavigation
           items={[
             { name: 'Home', url: '/' },

@@ -44,20 +44,7 @@ export default function ReviewDetail() {
 
   return (
     <>
-      <Helmet>
-        <title>{review.title} | MusicScan</title>
-        <meta name="description" content={review.summary} />
-        <meta property="og:title" content={review.title} />
-        <meta property="og:description" content={review.summary} />
-        <meta property="og:type" content="article" />
-        <meta property="og:image" content={review.cover_image_url || ""} />
-        <meta property="article:published_time" content={review.published_at || ""} />
-        <meta property="article:author" content={review.author_name || "MusicScan"} />
-        {review.genre && <meta property="article:section" content={review.genre} />}
-        <link rel="canonical" href={canonicalUrl} />
-      </Helmet>
-
-      <article className="min-h-screen bg-background">
+<article className="min-h-screen bg-background">
         <div className="container mx-auto max-w-4xl px-4 pt-8">
           <Link to="/reviews">
             <Button variant="ghost" size="sm" className="gap-2">

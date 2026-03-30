@@ -17,29 +17,7 @@ const Filmmuziek = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{tr.filmmuziek.title}</title>
-        <meta name="description" content={tr.filmmuziek.description} />
-        <meta name="keywords" content="filmmuziek, soundtracks, film scores, John Williams, Hans Zimmer, Ennio Morricone, filmcomponisten, orkestrale muziek" />
-        <link rel="canonical" href="https://www.musicscan.app/filmmuziek" />
-        <meta property="og:title" content={tr.filmmuziek.title} />
-        <meta property="og:description" content={tr.filmmuziek.description} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.musicscan.app/filmmuziek" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={tr.filmmuziek.title} />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            "name": "Filmmuziek",
-            "description": tr.filmmuziek.description,
-            "url": "https://www.musicscan.app/filmmuziek"
-          })}
-        </script>
-      </Helmet>
-
-      <main className="min-h-screen bg-background">
+<main className="min-h-screen bg-background">
         <FilmmuziekHero />
         <FilmmuziekQuiz />
         <DecenniumSliderFM />

@@ -60,27 +60,7 @@ export default function CanvasShop() {
 
   return (
     <>
-      <Helmet>
-        <title>Premium Canvas Doeken - Warm Grayscale Kunst Canvas | VinylScout</title>
-        <meta name="description" content="Ontdek unieke canvas doeken met elegante warm grayscale stijl. Zwart-wit met subtiele bruine en beige tonen. Premium canvas kwaliteit, gallery-wrapped. Gratis verzending vanaf €50." />
-        <meta name="keywords" content="canvas doeken, warm grayscale canvas, zwart wit canvas, kunst canvas, gallery wrap canvas, albumcover canvas, wanddecoratie canvas, premium canvas prints" />
-        <meta property="og:title" content="Premium Canvas Doeken - Warm Grayscale Kunst" />
-        <meta property="og:description" content="Elegante canvas doeken met warm grayscale stijl. Museum-kwaliteit canvas voor aan de muur." />
-        <meta property="og:type" content="website" />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            "name": "Premium Canvas Doeken",
-            "description": "Unieke canvas doeken met warm grayscale stijl",
-            "url": "https://www.musicscan.app/canvas",
-            "numberOfItems": canvasProducts?.length || 0,
-            "about": { "@type": "Thing", "name": "Canvas Art" }
-          })}
-        </script>
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-amber-50/20 dark:to-amber-950/10">
+<div className="min-h-screen bg-gradient-to-br from-background via-background to-amber-50/20 dark:to-amber-950/10">
         <div className="container py-4 md:py-8 space-y-4">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },

@@ -231,27 +231,8 @@ const Shop = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{sh.metaTitle}</title>
-        <meta name="description" content={sh.metaDescription} />
-        <meta name="keywords" content="muziek merchandise, band shirts, muziek posters, canvas art, metal prints, muziek shop" />
-        <link rel="canonical" href="https://www.musicscan.app/shop" />
-        <meta property="og:title" content={sh.title} />
-        <meta property="og:description" content={sh.metaDescription} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.musicscan.app/shop" />
-        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app" },
-            { "@type": "ListItem", "position": 2, "name": "Shop", "item": "https://www.musicscan.app/shop" }
-          ]
-        })}</script>
-      </Helmet>
-
-      <main className="min-h-screen bg-background">
+      <JsonLd data={structuredData} />
+<main className="min-h-screen bg-background">
         <section className="relative overflow-hidden border-b border-border/50 bg-gradient-to-br from-primary/5 via-background to-accent/5">
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
           <div className="container mx-auto px-4 py-6 md:py-14 relative">

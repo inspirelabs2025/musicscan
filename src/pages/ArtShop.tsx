@@ -83,18 +83,7 @@ export default function ArtShop() {
 
   return (
     <>
-      <Helmet>
-        {searchQuery && filteredProducts?.length === 0 && (
-          <meta name="robots" content="noindex" />
-        )}
-        <title>Metaalprints - Albumcovers op Metaal | VinylScout</title>
-        <meta name="description" content="Ontdek onze collectie premium metaalprints van iconische albumcovers. Museum-kwaliteit prints op aluminium. Gratis verzending vanaf €50." />
-        <meta property="og:title" content="Metaalprints - Albumcovers op Metaal" />
-        <meta property="og:description" content="Premium metaalprints van iconische albumcovers. Museum-kwaliteit op aluminium." />
-        <meta property="og:type" content="website" />
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20">
+<div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20">
         <div className="container py-4 md:py-8 space-y-4">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },

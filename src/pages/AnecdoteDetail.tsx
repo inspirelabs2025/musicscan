@@ -57,24 +57,7 @@ export default function AnecdoteDetail() {
 
   return (
     <>
-      <Helmet>
-        <title>{anecdote.meta_title}</title>
-        <meta name="description" content={anecdote.meta_description} />
-        <meta name="keywords" content={`${anecdote.subject_type}, ${anecdote.subject_name}`} />
-        <link rel="canonical" href={pageUrl} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={pageUrl} />
-        <meta property="og:title" content={anecdote.meta_title} />
-        <meta property="og:description" content={anecdote.meta_description} />
-        <meta property="article:published_time" content={anecdote.anecdote_date} />
-        <meta property="article:section" content={anecdote.subject_type} />
-        <meta property="article:tag" content={anecdote.subject_name} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={anecdote.meta_title} />
-        <meta name="twitter:description" content={anecdote.meta_description} />
-      </Helmet>
-
-      <ArticleStructuredData
+<ArticleStructuredData
         title={anecdote.anecdote_title}
         description={anecdote.meta_description}
         publishDate={anecdote.anecdote_date}

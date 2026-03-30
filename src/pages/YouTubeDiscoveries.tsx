@@ -161,36 +161,8 @@ export default function YouTubeDiscoveries() {
 
   return (
     <>
-      <Helmet>
-        <title>YouTube Discoveries - Unieke Muziek Content | MusicScan</title>
-        <meta name="description" content="Ontdek bijzondere muziekvideo's: interviews, studio sessies, live performances en documentaires van artiesten uit je collectie." />
-        <meta name="keywords" content="youtube muziek, artiest interviews, studio sessies, live performances, muziek documentaires, behind the scenes, muziekvideo's" />
-        <link rel="canonical" href={CANONICAL_URL} />
-        
-        {/* Open Graph */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={CANONICAL_URL} />
-        <meta property="og:title" content="YouTube Discoveries - Unieke Muziek Content | MusicScan" />
-        <meta property="og:description" content="Ontdek bijzondere muziekvideo's: interviews, studio sessies, live performances en documentaires van artiesten uit je collectie." />
-        <meta property="og:image" content="https://www.musicscan.app/og-youtube-discoveries.jpg" />
-        <meta property="og:site_name" content="MusicScan" />
-        <meta property="og:locale" content="nl_NL" />
-        
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@musicscan_app" />
-        <meta name="twitter:creator" content="@musicscan_app" />
-        <meta name="twitter:title" content="YouTube Discoveries - Unieke Muziek Content | MusicScan" />
-        <meta name="twitter:description" content="Ontdek bijzondere muziekvideo's: interviews, studio sessies en meer." />
-        <meta name="twitter:image" content="https://www.musicscan.app/og-youtube-discoveries.jpg" />
-        
-        {/* JSON-LD Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
+      <JsonLd data={structuredData} />
+<div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">

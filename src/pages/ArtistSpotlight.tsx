@@ -215,35 +215,7 @@ const ArtistSpotlight = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{spotlight.meta_title || `${spotlight.artist_name} - In de Spotlight | MusicScan`}</title>
-        <meta name="description" content={spotlight.meta_description || spotlight.spotlight_description} />
-        <link rel="canonical" href={canonicalUrl} />
-        
-        {/* Open Graph */}
-        <meta property="og:title" content={spotlight.artist_name} />
-        <meta property="og:description" content={spotlight.spotlight_description || ""} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={canonicalUrl} />
-        {heroImage && <meta property="og:image" content={heroImage} />}
-        
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={spotlight.artist_name} />
-        <meta name="twitter:description" content={spotlight.spotlight_description || ""} />
-        {heroImage && <meta name="twitter:image" content={heroImage} />}
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app" },
-            { "@type": "ListItem", "position": 2, "name": "Spotlights", "item": "https://www.musicscan.app/artist-spotlights" },
-            { "@type": "ListItem", "position": 3, "name": spotlight.artist_name, "item": canonicalUrl }
-          ]
-        })}</script>
-      </Helmet>
-
-      {spotlight.music_style && (
+{spotlight.music_style && (
         <MusicGroupStructuredData
           name={spotlight.artist_name}
           description={spotlight.spotlight_description || spotlight.story_content.substring(0, 200)}

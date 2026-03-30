@@ -28,16 +28,7 @@ export default function Reviews() {
 
   return (
     <>
-      <Helmet>
-        <title>Album Reviews - Muziek Recensies | MusicScan</title>
-        <meta name="description" content="Ontdek eerlijke en diepgaande album reviews van nieuwe releases en klassiekers. Van singles tot LP's, alle genres gerecenseerd." />
-        <meta property="og:title" content="Album Reviews - MusicScan" />
-        <meta property="og:description" content="Ontdek eerlijke en diepgaande album reviews van nieuwe releases en klassiekers." />
-        <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://www.musicscan.app/reviews" />
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
+<div className="min-h-screen bg-background">
         {/* Hero Section */}
         <div className="bg-gradient-to-b from-primary/10 to-background py-6 px-4">
           <div className="container mx-auto max-w-6xl text-center space-y-2">

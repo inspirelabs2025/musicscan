@@ -5,8 +5,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { optimizeImageUrl } from '@/lib/image-utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function CommunitySection() {
+  const { tr } = useLanguage();
+  const h = tr.homeUI;
+
   const { data: fanwallPhotos } = useQuery({
     queryKey: ['homepage-fanwall'],
     queryFn: async () => {
@@ -24,14 +28,14 @@ export function CommunitySection() {
   return (
     <section className="py-14 bg-muted/50">
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold text-foreground mb-6">Community</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-6">{h.communityTitle}</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="overflow-hidden border-border/50">
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Camera className="w-5 h-5 text-primary" />
-                <h3 className="font-bold text-foreground">Fanwall</h3>
+                <h3 className="font-bold text-foreground">{h.fanwallTitle}</h3>
               </div>
               <div className="flex gap-3 mb-4">
                 {fanwallPhotos?.map((fw) => (
@@ -40,7 +44,7 @@ export function CommunitySection() {
                       {fw.featured_photo_url ? (
                         <img
                           src={optimizeImageUrl(fw.featured_photo_url!, { width: 80, height: 80 })}
-                          alt={`${fw.artist_name} fanwall foto`}
+                          alt={`${fw.artist_name} fanwall`}
                           loading="lazy"
                           decoding="async"
                           width={80}
@@ -61,7 +65,7 @@ export function CommunitySection() {
               </div>
               <Button asChild variant="outline" size="sm">
                 <Link to="/fan-wall">
-                  Bekijk Fanwall <ArrowRight className="w-4 h-4 ml-1" />
+                  {h.viewFanwall} <ArrowRight className="w-4 h-4 ml-1" />
                 </Link>
               </Button>
             </CardContent>
@@ -72,16 +76,16 @@ export function CommunitySection() {
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <Gamepad2 className="w-5 h-5 text-primary" />
-                  <h3 className="font-bold text-foreground">Dagelijkse Challenge</h3>
+                  <h3 className="font-bold text-foreground">{h.dailyChallenge}</h3>
                 </div>
                 <p className="text-muted-foreground text-sm mb-6">
-                  Test je muziekkennis met de dagelijkse quiz! Verdien punten, unlock badges en bestrijd het leaderboard.
+                  {h.dailyChallengeDesc}
                 </p>
               </div>
               <Button asChild className="w-full">
                 <Link to="/quizzen">
                   <Gamepad2 className="w-4 h-4 mr-2" />
-                  Speel nu
+                  {h.playNow}
                 </Link>
               </Button>
             </CardContent>

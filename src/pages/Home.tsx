@@ -138,7 +138,7 @@ const Home = () => {
       </Suspense>
 
       {/* SEO Content Block */}
-      <SeoContentBlock text="MusicScan is hét muziekplatform voor vinyl- en CD-verzamelaars. Scan je platen met onze AI-scanner en ontdek direct de artiest, het album en de marktwaarde. Lees de verhalen achter iconische albums, test je muziekkennis met de dagelijkse quiz, en shop unieke album art producten zoals metal prints en canvas doeken. Of je nu vinyl wilt scannen, je collectie wilt beheren of gewoon muziekverhalen wilt lezen — bij MusicScan vind je alles." />
+      <SeoContentBlock text={tr.homeUI.seoBlock} />
     </div>
   );
 };

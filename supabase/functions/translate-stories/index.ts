@@ -97,13 +97,13 @@ ${story.story_content?.substring(0, 6000)}`;
 
         const translated = JSON.parse(jsonMatch[0]);
 
-        // Insert EN version
-        const { error: insertError } = await supabase.from("music_stories").insert({
+        // Insert EN version - first as unpublished to avoid notification trigger
+        const { data: inserted, error: insertError } = await supabase.from("music_stories").insert({
           query: story.query,
           title: translated.title || story.title,
           story_content: translated.story_content || story.story_content,
           slug: enSlug,
-          is_published: true,
+          is_published: false,
           content_language: "en",
           artist: story.artist,
           single_name: story.single_name,
@@ -122,11 +122,13 @@ ${story.story_content?.substring(0, 6000)}`;
           word_count: story.word_count,
           user_id: story.user_id,
           views_count: 0,
-        });
+        }).select("id").single();
 
         if (insertError) {
           results.push({ slug: story.slug, status: "error", reason: insertError.message });
         } else {
+          // Now publish it
+          await supabase.from("music_stories").update({ is_published: true }).eq("id", inserted.id);
           results.push({ slug: story.slug, enSlug, status: "translated" });
         }
       } catch (storyError: any) {

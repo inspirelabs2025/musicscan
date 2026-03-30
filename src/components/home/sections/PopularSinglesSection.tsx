@@ -10,8 +10,10 @@ export function PopularSinglesSection() {
   const { tr } = useLanguage();
   const h = tr.homeUI;
 
+  const { language } = useLanguage();
+
   const { data: singles } = useQuery({
-    queryKey: ['homepage-singles'],
+    queryKey: ['homepage-singles', language],
     queryFn: async () => {
       const EXCLUDE_WORDS = [
         'greatest hits', 'best of', 'collection', 'compilation', 'sampler',
@@ -24,6 +26,7 @@ export function PopularSinglesSection() {
         .from('music_stories')
         .select('id,slug,title,artist,single_name,artwork_url,created_at')
         .eq('is_published', true)
+        .eq('content_language', language)
         .not('single_name', 'is', null)
         .not('artwork_url', 'is', null)
         .order('created_at', { ascending: false })

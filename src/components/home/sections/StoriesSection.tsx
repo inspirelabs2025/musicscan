@@ -10,8 +10,10 @@ export function StoriesSection() {
   const { tr } = useLanguage();
   const h = tr.homeUI;
 
+  const { language } = useLanguage();
+
   const { data: stories } = useQuery({
-    queryKey: ['homepage-stories'],
+    queryKey: ['homepage-stories', language],
     queryFn: async () => {
       const items: Array<{
         id: string;
@@ -26,6 +28,7 @@ export function StoriesSection() {
         .from('blog_posts')
         .select('id,slug,yaml_frontmatter,album_cover_url')
         .eq('is_published', true)
+        .eq('content_language', language)
         .order('created_at', { ascending: false })
         .limit(8);
 
@@ -43,23 +46,26 @@ export function StoriesSection() {
         });
       });
 
-      const { data: anecdotes } = await supabase
-        .from('music_anecdotes')
-        .select('id,slug,anecdote_title,subject_name')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(4);
+      // Anecdotes are Dutch-only for now, skip in EN mode
+      if (language === 'nl') {
+        const { data: anecdotes } = await supabase
+          .from('music_anecdotes')
+          .select('id,slug,anecdote_title,subject_name')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(4);
 
-      anecdotes?.forEach(a => {
-        items.push({
-          id: a.id,
-          slug: a.slug || a.id,
-          title: a.anecdote_title,
-          artist: a.subject_name || '',
-          image_url: null,
-          type: 'anecdote',
+        anecdotes?.forEach(a => {
+          items.push({
+            id: a.id,
+            slug: a.slug || a.id,
+            title: a.anecdote_title,
+            artist: a.subject_name || '',
+            image_url: null,
+            type: 'anecdote',
+          });
         });
-      });
+      }
 
       return items.slice(0, 4);
     },

@@ -13,7 +13,6 @@ import { ReviewSchema, FAQSchema } from '@/components/SEO/ReviewSchema';
 import { MusicRecordingStructuredData } from '@/components/SEO/MusicRecordingStructuredData';
 import { useToast } from '@/hooks/use-toast';
 import { ShareButtons } from '@/components/ShareButtons';
-import { Helmet } from 'react-helmet';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
@@ -180,11 +179,7 @@ export default function SingleDetail() {
   if (notFound || !single) {
     return (
       <>
-        <Helmet>
-          <title>{dp.singleNotFound} | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
+<div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
           <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
           <div className="relative text-center max-w-md mx-auto px-4">
             <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-8 border border-border/50">

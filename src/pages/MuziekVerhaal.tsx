@@ -7,12 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Clock, Eye, Music, BookOpen, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { ArticleStructuredData } from '@/components/SEO/StructuredData';
 import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
 import { ReviewSchema, FAQSchema } from '@/components/SEO/ReviewSchema';
 import { useToast } from '@/hooks/use-toast';
 import { ShareButtons } from '@/components/ShareButtons';
-import { Helmet } from 'react-helmet';
 import { formatDate } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -195,11 +195,7 @@ export const MuziekVerhaal: React.FC = () => {
   if (notFound || !story) {
     return (
       <>
-        <Helmet>
-          <title>Verhaal niet gevonden | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
+<div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
           <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
           
           <div className="relative text-center max-w-md mx-auto px-4">

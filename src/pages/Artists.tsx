@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Music, Search, Filter, ChevronDown } from 'lucide-react';
 import { useArtistStories, useArtistStoriesStats } from '@/hooks/useArtistStories';

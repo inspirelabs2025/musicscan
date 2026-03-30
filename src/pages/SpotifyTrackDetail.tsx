@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArtistContentCards } from '@/components/scanner/ArtistContentCards';
 import { Button } from '@/components/ui/button';

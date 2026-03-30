@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { usePlatformProductDetail, useSimilarProducts } from "@/hooks/usePlatformProductDetail";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,6 @@ import { ArrowLeft, ShoppingCart, Check, Package, Clock, BookOpen, Sparkles } fr
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useSEO } from "@/hooks/useSEO";
-import { Helmet } from "react-helmet";
 import { useBlogPostByProduct } from "@/hooks/useBlogPostByProduct";
 import { ReviewSchema, AggregateRatingSchema } from "@/components/SEO/ReviewSchema";
 import { PosterStructuredData } from "@/components/SEO/PosterStructuredData";
@@ -138,11 +138,7 @@ export default function PlatformProductDetail() {
   if (!product) {
     return (
       <>
-        <Helmet>
-          <title>{dp.productNotFound} | MusicScan Shop</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="container mx-auto px-4 py-8 text-center">
+<div className="container mx-auto px-4 py-8 text-center">
           <h1 className="text-2xl font-bold mb-4">{dp.productNotFound}</h1>
           <Link to="/">
             <Button>{dp.backToHome}</Button>
@@ -305,11 +301,7 @@ export default function PlatformProductDetail() {
         <PosterStructuredData product={product} slug={slug!} />
       ) : (
         structuredData && (
-          <Helmet>
-            <script type="application/ld+json">
-              {JSON.stringify(structuredData)}
-            </script>
-          </Helmet>
+          <JsonLd data={structuredData} />
         )
       )}
 

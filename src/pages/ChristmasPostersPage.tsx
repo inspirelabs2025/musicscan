@@ -1,5 +1,5 @@
-import { Helmet } from 'react-helmet';
 import { useQuery } from '@tanstack/react-query';
+import { useSEO } from '@/hooks/useSEO';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -78,14 +78,7 @@ export default function ChristmasPostersPage() {
 
   return (
     <>
-      <Helmet>
-        <title>🎄 Kerst Posters & Art | MusicScan</title>
-        <meta name="description" content="Ontdek onze kerst muziek posters, canvas doeken en metal prints. Unieke artwork van iconische kerstliedjes als wanddecoratie." />
-        <meta property="og:title" content="🎄 Kerst Posters & Art | MusicScan" />
-        <meta property="og:description" content="Kerst muziek artwork: posters, canvas en metal prints van iconische kerstliedjes." />
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-to-b from-background via-red-950/5 to-green-950/5">
+<div className="min-h-screen bg-gradient-to-b from-background via-red-950/5 to-green-950/5">
         {/* Hero Section */}
         <section className="relative pt-24 pb-12 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-red-900/20 via-green-900/10 to-transparent" />

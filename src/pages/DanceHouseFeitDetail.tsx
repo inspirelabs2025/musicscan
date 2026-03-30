@@ -1,6 +1,7 @@
 import React from 'react';
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useParams, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
 import { ArrowLeft, Calendar, Music, Users, ExternalLink, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,11 +14,7 @@ const DanceHouseFeitDetail = () => {
   if (!feit) {
     return (
       <>
-        <Helmet>
-          <title>Feit niet gevonden | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen bg-background flex items-center justify-center">
+<div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Feit niet gevonden</h1>
             <Button asChild>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { DanceHouseHero } from '@/components/dance-house/DanceHouseHero';
 import { DanceHouseMuziekQuiz } from '@/components/dance-house/DanceHouseMuziekQuiz';
 import { DecenniumSliderDH } from '@/components/dance-house/DecenniumSliderDH';

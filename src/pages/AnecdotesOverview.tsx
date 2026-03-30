@@ -1,6 +1,6 @@
 import { useState } from 'react';
+import { useSEO } from '@/hooks/useSEO';
 import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
 import { useAnecdotes } from '@/hooks/useAnecdotes';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Search, BookOpen, TrendingUp, Calendar, Eye } from 'lucide-react';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
 import { format } from 'date-fns';
 import { nl, enUS } from 'date-fns/locale';

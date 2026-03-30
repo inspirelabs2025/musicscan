@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';

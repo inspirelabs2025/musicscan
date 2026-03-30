@@ -1,5 +1,6 @@
-import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

@@ -1,6 +1,6 @@
 import React from 'react';
+import { useSEO } from '@/hooks/useSEO';
 import { useParams, Navigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
 import { ArtistQuiz } from '@/components/quiz/ArtistQuiz';
 import { AlbumQuiz } from '@/components/quiz/AlbumQuiz';
 import { CollectionQuiz } from '@/components/CollectionQuiz';
@@ -100,12 +100,7 @@ export default function CategoryQuiz() {
 
   return (
     <>
-      <Helmet>
-        <title>{meta.title} | MusicScan Quizzen</title>
-        <meta name="description" content={meta.description} />
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
+<div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
         <div className="container mx-auto px-4 py-8">
           {renderQuiz()}
         </div>

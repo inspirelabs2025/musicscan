@@ -1,5 +1,6 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { Link } from 'react-router-dom';
 import { QuizHubHero } from '@/components/quiz/QuizHubHero';
 import { QuizCategoryGrid } from '@/components/quiz/QuizCategoryGrid';

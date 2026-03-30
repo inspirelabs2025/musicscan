@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
 import { useAnecdote, useRelatedAnecdotes } from '@/hooks/useAnecdotes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -38,11 +38,7 @@ export default function AnecdoteDetail() {
   if (!anecdote) {
     return (
       <>
-        <Helmet>
-          <title>{dp.anecdoteNotFound} | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen flex items-center justify-center">
+<div className="min-h-screen flex items-center justify-center">
           <Card>
             <CardContent className="py-12 text-center">
               <BookOpen className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />

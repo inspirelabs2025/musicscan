@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useSEO } from '@/hooks/useSEO';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
 import { 
   Music, 
   ShoppingBag, 
@@ -51,12 +51,7 @@ export default function ArtistSearchResults() {
 
   return (
     <>
-      <Helmet>
-        <title>Zoek naar {debouncedSearch || 'Artiest'} | MusicScan</title>
-        <meta name="description" content={`Doorzoek alle content over ${debouncedSearch || 'je favoriete artiest'}`} />
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
+<div className="min-h-screen bg-background">
         {/* Header with search */}
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b">
           <div className="container mx-auto px-4 py-4">

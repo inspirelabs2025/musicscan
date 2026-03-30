@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useTimeMachineEvents } from '@/hooks/useTimeMachineEvents';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

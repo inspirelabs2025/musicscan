@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
 import { usePodcastBySlug, usePodcastEpisodes } from '@/hooks/usePodcastDetail';
 import { PodcastSeriesStructuredData } from '@/components/SEO/PodcastStructuredData';
 import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
@@ -45,11 +45,7 @@ export default function PodcastDetail() {
   if (!podcast) {
     return (
       <>
-        <Helmet>
-          <title>Podcast niet gevonden | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen bg-background">
+<div className="min-h-screen bg-background">
           <main className="container py-8 text-center">
             <h1 className="text-2xl font-bold mb-4">Podcast niet gevonden</h1>
             <Link to="/podcasts">

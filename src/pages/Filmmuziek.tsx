@@ -1,5 +1,6 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { FilmmuziekHero } from '@/components/filmmuziek/FilmmuziekHero';
 import { FilmmuziekQuiz } from '@/components/filmmuziek/FilmmuziekQuiz';
 import { DecenniumSliderFM } from '@/components/filmmuziek/DecenniumSliderFM';

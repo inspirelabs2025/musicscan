@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Sparkles, Search, Music, ArrowLeft } from 'lucide-react';
@@ -22,12 +22,7 @@ const ChristmasAnecdotesPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Kerst Muziek Anekdotes | MusicScan</title>
-        <meta name="description" content="Ontdek fascinerende verhalen achter je favoriete kerstnummers. Van Mariah Carey's miljardenhit tot de oorlogshit van Bing Crosby." />
-      </Helmet>
-
-      <Navigation />
+<Navigation />
 
       <main className="min-h-screen bg-gradient-to-b from-background via-red-950/5 to-background pt-20">
         <div className="container mx-auto px-4 py-12">

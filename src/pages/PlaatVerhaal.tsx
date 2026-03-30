@@ -11,7 +11,6 @@ import { ArticleStructuredData } from '@/components/SEO/StructuredData';
 import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
 import { useToast } from '@/hooks/use-toast';
 import { ShareButtons } from '@/components/ShareButtons';
-import { Helmet } from 'react-helmet';
 import { ReviewsSection } from '@/components/blog/ReviewsSection';
 import { CommentsSection } from '@/components/blog/CommentsSection';
 import { RelatedArticles } from '@/components/SEO/RelatedArticles';
@@ -252,11 +251,7 @@ export const PlaatVerhaal: React.FC = () => {
   if (notFound || !blog) {
     return (
       <>
-        <Helmet>
-          <title>Artikel niet gevonden | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
+<div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
           <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
           
           <div className="relative text-center max-w-md mx-auto px-4">

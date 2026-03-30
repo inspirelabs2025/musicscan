@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useSEO } from '@/hooks/useSEO';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -258,11 +258,7 @@ const Auth = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{t.metaTitle}</title>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
-      <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-background to-muted">
+<div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-background to-muted">
         <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">{t.title}</CardTitle>

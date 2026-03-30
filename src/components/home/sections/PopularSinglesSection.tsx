@@ -4,8 +4,12 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { optimizeImageUrl, generateArtworkAlt } from '@/lib/image-utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function PopularSinglesSection() {
+  const { tr } = useLanguage();
+  const h = tr.homeUI;
+
   const { data: singles } = useQuery({
     queryKey: ['homepage-singles'],
     queryFn: async () => {
@@ -49,9 +53,9 @@ export function PopularSinglesSection() {
     <section className="py-14 bg-background">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Populaire Singles</h2>
+          <h2 className="text-2xl font-bold text-foreground">{h.popularSingles}</h2>
           <Link to="/verhalen?tab=singles" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
-            Alle singles <ArrowRight className="w-4 h-4" />
+            {h.allSingles} <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 

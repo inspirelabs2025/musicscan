@@ -9,27 +9,21 @@ export const ScannerHero = () => {
 
   return (
     <section className="relative min-h-[500px] md:min-h-[600px] bg-black overflow-hidden flex items-center">
-      {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/60 via-vinyl-purple/20 to-vinyl-gold/40" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(var(--vinyl-purple)/0.35)_0%,_transparent_70%)]" />
       
-      {/* Animated vinyl disc - left */}
       <div className="absolute -left-10 md:-left-20 top-1/2 -translate-y-1/2 opacity-30 md:opacity-40">
         <Disc3 className="w-72 h-72 md:w-[28rem] md:h-[28rem] lg:w-[32rem] lg:h-[32rem] text-vinyl-purple animate-vinyl-spin" />
       </div>
       
-      {/* Animated vinyl disc - right */}
       <div className="absolute -right-10 md:-right-20 top-1/2 -translate-y-1/2 opacity-20 md:opacity-30">
         <Disc3 className="w-56 h-56 md:w-80 md:h-80 lg:w-96 lg:h-96 text-vinyl-gold animate-vinyl-spin" style={{ animationDirection: 'reverse', animationDuration: '25s' }} />
       </div>
       
-      {/* Sparkle effects */}
       <Sparkles className="absolute top-20 left-[20%] w-8 h-8 text-vinyl-gold/60 animate-pulse" />
       <Sparkles className="absolute bottom-32 right-[25%] w-6 h-6 text-vinyl-purple/70 animate-pulse" style={{ animationDelay: '1s' }} />
 
-      {/* Content */}
       <div className="container relative z-10 py-16 md:py-24 text-center">
-        
         <div className="mb-8 md:mb-12">
           <div className="inline-flex items-center gap-2 bg-vinyl-gold/20 text-vinyl-gold px-4 py-2 rounded-full text-sm font-semibold mb-6 backdrop-blur-sm border border-vinyl-gold/30">
             <Zap className="w-4 h-4" />
@@ -37,14 +31,13 @@ export const ScannerHero = () => {
           </div>
           
           <h1 className="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white mb-6 tracking-tight">
-            Scan Je Vinyl & CD Collectie
+            {h.heroTitle}
           </h1>
           
           <h2 className="text-lg md:text-xl lg:text-2xl text-white/80 max-w-2xl mx-auto mb-10">
-            Ontdek de Waarde van je Platen en CD's
+            {h.heroSubtitle}
           </h2>
           
-          {/* Big Scanner Button */}
           <Button 
             asChild 
             size="lg"
@@ -57,27 +50,26 @@ export const ScannerHero = () => {
             </Link>
           </Button>
 
-          {/* 3-Step Strip */}
           <div className="mt-10 max-w-2xl mx-auto grid grid-cols-3 gap-3 md:gap-5 items-start">
             <div className="text-center">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 md:p-4 mb-2 mx-auto w-fit">
                 <span className="text-3xl md:text-4xl block">📷</span>
               </div>
-              <p className="text-white/90 text-xs md:text-sm font-medium">Maak een foto</p>
+              <p className="text-white/90 text-xs md:text-sm font-medium">{h.stepPhoto}</p>
             </div>
             <div className="text-center relative">
               <span className="absolute -left-4 md:-left-6 top-5 md:top-6 text-white/40 text-lg md:text-xl font-bold">→</span>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 md:p-4 mb-2 mx-auto w-fit">
                 <span className="text-3xl md:text-4xl block">🤖</span>
               </div>
-              <p className="text-white/90 text-xs md:text-sm font-medium">Slimme herkenning</p>
+              <p className="text-white/90 text-xs md:text-sm font-medium">{h.stepRecognition}</p>
             </div>
             <div className="text-center relative">
               <span className="absolute -left-4 md:-left-6 top-5 md:top-6 text-white/40 text-lg md:text-xl font-bold">→</span>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 md:p-4 mb-2 mx-auto w-fit">
                 <span className="text-3xl md:text-4xl block">💰</span>
               </div>
-              <p className="text-white/90 text-xs md:text-sm font-medium">Zie marktwaarde</p>
+              <p className="text-white/90 text-xs md:text-sm font-medium">{h.stepValue}</p>
             </div>
           </div>
 

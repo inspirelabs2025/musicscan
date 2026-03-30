@@ -1,42 +1,26 @@
 import { Link } from 'react-router-dom';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { useLanguage } from '@/contexts/LanguageContext';
 import promoNederlandBg from '@/assets/promo-nederland-bg.jpg';
 import promoDanceBg from '@/assets/promo-dance-bg.jpg';
 import promoFilmmuziekBg from '@/assets/promo-filmmuziek-bg.jpg';
 import promoFrankrijkBg from '@/assets/promo-frankrijk-bg.jpg';
 
-const genres = [
-  {
-    label: 'Nederlandse Muziek',
-    href: '/nederland',
-    emoji: '🇳🇱',
-    image: promoNederlandBg,
-  },
-  {
-    label: 'Dance & House',
-    href: '/dance-house',
-    emoji: '🎧',
-    image: promoDanceBg,
-  },
-  {
-    label: 'Filmmuziek',
-    href: '/filmmuziek',
-    emoji: '🎬',
-    image: promoFilmmuziekBg,
-  },
-  {
-    label: 'Franse Muziek',
-    href: '/frankrijk',
-    emoji: '🇫🇷',
-    image: promoFrankrijkBg,
-  },
-];
-
 export function GenresSection() {
+  const { tr } = useLanguage();
+  const h = tr.homeUI;
+
+  const genres = [
+    { label: h.dutchMusic, href: '/nederland', emoji: '🇳🇱', image: promoNederlandBg },
+    { label: h.danceHouse, href: '/dance-house', emoji: '🎧', image: promoDanceBg },
+    { label: h.filmMusic, href: '/filmmuziek', emoji: '🎬', image: promoFilmmuziekBg },
+    { label: h.frenchMusic, href: '/frankrijk', emoji: '🇫🇷', image: promoFrankrijkBg },
+  ];
+
   return (
     <section className="py-14 bg-muted/30 section-genres">
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold text-foreground mb-6">Ontdek op Genre</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-6">{h.discoverByGenre}</h2>
 
         <ScrollArea className="w-full">
           <div className="flex gap-4 pb-4">
@@ -49,7 +33,7 @@ export function GenresSection() {
                 <div className="aspect-[16/9] rounded-xl overflow-hidden relative group-hover:scale-[1.02] transition-transform duration-300 shadow-lg">
                   <img
                     src={genre.image}
-                    alt={`${genre.label} muziek ontdekken`}
+                    alt={genre.label}
                     loading="lazy"
                     decoding="async"
                     width={256}

@@ -4,8 +4,12 @@ import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { optimizeImageUrl, generateArtworkAlt } from '@/lib/image-utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function StoriesSection() {
+  const { tr } = useLanguage();
+  const h = tr.homeUI;
+
   const { data: stories } = useQuery({
     queryKey: ['homepage-stories'],
     queryFn: async () => {
@@ -68,9 +72,9 @@ export function StoriesSection() {
     <section className="py-14 bg-background">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Album Verhalen & Anekdotes</h2>
+          <h2 className="text-2xl font-bold text-foreground">{h.albumStoriesAnecdotes}</h2>
           <Link to="/verhalen" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
-            Alle verhalen <ArrowRight className="w-4 h-4" />
+            {h.allStories} <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
@@ -99,7 +103,7 @@ export function StoriesSection() {
                 )}
               </div>
               <Badge variant="secondary" className="mb-1.5 text-[10px]">
-                {story.type === 'album' ? 'Album Verhaal' : 'Anekdote'}
+                {story.type === 'album' ? h.albumStoryBadge : h.anecdoteBadge}
               </Badge>
               <h3 className="text-sm font-semibold text-foreground line-clamp-2">{story.title}</h3>
               <p className="text-xs text-muted-foreground">{story.artist}</p>

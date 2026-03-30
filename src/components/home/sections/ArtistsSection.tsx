@@ -4,8 +4,12 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { optimizeImageUrl, generateArtworkAlt } from '@/lib/image-utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function ArtistsSection() {
+  const { tr } = useLanguage();
+  const h = tr.homeUI;
+
   const { data: artists } = useQuery({
     queryKey: ['homepage-artists'],
     queryFn: async () => {
@@ -27,9 +31,9 @@ export function ArtistsSection() {
     <section className="py-14 bg-muted/30 section-artists">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Artiesten</h2>
+          <h2 className="text-2xl font-bold text-foreground">{h.artistsTitle}</h2>
           <Link to="/artists" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
-            Alle artiesten <ArrowRight className="w-4 h-4" />
+            {h.allArtists} <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 

@@ -58,6 +58,7 @@ const buildOrSearch = (term: string) => {
 
 export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
   const { user } = useAuth();
+  const { language } = useLanguage();
   const [hasManuallyFetched, setHasManuallyFetched] = useState(false);
 
   const fetchBlogs = async ({ pageParam = 0 }) => {
@@ -78,7 +79,8 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
         album_cover_url
       `)
       // Verhalen pagina: sluit nieuws-items uit (nieuws heeft eigen sectie/tabel)
-      .neq("album_type", "news");
+      .neq("album_type", "news")
+      .eq("content_language", language);
 
     // Note: No user filter applied - show all published blogs to everyone
 

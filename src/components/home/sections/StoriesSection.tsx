@@ -10,8 +10,10 @@ export function StoriesSection() {
   const { tr } = useLanguage();
   const h = tr.homeUI;
 
+  const { language } = useLanguage();
+
   const { data: stories } = useQuery({
-    queryKey: ['homepage-stories'],
+    queryKey: ['homepage-stories', language],
     queryFn: async () => {
       const items: Array<{
         id: string;

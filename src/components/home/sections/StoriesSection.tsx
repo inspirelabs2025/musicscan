@@ -46,12 +46,14 @@ export function StoriesSection() {
         });
       });
 
-      const { data: anecdotes } = await supabase
-        .from('music_anecdotes')
-        .select('id,slug,anecdote_title,subject_name')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(4);
+      // Anecdotes are Dutch-only for now, skip in EN mode
+      if (language === 'nl') {
+        const { data: anecdotes } = await supabase
+          .from('music_anecdotes')
+          .select('id,slug,anecdote_title,subject_name')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(4);
 
       anecdotes?.forEach(a => {
         items.push({

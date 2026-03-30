@@ -12,7 +12,7 @@ export function LanguageBar() {
 
   return (
     <section className="bg-muted/50 border-b border-border">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-center gap-3">
+      <div className="container mx-auto px-4 py-1.5 flex items-center justify-center gap-2">
         <Globe className="w-4 h-4 text-muted-foreground" />
         <div className="flex items-center gap-2">
           {languages.map(({ code, flag, label }) => (

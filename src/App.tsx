@@ -1,13 +1,21 @@
-import { RouterProvider } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
+import { Providers } from './providers';
 import { Toaster } from './components/ui/sonner';
-import { router } from './routes';
+import { TooltipProvider } from './components/ui/tooltip';
+import { MobileBottomNav } from './components/MobileBottomNav';
 
 function App() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
   return (
-    <>
-      <Toaster richColors />
-      <RouterProvider router={router} />
-    </>
+    <Providers>
+      <TooltipProvider>
+        <Outlet />
+      </TooltipProvider>
+      <Toaster />
+      {!isAdminRoute && <MobileBottomNav />}
+    </Providers>
   );
 }
 

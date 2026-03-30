@@ -468,7 +468,7 @@ export const VerhaalTab: React.FC = () => {
         )}
 
         {blogs.length === 0 && !isLoadingBlogs && (
-          <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700">
+          <Card className="border-2 border-dashed border-border">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                <FileText className="w-12 h-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">

@@ -5,7 +5,7 @@ import { MobileHeader } from './mobile-header';
 import { Toaster } from '@/components/ui/sonner';
 import { trackEvent } from '@/lib/analytics';
 import { AiFeatureNudge } from './grow/ai-feature-nudge';
-import { getABTestVariant, aiNudgeABTestConfig } from '@/lib/ab-test';
+import { useAINudgeABTest } from '@/lib/ab-test';
 
 interface DashboardShellProps {
   title?: string;
@@ -15,17 +15,17 @@ interface DashboardShellProps {
 export const DashboardShell: React.FC<DashboardShellProps> = ({ title, withSidebar = true }) => {
   const location = useLocation();
   const [showAiNudge, setShowAiNudge] = useState(false);
+  const aiNudgeVariant = useAINudgeABTest();
 
   useEffect(() => {
     trackEvent('page_view', { page_path: location.pathname, page_title: title || document.title });
 
-    const aiNudgeVariant = getABTestVariant(aiNudgeABTestConfig);
     if (aiNudgeVariant === 'nudge') {
       setShowAiNudge(true);
     } else {
       setShowAiNudge(false);
     }
-  }, [location.pathname, title]);
+  }, [location.pathname, title, aiNudgeVariant]);
 
   const handleCloseNudge = () => {
     setShowAiNudge(false);

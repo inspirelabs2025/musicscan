@@ -7,7 +7,7 @@ import { optimizeImageUrl, generateArtworkAlt } from '@/lib/image-utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function ArtistsSection() {
-  const { tr } = useLanguage();
+  const { tr, language } = useLanguage();
   const h = tr.homeUI;
 
   const { data: artists } = useQuery({
@@ -59,7 +59,7 @@ export function ArtistsSection() {
                 <h3 className={`font-semibold text-foreground truncate ${i === 0 ? 'text-base' : 'text-sm'}`}>
                   {artist.artist_name}
                 </h3>
-                {i === 0 && artist.spotlight_description && (
+                {i === 0 && artist.spotlight_description && language === 'nl' && (
                   <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{artist.spotlight_description}</p>
                 )}
               </Link>

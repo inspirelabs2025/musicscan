@@ -173,7 +173,7 @@ const structuredData = [
 export default function PodcastVerhalen() {
   return (
     <>
-      <JsonLd data={sd} />
+      {structuredData.map((sd, i) => <JsonLd key={i} data={sd} />)}
 <div className="min-h-screen">
         {/* Hero with album cover */}
         <section className="relative overflow-hidden bg-card-dark py-16 md:py-24">

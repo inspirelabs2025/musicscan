@@ -282,9 +282,6 @@ export default function PlatformProductDetail() {
         )
       )}
 
-      {/* Enhanced Social Media Meta Tags for POSTER */}
-      {isPoster && (
-)}
       
       <ReviewSchema
         itemName={`${product.artist ? product.artist + ' - ' : ''}${product.title}`}

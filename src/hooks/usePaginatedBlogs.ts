@@ -233,7 +233,7 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
     isLoading,
     refetch
   } = useInfiniteQuery({
-    queryKey: ["paginated-blogs", user?.id, filters],
+    queryKey: ["paginated-blogs", user?.id, filters, language],
     queryFn: fetchBlogs,
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextPage,

@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet";
+import { JsonLd } from "./JsonLd";
 import type { PlatformProduct } from "@/hooks/usePlatformProducts";
 
 interface PosterStructuredDataProps {
@@ -90,40 +90,20 @@ export const PosterStructuredData = ({ product, slug }: PosterStructuredDataProp
     } : undefined
   };
 
-  // Breadcrumb List Schema
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": "https://www.musicscan.app/"
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "Posters",
-        "item": "https://www.musicscan.app/posters"
-      },
-      {
-        "@type": "ListItem",
-        "position": 3,
-        "name": `${product.artist} - ${product.title}`,
-        "item": `https://www.musicscan.app/product/${slug}`
-      }
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app/" },
+      { "@type": "ListItem", "position": 2, "name": "Posters", "item": "https://www.musicscan.app/posters" },
+      { "@type": "ListItem", "position": 3, "name": `${product.artist} - ${product.title}`, "item": `https://www.musicscan.app/product/${slug}` }
     ]
   };
 
   return (
-    <Helmet>
-      <script type="application/ld+json">
-        {JSON.stringify(structuredData)}
-      </script>
-      <script type="application/ld+json">
-        {JSON.stringify(breadcrumbSchema)}
-      </script>
-    </Helmet>
+    <>
+      <JsonLd data={structuredData} />
+      <JsonLd data={breadcrumbSchema} />
+    </>
   );
 };

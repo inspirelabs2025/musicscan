@@ -29,7 +29,8 @@ export function AppLayout({ children, showMenu = true, showSearch = true }: AppL
 	return (
 		<div
 			className={cn(
-				'grid min-h-screen w-full lg:grid-cols-[280px_1fr]',
+				'grid min-h-screen w-full',
+				showMenu && 'lg:grid-cols-[280px_1fr]',
 				{ 'bg-card-dark text-card-dark-foreground': theme === 'dark' },
 				{ 'bg-card-purple text-card-purple-foreground': theme === 'purple' }
 			)}

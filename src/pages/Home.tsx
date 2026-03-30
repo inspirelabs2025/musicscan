@@ -60,7 +60,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-14">
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(websiteSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>

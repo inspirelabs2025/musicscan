@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DANCE_HOUSE_FEITEN } from '@/data/danceHouseMuziekFeiten';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // 100+ Dance/House artiesten database
 export const DANCE_HOUSE_ARTISTS = [

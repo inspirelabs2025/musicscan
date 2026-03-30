@@ -176,7 +176,7 @@ const UnifiedScanner = () => {
             </p>
           </div>
           {(state.mediaType || state.result) && (
-            <Button variant="ghost" size="sm" onClick={reset}>
+            <Button variant="outline" size="sm" onClick={reset} className="border-white/30 text-white hover:bg-white/10">
               <RotateCcw className="h-4 w-4 mr-1" />
               Opnieuw
             </Button>

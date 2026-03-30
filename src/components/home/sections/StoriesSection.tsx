@@ -55,16 +55,17 @@ export function StoriesSection() {
           .order('created_at', { ascending: false })
           .limit(4);
 
-      anecdotes?.forEach(a => {
-        items.push({
-          id: a.id,
-          slug: a.slug || a.id,
-          title: a.anecdote_title,
-          artist: a.subject_name || '',
-          image_url: null,
-          type: 'anecdote',
+        anecdotes?.forEach(a => {
+          items.push({
+            id: a.id,
+            slug: a.slug || a.id,
+            title: a.anecdote_title,
+            artist: a.subject_name || '',
+            image_url: null,
+            type: 'anecdote',
+          });
         });
-      });
+      }
 
       return items.slice(0, 4);
     },

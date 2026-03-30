@@ -26,6 +26,7 @@ export function PopularSinglesSection() {
         .from('music_stories')
         .select('id,slug,title,artist,single_name,artwork_url,created_at')
         .eq('is_published', true)
+        .eq('content_language', language)
         .not('single_name', 'is', null)
         .not('artwork_url', 'is', null)
         .order('created_at', { ascending: false })

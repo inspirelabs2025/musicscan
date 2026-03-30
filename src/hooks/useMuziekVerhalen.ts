@@ -51,14 +51,16 @@ const countryCodeMap: Record<string, string> = {
 
 export const useMuziekVerhalen = (options: MuziekVerhalenOptions = {}) => {
   const { userId, search, country } = options;
+  const { language } = useLanguage();
   
   return useQuery({
-    queryKey: ['music-stories', userId, search, country],
+    queryKey: ['music-stories', userId, search, country, language],
     queryFn: async () => {
       let query = supabase
         .from('music_stories')
         .select('*')
         .eq('is_published', true)
+        .eq('content_language', language)
         .not('single_name', 'is', null)
         .order('created_at', { ascending: false });
 

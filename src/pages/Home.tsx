@@ -61,10 +61,8 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background pt-14">
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(websiteSchema)}</script>
-        <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
-      </Helmet>
+      <JsonLd data={websiteSchema} />
+      <JsonLd data={organizationSchema} />
       {/* Language Switcher Bar */}
       <Suspense fallback={null}>
         <LanguageBar />

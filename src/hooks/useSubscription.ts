@@ -99,11 +99,12 @@ export const useSubscription = () => {
     checkSubscription();
   }, [checkSubscription]);
 
-  // Auto-refresh subscription status every 60 seconds
+  // Auto-refresh subscription status every 60 seconds — only for authenticated users
   useEffect(() => {
+    if (!user) return;
     const interval = setInterval(checkSubscription, 60000);
     return () => clearInterval(interval);
-  }, [checkSubscription]);
+  }, [checkSubscription, user]);
 
   return {
     subscription,

@@ -1,23 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-NPVTT9C5');</script>
-    <!-- Meta Pixel Code - deferred to avoid render blocking -->
-    <script>
-    function loadFBPixel(){if(window._fbPixelLoaded)return;window._fbPixelLoaded=true;
-    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
-    (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init','1635291241045529');fbq('track','PageView');}
-    if('requestIdleCallback' in window){requestIdleCallback(loadFBPixel,{timeout:3000})}
-    else{setTimeout(loadFBPixel,3000)}
-    </script>
-    <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=1635291241045529&ev=PageView&noscript=1"
-    /></noscript>
-    <!-- End Meta Pixel Code -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -107,21 +90,12 @@
       @media(min-width:768px) { .singles-scroll a { width: 12rem; } }
       .single-art { aspect-ratio: 1/1; border-radius: 0.75rem; overflow: hidden; background: #1a1625; margin-bottom: 0.5rem; }
       .single-art img { width: 100%; height: 100%; object-fit: cover; }
+      /* Reduce motion for accessibility */
+      @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
     </style>
 
     <!-- Preload LCP hero image -->
     <link rel="preload" as="image" href="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" fetchpriority="high">
-    
-    <!-- Google Analytics Script - deferred for performance -->
-    <script defer src="https://www.googletagmanager.com/gtag/js?id=G-B1TBDCNMR4"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-B1TBDCNMR4', {
-        send_page_view: false
-      });
-    </script>
     
     <!-- Performance hints -->
     <meta name="format-detection" content="telephone=no">
@@ -164,33 +138,64 @@
       }
     }
     </script>
-    <!-- PathSignals Scan Event Tracking -->
-    <script>
-    (function() {
-      var ENDPOINT = "https://ssiikzzewkqypxlofbnp.supabase.co/functions/v1/ingest-scan-event";
-      function getClientId() {
-        var id = localStorage.getItem("ps_client_id");
-        if (!id) {
-          id = "ps_" + Math.random().toString(36).substr(2, 9) + "_" + Date.now();
-          localStorage.setItem("ps_client_id", id);
-        }
-        return id;
-      }
-      function sendScanEvent(eventName, extra) {
-        var payload = { client_id: getClientId(), event_name: eventName, page_url: window.location.href, timestamp: new Date().toISOString() };
-        if (extra) { if (extra.scan_type) payload.scan_type = extra.scan_type; if (extra.scan_result) payload.scan_result = extra.scan_result; }
-        fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).catch(function() {});
-      }
-      window.PathSignals = window.PathSignals || {};
-      window.PathSignals.scanStart = function(extra) { sendScanEvent("scan_start", extra); };
-      window.PathSignals.scanComplete = function(extra) { sendScanEvent("scan_complete", extra); };
-    })();
-    </script>
   </head>
 
   <body>
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NPVTT9C5" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Deferred third-party scripts: loaded after page render -->
+    <script>
+    (function() {
+      function loadThirdParty() {
+        // GTM
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-NPVTT9C5');
+
+        // GA4
+        var ga = document.createElement('script');
+        ga.async = true;
+        ga.src = 'https://www.googletagmanager.com/gtag/js?id=G-B1TBDCNMR4';
+        document.head.appendChild(ga);
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', 'G-B1TBDCNMR4', { send_page_view: false });
+
+        // Meta Pixel
+        if(!window._fbPixelLoaded){window._fbPixelLoaded=true;
+        !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+        n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+        (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init','1635291241045529');fbq('track','PageView');}
+
+        // PathSignals
+        var PS_ENDPOINT = "https://ssiikzzewkqypxlofbnp.supabase.co/functions/v1/ingest-scan-event";
+        function getClientId() {
+          var id = localStorage.getItem("ps_client_id");
+          if (!id) { id = "ps_" + Math.random().toString(36).substr(2, 9) + "_" + Date.now(); localStorage.setItem("ps_client_id", id); }
+          return id;
+        }
+        function sendScanEvent(eventName, extra) {
+          var payload = { client_id: getClientId(), event_name: eventName, page_url: window.location.href, timestamp: new Date().toISOString() };
+          if (extra) { if (extra.scan_type) payload.scan_type = extra.scan_type; if (extra.scan_result) payload.scan_result = extra.scan_result; }
+          fetch(PS_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).catch(function() {});
+        }
+        window.PathSignals = window.PathSignals || {};
+        window.PathSignals.scanStart = function(extra) { sendScanEvent("scan_start", extra); };
+        window.PathSignals.scanComplete = function(extra) { sendScanEvent("scan_complete", extra); };
+      }
+
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(loadThirdParty, { timeout: 3500 });
+      } else {
+        setTimeout(loadThirdParty, 2000);
+      }
+    })();
+    </script>
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1635291241045529&ev=PageView&noscript=1" /></noscript>
   </body>
 </html>

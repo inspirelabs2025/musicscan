@@ -8,15 +8,7 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
-if ('caches' in window) {
-  caches.keys().then(names => {
-    Promise.all(names.map(name => caches.delete(name))).then(() => {
-      if (names.length > 0) {
-        console.log('[MusicScan] Cleared caches:', names);
-      }
-    });
-  });
-}
+// Cache management handled by service worker versioning — no blanket deletion
 
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.has('_v')) {

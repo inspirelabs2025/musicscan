@@ -154,7 +154,8 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
     let countQuery = supabase
       .from("blog_posts")
       .select("*", { count: 'exact', head: true })
-      .neq("album_type", "news");
+      .neq("album_type", "news")
+      .eq("content_language", language);
 
     // Apply same filters to count query - always show published by default
     if (filters.status === 'draft') {

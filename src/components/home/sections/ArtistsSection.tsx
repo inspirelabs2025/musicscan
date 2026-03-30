@@ -7,7 +7,7 @@ import { optimizeImageUrl, generateArtworkAlt } from '@/lib/image-utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function ArtistsSection() {
-  const { tr } = useLanguage();
+  const { tr, language } = useLanguage();
   const h = tr.homeUI;
 
   const { data: artists } = useQuery({

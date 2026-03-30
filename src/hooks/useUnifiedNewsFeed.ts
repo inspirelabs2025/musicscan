@@ -80,6 +80,7 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
         .from('music_stories')
         .select('id,title,artist,single_name,slug,artwork_url,created_at')
         .eq('is_published', true)
+        .eq('content_language', language)
         .not('single_name', 'is', null)
         .limit(100);
 

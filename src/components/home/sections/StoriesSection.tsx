@@ -28,6 +28,7 @@ export function StoriesSection() {
         .from('blog_posts')
         .select('id,slug,yaml_frontmatter,album_cover_url')
         .eq('is_published', true)
+        .eq('content_language', language)
         .order('created_at', { ascending: false })
         .limit(8);
 

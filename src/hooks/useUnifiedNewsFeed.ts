@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface NewsItem {
   id: string;
@@ -39,8 +40,9 @@ const CATEGORY_LABELS: Record<NewsItem['type'], string> = {
 };
 
 export const useUnifiedNewsFeed = (limit: number = 20) => {
+  const { language } = useLanguage();
   return useQuery({
-    queryKey: ['unified-news-feed', limit],
+    queryKey: ['unified-news-feed', limit, language],
     queryFn: async () => {
       const items: NewsItem[] = [];
 
@@ -49,6 +51,7 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
         .from('blog_posts')
         .select('id,slug,yaml_frontmatter,album_cover_url,created_at,published_at,album_type')
         .eq('is_published', true)
+        .eq('content_language', language)
         // blog_posts bevat ook nieuws; die willen we niet als album verhaal tonen
         .not('slug', 'ilike', 'nieuws-%')
         .or('album_type.is.null,album_type.neq.news')
@@ -77,6 +80,7 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
         .from('music_stories')
         .select('id,title,artist,single_name,slug,artwork_url,created_at')
         .eq('is_published', true)
+        .eq('content_language', language)
         .not('single_name', 'is', null)
         .limit(100);
 

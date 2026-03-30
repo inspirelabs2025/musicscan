@@ -1138,6 +1138,7 @@ export type Database = {
           album_cover_url: string | null
           album_id: string
           album_type: string
+          content_language: string
           country_code: string | null
           created_at: string
           id: string
@@ -1157,6 +1158,7 @@ export type Database = {
           album_cover_url?: string | null
           album_id: string
           album_type: string
+          content_language?: string
           country_code?: string | null
           created_at?: string
           id?: string
@@ -1176,6 +1178,7 @@ export type Database = {
           album_cover_url?: string | null
           album_id?: string
           album_type?: string
+          content_language?: string
           country_code?: string | null
           created_at?: string
           id?: string
@@ -4711,6 +4714,7 @@ export type Database = {
           artwork_fetch_attempted: boolean | null
           artwork_url: string | null
           catalog: string | null
+          content_language: string
           country_code: string | null
           created_at: string
           genre: string | null
@@ -4743,6 +4747,7 @@ export type Database = {
           artwork_fetch_attempted?: boolean | null
           artwork_url?: string | null
           catalog?: string | null
+          content_language?: string
           country_code?: string | null
           created_at?: string
           genre?: string | null
@@ -4775,6 +4780,7 @@ export type Database = {
           artwork_fetch_attempted?: boolean | null
           artwork_url?: string | null
           catalog?: string | null
+          content_language?: string
           country_code?: string | null
           created_at?: string
           genre?: string | null

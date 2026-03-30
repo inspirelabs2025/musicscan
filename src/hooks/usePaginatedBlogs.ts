@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface BlogPostListItem {
   id: string;
@@ -57,6 +58,7 @@ const buildOrSearch = (term: string) => {
 
 export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
   const { user } = useAuth();
+  const { language } = useLanguage();
   const [hasManuallyFetched, setHasManuallyFetched] = useState(false);
 
   const fetchBlogs = async ({ pageParam = 0 }) => {
@@ -77,7 +79,8 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
         album_cover_url
       `)
       // Verhalen pagina: sluit nieuws-items uit (nieuws heeft eigen sectie/tabel)
-      .neq("album_type", "news");
+      .neq("album_type", "news")
+      .eq("content_language", language);
 
     // Note: No user filter applied - show all published blogs to everyone
 
@@ -151,7 +154,8 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
     let countQuery = supabase
       .from("blog_posts")
       .select("*", { count: 'exact', head: true })
-      .neq("album_type", "news");
+      .neq("album_type", "news")
+      .eq("content_language", language);
 
     // Apply same filters to count query - always show published by default
     if (filters.status === 'draft') {
@@ -229,7 +233,7 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
     isLoading,
     refetch
   } = useInfiniteQuery({
-    queryKey: ["paginated-blogs", user?.id, filters],
+    queryKey: ["paginated-blogs", user?.id, filters, language],
     queryFn: fetchBlogs,
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextPage,

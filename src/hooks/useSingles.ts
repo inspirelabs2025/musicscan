@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Single {
   id: string;
@@ -30,13 +31,15 @@ interface Single {
 }
 
 export const useSingles = () => {
+  const { language } = useLanguage();
   return useQuery({
-    queryKey: ['singles'],
+    queryKey: ['singles', language],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('music_stories')
         .select('*')
         .eq('is_published', true)
+        .eq('content_language', language)
         .not('single_name', 'is', null)
         .order('created_at', { ascending: false });
 

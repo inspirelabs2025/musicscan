@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
@@ -42,11 +42,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const VerhaalTab: React.FC = () => {
   const navigate = useNavigate();
-  const { tr } = useLanguage();
+  const { tr, language } = useLanguage();
   const ct = tr.contentUI;
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showSearchSection, setShowSearchSection] = useState(false);
   const [activeTab, setActiveTab] = useState<'albums' | 'singles'>('albums');
+  const hasAutoSelectedTab = useRef(false);
   
   const {
     filters,
@@ -89,6 +90,20 @@ export const VerhaalTab: React.FC = () => {
     isLoading: isLoadingStories, 
     refetch: refetchStories 
   } = useMuziekVerhalen({ search: debouncedSearch, country: filters.country });
+
+  useEffect(() => {
+    hasAutoSelectedTab.current = false;
+  }, [language]);
+
+  useEffect(() => {
+    if (hasAutoSelectedTab.current || isLoadingBlogs || isLoadingStories) return;
+
+    if (language === 'en' && blogs.length === 0 && musicStories.length > 0) {
+      setActiveTab('singles');
+    }
+
+    hasAutoSelectedTab.current = true;
+  }, [language, blogs.length, musicStories.length, isLoadingBlogs, isLoadingStories]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -453,9 +468,9 @@ export const VerhaalTab: React.FC = () => {
         )}
 
         {blogs.length === 0 && !isLoadingBlogs && (
-          <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700">
+          <Card className="border-2 border-dashed border-border">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <FileText className="w-12 h-12 text-gray-400 mb-4" />
+               <FileText className="w-12 h-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">
                 {ct.noAlbumStories}
               </h3>
@@ -554,9 +569,9 @@ export const VerhaalTab: React.FC = () => {
         </div>
 
         {musicStories.length === 0 && !isLoadingStories && (
-          <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700">
+          <Card className="border-2 border-dashed border-border">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <FileText className="w-12 h-12 text-gray-400 mb-4" />
+              <FileText className="w-12 h-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">
                 {ct.noSingleStories}
               </h3>

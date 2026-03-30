@@ -65,13 +65,13 @@ const Home = () => {
         <script type="application/ld+json">{JSON.stringify(websiteSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
       </Helmet>
-      {/* Hero */}
-      <ScannerHero />
-
       {/* Language Switcher Bar */}
       <Suspense fallback={null}>
         <LanguageBar />
       </Suspense>
+
+      {/* Hero */}
+      <ScannerHero />
 
       {/* App Install Banner (mobile only) */}
       <Suspense fallback={null}>

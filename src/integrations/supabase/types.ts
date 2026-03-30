@@ -10526,6 +10526,27 @@ export type Database = {
         Args: { p_amount: number; p_user_id: string }
         Returns: undefined
       }
+      admin_insert_translated_story: {
+        Args: {
+          p_album?: string
+          p_artist?: string
+          p_artwork_url?: string
+          p_catalog?: string
+          p_content_language: string
+          p_genre?: string
+          p_label?: string
+          p_meta_description?: string
+          p_meta_title?: string
+          p_query: string
+          p_single_name?: string
+          p_slug: string
+          p_story_content: string
+          p_title: string
+          p_user_id?: string
+          p_year?: number
+        }
+        Returns: undefined
+      }
       check_scan_rate: {
         Args: {
           p_daily_limit?: number

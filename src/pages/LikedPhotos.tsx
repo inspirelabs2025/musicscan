@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useSEO } from '@/hooks/useSEO';
 import { useLikedPhotos } from "@/hooks/usePhotoLike";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -6,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Heart, ArrowLeft, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 
@@ -30,12 +30,7 @@ export default function LikedPhotos() {
 
   return (
     <>
-      <Helmet>
-        <title>Gelikte Foto's | MusicScan FanWall</title>
-        <meta name="robots" content="noindex,nofollow" />
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
+<div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-6xl mx-auto">
             {/* Header */}

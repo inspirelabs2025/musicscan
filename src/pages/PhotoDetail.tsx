@@ -1,4 +1,6 @@
 import { useParams, Link } from "react-router-dom";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,7 +26,6 @@ import {
 import { Heart, MessageCircle, MapPin, Calendar, Music, Flag, Image as ImageIcon, Eye, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Helmet } from "react-helmet";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { usePosterProductCreator } from "@/hooks/usePosterProductCreator";
@@ -172,11 +173,7 @@ export default function PhotoDetail() {
   if (!photo) {
     return (
       <>
-        <Helmet>
-          <title>Foto niet gevonden | MusicScan FanWall</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen flex items-center justify-center">Foto niet gevonden</div>
+<div className="min-h-screen flex items-center justify-center">Foto niet gevonden</div>
       </>
     );
   }

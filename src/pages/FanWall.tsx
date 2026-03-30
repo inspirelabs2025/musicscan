@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useSEO } from '@/hooks/useSEO';
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,6 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Upload, Eye } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Helmet } from "react-helmet";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Photo {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
 import { usePublicAlbumReviews } from "@/hooks/useAdminAlbumReviews";
 import { AlbumReviewCard } from "@/components/reviews/AlbumReviewCard";
 import { Button } from "@/components/ui/button";

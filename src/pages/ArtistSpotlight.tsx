@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { Loader2, Clock, Eye, ArrowLeft, ShoppingBag } from "lucide-react";
 import { useArtistSpotlight } from "@/hooks/useArtistSpotlight";
 import { useArtistProducts } from "@/hooks/useArtistProducts";

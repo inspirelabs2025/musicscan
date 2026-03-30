@@ -1,5 +1,6 @@
-import { Helmet } from "react-helmet";
 import { NederlandHero } from "@/components/nederland/NederlandHero";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { NederlandseMuziekQuiz } from "@/components/nederland/NederlandseMuziekQuiz";
 import { DecenniumSlider } from "@/components/nederland/DecenniumSlider";
 import { NederlandseSingles } from "@/components/nederland/NederlandseSingles";

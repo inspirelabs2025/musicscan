@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
+import { useSEO } from '@/hooks/useSEO';
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Helmet } from "react-helmet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

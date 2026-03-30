@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
 import { Store, Filter, ArrowUpDown, Loader2, Package, Euro, Calendar, Grid3x3 } from "lucide-react";
 import { usePublicMarketplace, type MarketplaceItem } from "@/hooks/usePublicMarketplace";
 import { ShopItemCard } from "@/components/ShopItemCard";
@@ -59,11 +59,7 @@ export default function Marketplace() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Helmet>
-          <title>{m.metaTitle}</title>
-          <meta name="description" content={m.metaDesc} />
-        </Helmet>
-        <div className="container mx-auto px-4 py-8">
+<div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
@@ -77,13 +73,7 @@ export default function Marketplace() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>{m.metaTitle}</title>
-        <meta name="description" content={m.metaDesc} />
-        <meta name="keywords" content={m.metaKeywords} />
-      </Helmet>
-
-      <div className="container mx-auto px-4 py-8">
+<div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
             <Store className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />

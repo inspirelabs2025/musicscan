@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
 import { Loader2, Clock, Eye, Sparkles } from "lucide-react";
 import { useArtistSpotlights } from "@/hooks/useArtistSpotlight";
 import { Badge } from "@/components/ui/badge";

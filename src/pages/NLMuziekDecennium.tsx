@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
 import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Music2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,11 +26,7 @@ export default function NLMuziekDecennium() {
   if (!decadeInfo || facts.length === 0) {
     return (
       <>
-        <Helmet>
-          <title>Decennium niet gevonden | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen flex flex-col">
+<div className="min-h-screen flex flex-col">
           <Navigation />
           <main className="flex-1 container mx-auto px-4 py-16 text-center">
             <h1 className="text-2xl font-bold mb-4">Decennium niet gevonden</h1>

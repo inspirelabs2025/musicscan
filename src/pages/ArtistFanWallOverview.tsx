@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useArtistFanwalls } from "@/hooks/useArtistFanwalls";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Search, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet";
 import { ArtistCard } from "@/components/ArtistCard";
 
 const CANONICAL_URL = "https://www.musicscan.app/fanwall";

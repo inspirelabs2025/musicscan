@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";

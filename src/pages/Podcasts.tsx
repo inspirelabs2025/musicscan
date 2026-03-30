@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Headphones, Search } from "lucide-react";

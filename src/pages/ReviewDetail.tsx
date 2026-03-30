@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
 import ReactMarkdown from "react-markdown";
 import { usePublicAlbumReview } from "@/hooks/useAdminAlbumReviews";
 import { RatingDisplay } from "@/components/reviews/RatingDisplay";
@@ -27,11 +27,7 @@ export default function ReviewDetail() {
   if (!review) {
     return (
       <>
-        <Helmet>
-          <title>{dp.reviewNotFound} | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen bg-background flex items-center justify-center">
+<div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center space-y-4">
             <Music className="h-16 w-16 text-muted-foreground mx-auto" />
             <h2 className="text-2xl font-bold">{dp.reviewNotFound}</h2>

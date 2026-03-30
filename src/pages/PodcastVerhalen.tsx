@@ -1,5 +1,6 @@
-import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { Headphones, ExternalLink, Music, MapPin, Users, Disc3, Mic2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

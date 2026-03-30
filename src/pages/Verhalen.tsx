@@ -1,6 +1,7 @@
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { VerhaalTab } from "@/components/VerhaalTab";
-import { Helmet } from "react-helmet";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Verhalen() {

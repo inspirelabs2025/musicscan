@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useArtistFanwall } from "@/hooks/useArtistFanwall";
 import { useArtistPhotos } from "@/hooks/useArtistPhotos";
@@ -7,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload, Eye, Heart, Image as ImageIcon, ArrowLeft } from "lucide-react";
-import { Helmet } from "react-helmet";
 
 export default function ArtistFanWall() {
   const { slug } = useParams<{ slug: string }>();
@@ -54,11 +55,7 @@ export default function ArtistFanWall() {
   if (!artist) {
     return (
       <>
-        <Helmet>
-          <title>Artiest niet gevonden | MusicScan FanWall</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen flex items-center justify-center">
+<div className="min-h-screen flex items-center justify-center">
           <div>Artiest niet gevonden</div>
         </div>
       </>

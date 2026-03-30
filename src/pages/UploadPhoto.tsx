@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useSEO } from '@/hooks/useSEO';
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +15,6 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, Sparkles, CheckCircle, AlertTriangle, Image as ImageIcon, ArrowLeft } from "lucide-react";
-import { Helmet } from "react-helmet";
 import { usePhotoEnrichment } from "@/hooks/usePhotoEnrichment";
 import { useDropzone } from "react-dropzone";
 
@@ -205,12 +205,7 @@ export default function UploadPhoto() {
 
   return (
     <>
-      <Helmet>
-        <title>Upload Foto | MusicScan FanWall</title>
-        <meta name="robots" content="noindex,nofollow" />
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
+<div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-3xl mx-auto">
             {/* Header */}

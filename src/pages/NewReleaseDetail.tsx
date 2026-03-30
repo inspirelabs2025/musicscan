@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -41,11 +42,7 @@ export default function NewReleaseDetail() {
   if (error || !release) {
     return (
       <>
-        <Helmet>
-          <title>{dp.releaseNotFoundTitle} | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen bg-background flex items-center justify-center">
+<div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center">
             <Disc3 className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
             <h1 className="text-2xl font-bold mb-2">{dp.releaseNotFoundTitle}</h1>

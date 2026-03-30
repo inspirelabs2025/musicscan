@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { useSEO } from '@/hooks/useSEO';
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Calendar, Music, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Helmet } from "react-helmet";
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -118,12 +118,7 @@ const MusicHistory = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{mh.metaTitle}</title>
-        <meta name="description" content={mh.metaDesc} />
-      </Helmet>
-
-      <div className="min-h-screen bg-background py-8 px-4">
+<div className="min-h-screen bg-background py-8 px-4">
         <div className="container max-w-4xl mx-auto">
           <div className="mb-8">
             <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">

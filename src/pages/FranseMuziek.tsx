@@ -1,5 +1,6 @@
-import { Helmet } from "react-helmet";
 import { FrankrijkHero } from "@/components/frankrijk/FrankrijkHero";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { FranseMuziekQuiz } from "@/components/frankrijk/FranseMuziekQuiz";
 import { DecenniumSliderFR } from "@/components/frankrijk/DecenniumSliderFR";
 import { FrenchArtistSpotlight } from "@/components/frankrijk/FrenchArtistSpotlight";

@@ -10,7 +10,8 @@ export const ScannerHero = () => {
   return (
     <section className="relative min-h-[500px] md:min-h-[600px] bg-black overflow-hidden flex items-center -mt-14 pt-14">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/50 via-black to-vinyl-gold/30" />
+      <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/60 via-vinyl-purple/20 to-vinyl-gold/40" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(var(--vinyl-purple)/0.35)_0%,_transparent_70%)]" />
       
       {/* Animated vinyl disc - left */}
       <div className="absolute -left-10 md:-left-20 top-1/2 -translate-y-1/2 opacity-30 md:opacity-40">

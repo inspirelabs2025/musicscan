@@ -20,7 +20,7 @@ export function LanguageBar() {
               key={code}
               onClick={() => setLanguage(code)}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+                "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all",
                 language === code
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "bg-background text-muted-foreground hover:text-foreground hover:bg-accent border border-border"

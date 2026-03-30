@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     }
 
     // Shuffle and pick 10
-    const shuffled = nlStories.sort(() => Math.random() - 0.5).slice(0, 3);
+    const shuffled = nlStories.sort(() => Math.random() - 0.5).slice(0, 10);
     const results: any[] = [];
 
     for (const story of shuffled) {

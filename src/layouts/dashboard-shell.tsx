@@ -4,7 +4,7 @@ import { ArrowLeft, MenuIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Sidebar } from '@/components/sidebar';
+import Sidebar from '@/components/Sidebar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { MobileHeader } from '@/components/mobile-header';

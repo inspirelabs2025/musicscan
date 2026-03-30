@@ -67,6 +67,11 @@ const Home = () => {
       {/* Hero */}
       <ScannerHero />
 
+      {/* Language Switcher Bar */}
+      <Suspense fallback={null}>
+        <LanguageBar />
+      </Suspense>
+
       {/* App Install Banner (mobile only) */}
       <Suspense fallback={null}>
         <AppInstallBanner />

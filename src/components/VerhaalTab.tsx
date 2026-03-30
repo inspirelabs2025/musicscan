@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
@@ -42,11 +42,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const VerhaalTab: React.FC = () => {
   const navigate = useNavigate();
-  const { tr } = useLanguage();
+  const { tr, language } = useLanguage();
   const ct = tr.contentUI;
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showSearchSection, setShowSearchSection] = useState(false);
   const [activeTab, setActiveTab] = useState<'albums' | 'singles'>('albums');
+  const hasAutoSelectedTab = useRef(false);
   
   const {
     filters,
@@ -89,6 +90,20 @@ export const VerhaalTab: React.FC = () => {
     isLoading: isLoadingStories, 
     refetch: refetchStories 
   } = useMuziekVerhalen({ search: debouncedSearch, country: filters.country });
+
+  useEffect(() => {
+    hasAutoSelectedTab.current = false;
+  }, [language]);
+
+  useEffect(() => {
+    if (hasAutoSelectedTab.current || isLoadingBlogs || isLoadingStories) return;
+
+    if (language === 'en' && blogs.length === 0 && musicStories.length > 0) {
+      setActiveTab('singles');
+    }
+
+    hasAutoSelectedTab.current = true;
+  }, [language, blogs.length, musicStories.length, isLoadingBlogs, isLoadingStories]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {

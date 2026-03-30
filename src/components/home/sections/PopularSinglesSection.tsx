@@ -10,8 +10,10 @@ export function PopularSinglesSection() {
   const { tr } = useLanguage();
   const h = tr.homeUI;
 
+  const { language } = useLanguage();
+
   const { data: singles } = useQuery({
-    queryKey: ['homepage-singles'],
+    queryKey: ['homepage-singles', language],
     queryFn: async () => {
       const EXCLUDE_WORDS = [
         'greatest hits', 'best of', 'collection', 'compilation', 'sampler',

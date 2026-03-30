@@ -4,7 +4,7 @@ import { ArrowLeft, MenuIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Sidebar } from '@/components/sidebar';
+import Sidebar from '@/components/Sidebar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { MobileHeader } from '@/components/mobile-header';
@@ -40,7 +40,9 @@ export function DashboardShell({
           'grid-rows-[auto_1fr]' // Ensure header takes up space
         )}
       >
-        <Sidebar className="fixed top-0 left-0 hidden h-full lg:flex flex-col z-50" />
+        <div className="fixed top-0 left-0 hidden h-full lg:flex flex-col z-50">
+          <Sidebar />
+        </div>
         <div className="flex flex-col lg:col-start-2 lg:row-start-1 lg:row-span-2">
           <header className="flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 lg:border-b-0 lg:hidden">
             <Sheet>
@@ -56,7 +58,9 @@ export function DashboardShell({
               </SheetTrigger>
               <SheetContent side="left" className="flex flex-col p-0 sm:max-w-xs">
                 <MobileHeader />
-                <Sidebar className="flex-1 overflow-auto" />
+                <div className="flex-1 overflow-auto">
+                  <Sidebar />
+                </div>
               </SheetContent>
             </Sheet>
           </header>

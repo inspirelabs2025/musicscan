@@ -45,7 +45,7 @@ export function AppLayout({ children, showMenu = true, showSearch = true }: AppL
 
 			{showMenu && <Menu />}
 
-			<div className="flex flex-col">
+			<div className={cn('flex flex-col min-w-0', showMenu && 'lg:col-start-2')}>
 				<Header showSearch={showSearch} />
 				<ScrollArea className="flex-1">
 					<main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">

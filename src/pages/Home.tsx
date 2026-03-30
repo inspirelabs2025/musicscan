@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Helmet } from 'react-helmet';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useSEO } from '@/hooks/useSEO';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ScannerHero } from '@/components/home/ScannerHero';

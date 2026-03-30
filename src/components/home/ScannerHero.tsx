@@ -8,7 +8,7 @@ export const ScannerHero = () => {
   const h = tr.homeUI;
 
   return (
-    <section className="relative min-h-[500px] md:min-h-[600px] bg-black overflow-hidden flex items-center -mt-14 pt-14">
+    <section className="relative min-h-[500px] md:min-h-[600px] bg-black overflow-hidden flex items-center">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/60 via-vinyl-purple/20 to-vinyl-gold/40" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(var(--vinyl-purple)/0.35)_0%,_transparent_70%)]" />

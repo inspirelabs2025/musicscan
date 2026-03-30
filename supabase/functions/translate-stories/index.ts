@@ -97,38 +97,30 @@ ${story.story_content?.substring(0, 6000)}`;
 
         const translated = JSON.parse(jsonMatch[0]);
 
-        // Insert EN version - first as unpublished to avoid notification trigger
-        const { data: inserted, error: insertError } = await supabase.from("music_stories").insert({
-          query: story.query,
-          title: translated.title || story.title,
-          story_content: translated.story_content || story.story_content,
-          slug: enSlug,
-          is_published: false,
-          content_language: "en",
-          artist: story.artist,
-          single_name: story.single_name,
-          year: story.year,
-          label: story.label,
-          catalog: story.catalog,
-          album: story.album,
-          genre: story.genre,
-          styles: story.styles,
-          tags: story.tags,
-          artwork_url: story.artwork_url,
-          meta_title: translated.meta_title || translated.title || story.meta_title,
-          meta_description: translated.meta_description || story.meta_description,
-          social_post: translated.social_post || story.social_post,
-          reading_time: story.reading_time,
-          word_count: story.word_count,
-          user_id: story.user_id,
-          views_count: 0,
-        }).select("id").single();
+        // Insert EN version directly as published
+        // Use RPC to bypass triggers
+        const { error: insertError } = await supabase.rpc('admin_insert_translated_story' as any, {
+          p_query: story.query,
+          p_title: translated.title || story.title,
+          p_story_content: translated.story_content || story.story_content,
+          p_slug: enSlug,
+          p_content_language: 'en',
+          p_artist: story.artist,
+          p_single_name: story.single_name,
+          p_year: story.year,
+          p_label: story.label,
+          p_catalog: story.catalog,
+          p_album: story.album,
+          p_genre: story.genre,
+          p_artwork_url: story.artwork_url,
+          p_meta_title: translated.meta_title || translated.title || story.meta_title,
+          p_meta_description: translated.meta_description || story.meta_description,
+          p_user_id: story.user_id,
+        });
 
         if (insertError) {
           results.push({ slug: story.slug, status: "error", reason: insertError.message });
         } else {
-          // Now publish it
-          await supabase.from("music_stories").update({ is_published: true }).eq("id", inserted.id);
           results.push({ slug: story.slug, enSlug, status: "translated" });
         }
       } catch (storyError: any) {

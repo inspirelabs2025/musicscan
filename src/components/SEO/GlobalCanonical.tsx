@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { useEffect } from "react";
 
 /**
  * Global canonical URL component that sets a self-referencing canonical tag
@@ -12,10 +12,32 @@ export const GlobalCanonical = () => {
   const canonicalUrl = `https://www.musicscan.app${cleanPath}`;
   const hasSearchParam = search.includes('search=');
 
-  return (
-    <Helmet>
-      <link rel="canonical" href={canonicalUrl} />
-      {hasSearchParam && <meta name="robots" content="noindex, follow" />}
-    </Helmet>
-  );
+  useEffect(() => {
+    let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+    if (!canonicalLink) {
+      canonicalLink = document.createElement('link');
+      canonicalLink.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.href = canonicalUrl;
+
+    let robotsMeta = document.querySelector('meta[name="robots"][data-global-canonical]') as HTMLMetaElement;
+    if (hasSearchParam) {
+      if (!robotsMeta) {
+        robotsMeta = document.createElement('meta');
+        robotsMeta.setAttribute('name', 'robots');
+        robotsMeta.setAttribute('data-global-canonical', 'true');
+        document.head.appendChild(robotsMeta);
+      }
+      robotsMeta.content = 'noindex, follow';
+    } else if (robotsMeta) {
+      robotsMeta.remove();
+    }
+
+    return () => {
+      if (robotsMeta && robotsMeta.parentNode) robotsMeta.remove();
+    };
+  }, [canonicalUrl, hasSearchParam]);
+
+  return null;
 };

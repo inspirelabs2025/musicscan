@@ -1,5 +1,5 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
+import { JsonLd } from './JsonLd';
 
 interface Props {
   name: string;
@@ -12,13 +12,7 @@ interface Props {
 }
 
 export const MusicGroupStructuredData: React.FC<Props> = ({
-  name,
-  description,
-  image,
-  url,
-  genre,
-  foundingDate,
-  albums
+  name, description, image, url, genre, foundingDate, albums
 }) => {
   const structuredData = {
     "@context": "https://schema.org",
@@ -35,11 +29,5 @@ export const MusicGroupStructuredData: React.FC<Props> = ({
     }))
   };
 
-  return (
-    <Helmet>
-      <script type="application/ld+json">
-        {JSON.stringify(structuredData)}
-      </script>
-    </Helmet>
-  );
+  return <JsonLd data={structuredData} />;
 };

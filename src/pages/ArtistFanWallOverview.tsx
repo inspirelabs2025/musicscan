@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useArtistFanwalls } from "@/hooks/useArtistFanwalls";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Search, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet";
 import { ArtistCard } from "@/components/ArtistCard";
 
 const CANONICAL_URL = "https://www.musicscan.app/fanwall";
@@ -55,39 +56,8 @@ export default function ArtistFanWallOverview() {
 
   return (
     <>
-      <Helmet>
-        <title>FanWall - Artiesten Ontdekken | MusicScan</title>
-        <meta
-          name="description"
-          content="Ontdek muziek herinneringen per artiest. Browse door duizenden fan foto's, concertmomenten en vinyl collecties georganiseerd per artiest."
-        />
-        <meta name="keywords" content="fan foto's, muziek herinneringen, concert foto's, vinyl collectie, artiesten, live muziek, muziek memorabilia" />
-        <link rel="canonical" href={CANONICAL_URL} />
-        
-        {/* Open Graph */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={CANONICAL_URL} />
-        <meta property="og:title" content="FanWall - Artiesten Ontdekken | MusicScan" />
-        <meta property="og:description" content="Ontdek muziek herinneringen per artiest. Browse door duizenden fan foto's en concertmomenten." />
-        <meta property="og:image" content="https://www.musicscan.app/og-fanwall.jpg" />
-        <meta property="og:site_name" content="MusicScan" />
-        <meta property="og:locale" content="nl_NL" />
-        
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@musicscan_app" />
-        <meta name="twitter:creator" content="@musicscan_app" />
-        <meta name="twitter:title" content="FanWall - Artiesten Ontdekken | MusicScan" />
-        <meta name="twitter:description" content="Ontdek muziek herinneringen per artiest. Browse door duizenden fan foto's." />
-        <meta name="twitter:image" content="https://www.musicscan.app/og-fanwall.jpg" />
-        
-        {/* JSON-LD Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
+      <JsonLd data={structuredData} />
+<div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">

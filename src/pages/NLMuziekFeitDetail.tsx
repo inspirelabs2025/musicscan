@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Share2, ChevronLeft, ChevronRight, Music, Play, Disc3, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,11 +30,7 @@ export default function NLMuziekFeitDetail() {
   if (!fact) {
     return (
       <>
-        <Helmet>
-          <title>Muziekfeit niet gevonden | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen flex flex-col">
+<div className="min-h-screen flex flex-col">
           <main className="flex-1 container mx-auto px-4 py-16 text-center">
             <h1 className="text-2xl font-bold mb-4">Muziekfeit niet gevonden</h1>
             <Button asChild>
@@ -73,41 +70,7 @@ export default function NLMuziekFeitDetail() {
 
   return (
     <>
-      <Helmet>
-        <title>{`${fact.title} (${fact.year}) - Nederlandse Muziekgeschiedenis | MusicScan`}</title>
-        <meta 
-          name="description" 
-          content={fact.longDescription || fact.description}
-        />
-        <link rel="canonical" href={`https://www.musicscan.app/nl-muziekfeit/${slug}`} />
-        
-        {/* Open Graph */}
-        <meta property="og:title" content={`${fact.title} (${fact.year})`} />
-        <meta property="og:description" content={fact.description} />
-        <meta property="og:type" content="article" />
-        
-        {/* Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Article",
-            "headline": fact.title,
-            "description": fact.description,
-            "datePublished": `${fact.year}-01-01`,
-            "author": {
-              "@type": "Organization",
-              "name": "MusicScan"
-            },
-            "about": {
-              "@type": "MusicEvent",
-              "name": fact.title,
-              "startDate": `${fact.year}`
-            }
-          })}
-        </script>
-      </Helmet>
-
-      <div className="min-h-screen flex flex-col bg-background">
+<div className="min-h-screen flex flex-col bg-background">
         
         <main className="flex-1">
           {/* Hero Section */}

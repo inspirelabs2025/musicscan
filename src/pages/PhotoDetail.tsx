@@ -1,4 +1,6 @@
 import { useParams, Link } from "react-router-dom";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,7 +26,6 @@ import {
 import { Heart, MessageCircle, MapPin, Calendar, Music, Flag, Image as ImageIcon, Eye, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Helmet } from "react-helmet";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { usePosterProductCreator } from "@/hooks/usePosterProductCreator";
@@ -172,11 +173,7 @@ export default function PhotoDetail() {
   if (!photo) {
     return (
       <>
-        <Helmet>
-          <title>Foto niet gevonden | MusicScan FanWall</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen flex items-center justify-center">Foto niet gevonden</div>
+<div className="min-h-screen flex items-center justify-center">Foto niet gevonden</div>
       </>
     );
   }
@@ -185,46 +182,7 @@ export default function PhotoDetail() {
 
   return (
     <>
-      <Helmet>
-        <title>{photo.seo_title || photo.caption || "Muziek Herinnering"} | MusicScan</title>
-        <meta name="description" content={photo.seo_description || photo.caption || "Een muziek herinnering gedeeld op MusicScan FanWall"} />
-        <link rel="canonical" href={canonicalUrl} />
-        
-        {/* Open Graph */}
-        <meta property="og:title" content={photo.seo_title || photo.caption} />
-        <meta property="og:description" content={photo.seo_description || photo.caption} />
-        <meta property="og:image" content={photo.og_image_url || photo.display_url} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:site_name" content="MusicScan FanWall" />
-        
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={photo.seo_title || photo.caption} />
-        <meta name="twitter:description" content={photo.seo_description || photo.caption} />
-        <meta name="twitter:image" content={photo.og_image_url || photo.display_url} />
-        
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "ImageObject",
-            "name": photo.seo_title || photo.caption,
-            "description": photo.seo_description || photo.caption,
-            "contentUrl": photo.display_url,
-            "datePublished": photo.published_at,
-            "author": {
-              "@type": "Person",
-              "name": "MusicScan User"
-            },
-            "keywords": photo.tags?.join(", "),
-            "isFamilyFriendly": true
-          })}
-        </script>
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
+<div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           {/* Breadcrumbs */}
           {photo.artist && (

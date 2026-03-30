@@ -1,5 +1,6 @@
-import { Helmet } from "react-helmet";
 import { NederlandHero } from "@/components/nederland/NederlandHero";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { NederlandseMuziekQuiz } from "@/components/nederland/NederlandseMuziekQuiz";
 import { DecenniumSlider } from "@/components/nederland/DecenniumSlider";
 import { NederlandseSingles } from "@/components/nederland/NederlandseSingles";
@@ -92,52 +93,10 @@ const NederlandseMuziek = () => {
 
   return (
     <>
-      <Helmet>
-        {/* Primary Meta Tags */}
-        <title>{pageTitle}</title>
-        <meta name="title" content={pageTitle} />
-        <meta name="description" content={pageDescription} />
-        <meta name="keywords" content="Nederlandse muziek, Dutch music, Nederlandse artiesten, Golden Earring, Within Temptation, André Hazes, Tiësto, Martin Garrix, nederpop, levenslied, symphonic metal, Dutch EDM, Nederlandse albums" />
-        <meta name="robots" content="index, follow" />
-        <meta name="language" content="Dutch" />
-        <meta name="author" content="VinylPlaten.nl" />
-        <link rel="canonical" href={pageUrl} />
-        
-        {/* Hreflang */}
-        <link rel="alternate" hrefLang="nl" href={pageUrl} />
-        <link rel="alternate" hrefLang="x-default" href={pageUrl} />
-        
-        {/* Open Graph / Facebook */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={pageUrl} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription} />
-        <meta property="og:image" content={ogImage} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:locale" content="nl_NL" />
-        <meta property="og:site_name" content="VinylPlaten.nl" />
-        
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content={pageUrl} />
-        <meta name="twitter:title" content={pageTitle} />
-        <meta name="twitter:description" content={pageDescription} />
-        <meta name="twitter:image" content={ogImage} />
-        
-        {/* Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify(collectionPageSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(breadcrumbSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(faqSchema)}
-        </script>
-      </Helmet>
-
-      <main className="min-h-screen">
+      <JsonLd data={collectionPageSchema} />
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={faqSchema} />
+<main className="min-h-screen">
         {/* H1 is in NederlandHero component */}
         <NederlandHero />
 

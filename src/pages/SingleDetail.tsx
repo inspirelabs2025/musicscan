@@ -13,7 +13,6 @@ import { ReviewSchema, FAQSchema } from '@/components/SEO/ReviewSchema';
 import { MusicRecordingStructuredData } from '@/components/SEO/MusicRecordingStructuredData';
 import { useToast } from '@/hooks/use-toast';
 import { ShareButtons } from '@/components/ShareButtons';
-import { Helmet } from 'react-helmet';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
@@ -180,11 +179,7 @@ export default function SingleDetail() {
   if (notFound || !single) {
     return (
       <>
-        <Helmet>
-          <title>{dp.singleNotFound} | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
+<div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
           <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
           <div className="relative text-center max-w-md mx-auto px-4">
             <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-8 border border-border/50">
@@ -224,28 +219,7 @@ export default function SingleDetail() {
 
   return (
     <>
-      <Helmet>
-        <meta property="og:type" content="music.song" />
-        <meta property="og:url" content={currentUrl} />
-        <meta property="og:title" content={seoTitle} />
-        <meta property="og:description" content={singleDescription} />
-        <meta property="og:image" content={singleImage} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content={`${single.artist} - ${single.single_name}`} />
-        <meta property="music:musician" content={single?.artist} />
-        {single?.year && <meta property="music:release_date" content={single.year.toString()} />}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={seoTitle} />
-        <meta name="twitter:description" content={singleDescription} />
-        <meta name="twitter:image" content={singleImage} />
-        {single?.reading_time && <meta name="twitter:label1" content={dp.readingTime} />}
-        {single?.reading_time && <meta name="twitter:data1" content={`${single.reading_time} min`} />}
-        {single?.views_count && <meta name="twitter:label2" content="Views" />}
-        {single?.views_count && <meta name="twitter:data2" content={single.views_count.toString()} />}
-      </Helmet>
-      
-      <MusicRecordingStructuredData
+<MusicRecordingStructuredData
         name={`${single.artist} - ${single.single_name}`}
         artist={single.artist}
         description={singleDescription}

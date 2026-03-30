@@ -11,7 +11,6 @@ import { ArticleStructuredData } from '@/components/SEO/StructuredData';
 import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
 import { useToast } from '@/hooks/use-toast';
 import { ShareButtons } from '@/components/ShareButtons';
-import { Helmet } from 'react-helmet';
 import { ReviewsSection } from '@/components/blog/ReviewsSection';
 import { CommentsSection } from '@/components/blog/CommentsSection';
 import { RelatedArticles } from '@/components/SEO/RelatedArticles';
@@ -252,11 +251,7 @@ export const PlaatVerhaal: React.FC = () => {
   if (notFound || !blog) {
     return (
       <>
-        <Helmet>
-          <title>Artikel niet gevonden | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
+<div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
           <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
           
           <div className="relative text-center max-w-md mx-auto px-4">
@@ -345,37 +340,7 @@ export const PlaatVerhaal: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        {/* Article-specific Open Graph tags */}
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={currentUrl} />
-        <meta property="og:title" content={frontmatter.meta_title || `${artist} - ${album}`} />
-        <meta property="og:description" content={seoDescription} />
-        <meta property="og:image" content={blogImage} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content={`${artist} - ${album} album cover`} />
-        
-        {/* Article metadata */}
-        <meta property="article:published_time" content={blog?.published_at || blog?.created_at} />
-        {artist && <meta property="article:author" content={artist} />}
-        {genre && <meta property="article:section" content={genre} />}
-        {tags[0] && <meta property="article:tag" content={tags[0]} />}
-        {tags[1] && <meta property="article:tag" content={tags[1]} />}
-        {tags[2] && <meta property="article:tag" content={tags[2]} />}
-
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={frontmatter.meta_title || `${artist} - ${album}`} />
-        <meta name="twitter:description" content={seoDescription} />
-        <meta name="twitter:image" content={blogImage} />
-        {readingTime && <meta name="twitter:label1" content="Leestijd" />}
-        {readingTime && <meta name="twitter:data1" content={`${readingTime} min`} />}
-        {price > 0 && <meta name="twitter:label2" content="Prijs" />}
-        {price > 0 && <meta name="twitter:data2" content={`€${price}`} />}
-      </Helmet>
-      
-      <ArticleStructuredData
+<ArticleStructuredData
         title={title}
         description={frontmatter.meta_description || `Het verhaal achter ${artist} - ${album}`}
         publishDate={blog.published_at || blog.created_at}

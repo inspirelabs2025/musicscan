@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useSEO } from '@/hooks/useSEO';
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,6 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Upload, Eye } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Helmet } from "react-helmet";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Photo {
@@ -101,13 +101,7 @@ export default function FanWall() {
 
   return (
     <>
-      <Helmet>
-        <title>{f.metaTitle}</title>
-        <meta name="description" content={f.metaDesc} />
-        <link rel="canonical" href="https://www.musicscan.app/fanwall" />
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
+<div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-2xl sm:text-4xl font-bold mb-2 text-foreground">{f.title}</h1>

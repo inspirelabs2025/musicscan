@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
+import { useSEO } from '@/hooks/useSEO';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Helmet } from 'react-helmet';
 import { Music, Clock, Eye, ChevronRight, Home } from 'lucide-react';
 import { useArtistStory, useArtistStories } from '@/hooks/useArtistStories';
 import { Badge } from '@/components/ui/badge';
@@ -72,11 +72,7 @@ const ArtistDetail = () => {
     if (isLoading) return null;
     return (
       <>
-        <Helmet>
-          <title>{dp.artistNotFound} | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen bg-background flex items-center justify-center">
+<div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center">
             <Music className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
             <h2 className="text-2xl font-bold mb-2">{dp.artistNotFound}</h2>
@@ -149,22 +145,7 @@ const ArtistDetail = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{story.meta_title || `${story.artist_name}: Biografie, Muziek & Verhaal | MusicScan`}</title>
-        <meta name="description" content={storyDescription} />
-        <meta property="og:title" content={story.meta_title || `${story.artist_name}: Biografie & Carrièreverhaal`} />
-        <meta property="og:description" content={storyDescription} />
-        <meta property="og:image" content={storyImage} />
-        <meta property="og:url" content={currentUrl} />
-        <meta property="og:type" content="article" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={story.meta_title || `${story.artist_name}: Biografie & Carrièreverhaal`} />
-        <meta name="twitter:description" content={storyDescription} />
-        <meta name="twitter:image" content={storyImage} />
-        <link rel="canonical" href={currentUrl} />
-      </Helmet>
-
-      <MusicGroupStructuredData
+<MusicGroupStructuredData
         name={story.artist_name}
         description={storyDescription}
         image={storyImage}

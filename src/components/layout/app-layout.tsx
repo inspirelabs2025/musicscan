@@ -1,11 +1,11 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
+import { useEffect } from 'react';
 import { Header } from './header';
 import { Menu } from './menu';
 import { cn } from '@/lib/utils';
 import { Toaster } from 'sonner';
 import { ScrollArea } from '../ui/scroll-area';
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import { useMenu } from '@/hooks/useMenu';
 import { useTheme } from '@/hooks/useTheme';
 import { AINudge } from '@/components/ainudge';
@@ -26,6 +26,12 @@ export function AppLayout({ children, showMenu = true, showSearch = true }: AppL
 		toggleMenu(false);
 	}, [location, toggleMenu]);
 
+	useEffect(() => {
+		document.title = 'Melodify';
+		let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement;
+		if (meta) meta.content = 'Melodify: De beste app om jouw muziek te creëren, distribueren en te promoten.';
+	}, []);
+
 	return (
 		<div
 			className={cn(
@@ -35,14 +41,6 @@ export function AppLayout({ children, showMenu = true, showSearch = true }: AppL
 				{ 'bg-card-purple text-card-purple-foreground': theme === 'purple' }
 			)}
 		>
-			<Helmet>
-				<title>Melodify</title>
-				<meta
-					name="description"
-					content="Melodify: De beste app om jouw muziek te creëren, distribueren en te promoten."
-				/>
-			</Helmet>
-
 			{showMenu && <Menu />}
 
 			<div className={cn('flex flex-col min-w-0', showMenu && 'lg:col-start-2')}>

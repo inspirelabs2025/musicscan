@@ -1,4 +1,5 @@
 import React from "react";
+import { useSEO } from '@/hooks/useSEO';
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, MapPin, Calendar, Clock, Eye } from "lucide-react";
-import { Helmet } from "react-helmet";
 import SafeImage from "@/components/SafeImage";
 
 interface StudioStory {
@@ -47,12 +47,7 @@ export default function StudioStories() {
 
   return (
     <>
-      <Helmet>
-        <title>Legendarische Opnamestudio's | MusicScan</title>
-        <meta name="description" content="Ontdek de verhalen achter de meest legendarische opnamestudio's ter wereld. Van Abbey Road tot Electric Lady - de plekken waar muziekgeschiedenis werd geschreven." />
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
+<div className="min-h-screen bg-background">
         {/* Hero Section */}
         <div className="relative bg-gradient-to-br from-primary/20 via-background to-secondary/20 py-16 md:py-24">
           <div className="container mx-auto px-4">

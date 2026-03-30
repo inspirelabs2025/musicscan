@@ -1,5 +1,6 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { Link } from 'react-router-dom';
 import { QuizHubHero } from '@/components/quiz/QuizHubHero';
 import { QuizCategoryGrid } from '@/components/quiz/QuizCategoryGrid';
@@ -17,31 +18,7 @@ export default function QuizHub() {
 
   return (
     <>
-      <Helmet>
-        <title>{tr.quiz.metaTitle}</title>
-        <meta name="description" content={tr.quiz.metaDescription} />
-        <meta property="og:title" content={tr.quiz.ogTitle} />
-        <meta property="og:description" content={tr.quiz.ogDescription} />
-        <meta property="og:type" content="website" />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Quiz",
-          "name": "MusicScan Dagelijkse Muziekquiz",
-          "description": "Test je muziekkennis met de dagelijkse muziekquiz.",
-          "educationalLevel": "beginner",
-          "provider": { "@type": "Organization", "name": "MusicScan" }
-        })}</script>
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app" },
-            { "@type": "ListItem", "position": 2, "name": "Muziekquiz", "item": "https://www.musicscan.app/quizzen" }
-          ]
-        })}</script>
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
+<div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
         <QuizHubHero />
         
         <div className="container mx-auto px-4 py-8 space-y-12">

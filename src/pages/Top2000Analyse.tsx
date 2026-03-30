@@ -1,5 +1,5 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -133,12 +133,7 @@ export default function Top2000Analyse() {
 
   return (
     <>
-      <Helmet>
-        <title>Top 2000 Culturele Analyse | MusicScan</title>
-        <meta name="description" content="Ontdek de Nederlandse muziekcanon: welke nummers blijven, welke verdwijnen, en wat vormt ons collectieve muziekgeheugen." />
-      </Helmet>
-
-      <Navigation />
+<Navigation />
 
       <main className="container mx-auto px-4 py-8">
         {/* Hero */}

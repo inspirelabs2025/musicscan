@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArtistContentCards } from '@/components/scanner/ArtistContentCards';
 import { Button } from '@/components/ui/button';
@@ -150,23 +151,8 @@ export default function SpotifyTrackDetail() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription.substring(0, 160)} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription.substring(0, 160)} />
-        <meta property="og:type" content="music.song" />
-        <meta property="og:url" content={canonicalUrl} />
-        {imageUrl && <meta property="og:image" content={imageUrl} />}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={pageTitle} />
-        <meta name="twitter:description" content={pageDescription.substring(0, 160)} />
-        {imageUrl && <meta name="twitter:image" content={imageUrl} />}
-        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
-      </Helmet>
-
-      <div className="container mx-auto px-4 py-8">
+      <JsonLd data={structuredData} />
+<div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
 
           {/* Back button */}

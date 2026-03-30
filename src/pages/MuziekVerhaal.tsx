@@ -7,12 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Clock, Eye, Music, BookOpen, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { ArticleStructuredData } from '@/components/SEO/StructuredData';
 import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
 import { ReviewSchema, FAQSchema } from '@/components/SEO/ReviewSchema';
 import { useToast } from '@/hooks/use-toast';
 import { ShareButtons } from '@/components/ShareButtons';
-import { Helmet } from 'react-helmet';
 import { formatDate } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -195,11 +195,7 @@ export const MuziekVerhaal: React.FC = () => {
   if (notFound || !story) {
     return (
       <>
-        <Helmet>
-          <title>Verhaal niet gevonden | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
+<div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
           <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
           
           <div className="relative text-center max-w-md mx-auto px-4">
@@ -244,55 +240,7 @@ export const MuziekVerhaal: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        {/* Article-specific Open Graph tags */}
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={currentUrl} />
-        <meta property="og:title" content={story?.meta_title || story?.title} />
-        <meta property="og:description" content={storyDescription} />
-        <meta property="og:image" content={storyImage} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content={story?.title} />
-        
-        {/* Article metadata */}
-        <meta property="article:published_time" content={story?.created_at} />
-        <meta property="article:modified_time" content={story?.updated_at} />
-        {story?.artist && <meta property="article:author" content={story.artist} />}
-        {story?.genre && <meta property="article:section" content={story.genre} />}
-        {story?.tags?.map((tag) => (
-          <meta key={tag} property="article:tag" content={tag} />
-        ))}
-        
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={story?.meta_title || story?.title} />
-        <meta name="twitter:description" content={storyDescription} />
-        <meta name="twitter:image" content={storyImage} />
-        {story?.reading_time && (
-          <>
-            <meta name="twitter:label1" content="Leestijd" />
-            <meta name="twitter:data1" content={`${story.reading_time} min`} />
-          </>
-        )}
-        {story?.views_count && (
-          <>
-            <meta name="twitter:label2" content="Views" />
-            <meta name="twitter:data2" content={story.views_count.toString()} />
-          </>
-        )}
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app" },
-            { "@type": "ListItem", "position": 2, "name": "Verhalen", "item": "https://www.musicscan.app/verhalen" },
-            { "@type": "ListItem", "position": 3, "name": story.title, "item": currentUrl }
-          ]
-        })}</script>
-      </Helmet>
-      
-      <ArticleStructuredData
+<ArticleStructuredData
         title={story.title}
         description={storyDescription}
         publishDate={story.created_at}

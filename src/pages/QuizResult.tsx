@@ -1,11 +1,11 @@
 import React from 'react';
+import { useSEO } from '@/hooks/useSEO';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Helmet } from 'react-helmet';
 import { QuizResultShareCard } from '@/components/quiz/QuizResultShareCard';
 import { ShareButtons } from '@/components/ShareButtons';
 import { Trophy, Play, Loader2, Music, Disc3, Shuffle, Target, ArrowRight } from 'lucide-react';
@@ -132,19 +132,7 @@ export default function QuizResult() {
   
   return (
     <>
-      <Helmet>
-        <title>{displayName} scoorde {result.score_percentage}% - MusicScan Quiz</title>
-        <meta name="description" content={`${displayName} scoorde ${result.score_percentage}% op de MusicScan ${getQuizTypeLabel(result.quiz_type)} Quiz. Kun jij dit verslaan?`} />
-        <meta property="og:title" content={`${displayName} scoorde ${result.score_percentage}% - MusicScan Quiz`} />
-        <meta property="og:description" content={`${result.questions_correct}/${result.questions_total} vragen correct beantwoord. ${badge.emoji} ${badge.title}`} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={shareUrl} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${displayName} scoorde ${result.score_percentage}%`} />
-        <meta name="twitter:description" content={`MusicScan ${getQuizTypeLabel(result.quiz_type)} Quiz - Kun jij dit verslaan?`} />
-      </Helmet>
-      
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
+<div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
         <div className="container mx-auto px-4 py-8 md:py-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

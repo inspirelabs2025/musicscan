@@ -1,5 +1,5 @@
-import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
+import { useSEO } from '@/hooks/useSEO';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChristmasCountdown } from '@/components/christmas/ChristmasCountdown';
@@ -47,15 +47,7 @@ export default function Christmas() {
 
   return (
     <>
-      <Helmet>
-        <title>🎄 Kerst Muziek Platform | MusicScan</title>
-        <meta name="description" content="Ontdek de mooiste kerstmuziek: klassiekers, verhalen achter videoclips, royalties van kerstliedjes en meer." />
-        <meta property="og:title" content="🎄 Kerst Muziek Platform | MusicScan" />
-        <meta property="og:description" content="Ontdek de mooiste kerstmuziek: klassiekers, verhalen achter videoclips en meer." />
-        <meta property="og:type" content="website" />
-      </Helmet>
-
-      <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-background via-red-950/5 to-green-950/5">
+<div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-background via-red-950/5 to-green-950/5">
         {/* Snowfall Effect */}
         <div className="fixed inset-0 pointer-events-none z-0">
           {snowflakes.map((style, i) => (

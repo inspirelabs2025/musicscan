@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
+import { useSEO } from '@/hooks/useSEO';
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Helmet } from "react-helmet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -101,13 +101,7 @@ export default function StudioStoryDetail() {
 
   return (
     <>
-      <Helmet>
-        <title>{story.meta_title || `${story.studio_name} | MusicScan`}</title>
-        <meta name="description" content={story.meta_description || `Ontdek het verhaal van ${story.studio_name}`} />
-        <link rel="canonical" href={`https://www.musicscan.app/studio-stories/${story.slug}`} />
-      </Helmet>
-
-      <StudioStructuredData
+<StudioStructuredData
         name={story.studio_name}
         description={story.meta_description || `Ontdek het verhaal van ${story.studio_name}`}
         image={story.artwork_url || undefined}

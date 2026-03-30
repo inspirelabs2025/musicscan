@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
 import { Trophy, Target, Flame, Star, BarChart3, Filter, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,12 +60,7 @@ export default function MyQuizzes() {
 
   return (
     <>
-      <Helmet>
-        <title>Mijn Quizzen & Scores | MusicScan</title>
-        <meta name="description" content="Bekijk je quiz geschiedenis, verdiende badges en statistieken." />
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
+<div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
         {/* Hero Section */}
         <div className="bg-gradient-to-r from-primary/20 via-purple-500/20 to-pink-500/20 border-b">
           <div className="container mx-auto px-4 py-8">

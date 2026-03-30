@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useSEO } from '@/hooks/useSEO';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,6 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDebounceSearch } from "@/hooks/useDebounceSearch";
-import { Helmet } from "react-helmet";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -71,12 +71,7 @@ export default function Nieuws() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>{n.metaTitle}</title>
-        <meta name="description" content={n.metaDesc} />
-      </Helmet>
-
-      <BreadcrumbNavigation className="max-w-7xl mx-auto px-4 pt-4" />
+<BreadcrumbNavigation className="max-w-7xl mx-auto px-4 pt-4" />
 
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-12">
         <motion.div 

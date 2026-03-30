@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
 import { useAnecdote, useRelatedAnecdotes } from '@/hooks/useAnecdotes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -38,11 +38,7 @@ export default function AnecdoteDetail() {
   if (!anecdote) {
     return (
       <>
-        <Helmet>
-          <title>{dp.anecdoteNotFound} | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen flex items-center justify-center">
+<div className="min-h-screen flex items-center justify-center">
           <Card>
             <CardContent className="py-12 text-center">
               <BookOpen className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
@@ -61,24 +57,7 @@ export default function AnecdoteDetail() {
 
   return (
     <>
-      <Helmet>
-        <title>{anecdote.meta_title}</title>
-        <meta name="description" content={anecdote.meta_description} />
-        <meta name="keywords" content={`${anecdote.subject_type}, ${anecdote.subject_name}`} />
-        <link rel="canonical" href={pageUrl} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={pageUrl} />
-        <meta property="og:title" content={anecdote.meta_title} />
-        <meta property="og:description" content={anecdote.meta_description} />
-        <meta property="article:published_time" content={anecdote.anecdote_date} />
-        <meta property="article:section" content={anecdote.subject_type} />
-        <meta property="article:tag" content={anecdote.subject_name} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={anecdote.meta_title} />
-        <meta name="twitter:description" content={anecdote.meta_description} />
-      </Helmet>
-
-      <ArticleStructuredData
+<ArticleStructuredData
         title={anecdote.anecdote_title}
         description={anecdote.meta_description}
         publishDate={anecdote.anecdote_date}

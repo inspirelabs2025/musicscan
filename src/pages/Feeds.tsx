@@ -1,5 +1,5 @@
-import { Helmet } from 'react-helmet';
 import { Rss, Copy, ExternalLink } from 'lucide-react';
+import { useSEO } from '@/hooks/useSEO';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -23,12 +23,7 @@ const Feeds = () => {
 
   return (
     <>
-      <Helmet>
-        <title>RSS Feeds | MusicScan</title>
-        <meta name="description" content="RSS feeds van MusicScan voor automatische content updates" />
-      </Helmet>
-
-      <div className="min-h-screen bg-background py-12">
+<div className="min-h-screen bg-background py-12">
         <div className="container max-w-4xl mx-auto px-4">
           <div className="text-center mb-12">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">

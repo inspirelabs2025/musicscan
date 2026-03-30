@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Helmet } from 'react-helmet';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useSEO } from '@/hooks/useSEO';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ScannerHero } from '@/components/home/ScannerHero';
@@ -61,10 +61,8 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background pt-14">
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(websiteSchema)}</script>
-        <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
-      </Helmet>
+      <JsonLd data={websiteSchema} />
+      <JsonLd data={organizationSchema} />
       {/* Language Switcher Bar */}
       <Suspense fallback={null}>
         <LanguageBar />

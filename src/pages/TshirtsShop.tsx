@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,28 +56,7 @@ export default function TshirtsShop() {
 
   return (
     <>
-      <Helmet>
-        <title>Muziek T-Shirts - Album Cover T-Shirts | VinylScout</title>
-        <meta name="description" content="Unieke T-shirts met iconische album artwork. Verkrijgbaar in Standard en Premium varianten. Draag je favoriete muziek met stijl!" />
-        <meta name="keywords" content="muziek t-shirts, album shirts, band merchandise, music fashion, concert shirts, vintage band tees" />
-        <meta property="og:title" content="Muziek T-Shirts - Album Cover Inspired" />
-        <meta property="og:description" content="Unieke T-shirts met iconische album artwork. Standard & Premium collecties beschikbaar." />
-        <meta property="og:type" content="website" />
-        
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            "name": "Muziek T-Shirts",
-            "description": "T-shirts met iconische album artwork",
-            "url": "https://www.musicscan.app/shirts",
-            "numberOfItems": tshirtProducts?.length || 0,
-            "about": { "@type": "Thing", "name": "Music Merchandise T-Shirts" }
-          })}
-        </script>
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-50/30 dark:to-blue-950/20">
+<div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-50/30 dark:to-blue-950/20">
         <div className="container py-4 md:py-8 space-y-4">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },

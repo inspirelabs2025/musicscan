@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Music, Search, Filter, ChevronDown } from 'lucide-react';
 import { useArtistStories, useArtistStoriesStats } from '@/hooks/useArtistStories';
@@ -62,19 +62,7 @@ const Artists = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{selectedGenre !== 'all' ? `${selectedGenre} ${a.artist}` : 'Artiesten — Ontdek Muzikanten & Hun Verhalen'} | MusicScan</title>
-        <meta 
-          name="description" 
-          content="Ontdek artiesten en hun muziekverhalen. Van legendarische rockbands tot jazz-iconen. Lees biografieën, bekijk discografieën en ontdek de muziek."
-        />
-        <meta property="og:title" content={`${selectedGenre !== 'all' ? selectedGenre + ' ' : ''}${tr.nav.artists} | MusicScan`} />
-        <meta property="og:description" content={a.defaultDesc} />
-        <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://www.musicscan.app/artists" />
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
+<div className="min-h-screen bg-background">
         <section className="bg-gradient-to-b from-primary/10 to-background py-6">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center space-y-3">

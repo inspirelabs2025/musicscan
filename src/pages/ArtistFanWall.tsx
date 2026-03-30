@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useArtistFanwall } from "@/hooks/useArtistFanwall";
 import { useArtistPhotos } from "@/hooks/useArtistPhotos";
@@ -7,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload, Eye, Heart, Image as ImageIcon, ArrowLeft } from "lucide-react";
-import { Helmet } from "react-helmet";
 
 export default function ArtistFanWall() {
   const { slug } = useParams<{ slug: string }>();
@@ -54,11 +55,7 @@ export default function ArtistFanWall() {
   if (!artist) {
     return (
       <>
-        <Helmet>
-          <title>Artiest niet gevonden | MusicScan FanWall</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen flex items-center justify-center">
+<div className="min-h-screen flex items-center justify-center">
           <div>Artiest niet gevonden</div>
         </div>
       </>
@@ -100,36 +97,8 @@ export default function ArtistFanWall() {
 
   return (
     <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
-        <meta name="keywords" content={`${artist.artist_name}, fan foto's, concert foto's, vinyl collectie, live muziek, muziek herinneringen, ${artist.artist_name} fans`} />
-        <link rel="canonical" href={canonicalUrl} />
-
-        {/* Open Graph */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription} />
-        <meta property="og:image" content={pageImage} />
-        <meta property="og:site_name" content="MusicScan" />
-        <meta property="og:locale" content="nl_NL" />
-
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@musicscan_app" />
-        <meta name="twitter:creator" content="@musicscan_app" />
-        <meta name="twitter:title" content={pageTitle} />
-        <meta name="twitter:description" content={pageDescription} />
-        <meta name="twitter:image" content={pageImage} />
-
-        {/* JSON-LD Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
+      <JsonLd data={structuredData} />
+<div className="min-h-screen bg-background">
         {/* Hero Section */}
         <div
           className="relative h-64 md:h-80 bg-cover bg-center"

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
 import { Footer } from '@/components/Footer';
 import { useYearOverview, useAvailableYears, useGenerateYearOverview } from '@/hooks/useYearOverview';
 import { YearOverviewHero } from '@/components/year-overview/YearOverviewHero';
@@ -39,12 +39,7 @@ const YearOverview: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{`Muziek Jaaroverzicht ${selectedYear} | MusicScan`}</title>
-        <meta name="description" content={`Ontdek het complete muziekjaaroverzicht van ${selectedYear}. Top artiesten, beste albums, awards, virale hits en meer.`} />
-      </Helmet>
-
-      <div className="min-h-screen flex flex-col bg-background">
+<div className="min-h-screen flex flex-col bg-background">
         
         <main className="flex-grow container mx-auto px-4 py-8">
           <YearOverviewHero year={selectedYear} onYearChange={setSelectedYear} availableYears={availableYears} />

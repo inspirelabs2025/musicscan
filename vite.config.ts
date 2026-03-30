@@ -82,8 +82,7 @@ export default defineConfig(({ mode }) => ({
           'vendor-motion': ['framer-motion'],
           'vendor-charts': ['recharts'],
           'vendor-form': ['react-hook-form', 'zod', '@hookform/resolvers'],
-          'vendor-ffmpeg': ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
-          'vendor-ai': ['@huggingface/transformers'],
+          // @ffmpeg and @huggingface excluded — loaded dynamically only when needed
           'vendor-utils': ['clsx', 'tailwind-merge', 'class-variance-authority', 'date-fns'],
           'vendor-query': ['@tanstack/react-query'],
           'vendor-supabase': ['@supabase/supabase-js'],

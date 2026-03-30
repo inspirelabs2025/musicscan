@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -67,47 +68,7 @@ export default function MerchandiseShop() {
 
   return (
     <>
-      <Helmet>
-        <title>Merchandise - T-Shirts & Muziekkleding | MusicScan Shop</title>
-        <meta name="description" content="Ontdek unieke muziek T-shirts in de MusicScan Shop. Premium designs geïnspireerd op iconische albums. Verkrijgbaar in diverse maten en stijlen." />
-        <meta name="keywords" content="muziek merchandise, band t-shirts, album shirts, muziek kleding, MusicScan shop" />
-        <meta property="og:title" content="Merchandise - T-Shirts & Muziekkleding | MusicScan Shop" />
-        <meta property="og:description" content="Ontdek unieke muziek T-shirts in de MusicScan Shop. Premium designs geïnspireerd op iconische albums." />
-        <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://www.musicscan.app/merchandise" />
-        
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            "name": "MusicScan Merchandise Shop",
-            "description": "Ontdek unieke muziek T-shirts geïnspireerd op iconische albums",
-            "url": "https://www.musicscan.app/merchandise",
-            "numberOfItems": allProducts?.length || 0,
-            "mainEntity": {
-              "@type": "ItemList",
-              "numberOfItems": allProducts?.length || 0,
-              "itemListElement": (filteredProducts || []).slice(0, 10).map((p, i) => ({
-                "@type": "ListItem",
-                "position": i + 1,
-                "item": {
-                  "@type": "Product",
-                  "name": `${p.artist} - ${p.title}`,
-                  "image": p.primary_image,
-                  "offers": {
-                    "@type": "Offer",
-                    "price": p.price?.toString(),
-                    "priceCurrency": "EUR",
-                    "availability": "https://schema.org/InStock"
-                  }
-                }
-              }))
-            }
-          })}
-        </script>
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-pink-50/30 dark:to-pink-950/20">
+<div className="min-h-screen bg-gradient-to-br from-background via-background to-pink-50/30 dark:to-pink-950/20">
         <div className="container py-4 md:py-8 space-y-4">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },

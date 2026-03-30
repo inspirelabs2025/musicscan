@@ -1,6 +1,7 @@
 import React from 'react';
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useParams, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
 import { ArrowLeft, Calendar, Music, Users, ExternalLink, Play, Film, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,11 +14,7 @@ const FilmmuziekFeitDetail = () => {
   if (!feit) {
     return (
       <>
-        <Helmet>
-          <title>Feit niet gevonden | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen bg-background flex items-center justify-center">
+<div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Feit niet gevonden</h1>
             <Button asChild>
@@ -58,19 +55,8 @@ const FilmmuziekFeitDetail = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={feit.description} />
-        <link rel="canonical" href={pageUrl} />
-        <meta property="og:type" content="article" />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={feit.description} />
-        <meta property="og:url" content={pageUrl} />
-        {feit.imageUrl && <meta property="og:image" content={feit.imageUrl} />}
-        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
-      </Helmet>
-
-      <main className="min-h-screen bg-gradient-to-br from-amber-950 via-orange-950 to-red-950">
+      <JsonLd data={structuredData} />
+<main className="min-h-screen bg-gradient-to-br from-amber-950 via-orange-950 to-red-950">
         {/* Hero */}
         <section className="relative py-20">
           {/* Background image if available */}

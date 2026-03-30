@@ -12,12 +12,12 @@ export const ScannerHero = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/60 via-vinyl-purple/20 to-vinyl-gold/40" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(var(--vinyl-purple)/0.35)_0%,_transparent_70%)]" />
       
-      <div className="absolute -left-10 md:-left-20 top-1/2 -translate-y-1/2 opacity-30 md:opacity-40">
-        <Disc3 className="w-72 h-72 md:w-[28rem] md:h-[28rem] lg:w-[32rem] lg:h-[32rem] text-vinyl-purple animate-vinyl-spin" />
+      <div className="absolute -left-10 md:-left-20 top-1/2 -translate-y-1/2 opacity-30 md:opacity-40" style={{ willChange: 'transform' }}>
+        <Disc3 className="w-72 h-72 md:w-[28rem] md:h-[28rem] lg:w-[32rem] lg:h-[32rem] text-vinyl-purple animate-vinyl-spin hidden md:block" />
       </div>
       
-      <div className="absolute -right-10 md:-right-20 top-1/2 -translate-y-1/2 opacity-20 md:opacity-30">
-        <Disc3 className="w-56 h-56 md:w-80 md:h-80 lg:w-96 lg:h-96 text-vinyl-gold animate-vinyl-spin" style={{ animationDirection: 'reverse', animationDuration: '25s' }} />
+      <div className="absolute -right-10 md:-right-20 top-1/2 -translate-y-1/2 opacity-20 md:opacity-30" style={{ willChange: 'transform' }}>
+        <Disc3 className="w-56 h-56 md:w-80 md:h-80 lg:w-96 lg:h-96 text-vinyl-gold animate-vinyl-spin hidden md:block" style={{ animationDirection: 'reverse', animationDuration: '25s' }} />
       </div>
       
       <Sparkles className="absolute top-20 left-[20%] w-8 h-8 text-vinyl-gold/60 animate-pulse" />

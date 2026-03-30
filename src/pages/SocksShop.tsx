@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,31 +86,7 @@ export default function SocksShop() {
 
   return (
     <>
-      <Helmet>
-        <title>Muziek Sokken - Album Cover Sokken | VinylScout</title>
-        <meta name="description" content="Unieke sokken geïnspireerd op iconische albums. Verkrijgbaar in Standard Cotton en Premium Merino Wool. Draag je favoriete muziek aan je voeten!" />
-        <meta name="keywords" content="muziek sokken, album sokken, band sokken, merchandise, merino sokken, cotton sokken, music fashion" />
-        <meta property="og:title" content="Muziek Sokken - Album Cover Inspired" />
-        <meta property="og:description" content="Unieke sokken geïnspireerd op iconische albums. Standard & Premium varianten beschikbaar." />
-        <meta property="og:type" content="website" />
-        
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            "name": "Muziek Sokken",
-            "description": "Sokken geïnspireerd op iconische albums",
-            "url": "https://www.musicscan.app/socks",
-            "numberOfItems": sockProducts?.length || 0,
-            "about": {
-              "@type": "Thing",
-              "name": "Music Merchandise Socks"
-            }
-          })}
-        </script>
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-orange-50/30 dark:to-orange-950/20">
+<div className="min-h-screen bg-gradient-to-br from-background via-background to-orange-50/30 dark:to-orange-950/20">
         <div className="container py-8 space-y-8">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },

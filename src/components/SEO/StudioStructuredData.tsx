@@ -1,5 +1,5 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
+import { JsonLd } from './JsonLd';
 
 interface Props {
   name: string;
@@ -13,14 +13,7 @@ interface Props {
 }
 
 export const StudioStructuredData: React.FC<Props> = ({
-  name,
-  description,
-  image,
-  url,
-  location,
-  foundingDate,
-  notableArtists,
-  famousRecordings
+  name, description, image, url, location, foundingDate, notableArtists, famousRecordings
 }) => {
   const structuredData = {
     "@context": "https://schema.org",
@@ -30,35 +23,17 @@ export const StudioStructuredData: React.FC<Props> = ({
     "description": description,
     "image": image,
     "url": url,
-    ...(location && {
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": location
-      }
-    }),
+    ...(location && { "address": { "@type": "PostalAddress", "addressLocality": location } }),
     ...(foundingDate && { "foundingDate": foundingDate }),
     ...(notableArtists && notableArtists.length > 0 && {
-      "performer": notableArtists.map(artist => ({
-        "@type": "MusicGroup",
-        "name": artist
-      }))
+      "performer": notableArtists.map(artist => ({ "@type": "MusicGroup", "name": artist }))
     }),
     ...(famousRecordings && famousRecordings.length > 0 && {
-      "event": famousRecordings.map(recording => ({
-        "@type": "Event",
-        "name": recording,
-        "description": `Recording session at ${name}`
-      }))
+      "event": famousRecordings.map(recording => ({ "@type": "Event", "name": recording, "description": `Recording session at ${name}` }))
     }),
     "sameAs": [],
     "priceRange": "$$"
   };
 
-  return (
-    <Helmet>
-      <script type="application/ld+json">
-        {JSON.stringify(structuredData)}
-      </script>
-    </Helmet>
-  );
+  return <JsonLd data={structuredData} />;
 };

@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { usePlatformProductDetail, useSimilarProducts } from "@/hooks/usePlatformProductDetail";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,6 @@ import { ArrowLeft, ShoppingCart, Check, Package, Clock, BookOpen, Sparkles } fr
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useSEO } from "@/hooks/useSEO";
-import { Helmet } from "react-helmet";
 import { useBlogPostByProduct } from "@/hooks/useBlogPostByProduct";
 import { ReviewSchema, AggregateRatingSchema } from "@/components/SEO/ReviewSchema";
 import { PosterStructuredData } from "@/components/SEO/PosterStructuredData";
@@ -138,11 +138,7 @@ export default function PlatformProductDetail() {
   if (!product) {
     return (
       <>
-        <Helmet>
-          <title>{dp.productNotFound} | MusicScan Shop</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="container mx-auto px-4 py-8 text-center">
+<div className="container mx-auto px-4 py-8 text-center">
           <h1 className="text-2xl font-bold mb-4">{dp.productNotFound}</h1>
           <Link to="/">
             <Button>{dp.backToHome}</Button>
@@ -265,30 +261,7 @@ export default function PlatformProductDetail() {
 
   return (
     <>
-      <Helmet>
-        {/* Product-specific Open Graph tags */}
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="MusicScan" />
-        <meta property="og:url" content={currentUrl} />
-        <meta property="og:title" content={`${product.artist} - ${product.title}`} />
-        <meta property="og:description" content={productDescription} />
-        <meta property="og:image" content={productImage} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="1200" />
-        <meta property="og:image:alt" content={`${product.artist} - ${product.title}`} />
-        
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${product.artist} - ${product.title}`} />
-        <meta name="twitter:description" content={productDescription} />
-        <meta name="twitter:image" content={productImage} />
-        <meta name="twitter:label1" content="Prijs" />
-        <meta name="twitter:data1" content={`€${product.price}`} />
-        <meta name="twitter:label2" content="Voorraad" />
-        <meta name="twitter:data2" content={product.stock_quantity > 0 ? "Op voorraad" : "Uitverkocht"} />
-      </Helmet>
-      
-      <div className="container mx-auto px-4 py-8">
+<div className="container mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <BreadcrumbNavigation items={[
         { name: "Home", url: "/" },
@@ -305,31 +278,13 @@ export default function PlatformProductDetail() {
         <PosterStructuredData product={product} slug={slug!} />
       ) : (
         structuredData && (
-          <Helmet>
-            <script type="application/ld+json">
-              {JSON.stringify(structuredData)}
-            </script>
-          </Helmet>
+          <JsonLd data={structuredData} />
         )
       )}
 
       {/* Enhanced Social Media Meta Tags for POSTER */}
       {isPoster && (
-        <Helmet>
-          
-          {/* Pinterest Rich Pins */}
-          <meta property="og:type" content="website" />
-          <meta name="pinterest:price:amount" content={product.price.toString()} />
-          <meta name="pinterest:price:currency" content="EUR" />
-          
-          {/* Twitter Product Card */}
-          <meta name="twitter:card" content="product" />
-          <meta name="twitter:data1" content={`€${product.price}`} />
-          <meta name="twitter:label1" content="Prijs" />
-          <meta name="twitter:data2" content={product.stock_quantity > 0 ? "Op voorraad" : "Uitverkocht"} />
-          <meta name="twitter:label2" content="Beschikbaarheid" />
-        </Helmet>
-      )}
+)}
       
       <ReviewSchema
         itemName={`${product.artist ? product.artist + ' - ' : ''}${product.title}`}

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { DanceHouseHero } from '@/components/dance-house/DanceHouseHero';
 import { DanceHouseMuziekQuiz } from '@/components/dance-house/DanceHouseMuziekQuiz';
 import { DecenniumSliderDH } from '@/components/dance-house/DecenniumSliderDH';
@@ -79,34 +80,10 @@ const DanceHouseMuziek = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
-        <meta name="keywords" content="dance muziek, house muziek, techno, trance, EDM, electronic music, DJ, Daft Punk, Tiësto, Martin Garrix, Carl Cox, Armin van Buuren, Chicago house, Detroit techno" />
-        <meta name="robots" content="index, follow" />
-        <link rel="canonical" href={pageUrl} />
-        
-        {/* Open Graph */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={pageUrl} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription} />
-        <meta property="og:image" content={ogImage} />
-        <meta property="og:locale" content="nl_NL" />
-        
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={pageTitle} />
-        <meta name="twitter:description" content={pageDescription} />
-        <meta name="twitter:image" content={ogImage} />
-        
-        {/* Structured Data */}
-        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
-        <script type="application/ld+json">{JSON.stringify(breadcrumbData)}</script>
-        <script type="application/ld+json">{JSON.stringify(faqData)}</script>
-      </Helmet>
-
-      <main className="min-h-screen bg-background">
+      <JsonLd data={structuredData} />
+      <JsonLd data={breadcrumbData} />
+      <JsonLd data={faqData} />
+<main className="min-h-screen bg-background">
         <DanceHouseHero />
         <DanceHouseMuziekQuiz />
         <DecenniumSliderDH />

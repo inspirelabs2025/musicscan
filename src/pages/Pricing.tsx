@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useSEO } from '@/hooks/useSEO';
 import { useIsIOS } from '@/hooks/useIsIOS';
-import { Helmet } from 'react-helmet';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -200,12 +200,7 @@ const Pricing = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{p.metaTitle}</title>
-        <meta name="description" content={p.metaDescription} />
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+<div className="min-h-screen bg-gradient-to-br from-background to-muted">
         <div className="container mx-auto px-4 py-16">
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">

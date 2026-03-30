@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,27 +60,7 @@ export default function PosterShop() {
 
   return (
     <>
-      <Helmet>
-        <title>Premium Art Posters - Unieke Muziek Kunst Posters | VinylScout</title>
-        <meta name="description" content="Ontdek unieke posters van iconische muziek artiesten in diverse kunststijlen. Pop Art, Vectorized Cartoon, Oil Painting stijlen. Premium kwaliteit. Gratis verzending vanaf €50." />
-        <meta name="keywords" content="art posters, muziek posters, kunst posters, pop art posters, vectorized cartoon, albumcover posters, wanddecoratie, kunstposters" />
-        <meta property="og:title" content="Premium Art Posters - Unieke Muziek Kunst" />
-        <meta property="og:description" content="Unieke posters van iconische muziek artiesten. Museum-kwaliteit kunst voor aan de muur." />
-        <meta property="og:type" content="website" />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            "name": "Premium Art Posters",
-            "description": "Unieke posters van muziek artiesten",
-            "url": "https://www.musicscan.app/posters",
-            "numberOfItems": posterProducts?.length || 0,
-            "about": { "@type": "Thing", "name": "Art Posters" }
-          })}
-        </script>
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20">
+<div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20">
         <div className="container py-4 md:py-8 space-y-4">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },

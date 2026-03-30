@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,34 +57,7 @@ export default function ButtonsShop() {
 
   return (
     <>
-      <Helmet>
-        <title>Artist Buttons & Badges - Muziek Speldjes | VinylScout</title>
-        <meta name="description" content="Draag je favoriete artiesten met stijl! Unieke buttons en badges met iconische muzikanten. Formaat 3.5-4cm, vanaf €4,50. Shop nu!" />
-        <meta name="keywords" content="artist buttons, muziek badges, band speldjes, merchandise, music pins, buttons kopen, badge collection" />
-        <meta property="og:title" content="Artist Buttons - Muziek Speldjes" />
-        <meta property="og:description" content="Unieke artist buttons vanaf €4,50. Speld je favoriete muziek!" />
-        <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://www.musicscan.app/buttons" />
-        
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            "name": "Artist Buttons Collectie",
-            "description": "Buttons en badges met iconische muziekartisten",
-            "url": "https://www.musicscan.app/buttons",
-            "numberOfItems": buttonProducts?.length || 0,
-            "offers": {
-              "@type": "AggregateOffer",
-              "priceCurrency": "EUR",
-              "lowPrice": "4.50",
-              "highPrice": avgPrice.toString()
-            }
-          })}
-        </script>
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-50/30 dark:to-blue-950/20">
+<div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-50/30 dark:to-blue-950/20">
         <div className="container py-4 md:py-8 space-y-4">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },

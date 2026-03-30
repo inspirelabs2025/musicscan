@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
 import { Loader2, Clock, Eye, Sparkles } from "lucide-react";
 import { useArtistSpotlights } from "@/hooks/useArtistSpotlight";
 import { Badge } from "@/components/ui/badge";
@@ -21,16 +21,7 @@ const ArtistSpotlights = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Artiest Spotlights - In de Schijnwerpers | MusicScan</title>
-        <meta 
-          name="description" 
-          content="Ontdek uitgebreide verhalen over iconische artiesten. Van biografieën tot muzikale evolutie en culturele impact." 
-        />
-        <link rel="canonical" href="https://www.musicscan.app/artist-spotlights" />
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
+<div className="min-h-screen bg-background">
         {/* Hero Section */}
         <div className="bg-gradient-to-b from-primary/10 to-background py-6">
           <div className="container mx-auto px-4">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
+import { JsonLd } from './JsonLd';
 
 interface ReviewSchemaProps {
   itemName: string;
@@ -15,16 +15,8 @@ interface ReviewSchemaProps {
 }
 
 export const ReviewSchema: React.FC<ReviewSchemaProps> = ({
-  itemName,
-  artist,
-  reviewBody,
-  rating = 4.5,
-  bestRating = 5,
-  worstRating = 1,
-  datePublished,
-  reviewUrl,
-  imageUrl,
-  itemType = 'MusicAlbum'
+  itemName, artist, reviewBody, rating = 4.5, bestRating = 5, worstRating = 1,
+  datePublished, reviewUrl, imageUrl, itemType = 'MusicAlbum'
 }) => {
   const schema = {
     "@context": "https://schema.org",
@@ -32,46 +24,19 @@ export const ReviewSchema: React.FC<ReviewSchemaProps> = ({
     "itemReviewed": {
       "@type": itemType,
       "name": itemName,
-      ...(itemType !== 'Product' && {
-        "byArtist": {
-          "@type": "MusicGroup",
-          "name": artist
-        }
-      }),
-      ...(itemType === 'Product' && {
-        "brand": {
-          "@type": "Brand",
-          "name": artist || "MusicScan"
-        }
-      }),
+      ...(itemType !== 'Product' && { "byArtist": { "@type": "MusicGroup", "name": artist } }),
+      ...(itemType === 'Product' && { "brand": { "@type": "Brand", "name": artist || "MusicScan" } }),
       ...(imageUrl && { "image": imageUrl })
     },
-    "reviewRating": {
-      "@type": "Rating",
-      "ratingValue": rating,
-      "bestRating": bestRating,
-      "worstRating": worstRating
-    },
-    "author": {
-      "@type": "Organization",
-      "name": "MusicScan"
-    },
+    "reviewRating": { "@type": "Rating", "ratingValue": rating, "bestRating": bestRating, "worstRating": worstRating },
+    "author": { "@type": "Organization", "name": "MusicScan" },
     "reviewBody": reviewBody.substring(0, 200) + "...",
     "datePublished": datePublished,
     "url": reviewUrl,
-    "publisher": {
-      "@type": "Organization",
-      "name": "MusicScan"
-    }
+    "publisher": { "@type": "Organization", "name": "MusicScan" }
   };
 
-  return (
-    <Helmet>
-      <script type="application/ld+json">
-        {JSON.stringify(schema)}
-      </script>
-    </Helmet>
-  );
+  return <JsonLd data={schema} />;
 };
 
 interface AggregateRatingSchemaProps {
@@ -84,44 +49,22 @@ interface AggregateRatingSchemaProps {
 }
 
 export const AggregateRatingSchema: React.FC<AggregateRatingSchemaProps> = ({
-  itemName,
-  artist,
-  ratingValue,
-  reviewCount,
-  bestRating = 5,
-  imageUrl
+  itemName, artist, ratingValue, reviewCount, bestRating = 5, imageUrl
 }) => {
   const schema = {
     "@context": "https://schema.org",
     "@type": "MusicAlbum",
     "name": itemName,
-    "byArtist": {
-      "@type": "MusicGroup",
-      "name": artist
-    },
+    "byArtist": { "@type": "MusicGroup", "name": artist },
     ...(imageUrl && { "image": imageUrl }),
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": ratingValue,
-      "reviewCount": reviewCount,
-      "bestRating": bestRating
-    }
+    "aggregateRating": { "@type": "AggregateRating", "ratingValue": ratingValue, "reviewCount": reviewCount, "bestRating": bestRating }
   };
 
-  return (
-    <Helmet>
-      <script type="application/ld+json">
-        {JSON.stringify(schema)}
-      </script>
-    </Helmet>
-  );
+  return <JsonLd data={schema} />;
 };
 
 interface FAQSchemaProps {
-  questions: Array<{
-    question: string;
-    answer: string;
-  }>;
+  questions: Array<{ question: string; answer: string; }>;
 }
 
 export const FAQSchema: React.FC<FAQSchemaProps> = ({ questions }) => {
@@ -131,18 +74,9 @@ export const FAQSchema: React.FC<FAQSchemaProps> = ({ questions }) => {
     "mainEntity": questions.map(q => ({
       "@type": "Question",
       "name": q.question,
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": q.answer
-      }
+      "acceptedAnswer": { "@type": "Answer", "text": q.answer }
     }))
   };
 
-  return (
-    <Helmet>
-      <script type="application/ld+json">
-        {JSON.stringify(schema)}
-      </script>
-    </Helmet>
-  );
+  return <JsonLd data={schema} />;
 };

@@ -1,5 +1,5 @@
-import { Helmet } from 'react-helmet';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { useSEO } from '@/hooks/useSEO';
 import { Bot, Lightbulb, TrendingUp } from 'lucide-react';
 import { useAICounters } from '@/lib/ai-nudge-utils';
 import { useEffect } from 'react';
@@ -14,10 +14,7 @@ const AIFeaturesPage = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <Helmet>
-        <title>AI Features - Melodify</title>
-      </Helmet>
-      <h1 className="text-4xl font-bold mb-8 text-center">Ontdek de kracht van AI</h1>
+<h1 className="text-4xl font-bold mb-8 text-center">Ontdek de kracht van AI</h1>
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         <Card className="animate-fade-in delay-100">

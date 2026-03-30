@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
+import { useSEO } from '@/hooks/useSEO';
 import { usePodcastEpisodeBySlug, useRelatedEpisodes } from '@/hooks/usePodcastDetail';
 import { PodcastEpisodeStructuredData } from '@/components/SEO/PodcastStructuredData';
 import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
@@ -72,11 +72,7 @@ export default function PodcastEpisodeDetail() {
   if (!data) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
-        <Helmet>
-          <title>Aflevering niet gevonden | MusicScan</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <Navigation />
+<Navigation />
         <main className="flex-1 container py-8 text-center">
           <h1 className="text-2xl font-bold mb-4">Aflevering niet gevonden</h1>
           <Link to="/podcasts">
@@ -100,20 +96,7 @@ export default function PodcastEpisodeDetail() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>{episode.title} | {podcast.name} - MusicScan Podcast</title>
-        <meta name="description" content={episode.description || `Luister naar ${episode.title} van ${podcast.name}`} />
-        <meta property="og:title" content={`${episode.title} | ${podcast.name}`} />
-        <meta property="og:description" content={episode.description || `Luister naar ${episode.title}`} />
-        <meta property="og:type" content="music.episode" />
-        <meta property="og:url" content={episodeUrl} />
-        {artworkUrl && <meta property="og:image" content={artworkUrl} />}
-        <meta property="og:audio" content={episode.audio_url} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <link rel="canonical" href={episodeUrl} />
-      </Helmet>
-
-      <PodcastEpisodeStructuredData
+<PodcastEpisodeStructuredData
         name={episode.title}
         description={episode.description || ''}
         datePublished={episode.published_at || undefined}

@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { useSEO } from '@/hooks/useSEO';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,11 +62,7 @@ export default function PublicShop() {
   if (!shop) {
     return (
       <>
-        <Helmet>
-          <title>{s.shopNotFoundTitle}</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
-        <div className="min-h-screen bg-gradient-to-br from-background via-card to-accent/5 relative overflow-hidden">
+<div className="min-h-screen bg-gradient-to-br from-background via-card to-accent/5 relative overflow-hidden">
           <div className="container mx-auto p-6 space-y-6 relative z-10">
             <Card className="p-12 text-center bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg">
               <Store className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />

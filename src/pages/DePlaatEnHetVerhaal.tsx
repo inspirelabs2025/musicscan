@@ -1,5 +1,6 @@
-import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
+import { useSEO } from '@/hooks/useSEO';
+import { JsonLd } from '@/components/SEO/JsonLd';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -93,25 +94,8 @@ export default function DePlaatEnHetVerhaal() {
 
   return (
     <>
-      <Helmet>
-        <title>De Plaat en het Verhaal | Podcast over Iconische Albums | MusicScan</title>
-        <meta 
-          name="description" 
-          content="Luister naar De Plaat en het Verhaal - de podcast waarin Rogier Visser en Ingmar Loman je meenemen in de verhalen achter iconische albums. Vinyl, muziekgeschiedenis en meer." 
-        />
-        <meta property="og:title" content="De Plaat en het Verhaal | MusicScan Podcast" />
-        <meta property="og:description" content="De podcast over iconische albums en hun verhalen. Gepresenteerd door Rogier Visser en Ingmar Loman." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.musicscan.app/de-plaat-en-het-verhaal" />
-        {podcast?.artwork_url && <meta property="og:image" content={podcast.artwork_url} />}
-        <link rel="canonical" href="https://www.musicscan.app/de-plaat-en-het-verhaal" />
-        <link rel="alternate" type="application/rss+xml" title="De Plaat en het Verhaal RSS Feed" href={rssUrl} />
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
-      </Helmet>
-
-      <main className="min-h-screen bg-background">
+      <JsonLd data={structuredData} />
+<main className="min-h-screen bg-background">
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-primary/10 via-background to-primary/5 py-16 md:py-24">
           <div className="container mx-auto px-4">

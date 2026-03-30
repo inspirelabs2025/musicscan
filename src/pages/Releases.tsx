@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useSEO } from '@/hooks/useSEO';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,6 @@ import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
 import { useSpotifyNewReleases } from "@/hooks/useSpotifyNewReleases";
 import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
-import { Helmet } from "react-helmet";
 
 export default function Releases() {
   const { filters, updateFilter, resetFilters, activeFilterCount } = useUrlFilters();
@@ -56,12 +56,7 @@ export default function Releases() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>Nieuwe Releases - Spotify New Releases | PlaatjesPraat</title>
-        <meta name="description" content="Ontdek de nieuwste muziek releases en albums op Spotify" />
-      </Helmet>
-
-      <BreadcrumbNavigation className="max-w-7xl mx-auto px-4 pt-4" />
+<BreadcrumbNavigation className="max-w-7xl mx-auto px-4 pt-4" />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center mb-8">

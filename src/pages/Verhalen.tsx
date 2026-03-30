@@ -31,7 +31,7 @@ export default function Verhalen() {
             📚 {tr.verhalen.title}
           </h1>
           <h2 className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Het Verhaal Achter Legendarische Albums & Singles
+            {tr.verhalen.subtitle}
           </h2>
         </div>
 

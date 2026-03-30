@@ -534,7 +534,7 @@ export const VerhaalTab: React.FC = () => {
                     </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Calendar className="w-3 h-3" />
-                      {new Date(story.created_at).toLocaleDateString('nl-NL')}
+                      {new Date(story.created_at).toLocaleDateString()}
                       {story.reading_time && (
                         <>
                           <span>•</span>

@@ -1,101 +1,82 @@
 
-# Audit Resultaat: Verkeerd Project Gekoppeld aan Domein
 
-## De Kern van het Probleem
+# Performance Audit & Speed Optimization Plan
 
-Na een volledige audit is de oorzaak 100% duidelijk vastgesteld:
+## Key Issues Found
 
-**www.musicscan.app en musicscan.lovable.app wijzen naar een ANDER, OUDER Lovable project.**
+### 1. Render-Blocking Scripts in `<head>` (HIGH)
+- **GTM script** (line 4 of `index.html`) is synchronous and render-blocking — it runs before anything paints.
+- **PathSignals** inline script (lines 168-188) runs synchronously in `<head>`, creating `localStorage` calls and defining functions before the page renders.
+- **GA4 config script** (lines 117-124) runs synchronously even though the gtag.js library is deferred.
 
-Dit project (waar we alle wijzigingen maken) heeft als published URL:
-- `https://musicscan.lovable.app` (verwacht)
+### 2. Duplicate SEO/Meta Management (MEDIUM)
+- `react-helmet` is used in 72+ pages, BUT there's also a custom `useSEO` hook that does the same thing via DOM manipulation. Both run simultaneously on every page, causing redundant work. Pick one and remove the other.
 
-Maar in werkelijkheid serveert `musicscan.lovable.app` de oude "Vinyl Scanner" applicatie met het menu "Home / Price Check / Forum". Dat is een compleet andere app — niet de MusicScan die we hier bouwen.
+### 3. Heavy Dependencies in Main Bundle (HIGH)
+- `@ffmpeg/ffmpeg` and `@huggingface/transformers` are in `manualChunks` — even though excluded from `optimizeDeps`, they still create separate chunks that the browser may preload/prefetch. These are massive libraries used only by admin/scanner features.
+- `framer-motion` is used in 33 components but loaded as a vendor chunk even when visiting pages that don't use it. The homepage itself doesn't import it (except one unused `TimeMachineSpotlight`).
 
-Dit huidige project heeft als preview URL:
-- `https://id-preview--0638cdc3-ae41-4fe5-9a88-2b2d34d360f4.lovable.app`
+### 4. SubscriptionProvider on Every Page (MEDIUM)
+- `SubscriptionProvider` wraps the entire app and calls a Supabase Edge Function on every page load, even for anonymous visitors on the homepage. This adds a blocking network request to every initial render.
 
-Alle code-wijzigingen die gedaan zijn (Discogs Messages, Mobile Nav, promo banner, etc.) zijn aanwezig in DEZE codebase, maar komen nooit op de live site terecht omdat het verkeerde project published staat.
+### 5. Cache-Busting on Every Load (LOW-MEDIUM)
+- `main.tsx` lines 11-18: Every page load deletes ALL caches (`caches.keys()` → `caches.delete()`), defeating the purpose of service worker caching. This contradicts registering a service worker on lines 2-9.
 
-## Wat er Fout is Gegaan
+### 6. Continuous CSS Animations (LOW)
+- Hero section has two large `Disc3` icons with `animate-vinyl-spin` (4s infinite rotation) and two `Sparkles` with `animate-pulse`. These cause constant GPU compositing on mobile.
 
-Er zijn hoogstwaarschijnlijk twee Lovable projecten:
+### 7. `react-helmet` Library Choice (LOW)
+- `react-helmet` is unmaintained. It synchronously manages `<head>` on every render. `react-helmet-async` is the maintained fork and is lighter.
 
-```text
-Project A (OUD) — "Vinyl Scanner"
-  Published als: musicscan.lovable.app
-  Domein: www.musicscan.app → wijst naar Project A
+---
 
-Project B (DIT project) — "MusicScan"
-  Preview: id-preview--0638cdc3-...lovable.app
-  Published URL: (losgekoppeld of fout geconfigureerd)
-  Domein: NIET gekoppeld
-```
+## Implementation Plan
 
-Alle wijzigingen zijn in Project B gemaakt, maar de wereld ziet Project A.
+### Step 1: Defer all third-party scripts
+**File: `index.html`**
+- Move GTM to after `</body>` or wrap in `requestIdleCallback` like Meta Pixel already is.
+- Move PathSignals script to end of `<body>` or defer it.
+- Remove inline GA4 config script; merge it into the deferred gtag.js setup.
 
-## De Oplossing: 3 Stappen
+### Step 2: Remove duplicate SEO management
+- Remove `react-helmet` dependency and all `<Helmet>` usage across 72+ files.
+- Keep the custom `useSEO` hook (it's lighter, no extra library, already works).
+- OR: keep `react-helmet` and remove `useSEO`. Pick one path.
+- **Recommendation**: Keep `useSEO` — it's zero-dependency, already covers all meta tags.
 
-### Stap 1 — Koppel het domein los van het oude project
+### Step 3: Lazy-load SubscriptionProvider
+**File: `src/providers.tsx`**
+- Don't wrap the entire app in `SubscriptionProvider`. Instead, only load subscription data when user is authenticated and on relevant pages (dashboard, settings, scan).
+- Make `useSubscription` lazy — skip the edge function call for anonymous users (it already returns a default `free` plan, but still runs the wrapper).
 
-In het OUDE Lovable project (Vinyl Scanner):
-1. Ga naar **Settings → Domains**
-2. Verwijder de koppeling met `www.musicscan.app`
+### Step 4: Fix cache-busting contradiction
+**File: `src/main.tsx`**
+- Remove the `caches.keys()` → `caches.delete()` block (lines 11-18). This destroys all offline caching. If cache-busting is needed for deployments, handle it via service worker versioning, not blanket deletion.
 
-### Stap 2 — Publiceer dit project correct
+### Step 5: Reduce hero GPU cost
+**File: `src/components/home/ScannerHero.tsx`**
+- Add `will-change: transform` to spinning discs for GPU layer promotion.
+- Or: replace continuous CSS animation with a static visual on mobile (use `prefers-reduced-motion` media query and a `md:` breakpoint).
 
-In DIT Lovable project (de nieuwe MusicScan):
-1. Klik op de **Publish** knop rechtsboven in Lovable
-2. Wacht tot de build klaar is
-3. Verifieer dat `musicscan.lovable.app` nu de NIEUWE versie toont
+### Step 6: Tree-shake framer-motion from homepage
+- Verify homepage sections don't import framer-motion (currently clean except `TimeMachineSpotlight` which isn't rendered on homepage). No action needed unless it's re-added.
 
-### Stap 3 — Koppel het domein aan dit project
+### Step 7: Split heavy vendor chunks
+**File: `vite.config.ts`**
+- Remove `@ffmpeg/ffmpeg`, `@ffmpeg/util`, `@huggingface/transformers` from `manualChunks`. They're already in `optimizeDeps.exclude` — let Vite handle them as dynamic imports naturally. Putting them in `manualChunks` forces them into named chunks.
 
-In DIT Lovable project:
-1. Ga naar **Settings → Domains**
-2. Voeg `www.musicscan.app` toe
-3. Volg de DNS-instructies (als de CNAME al klopt, werkt het direct)
+---
 
-## Aanvullende Code Fix: Zorg dat de app altijd de nieuwste versie laadt
+## Expected Impact
 
-Naast de deployment-fix voeg ik ook een **cache-busting mechanisme** toe in de code zodat gebruikers nooit een verouderde versie zien:
+| Change | Estimated Improvement |
+|---|---|
+| Defer GTM/PathSignals | -200-400ms FCP on mobile |
+| Remove react-helmet overhead | -50-100ms per navigation |
+| Lazy SubscriptionProvider | -100-300ms initial load (saves 1 API call) |
+| Fix cache deletion | Better repeat-visit performance |
+| Reduce hero animations | Lower CPU/GPU on mobile |
+| Clean vendor chunks | Smaller initial JS parse |
 
-### 1. `index.html` — Voeg cache-control meta tags toe
-```html
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-```
+**Total estimated improvement**: 400-800ms faster initial load on mobile.
 
-### 2. `public/_headers` — Verstevig de cache headers voor Netlify/Vercel
-```
-/*
-  Cache-Control: no-cache, no-store, must-revalidate
-  Pragma: no-cache
-  Expires: 0
-
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable
-```
-
-### 3. `vercel.json` — Cache headers zijn al correct aanwezig
-De `vercel.json` heeft al de juiste `no-store` headers voor `/index.html` en alle routes behalve `/assets`. Dit is correct.
-
-## Wat ik in de Code Zal Aanpassen
-
-Omdat de deployment-fix buiten mijn bereik valt (dat moet jij doen in de Lovable interface), focus ik op het verstevigen van de code zodat browsers altijd de nieuwste versie laden:
-
-1. **`index.html`** — Cache-busting meta tags toevoegen
-2. **`public/_headers`** — Uitbreiden met alle routes
-3. **`src/hooks/useVersionCheck.ts`** — Lichtgewicht version-check reactiveren die de pagina herlaadt als er een nieuwe build is
-
-## Jouw Actieplan (Dit Kun Jij Alleen Doen)
-
-De belangrijkste stap ligt buiten de code:
-
-1. **Zoek het oude Lovable project op** (de "Vinyl Scanner" app) — dit is waarschijnlijk een ander project in jouw Lovable workspace
-2. **Ontkoppel daar het domein** `www.musicscan.app`
-3. **Klik hier in dit project op "Publish"** (de blauwe knop rechtsboven)
-4. **Koppel hier het domein** `www.musicscan.app` via Settings → Domains
-
-Zodra je dit doet, zal de live site direct de nieuwste versie tonen — inclusief de Discogs Messages pagina, de promo banner, en alle andere wijzigingen.

@@ -310,7 +310,7 @@ export default function PlatformProductDetail() {
         {isPoster ? dp.backToPosters : dp.backToArtShop}
       </Link>
 
-      <div className="grid md:grid-cols-2 gap-8 mb-12">
+      <div className="grid md:grid-cols-2 gap-4 md:gap-8 mb-12">
         {/* Image Gallery */}
         <div className="space-y-4">
           <div className={`bg-muted rounded-lg overflow-hidden ${isTShirt ? 'aspect-[3/4]' : 'aspect-square'}`}>
@@ -360,12 +360,12 @@ export default function PlatformProductDetail() {
         </div>
 
         {/* Product Info */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6 min-w-0">
           <div>
             {product.artist && (
               <p className="text-muted-foreground mb-2">{product.artist}</p>
             )}
-            <h1 className="text-2xl md:text-3xl font-bold mb-4">{product.title}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-4 break-words">{product.title}</h1>
 
             <div className="flex flex-wrap gap-2 mb-4">
               {product.is_new && <Badge>NIEUW</Badge>}
@@ -382,13 +382,13 @@ export default function PlatformProductDetail() {
           </div>
 
           {product.description && (
-            <div className="prose max-w-none overflow-hidden">
-              <p className="text-muted-foreground text-sm md:text-base break-words">{product.description}</p>
+            <div className="max-w-full overflow-hidden">
+              <p className="text-muted-foreground text-sm md:text-base" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{product.description}</p>
             </div>
           )}
 
           {/* Price & Stock */}
-          <Card className="p-6 space-y-4">
+          <Card className="p-4 md:p-6 space-y-4">
             <div className="flex items-baseline gap-3">
               <span className="text-3xl font-bold">
                 {product.currency}{product.price}
@@ -417,10 +417,10 @@ export default function PlatformProductDetail() {
             </div>
 
             {product.stock_quantity > 0 && (
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <Button
                   size="lg"
-                  className="flex-1"
+                  className="flex-1 min-w-0"
                   onClick={handleAddToCart}
                   disabled={inCart || (isTShirt && !canAddToCart) || (isButton && !canAddToCart)}
                 >

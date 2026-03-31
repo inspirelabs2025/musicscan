@@ -3,6 +3,7 @@ import { Providers } from './providers';
 import { Toaster } from './components/ui/sonner';
 import { TooltipProvider } from './components/ui/tooltip';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { StickyHeader } from './components/layout/StickyHeader';
 
 function App() {
   const location = useLocation();
@@ -11,6 +12,7 @@ function App() {
   return (
     <Providers>
       <TooltipProvider>
+        {!isAdminRoute && <StickyHeader />}
         <Outlet />
       </TooltipProvider>
       <Toaster />

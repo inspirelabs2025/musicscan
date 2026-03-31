@@ -248,7 +248,7 @@ export const router = createBrowserRouter([
       { path: 'shop/buttons', element: wrap(ButtonsShop) },
       { path: 'shop/art-prints', element: wrap(ArtShop) },
       { path: 'shop/merchandise', element: wrap(MerchandiseShop) },
-      { path: 'product/:slug', element: <Navigate to="/shop/art-prints" replace /> },
+      { path: 'product/:slug', element: wrap(PlatformProductDetail) },
       // Legacy redirects for old shop URLs
       { path: 'posters', element: <Navigate to="/shop/posters" replace /> },
       { path: 'canvas', element: <Navigate to="/shop/canvas" replace /> },

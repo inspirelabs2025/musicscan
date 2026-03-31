@@ -120,7 +120,7 @@ export default function PlatformProductDetail() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-16 py-8">
         <Skeleton className="h-8 w-32 mb-6" />
         <div className="grid md:grid-cols-2 gap-8">
           <Skeleton className="aspect-square w-full rounded-lg" />

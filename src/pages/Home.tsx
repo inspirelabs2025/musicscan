@@ -63,11 +63,6 @@ const Home = () => {
     <div className="min-h-screen bg-background pt-14">
       <JsonLd data={websiteSchema} />
       <JsonLd data={organizationSchema} />
-      {/* Language Switcher Bar */}
-      <Suspense fallback={null}>
-        <LanguageBar />
-      </Suspense>
-
       {/* Hero */}
       <ScannerHero />
 

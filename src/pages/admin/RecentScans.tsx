@@ -28,6 +28,35 @@ interface ScanAction {
   function_name?: string | null;
   error_message?: string | null;
   duration_ms?: number | null;
+  ip_address?: string | null;
+}
+
+interface UserProfile {
+  user_id: string;
+  first_name: string | null;
+  location: string | null;
+}
+
+function useUserProfiles(userIds: string[]) {
+  return useQuery({
+    queryKey: ["admin-user-profiles", userIds.sort().join(",")],
+    queryFn: async () => {
+      if (userIds.length === 0) return {};
+      const uniqueIds = [...new Set(userIds.filter(id => id && id.length > 0))];
+      if (uniqueIds.length === 0) return {};
+      
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_id, first_name, location")
+        .in("user_id", uniqueIds);
+      
+      const map: Record<string, UserProfile> = {};
+      (data || []).forEach(p => { map[p.user_id] = p; });
+      return map;
+    },
+    enabled: userIds.length > 0,
+    staleTime: 60000,
+  });
 }
 
 function useRecentScanActions(limit: number, sourceFilter: string, searchTerm: string) {

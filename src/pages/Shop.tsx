@@ -101,16 +101,14 @@ const Shop = () => {
   const postersQuery = useCategoryProducts('posters', CATEGORIES.find(c => c.key === 'posters')!.dbFilter);
   const canvasQuery = useCategoryProducts('canvas', CATEGORIES.find(c => c.key === 'canvas')!.dbFilter);
   const metalQuery = useCategoryProducts('metal', CATEGORIES.find(c => c.key === 'metal')!.dbFilter);
-  const clothingQuery = useCategoryProducts('clothing', CATEGORIES.find(c => c.key === 'clothing')!.dbFilter);
   const countsQuery = useCategoryCounts();
 
-  const isLoading = postersQuery.isLoading || canvasQuery.isLoading || metalQuery.isLoading || clothingQuery.isLoading;
+  const isLoading = postersQuery.isLoading || canvasQuery.isLoading || metalQuery.isLoading;
 
   const productsByCategory: Record<string, ShopProduct[]> = {
     posters: postersQuery.data || [],
     canvas: canvasQuery.data || [],
     metal: metalQuery.data || [],
-    clothing: clothingQuery.data || [],
   };
 
   const getFilteredProducts = (products: ShopProduct[]) => {

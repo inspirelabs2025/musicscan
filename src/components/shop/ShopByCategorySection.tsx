@@ -18,7 +18,7 @@ export function ShopByCategorySection() {
     return (
       <div className="flex flex-wrap justify-center gap-2">
         {categories.map((cat) => (
-          <Link key={cat.slug} to={cat.slug === 'art' ? '/shop/art-prints' : cat.slug === 'merchandise' ? '/shop/merchandise' : cat.slug === 'buttons' ? '/shop/buttons' : `/shop?category=${cat.slug}`}>
+           <Link key={cat.slug} to={cat.slug === 'art' ? '/shop/art-prints' : `/shop?category=${cat.slug}`}>
             <Card className="px-4 py-2 hover:shadow-md transition-all hover:scale-105 cursor-pointer group border hover:border-primary">
               <div className="flex items-center gap-2">
                 <span className="text-xl">{cat.emoji}</span>

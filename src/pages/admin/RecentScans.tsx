@@ -102,6 +102,7 @@ function useRecentScanActions(limit: number, sourceFilter: string, searchTerm: s
             function_name: r.function_name,
             error_message: r.error_message,
             duration_ms: r.duration_ms,
+            ip_address: r.ip_address,
           }));
         })());
       }

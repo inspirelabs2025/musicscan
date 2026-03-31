@@ -204,7 +204,7 @@ const DiscogsMessages = () => {
   }
 
   return (
-    <div className="w-full pt-16 py-6" style={{ maxWidth: "100vw", overflowX: "clip" }}>
+    <div className="w-full pt-16 pb-20 py-6" style={{ maxWidth: "100vw", overflowX: "clip" }}>
       <div className="mx-auto w-full" style={{ maxWidth: "1280px", paddingInline: "16px", boxSizing: "border-box" }}>
         {/* Header */}
         <div className="flex items-center gap-2 mb-3 sm:mb-4 min-w-0 overflow-hidden">
@@ -224,7 +224,7 @@ const DiscogsMessages = () => {
         </div>
 
         {/* Content layout */}
-        <div className={isMobile ? "flex flex-col gap-3 min-h-[calc(100dvh-170px)] overflow-hidden" : "flex gap-4 h-[calc(100vh-220px)] overflow-hidden"}>
+        <div className={isMobile ? "flex flex-col gap-3 min-h-[calc(100dvh-250px)] overflow-hidden" : "flex gap-4 h-[calc(100vh-220px)] overflow-hidden"}>
           {/* Orders list */}
           <div
             className={`flex flex-col min-h-0 overflow-hidden ${
@@ -399,7 +399,7 @@ const DiscogsMessages = () => {
                         return (
                           <div key={i} className={`flex w-full min-w-0 ${isMe ? "justify-end" : "justify-start"}`}>
                             <div
-                              className={`w-fit max-w-[96%] sm:max-w-[80%] rounded-xl px-3 py-2 overflow-hidden ${
+                              className={`w-fit max-w-[85%] sm:max-w-[80%] rounded-xl px-3 py-2 overflow-hidden ${
                                 isMe ? "bg-primary text-primary-foreground" : "bg-muted"
                               }`}
                             >

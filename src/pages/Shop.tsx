@@ -129,11 +129,11 @@ const Shop = () => {
     });
   };
 
-  const counts: Record<string, number> = (countsQuery.data as Record<string, number>) || { posters: 0, canvas: 0, metal: 0, clothing: 0 };
+  const counts: Record<string, number> = (countsQuery.data as Record<string, number>) || { posters: 0, canvas: 0, metal: 0 };
   const totalProducts = Object.values(counts).reduce((a, b) => a + b, 0);
 
   const allDisplayProducts = [...(productsByCategory.posters || []), ...(productsByCategory.canvas || []), 
-    ...(productsByCategory.metal || []).slice(0, 10), ...(productsByCategory.clothing || [])];
+    ...(productsByCategory.metal || []).slice(0, 10)];
   
   const structuredData = {
     "@context": "https://schema.org",

@@ -120,7 +120,7 @@ export default function PlatformProductDetail() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-16 py-8">
         <Skeleton className="h-8 w-32 mb-6" />
         <div className="grid md:grid-cols-2 gap-8">
           <Skeleton className="aspect-square w-full rounded-lg" />
@@ -138,7 +138,7 @@ export default function PlatformProductDetail() {
   if (!product) {
     return (
       <>
-<div className="container mx-auto px-4 py-8 text-center">
+<div className="container mx-auto px-4 pt-16 py-8 text-center">
           <h1 className="text-2xl font-bold mb-4">{dp.productNotFound}</h1>
           <Link to="/">
             <Button>{dp.backToHome}</Button>
@@ -261,7 +261,7 @@ export default function PlatformProductDetail() {
 
   return (
     <>
-<div className="container mx-auto px-4 py-8">
+<div className="container mx-auto px-4 pt-16 py-8">
         {/* Breadcrumb Navigation */}
         <BreadcrumbNavigation items={[
         { name: "Home", url: "/" },
@@ -365,7 +365,7 @@ export default function PlatformProductDetail() {
             {product.artist && (
               <p className="text-muted-foreground mb-2">{product.artist}</p>
             )}
-            <h1 className="text-3xl font-bold mb-4">{product.title}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-4">{product.title}</h1>
 
             <div className="flex flex-wrap gap-2 mb-4">
               {product.is_new && <Badge>NIEUW</Badge>}
@@ -382,8 +382,8 @@ export default function PlatformProductDetail() {
           </div>
 
           {product.description && (
-            <div className="prose max-w-none">
-              <p className="text-muted-foreground">{product.description}</p>
+            <div className="prose max-w-none overflow-hidden">
+              <p className="text-muted-foreground text-sm md:text-base break-words">{product.description}</p>
             </div>
           )}
 

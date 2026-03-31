@@ -365,7 +365,7 @@ export default function PlatformProductDetail() {
             {product.artist && (
               <p className="text-muted-foreground mb-2">{product.artist}</p>
             )}
-            <h1 className="text-3xl font-bold mb-4">{product.title}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-4">{product.title}</h1>
 
             <div className="flex flex-wrap gap-2 mb-4">
               {product.is_new && <Badge>NIEUW</Badge>}

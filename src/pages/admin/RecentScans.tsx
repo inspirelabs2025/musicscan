@@ -289,6 +289,8 @@ const RecentScans = () => {
 
   const { data: scans, isLoading } = useRecentScanActions(limit, sourceFilter, searchTerm);
   const { data: stats } = useQuickStats();
+  const userIds = (scans || []).map(s => s.user_id).filter(Boolean);
+  const { data: profiles } = useUserProfiles(userIds);
 
   return (
     <div className="p-6 space-y-6">

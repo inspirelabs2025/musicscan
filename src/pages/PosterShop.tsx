@@ -157,9 +157,9 @@ export default function PosterShop() {
                 </Card>
               ))}
             </div>
-          ) : filteredProducts && filteredProducts.length > 0 ? (
+          ) : displayProducts && displayProducts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
+              {displayProducts.map((product) => (
                 <Link key={product.id} to={`/product/${product.slug}`}>
                   <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-2 hover:border-primary h-full">
                     <div className="relative aspect-square overflow-hidden bg-muted">

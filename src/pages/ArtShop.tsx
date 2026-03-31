@@ -89,7 +89,7 @@ export default function ArtShop() {
 
   return (
     <>
-<div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20">
+<div className="min-h-screen pt-16 bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20">
         <div className="container py-4 md:py-8 space-y-4">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },

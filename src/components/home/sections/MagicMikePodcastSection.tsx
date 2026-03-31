@@ -3,8 +3,10 @@ import { ArrowRight, Headphones, Radio } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function MagicMikePodcastSection() {
-  const { tr } = useLanguage();
+  const { tr, language } = useLanguage();
   const h = tr.homeUI;
+
+  if (language === 'en') return null;
 
   return (
     <section className="py-10 bg-background">

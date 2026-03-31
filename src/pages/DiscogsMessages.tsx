@@ -172,8 +172,8 @@ const DiscogsMessages = () => {
 
   if (!isConnected) {
     return (
-      <div className="w-full pt-16 py-6" style={{ maxWidth: "100vw", overflowX: "clip" }}>
-        <div className="mx-auto w-full" style={{ maxWidth: "1280px", paddingInline: "16px", boxSizing: "border-box" }}>
+      <div className="w-full pt-16 pb-24 py-6 overflow-x-hidden">
+        <div className="px-4 mx-auto max-w-screen-xl">
           <Card className="mx-auto max-w-xl rounded-[1.75rem] overflow-hidden">
             <div className="px-4 py-4 border-b bg-muted/40 flex items-center gap-3 min-w-0">
               <div className="h-11 w-11 rounded-xl bg-background border flex items-center justify-center shrink-0">

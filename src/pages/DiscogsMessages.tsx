@@ -257,7 +257,7 @@ const DiscogsMessages = () => {
                     {orders.map((order) => (
                       <Card
                         key={order.id}
-                        className={`cursor-pointer transition-all hover:shadow-md overflow-hidden rounded-2xl ${
+                        className={`cursor-pointer transition-all hover:shadow-md overflow-hidden rounded-2xl w-full max-w-full ${
                           selectedOrder?.id === order.id ? "ring-2 ring-primary border-primary" : "hover:border-primary/30"
                         }`}
                         onClick={() => handleSelectOrder(order)}

@@ -58,7 +58,7 @@ export function MobileBottomNav() {
         { icon: Music, label: t('nav.singles'), url: "/singles" },
         { icon: Users, label: t('nav.artists'), url: "/artists" },
         { icon: Newspaper, label: t('nav.news'), url: "/nieuws" },
-        { icon: Headphones, label: t('nav.podcasts'), url: "/podcasts" },
+        ...(tr._lang !== 'en' ? [{ icon: Headphones, label: t('nav.podcasts'), url: "/podcasts" }] : []),
         { icon: Calendar, label: t('nav.musicHistory'), url: "/vandaag-in-de-muziekgeschiedenis" },
       ],
     },

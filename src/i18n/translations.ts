@@ -5623,6 +5623,12 @@ const translations = {
       knowThisAnecdote: "Do you know this anecdote?",
       uploadedPhotos: "I uploaded {count} photo(s) of my {type}. Analyze these photos. First confirm the artist and title. Then look for barcode, catalog number and matrix number in the photos. Also look for rights organizations (BIEM, STEMRA, JASRAC, etc.). Give your findings.",
       viewAllOffers: "View all offers",
+      scanCtaTitle: "Own this record? Discover its value!",
+      scanCtaDesc: "Scan your vinyl or CD and instantly discover its market value with Magic Mike",
+      startScanning: "📸 Start Scanning",
+      scanCtaFree: "Free - No account needed",
+      moreStories: "More Stories",
+      allSingles: "All singles",
     },
     collectionChatPage: {
       yourExpert: "Your collection expert",

@@ -391,6 +391,8 @@ function ScanCTABlock() {
 }
 
 function MoreSinglesSection({ currentSlug }: { currentSlug: string }) {
+  const { tr } = useLanguage();
+  const m = tr.miscUI;
   const { data: moreSingles } = useQuery({
     queryKey: ['more-singles', currentSlug],
     queryFn: async () => {
@@ -415,9 +417,9 @@ function MoreSinglesSection({ currentSlug }: { currentSlug: string }) {
   return (
     <div className="mt-12">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-foreground">Meer Verhalen</h2>
+        <h2 className="text-2xl font-bold text-foreground">{m.moreStories}</h2>
         <Link to="/singles" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
-          Alle singles <ArrowLeft className="w-4 h-4 rotate-180" />
+          {m.allSingles} <ArrowLeft className="w-4 h-4 rotate-180" />
         </Link>
       </div>
       <div className="flex gap-4 overflow-x-auto pb-4">

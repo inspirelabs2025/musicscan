@@ -69,7 +69,7 @@ export default function CanvasShop() {
 
   return (
     <>
-<div className="min-h-screen bg-gradient-to-br from-background via-background to-amber-50/20 dark:to-amber-950/10">
+<div className="min-h-screen pt-16 bg-gradient-to-br from-background via-background to-amber-50/20 dark:to-amber-950/10">
         <div className="container py-4 md:py-8 space-y-4">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },

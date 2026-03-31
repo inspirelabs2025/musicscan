@@ -55,11 +55,7 @@ const useCategoryProducts = (categoryKey: string, dbFilter: string) => {
         .not('published_at', 'is', null)
         .or('stock_quantity.gt.0,allow_backorder.eq.true');
       
-      if (categoryKey === 'clothing') {
-        query = query.contains('categories', ['tshirts']);
-      } else {
-        query = query.contains('categories', [dbFilter]);
-      }
+      query = query.contains('categories', [dbFilter]);
       
       const { data, error } = await query
         .limit(50);

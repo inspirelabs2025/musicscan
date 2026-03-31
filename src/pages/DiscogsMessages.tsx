@@ -204,7 +204,7 @@ const DiscogsMessages = () => {
   }
 
   return (
-    <div className="w-full pt-16 pb-24 py-6 overflow-x-hidden">
+    <div className="w-full pt-16 pb-24 py-6 overflow-hidden box-border max-w-[100vw]">
       <div className="px-4 mx-auto max-w-screen-xl">
         {/* Header */}
         <div className="flex items-center gap-2 mb-3 sm:mb-4 min-w-0 overflow-hidden">
@@ -251,13 +251,13 @@ const DiscogsMessages = () => {
                 </CardContent>
               </Card>
             ) : (
-              <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-                <ScrollArea className="flex-1">
-                  <div className="space-y-2">
+              <div className="flex flex-col flex-1 min-h-0 overflow-hidden w-full">
+                <ScrollArea className="flex-1 w-full">
+                  <div className="space-y-2 w-full pr-1">
                     {orders.map((order) => (
                       <Card
                         key={order.id}
-                        className={`cursor-pointer transition-all hover:shadow-md overflow-hidden rounded-2xl ${
+                        className={`cursor-pointer transition-all hover:shadow-md overflow-hidden rounded-2xl w-full max-w-full ${
                           selectedOrder?.id === order.id ? "ring-2 ring-primary border-primary" : "hover:border-primary/30"
                         }`}
                         onClick={() => handleSelectOrder(order)}
@@ -267,7 +267,7 @@ const DiscogsMessages = () => {
                             <span className="font-mono text-xs font-medium truncate min-w-0 flex-1">#{order.id}</span>
                             <Badge
                               variant="outline"
-                              className={`text-[10px] shrink-0 max-w-[50%] truncate ${statusColor(order.status)}`}
+                              className={`text-[10px] shrink-0 max-w-[40%] truncate ${statusColor(order.status)}`}
                             >
                               {order.status}
                             </Badge>

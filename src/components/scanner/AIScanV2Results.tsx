@@ -305,7 +305,7 @@ export function AIScanV2Results({
           <ShareButtons 
             url={result.discogs_url || `/ai-scan-v2`}
             title={`${result.artist || 'Onbekend'} - ${result.title || 'Onbekend'}`}
-            description={`Gescand met MusicScan! ${result.media_type?.toUpperCase() || ''} ${result.condition_grade ? `• Conditie: ${result.condition_grade}` : ''}`}
+            description={`Gescand met MusicScan!`}
           />
           <Button onClick={onReset} variant="outline">Nieuwe Analyse</Button>
         </div>

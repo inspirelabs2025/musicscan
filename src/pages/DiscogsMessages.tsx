@@ -164,7 +164,7 @@ const DiscogsMessages = () => {
 
   if (connLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="flex items-center justify-center min-h-[50vh] pt-16">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -172,7 +172,7 @@ const DiscogsMessages = () => {
 
   if (!isConnected) {
     return (
-      <div className="w-full py-6" style={{ maxWidth: "100vw", overflowX: "clip" }}>
+      <div className="w-full pt-16 py-6" style={{ maxWidth: "100vw", overflowX: "clip" }}>
         <div className="mx-auto w-full" style={{ maxWidth: "1280px", paddingInline: "16px", boxSizing: "border-box" }}>
           <Card className="mx-auto max-w-xl rounded-[1.75rem] overflow-hidden">
             <div className="px-4 py-4 border-b bg-muted/40 flex items-center gap-3 min-w-0">
@@ -204,7 +204,7 @@ const DiscogsMessages = () => {
   }
 
   return (
-    <div className="w-full py-6" style={{ maxWidth: "100vw", overflowX: "clip" }}>
+    <div className="w-full pt-16 py-6" style={{ maxWidth: "100vw", overflowX: "clip" }}>
       <div className="mx-auto w-full" style={{ maxWidth: "1280px", paddingInline: "16px", boxSizing: "border-box" }}>
         {/* Header */}
         <div className="flex items-center gap-2 mb-3 sm:mb-4 min-w-0 overflow-hidden">

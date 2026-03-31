@@ -310,7 +310,7 @@ export default function PlatformProductDetail() {
         {isPoster ? dp.backToPosters : dp.backToArtShop}
       </Link>
 
-      <div className="grid md:grid-cols-2 gap-8 mb-12">
+      <div className="grid md:grid-cols-2 gap-4 md:gap-8 mb-12">
         {/* Image Gallery */}
         <div className="space-y-4">
           <div className={`bg-muted rounded-lg overflow-hidden ${isTShirt ? 'aspect-[3/4]' : 'aspect-square'}`}>

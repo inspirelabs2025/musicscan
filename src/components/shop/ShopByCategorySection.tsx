@@ -32,7 +32,7 @@ export function ShopByCategorySection() {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
       {categories.map((cat) => (
         <Link key={cat.slug} to={cat.slug === 'art' ? '/shop/art-prints' : `/shop?category=${cat.slug}`}>
           <Card className="p-8 hover:shadow-2xl transition-all hover:scale-105 cursor-pointer group border-2 hover:border-primary h-full">

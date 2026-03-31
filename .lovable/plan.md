@@ -2,34 +2,31 @@
 
 ## Probleem
 
-De screenshot toont duidelijk dat de order cards op mobile rechts worden afgekapt: de status badge ("Shipped") en het prijsbedrag ("EUR 23.7...") zijn niet volledig zichtbaar. Dit komt doordat de `ScrollArea` viewport geen expliciete breedte-beperking afdwingt, waardoor de card-inhoud breder wordt dan het scherm.
+Op mobile (390px) zijn er meerdere layout-problemen op de productdetailpagina:
 
-## Oorzaak
+1. **Beschrijvingstekst loopt uit het scherm** — geen goede word-wrap, tekst wordt horizontaal afgesneden
+2. **Share-knop wordt van het scherm geduwd** — de flex-row met "Toevoegen" knop en share-knop past niet op mobile breedte
+3. **Prijs/voorraad card sluit niet netjes aan** — te veel padding, elementen overlappen met bottom nav
 
-De `ScrollArea` component (Radix) rendert een viewport `div` met `w-full`, maar zonder `overflow-x-hidden` op de viewport zelf. In combinatie met de `min-w-0` en `overflow-hidden` op de containers erboven, wordt de breedte niet correct doorgegeven aan de kinderen. De cards nemen meer ruimte in dan beschikbaar.
+## Aanpak
 
-## Oplossing
+### Bestand: `src/pages/PlatformProductDetail.tsx`
 
-Wijzigingen in **`src/pages/DiscogsMessages.tsx`**:
+1. **Beschrijving overflow fixen**: Toevoegen van `overflow-wrap: anywhere` en `word-break: break-word` op de beschrijving paragraaf, plus `max-w-full` op de container.
 
-1. **ScrollArea wrapper**: Voeg `w-full` toe aan de `ScrollArea` en wrap de kaarten in een container met expliciete `pr-1` (ruimte voor scrollbar) en `w-full overflow-hidden`.
+2. **Add-to-cart + Share knop responsive maken**: De `flex gap-3` row met de cart-knop en share-knop aanpassen — op mobile de share-knop onder de cart-knop plaatsen of de cart-knop minder breed (`flex-1 min-w-0`) en de share-knop compact houden.
 
-2. **Cards breedte forceren**: Voeg `w-full max-w-full` toe aan elke `Card` zodat ze nooit breder worden dan hun parent.
+3. **Card padding verkleinen op mobile**: `p-4 md:p-6` in plaats van `p-6` voor de prijs-card.
 
-3. **Outer container**: Verander de outer wrapper van `overflow-x-hidden` (CSS) naar `overflow-hidden` en voeg `max-w-[100vw]` toe om viewport-overflow volledig te voorkomen.
+4. **Grid spacing verkleinen op mobile**: `gap-4 md:gap-8` in de hoofdgrid, en `space-y-4 md:space-y-6` voor de product-info kolom.
 
-4. **Badge max-width verkleinen**: Verklein `max-w-[50%]` naar `max-w-[40%]` op de status badge zodat er altijd ruimte overblijft.
+5. **Titel responsive**: Al gefixt met `text-2xl md:text-3xl`, maar checken of het daadwerkelijk werkt.
 
-### Concrete wijzigingen
+### Technische details
 
-```
-Regel 207: overflow-x-hidden → overflow-hidden, voeg box-border toe
-Regel 254: voeg w-full toe aan flex container  
-Regel 255: ScrollArea → className="flex-1 w-full"
-Regel 256: space-y-2 → space-y-2 w-full pr-1
-Regel 258-261: Card → voeg w-full max-w-full toe
-Regel 270: max-w-[50%] → max-w-[40%]
-```
-
-Dit zorgt ervoor dat elke laag in de DOM-boom een expliciete breedte-beperking heeft, zodat de cards niet kunnen uitlopen.
+- Regel ~313: `gap-8` → `gap-4 md:gap-8`
+- Regel ~363: `space-y-6` → `space-y-4 md:space-y-6`  
+- Regel ~385-387: beschrijving container + tekst: toevoegen `overflow-wrap-anywhere` style, `whitespace-pre-line`
+- Regel ~391: Card `p-6` → `p-4 md:p-6`
+- Regel ~420: Cart/share button row: `flex-wrap` toevoegen zodat share-knop op volgende regel valt als er geen ruimte is
 

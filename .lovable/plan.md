@@ -1,82 +1,35 @@
 
 
-# Performance Audit & Speed Optimization Plan
+## Probleem
 
-## Key Issues Found
+De screenshot toont duidelijk dat de order cards op mobile rechts worden afgekapt: de status badge ("Shipped") en het prijsbedrag ("EUR 23.7...") zijn niet volledig zichtbaar. Dit komt doordat de `ScrollArea` viewport geen expliciete breedte-beperking afdwingt, waardoor de card-inhoud breder wordt dan het scherm.
 
-### 1. Render-Blocking Scripts in `<head>` (HIGH)
-- **GTM script** (line 4 of `index.html`) is synchronous and render-blocking — it runs before anything paints.
-- **PathSignals** inline script (lines 168-188) runs synchronously in `<head>`, creating `localStorage` calls and defining functions before the page renders.
-- **GA4 config script** (lines 117-124) runs synchronously even though the gtag.js library is deferred.
+## Oorzaak
 
-### 2. Duplicate SEO/Meta Management (MEDIUM)
-- `react-helmet` is used in 72+ pages, BUT there's also a custom `useSEO` hook that does the same thing via DOM manipulation. Both run simultaneously on every page, causing redundant work. Pick one and remove the other.
+De `ScrollArea` component (Radix) rendert een viewport `div` met `w-full`, maar zonder `overflow-x-hidden` op de viewport zelf. In combinatie met de `min-w-0` en `overflow-hidden` op de containers erboven, wordt de breedte niet correct doorgegeven aan de kinderen. De cards nemen meer ruimte in dan beschikbaar.
 
-### 3. Heavy Dependencies in Main Bundle (HIGH)
-- `@ffmpeg/ffmpeg` and `@huggingface/transformers` are in `manualChunks` — even though excluded from `optimizeDeps`, they still create separate chunks that the browser may preload/prefetch. These are massive libraries used only by admin/scanner features.
-- `framer-motion` is used in 33 components but loaded as a vendor chunk even when visiting pages that don't use it. The homepage itself doesn't import it (except one unused `TimeMachineSpotlight`).
+## Oplossing
 
-### 4. SubscriptionProvider on Every Page (MEDIUM)
-- `SubscriptionProvider` wraps the entire app and calls a Supabase Edge Function on every page load, even for anonymous visitors on the homepage. This adds a blocking network request to every initial render.
+Wijzigingen in **`src/pages/DiscogsMessages.tsx`**:
 
-### 5. Cache-Busting on Every Load (LOW-MEDIUM)
-- `main.tsx` lines 11-18: Every page load deletes ALL caches (`caches.keys()` → `caches.delete()`), defeating the purpose of service worker caching. This contradicts registering a service worker on lines 2-9.
+1. **ScrollArea wrapper**: Voeg `w-full` toe aan de `ScrollArea` en wrap de kaarten in een container met expliciete `pr-1` (ruimte voor scrollbar) en `w-full overflow-hidden`.
 
-### 6. Continuous CSS Animations (LOW)
-- Hero section has two large `Disc3` icons with `animate-vinyl-spin` (4s infinite rotation) and two `Sparkles` with `animate-pulse`. These cause constant GPU compositing on mobile.
+2. **Cards breedte forceren**: Voeg `w-full max-w-full` toe aan elke `Card` zodat ze nooit breder worden dan hun parent.
 
-### 7. `react-helmet` Library Choice (LOW)
-- `react-helmet` is unmaintained. It synchronously manages `<head>` on every render. `react-helmet-async` is the maintained fork and is lighter.
+3. **Outer container**: Verander de outer wrapper van `overflow-x-hidden` (CSS) naar `overflow-hidden` en voeg `max-w-[100vw]` toe om viewport-overflow volledig te voorkomen.
 
----
+4. **Badge max-width verkleinen**: Verklein `max-w-[50%]` naar `max-w-[40%]` op de status badge zodat er altijd ruimte overblijft.
 
-## Implementation Plan
+### Concrete wijzigingen
 
-### Step 1: Defer all third-party scripts
-**File: `index.html`**
-- Move GTM to after `</body>` or wrap in `requestIdleCallback` like Meta Pixel already is.
-- Move PathSignals script to end of `<body>` or defer it.
-- Remove inline GA4 config script; merge it into the deferred gtag.js setup.
+```
+Regel 207: overflow-x-hidden → overflow-hidden, voeg box-border toe
+Regel 254: voeg w-full toe aan flex container  
+Regel 255: ScrollArea → className="flex-1 w-full"
+Regel 256: space-y-2 → space-y-2 w-full pr-1
+Regel 258-261: Card → voeg w-full max-w-full toe
+Regel 270: max-w-[50%] → max-w-[40%]
+```
 
-### Step 2: Remove duplicate SEO management
-- Remove `react-helmet` dependency and all `<Helmet>` usage across 72+ files.
-- Keep the custom `useSEO` hook (it's lighter, no extra library, already works).
-- OR: keep `react-helmet` and remove `useSEO`. Pick one path.
-- **Recommendation**: Keep `useSEO` — it's zero-dependency, already covers all meta tags.
-
-### Step 3: Lazy-load SubscriptionProvider
-**File: `src/providers.tsx`**
-- Don't wrap the entire app in `SubscriptionProvider`. Instead, only load subscription data when user is authenticated and on relevant pages (dashboard, settings, scan).
-- Make `useSubscription` lazy — skip the edge function call for anonymous users (it already returns a default `free` plan, but still runs the wrapper).
-
-### Step 4: Fix cache-busting contradiction
-**File: `src/main.tsx`**
-- Remove the `caches.keys()` → `caches.delete()` block (lines 11-18). This destroys all offline caching. If cache-busting is needed for deployments, handle it via service worker versioning, not blanket deletion.
-
-### Step 5: Reduce hero GPU cost
-**File: `src/components/home/ScannerHero.tsx`**
-- Add `will-change: transform` to spinning discs for GPU layer promotion.
-- Or: replace continuous CSS animation with a static visual on mobile (use `prefers-reduced-motion` media query and a `md:` breakpoint).
-
-### Step 6: Tree-shake framer-motion from homepage
-- Verify homepage sections don't import framer-motion (currently clean except `TimeMachineSpotlight` which isn't rendered on homepage). No action needed unless it's re-added.
-
-### Step 7: Split heavy vendor chunks
-**File: `vite.config.ts`**
-- Remove `@ffmpeg/ffmpeg`, `@ffmpeg/util`, `@huggingface/transformers` from `manualChunks`. They're already in `optimizeDeps.exclude` — let Vite handle them as dynamic imports naturally. Putting them in `manualChunks` forces them into named chunks.
-
----
-
-## Expected Impact
-
-| Change | Estimated Improvement |
-|---|---|
-| Defer GTM/PathSignals | -200-400ms FCP on mobile |
-| Remove react-helmet overhead | -50-100ms per navigation |
-| Lazy SubscriptionProvider | -100-300ms initial load (saves 1 API call) |
-| Fix cache deletion | Better repeat-visit performance |
-| Reduce hero animations | Lower CPU/GPU on mobile |
-| Clean vendor chunks | Smaller initial JS parse |
-
-**Total estimated improvement**: 400-800ms faster initial load on mobile.
+Dit zorgt ervoor dat elke laag in de DOM-boom een expliciete breedte-beperking heeft, zodat de cards niet kunnen uitlopen.
 

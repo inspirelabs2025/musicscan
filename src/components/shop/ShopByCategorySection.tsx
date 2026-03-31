@@ -18,7 +18,7 @@ export function ShopByCategorySection() {
     return (
       <div className="flex flex-wrap justify-center gap-2">
         {categories.map((cat) => (
-          <Link key={cat.slug} to={cat.slug === 'art' ? '/shop/art-prints' : cat.slug === 'merchandise' ? '/shop/merchandise' : cat.slug === 'buttons' ? '/shop/buttons' : `/shop?category=${cat.slug}`}>
+           <Link key={cat.slug} to={cat.slug === 'art' ? '/shop/art-prints' : `/shop?category=${cat.slug}`}>
             <Card className="px-4 py-2 hover:shadow-md transition-all hover:scale-105 cursor-pointer group border hover:border-primary">
               <div className="flex items-center gap-2">
                 <span className="text-xl">{cat.emoji}</span>
@@ -32,9 +32,9 @@ export function ShopByCategorySection() {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
       {categories.map((cat) => (
-        <Link key={cat.slug} to={cat.slug === 'art' ? '/shop/art-prints' : cat.slug === 'merchandise' ? '/shop/merchandise' : cat.slug === 'buttons' ? '/shop/buttons' : `/shop?category=${cat.slug}`}>
+        <Link key={cat.slug} to={cat.slug === 'art' ? '/shop/art-prints' : `/shop?category=${cat.slug}`}>
           <Card className="p-8 hover:shadow-2xl transition-all hover:scale-105 cursor-pointer group border-2 hover:border-primary h-full">
             <div className="text-center space-y-4">
               <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">
@@ -43,7 +43,7 @@ export function ShopByCategorySection() {
               <h3 className="font-bold text-xl">{cat.name}</h3>
               <p className="text-sm text-muted-foreground">{cat.description}</p>
               <div className="pt-2">
-                <p className="text-lg font-bold text-vinyl-gold">{sp.fromPrice} €{cat.slug === 'art' ? '29,95' : cat.slug === 'merchandise' ? '24,95' : cat.slug === 'buttons' ? '4,50' : cat.slug === 'vinyl' ? '15' : '5'}</p>
+                <p className="text-lg font-bold text-vinyl-gold">{sp.fromPrice} €{cat.slug === 'art' ? '29,95' : cat.slug === 'vinyl' ? '15' : '5'}</p>
               </div>
             </div>
           </Card>

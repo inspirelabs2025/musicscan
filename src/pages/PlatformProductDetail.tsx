@@ -360,12 +360,12 @@ export default function PlatformProductDetail() {
         </div>
 
         {/* Product Info */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6 min-w-0">
           <div>
             {product.artist && (
               <p className="text-muted-foreground mb-2">{product.artist}</p>
             )}
-            <h1 className="text-2xl md:text-3xl font-bold mb-4">{product.title}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-4 break-words">{product.title}</h1>
 
             <div className="flex flex-wrap gap-2 mb-4">
               {product.is_new && <Badge>NIEUW</Badge>}

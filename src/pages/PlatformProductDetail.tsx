@@ -138,7 +138,7 @@ export default function PlatformProductDetail() {
   if (!product) {
     return (
       <>
-<div className="container mx-auto px-4 py-8 text-center">
+<div className="container mx-auto px-4 pt-16 py-8 text-center">
           <h1 className="text-2xl font-bold mb-4">{dp.productNotFound}</h1>
           <Link to="/">
             <Button>{dp.backToHome}</Button>

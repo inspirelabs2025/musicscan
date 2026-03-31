@@ -386,6 +386,7 @@ export const router = createBrowserRouter([
           { path: 'curated-artists', element: wrap(AdminCuratedArtists) },
           { path: 'discogs-lookup', element: wrap(AdminDiscogsLookup) },
           { path: 'discogs-messages', element: wrap(AdminDiscogsMessages) },
+          { path: 'discogs-bulk-email', element: wrap(AdminDiscogsBulkEmail) },
           { path: 'photo-moderation', element: wrap(AdminPhotoModeration) },
           { path: 'auto-comments', element: wrap(AdminAutoComments) },
           { path: 'magic-mike', element: wrap(AdminMagicMikeProfile) },

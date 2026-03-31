@@ -253,7 +253,7 @@ const DiscogsMessages = () => {
             ) : (
               <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
                 <ScrollArea className="flex-1">
-                  <div className="space-y-2 pr-1">
+                  <div className="space-y-2">
                     {orders.map((order) => (
                       <Card
                         key={order.id}

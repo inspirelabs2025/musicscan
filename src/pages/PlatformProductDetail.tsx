@@ -382,8 +382,8 @@ export default function PlatformProductDetail() {
           </div>
 
           {product.description && (
-            <div className="prose max-w-none">
-              <p className="text-muted-foreground">{product.description}</p>
+            <div className="prose max-w-none overflow-hidden">
+              <p className="text-muted-foreground text-sm md:text-base break-words">{product.description}</p>
             </div>
           )}
 

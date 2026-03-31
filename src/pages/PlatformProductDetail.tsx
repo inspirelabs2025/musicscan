@@ -417,10 +417,10 @@ export default function PlatformProductDetail() {
             </div>
 
             {product.stock_quantity > 0 && (
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <Button
                   size="lg"
-                  className="flex-1"
+                  className="flex-1 min-w-0"
                   onClick={handleAddToCart}
                   disabled={inCart || (isTShirt && !canAddToCart) || (isButton && !canAddToCart)}
                 >

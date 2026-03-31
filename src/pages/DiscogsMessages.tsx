@@ -204,8 +204,8 @@ const DiscogsMessages = () => {
   }
 
   return (
-    <div className="w-full pt-16 pb-20 py-6" style={{ maxWidth: "100vw", overflowX: "clip" }}>
-      <div className="mx-auto w-full" style={{ maxWidth: "1280px", paddingInline: "16px", boxSizing: "border-box" }}>
+    <div className="w-full pt-16 pb-24 py-6 overflow-x-hidden">
+      <div className="px-4 mx-auto max-w-screen-xl">
         {/* Header */}
         <div className="flex items-center gap-2 mb-3 sm:mb-4 min-w-0 overflow-hidden">
           <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate(-1)}>

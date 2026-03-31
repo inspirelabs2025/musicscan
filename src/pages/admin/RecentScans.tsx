@@ -443,8 +443,38 @@ const RecentScans = () => {
                       <TableCell className="text-xs">
                         {scan.condition_grade || "—"}
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground max-w-[100px] truncate">
-                        {scan.user_id ? `${scan.user_id.slice(0, 8)}...` : "—"}
+                      <TableCell className="text-xs max-w-[140px]">
+                        {(() => {
+                          const profile = scan.user_id ? profiles?.[scan.user_id] : null;
+                          if (profile?.first_name) {
+                            return (
+                              <span className="flex items-center gap-1 text-foreground font-medium">
+                                <User className="h-3 w-3 text-primary" />
+                                {profile.first_name}
+                              </span>
+                            );
+                          }
+                          if (profile?.location) {
+                            return (
+                              <span className="flex items-center gap-1 text-muted-foreground">
+                                <MapPin className="h-3 w-3" />
+                                {profile.location}
+                              </span>
+                            );
+                          }
+                          if (scan.ip_address) {
+                            return (
+                              <span className="flex items-center gap-1 text-muted-foreground" title={scan.ip_address}>
+                                <Globe className="h-3 w-3" />
+                                {scan.ip_address.length > 15 ? scan.ip_address.slice(0, 15) + "…" : scan.ip_address}
+                              </span>
+                            );
+                          }
+                          if (scan.user_id) {
+                            return <span className="text-muted-foreground truncate" title={scan.user_id}>{scan.user_id.slice(0, 8)}…</span>;
+                          }
+                          return <span className="text-muted-foreground">Gast</span>;
+                        })()}
                       </TableCell>
                       <TableCell>
                         {scan.discogs_url ? (

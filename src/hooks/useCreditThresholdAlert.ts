@@ -5,6 +5,7 @@ import { useCallback, useRef } from 'react';
 
 /**
  * Shows user-facing toast warnings when credits drop below 25%, 10%, or 0%.
+ * Sends email warning at 20% to admin.
  * Also logs admin alerts for visibility in the admin dashboard.
  * Deduplicates per session so each threshold is only shown once.
  */
@@ -12,6 +13,7 @@ export function useCreditThresholdAlert() {
   const { user } = useAuth();
   const { toast } = useToast();
   const shownThresholds = useRef<Set<number>>(new Set());
+  const emailSent = useRef(false);
 
   const checkAndAlert = useCallback(async () => {
     if (!user?.id) return;
@@ -30,10 +32,19 @@ export function useCreditThresholdAlert() {
 
       const percentage = (balance / total_earned) * 100;
 
+      // Send email warning at 20% (once per session, deduped server-side per 24h)
+      if (percentage <= 20 && !emailSent.current) {
+        emailSent.current = true;
+        supabase.functions.invoke('send-credit-warning-email', {
+          body: { user_id: user.id, balance, total_earned, percentage },
+        }).catch(() => { /* fire-and-forget */ });
+      }
+
       // Check thresholds from lowest to highest
       const thresholds = [
         { pct: 0, label: 'Op', variant: 'destructive' as const, emoji: '🚨', msg: 'Je scan credits zijn op! Koop nieuwe credits om verder te scannen.' },
         { pct: 10, label: '10%', variant: 'destructive' as const, emoji: '⚠️', msg: 'Je hebt nog maar 10% van je credits over. Overweeg om bij te kopen.' },
+        { pct: 20, label: '20%', variant: 'default' as const, emoji: '📧', msg: `Je hebt nog ${balance} credits over (20%). We hebben je een melding gestuurd.` },
         { pct: 25, label: '25%', variant: 'default' as const, emoji: '📊', msg: `Je hebt nog ${balance} credits over (25%). Tijd om bij te vullen?` },
       ];
 

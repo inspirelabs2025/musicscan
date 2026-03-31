@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSEO } from '@/hooks/useSEO';
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -71,9 +71,15 @@ export default function ArtShop() {
           return b.view_count - a.view_count;
         case "newest":
         default:
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return 0;
       }
     });
+
+  const [shuffleSeed] = useState(() => Math.random());
+  const displayProducts = useMemo(() => {
+    if (!filteredProducts || sortBy !== 'newest') return filteredProducts;
+    return [...filteredProducts].sort(() => shuffleSeed - 0.5 + (Math.random() - 0.5) * 0.01);
+  }, [filteredProducts, sortBy, shuffleSeed]);
 
   const featuredCount = products?.filter(p => p.is_featured).length || 0;
   const onSaleCount = products?.filter(p => p.is_on_sale).length || 0;
@@ -201,9 +207,9 @@ export default function ArtShop() {
                 </Card>
               ))}
             </div>
-          ) : filteredProducts && filteredProducts.length > 0 ? (
+          ) : displayProducts && displayProducts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
+              {displayProducts.map((product) => (
                 <Link key={product.id} to={`/product/${product.slug}`}>
                   <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-2 hover:border-primary h-full">
                     {/* Image */}

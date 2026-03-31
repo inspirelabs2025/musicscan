@@ -66,7 +66,7 @@ const Dashboard = () => {
 
   if (scansLoading || collectionLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen pt-16 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
@@ -80,7 +80,7 @@ const Dashboard = () => {
         totalSteps={totalSteps} nextStep={nextStep} previousStep={previousStep}
         completeOnboarding={completeOnboarding} skipOnboarding={skipOnboarding}
       />
-      <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background">
+      <div className="min-h-screen pt-16 bg-gradient-to-br from-background via-accent/3 to-background">
         {/* Musical Background Elements */}
         <div className="fixed inset-0 opacity-5 pointer-events-none">
           <div className="absolute top-20 left-10 text-4xl animate-pulse">🎵</div>

@@ -7,8 +7,11 @@ import promoFilmmuziekBg from '@/assets/promo-filmmuziek-bg.jpg';
 import promoFrankrijkBg from '@/assets/promo-frankrijk-bg.jpg';
 
 export function GenresSection() {
-  const { tr } = useLanguage();
+  const { tr, language } = useLanguage();
   const h = tr.homeUI;
+
+  // Genre/country hubs are Dutch-only content
+  if (language === 'en') return null;
 
   const genres = [
     { label: h.dutchMusic, href: '/nederland', emoji: '🇳🇱', image: promoNederlandBg },

@@ -10,6 +10,9 @@ export function ArtistsSection() {
   const { tr, language } = useLanguage();
   const h = tr.homeUI;
 
+  // Artist stories are Dutch-only, hide for English users
+  if (language === 'en') return null;
+
   const { data: artists } = useQuery({
     queryKey: ['homepage-artists'],
     queryFn: async () => {

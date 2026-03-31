@@ -383,7 +383,7 @@ export default function PlatformProductDetail() {
 
           {product.description && (
             <div className="max-w-full overflow-hidden">
-              <p className="text-muted-foreground text-sm md:text-base" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{product.description}</p>
+              <p className="text-foreground text-sm md:text-base" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{product.description}</p>
             </div>
           )}
 

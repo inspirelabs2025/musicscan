@@ -47,9 +47,6 @@ export function MobileBottomNav() {
         { icon: Images, label: t('nav.artPrints'), url: "/shop/art-prints" },
         { icon: Images, label: t('nav.posters'), url: "/shop/posters" },
         { icon: Images, label: t('nav.canvasArt'), url: "/shop/canvas" },
-        { icon: Package, label: t('nav.tshirts'), url: "/shop/tshirts" },
-        { icon: CircleDot, label: t('nav.buttonsBadges'), url: "/shop/buttons" },
-        { icon: Store, label: t('nav.marketplace'), url: "/marketplace" },
       ],
     },
     {

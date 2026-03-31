@@ -48,9 +48,19 @@ export default function PosterShop() {
         case "price-desc": return b.price - a.price;
         case "popular": return b.view_count - a.view_count;
         case "newest":
-        default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        default: return 0; // keep original order, will be shuffled below
       }
     });
+
+  // Shuffle products randomly on default sort
+  const [shuffleSeed] = useState(() => Math.random());
+  const displayProducts = useMemo(() => {
+    if (!filteredProducts || sortBy !== 'newest') return filteredProducts;
+    return [...filteredProducts].sort(() => {
+      const seed = shuffleSeed;
+      return seed - 0.5 + (Math.random() - 0.5) * 0.01;
+    });
+  }, [filteredProducts, sortBy, shuffleSeed]);
 
   const featuredCount = posterProducts?.filter(p => p.is_featured).length || 0;
   const onSaleCount = posterProducts?.filter(p => p.is_on_sale).length || 0;

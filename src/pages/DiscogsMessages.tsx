@@ -204,7 +204,7 @@ const DiscogsMessages = () => {
   }
 
   return (
-    <div className="w-full pt-16 pb-24 py-6 overflow-x-hidden">
+    <div className="w-full pt-16 pb-24 py-6 overflow-hidden box-border max-w-[100vw]">
       <div className="px-4 mx-auto max-w-screen-xl">
         {/* Header */}
         <div className="flex items-center gap-2 mb-3 sm:mb-4 min-w-0 overflow-hidden">

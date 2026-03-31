@@ -267,7 +267,7 @@ const DiscogsMessages = () => {
                             <span className="font-mono text-xs font-medium truncate min-w-0 flex-1">#{order.id}</span>
                             <Badge
                               variant="outline"
-                              className={`text-[10px] shrink-0 max-w-[50%] truncate ${statusColor(order.status)}`}
+                              className={`text-[10px] shrink-0 max-w-[40%] truncate ${statusColor(order.status)}`}
                             >
                               {order.status}
                             </Badge>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSEO } from '@/hooks/useSEO';
 import { JsonLd } from '@/components/SEO/JsonLd';
 import { Link } from "react-router-dom";

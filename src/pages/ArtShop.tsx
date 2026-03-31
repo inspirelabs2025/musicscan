@@ -71,9 +71,15 @@ export default function ArtShop() {
           return b.view_count - a.view_count;
         case "newest":
         default:
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return 0;
       }
     });
+
+  const [shuffleSeed] = useState(() => Math.random());
+  const displayProducts = useMemo(() => {
+    if (!filteredProducts || sortBy !== 'newest') return filteredProducts;
+    return [...filteredProducts].sort(() => shuffleSeed - 0.5 + (Math.random() - 0.5) * 0.01);
+  }, [filteredProducts, sortBy, shuffleSeed]);
 
   const featuredCount = products?.filter(p => p.is_featured).length || 0;
   const onSaleCount = products?.filter(p => p.is_on_sale).length || 0;

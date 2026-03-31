@@ -7,7 +7,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { SeoContentBlock } from '@/components/SEO/SeoContentBlock';
 
 // Lazy load sections
-const LanguageBar = lazy(() => import('@/components/home/LanguageBar').then(m => ({ default: m.LanguageBar })));
 const PopularSinglesSection = lazy(() => import('@/components/home/sections/PopularSinglesSection').then(m => ({ default: m.PopularSinglesSection })));
 const ArtistsSection = lazy(() => import('@/components/home/sections/ArtistsSection').then(m => ({ default: m.ArtistsSection })));
 const StoriesSection = lazy(() => import('@/components/home/sections/StoriesSection').then(m => ({ default: m.StoriesSection })));
@@ -63,11 +62,6 @@ const Home = () => {
     <div className="min-h-screen bg-background pt-14">
       <JsonLd data={websiteSchema} />
       <JsonLd data={organizationSchema} />
-      {/* Language Switcher Bar */}
-      <Suspense fallback={null}>
-        <LanguageBar />
-      </Suspense>
-
       {/* Hero */}
       <ScannerHero />
 

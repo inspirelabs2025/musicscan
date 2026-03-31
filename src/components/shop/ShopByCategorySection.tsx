@@ -43,7 +43,7 @@ export function ShopByCategorySection() {
               <h3 className="font-bold text-xl">{cat.name}</h3>
               <p className="text-sm text-muted-foreground">{cat.description}</p>
               <div className="pt-2">
-                <p className="text-lg font-bold text-vinyl-gold">{sp.fromPrice} €{cat.slug === 'art' ? '29,95' : cat.slug === 'merchandise' ? '24,95' : cat.slug === 'buttons' ? '4,50' : cat.slug === 'vinyl' ? '15' : '5'}</p>
+                <p className="text-lg font-bold text-vinyl-gold">{sp.fromPrice} €{cat.slug === 'art' ? '29,95' : cat.slug === 'vinyl' ? '15' : '5'}</p>
               </div>
             </div>
           </Card>

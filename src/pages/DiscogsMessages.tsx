@@ -224,7 +224,7 @@ const DiscogsMessages = () => {
         </div>
 
         {/* Content layout */}
-        <div className={isMobile ? "flex flex-col gap-3 min-h-[calc(100dvh-170px)] overflow-hidden" : "flex gap-4 h-[calc(100vh-220px)] overflow-hidden"}>
+        <div className={isMobile ? "flex flex-col gap-3 min-h-[calc(100dvh-250px)] overflow-hidden" : "flex gap-4 h-[calc(100vh-220px)] overflow-hidden"}>
           {/* Orders list */}
           <div
             className={`flex flex-col min-h-0 overflow-hidden ${

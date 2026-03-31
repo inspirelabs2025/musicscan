@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 export function MobileBottomNav() {
   const location = useLocation();
   const { user, signOut } = useAuth();
-  const { t, tr } = useLanguage();
+  const { t, tr, language } = useLanguage();
   const currentPath = location.pathname;
   const [menuOpen, setMenuOpen] = useState(false);
   const m = tr.miscUI;
@@ -58,7 +58,7 @@ export function MobileBottomNav() {
         { icon: Music, label: t('nav.singles'), url: "/singles" },
         { icon: Users, label: t('nav.artists'), url: "/artists" },
         { icon: Newspaper, label: t('nav.news'), url: "/nieuws" },
-        { icon: Headphones, label: t('nav.podcasts'), url: "/podcasts" },
+        ...(language === 'nl' ? [{ icon: Headphones, label: t('nav.podcasts'), url: "/podcasts" }] : []),
         { icon: Calendar, label: t('nav.musicHistory'), url: "/vandaag-in-de-muziekgeschiedenis" },
       ],
     },

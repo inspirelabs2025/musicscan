@@ -2806,6 +2806,13 @@ const translations = {
       knowThisAnecdote: "Ken je deze anekdote?",
       uploadedPhotos: "Ik heb {count} foto's geüpload van mijn {type}. Analyseer deze foto's. Bevestig eerst de artiest en titel. Zoek dan naar barcode, catalogusnummer en matrix-nummer op de foto's. Let ook op rechtenorganisaties (BIEM, STEMRA, JASRAC, etc.). Geef je bevindingen.",
       viewAllOffers: "Bekijk alle aanbiedingen",
+      // ScanCTABlock & MoreSinglesSection
+      scanCtaTitle: "Heb je deze plaat? Ontdek de waarde!",
+      scanCtaDesc: "Scan je vinyl of CD en ontdek direct de marktwaarde met Magic Mike",
+      startScanning: "📸 Start Scannen",
+      scanCtaFree: "Gratis - Geen account nodig",
+      moreStories: "Meer Verhalen",
+      allSingles: "Alle singles",
     },
     collectionChatPage: {
       yourExpert: "Jouw collectie-expert",
@@ -5616,6 +5623,12 @@ const translations = {
       knowThisAnecdote: "Do you know this anecdote?",
       uploadedPhotos: "I uploaded {count} photo(s) of my {type}. Analyze these photos. First confirm the artist and title. Then look for barcode, catalog number and matrix number in the photos. Also look for rights organizations (BIEM, STEMRA, JASRAC, etc.). Give your findings.",
       viewAllOffers: "View all offers",
+      scanCtaTitle: "Own this record? Discover its value!",
+      scanCtaDesc: "Scan your vinyl or CD and instantly discover its market value with Magic Mike",
+      startScanning: "📸 Start Scanning",
+      scanCtaFree: "Free - No account needed",
+      moreStories: "More Stories",
+      allSingles: "All singles",
     },
     collectionChatPage: {
       yourExpert: "Your collection expert",

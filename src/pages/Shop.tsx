@@ -227,7 +227,7 @@ const Shop = () => {
 <main className="min-h-screen bg-background">
         <section className="relative overflow-hidden border-b border-border/50 bg-gradient-to-br from-primary/5 via-background to-accent/5">
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
-          <div className="container mx-auto px-4 py-6 md:py-14 relative">
+          <div className="container mx-auto px-4 pt-16 pb-6 md:pt-20 md:pb-14 relative">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto text-center">
               <Badge variant="outline" className="mb-2 border-primary/30 text-xs">
                 <Sparkles className="w-3 h-3 mr-1" />

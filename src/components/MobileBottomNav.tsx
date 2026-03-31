@@ -127,12 +127,12 @@ export function MobileBottomNav() {
                 <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-background z-10">
                   <h2 className="text-lg font-semibold text-foreground">{t('common.menu')}</h2>
                   <Button
-                    variant="default"
+                    variant="ghost"
                     size="icon"
                     onClick={() => setMenuOpen(false)}
-                    className="h-10 w-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
+                    className="h-11 w-11 min-h-[44px] rounded-full bg-background/95 text-foreground border border-border shadow-md hover:bg-background"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-5 w-5 stroke-[2.5]" />
                   </Button>
                 </div>
 

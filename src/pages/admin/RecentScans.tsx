@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ExternalLink, Camera, Brain, Disc, Music, Upload, AlertCircle, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Loader2, ExternalLink, Camera, Brain, Disc, Music, Upload, AlertCircle, CheckCircle2, Clock, XCircle, User, MapPin, Globe } from "lucide-react";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { useState } from "react";
@@ -28,6 +28,35 @@ interface ScanAction {
   function_name?: string | null;
   error_message?: string | null;
   duration_ms?: number | null;
+  ip_address?: string | null;
+}
+
+interface UserProfile {
+  user_id: string;
+  first_name: string | null;
+  location: string | null;
+}
+
+function useUserProfiles(userIds: string[]) {
+  return useQuery({
+    queryKey: ["admin-user-profiles", userIds.sort().join(",")],
+    queryFn: async () => {
+      if (userIds.length === 0) return {};
+      const uniqueIds = [...new Set(userIds.filter(id => id && id.length > 0))];
+      if (uniqueIds.length === 0) return {};
+      
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_id, first_name, location")
+        .in("user_id", uniqueIds);
+      
+      const map: Record<string, UserProfile> = {};
+      (data || []).forEach(p => { map[p.user_id] = p; });
+      return map;
+    },
+    enabled: userIds.length > 0,
+    staleTime: 60000,
+  });
 }
 
 function useRecentScanActions(limit: number, sourceFilter: string, searchTerm: string) {
@@ -73,6 +102,7 @@ function useRecentScanActions(limit: number, sourceFilter: string, searchTerm: s
             function_name: r.function_name,
             error_message: r.error_message,
             duration_ms: r.duration_ms,
+            ip_address: r.ip_address,
           }));
         })());
       }
@@ -259,6 +289,8 @@ const RecentScans = () => {
 
   const { data: scans, isLoading } = useRecentScanActions(limit, sourceFilter, searchTerm);
   const { data: stats } = useQuickStats();
+  const userIds = (scans || []).map(s => s.user_id).filter(Boolean);
+  const { data: profiles } = useUserProfiles(userIds);
 
   return (
     <div className="p-6 space-y-6">
@@ -411,8 +443,38 @@ const RecentScans = () => {
                       <TableCell className="text-xs">
                         {scan.condition_grade || "—"}
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground max-w-[100px] truncate">
-                        {scan.user_id ? `${scan.user_id.slice(0, 8)}...` : "—"}
+                      <TableCell className="text-xs max-w-[140px]">
+                        {(() => {
+                          const profile = scan.user_id ? profiles?.[scan.user_id] : null;
+                          if (profile?.first_name) {
+                            return (
+                              <span className="flex items-center gap-1 text-foreground font-medium">
+                                <User className="h-3 w-3 text-primary" />
+                                {profile.first_name}
+                              </span>
+                            );
+                          }
+                          if (profile?.location) {
+                            return (
+                              <span className="flex items-center gap-1 text-muted-foreground">
+                                <MapPin className="h-3 w-3" />
+                                {profile.location}
+                              </span>
+                            );
+                          }
+                          if (scan.ip_address) {
+                            return (
+                              <span className="flex items-center gap-1 text-muted-foreground" title={scan.ip_address}>
+                                <Globe className="h-3 w-3" />
+                                {scan.ip_address.length > 15 ? scan.ip_address.slice(0, 15) + "…" : scan.ip_address}
+                              </span>
+                            );
+                          }
+                          if (scan.user_id) {
+                            return <span className="text-muted-foreground truncate" title={scan.user_id}>{scan.user_id.slice(0, 8)}…</span>;
+                          }
+                          return <span className="text-muted-foreground">Gast</span>;
+                        })()}
                       </TableCell>
                       <TableCell>
                         {scan.discogs_url ? (

@@ -130,9 +130,9 @@ export function MobileBottomNav() {
                     variant="default"
                     size="icon"
                     onClick={() => setMenuOpen(false)}
-                    className="h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                    className="h-10 w-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-5 w-5" />
                   </Button>
                 </div>
 

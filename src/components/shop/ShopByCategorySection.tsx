@@ -11,7 +11,6 @@ export function ShopByCategorySection() {
   const categories = [
     { name: sp.catVinyl, emoji: "🎧", slug: "vinyl", description: sp.catVinylDesc },
     { name: sp.catCds, emoji: "💿", slug: "cd", description: sp.catCdsDesc },
-    { name: sp.catMerch, emoji: "🎁", slug: "merchandise", description: sp.catMerchDesc },
     { name: sp.catArt, emoji: "🎨", slug: "art", description: sp.catArtDesc },
   ];
 

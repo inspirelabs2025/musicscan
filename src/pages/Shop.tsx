@@ -13,11 +13,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Search, 
   ShoppingBag, 
-  Shirt, 
   Image as ImageIcon,
   ArrowRight,
   Sparkles,
-  CircleDot,
   ChevronRight
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -29,7 +27,7 @@ const useCategoryConfig = () => {
     { key: "posters", label: tr.nav.posters, icon: ImageIcon, description: tr.shop.postersDescription, link: "/posters", gradient: "from-pink-500/20 to-rose-500/20", dbFilter: "POSTER" },
     { key: "canvas", label: tr.nav.canvasArt, icon: ImageIcon, description: tr.shop.canvasDescription, link: "/canvas", gradient: "from-purple-500/20 to-indigo-500/20", dbFilter: "CANVAS" },
     { key: "metal", label: tr.nav.metalPrints, icon: ImageIcon, description: tr.shop.metalDescription, link: "/metal-prints", gradient: "from-slate-500/20 to-zinc-500/20", dbFilter: "metaalprint" },
-    { key: "clothing", label: tr.shop.clothing, icon: Shirt, description: tr.shop.clothingDescription, link: "/merchandise", gradient: "from-green-500/20 to-emerald-500/20", dbFilter: "merchandise" },
+    
   ];
 };
 
@@ -55,11 +53,7 @@ const useCategoryProducts = (categoryKey: string, dbFilter: string) => {
         .not('published_at', 'is', null)
         .or('stock_quantity.gt.0,allow_backorder.eq.true');
       
-      if (categoryKey === 'clothing') {
-        query = query.contains('categories', ['tshirts']);
-      } else {
-        query = query.contains('categories', [dbFilter]);
-      }
+      query = query.contains('categories', [dbFilter]);
       
       const { data, error } = await query
         .limit(50);

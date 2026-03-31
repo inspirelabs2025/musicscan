@@ -137,7 +137,7 @@ export default function MyCollection() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="h-8 bg-muted animate-pulse rounded-lg mx-auto w-48 mb-8" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -153,7 +153,7 @@ export default function MyCollection() {
 
   return (
     <ErrorBoundary fallback={<CollectionErrorFallback />}>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pt-16">
         <div className="container mx-auto px-4 py-8">
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 export function MobileBottomNav() {
   const location = useLocation();
   const { user, signOut } = useAuth();
-  const { t, tr } = useLanguage();
+  const { t, tr, language } = useLanguage();
   const currentPath = location.pathname;
   const [menuOpen, setMenuOpen] = useState(false);
   const m = tr.miscUI;

@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode, useMemo } from 'react';
-import { CheckCircle, Info, Camera, Eye, Euro, TrendingUp, TrendingDown, Loader2, RefreshCw, ShoppingCart, AlertCircle } from 'lucide-react';
+import { CheckCircle, Info, Camera, Eye, Euro, TrendingUp, TrendingDown, Loader2, RefreshCw, ShoppingCart, AlertCircle, Share2 } from 'lucide-react';
+import { ShareButtons } from '@/components/ShareButtons';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

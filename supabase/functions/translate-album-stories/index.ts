@@ -16,43 +16,52 @@ Deno.serve(async (req) => {
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch 20 random NL album stories (single_name IS NULL = album stories)
+    // Get existing EN slugs to exclude
+    const { data: existingEn } = await supabase
+      .from("music_stories")
+      .select("slug")
+      .eq("content_language", "en");
+
+    const enSlugs = new Set((existingEn || []).map(s => s.slug));
+
+    // Fetch NL album/music stories
     const { data: nlStories, error: fetchError } = await supabase
       .from("music_stories")
       .select("*")
       .eq("is_published", true)
       .eq("content_language", "nl")
-      .is("single_name", null)
       .not("story_content", "is", null)
-      .limit(20);
+      .limit(30);
 
     if (fetchError) throw fetchError;
     if (!nlStories || nlStories.length === 0) {
-      return new Response(JSON.stringify({ error: "No NL album stories found to translate" }), {
+      return new Response(JSON.stringify({ error: "No NL stories found" }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Shuffle and pick 10
-    const shuffled = nlStories.sort(() => Math.random() - 0.5).slice(0, 10);
+    // Filter out already translated, shuffle and pick 10
+    const untranslated = nlStories.filter(s => {
+      const enSlug = s.slug.endsWith("-en") ? s.slug : `${s.slug}-en`;
+      return !enSlugs.has(enSlug);
+    });
+
+    if (untranslated.length === 0) {
+      return new Response(JSON.stringify({ error: "All fetched stories already have EN versions" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const shuffled = untranslated.sort(() => Math.random() - 0.5).slice(0, 10);
     const results: any[] = [];
 
     for (const story of shuffled) {
       try {
         const enSlug = story.slug.endsWith("-en") ? story.slug : `${story.slug}-en`;
-        const { data: existing } = await supabase
-          .from("music_stories")
-          .select("id")
-          .eq("slug", enSlug)
-          .maybeSingle();
 
-        if (existing) {
-          results.push({ slug: story.slug, status: "skipped", reason: "EN version exists" });
-          continue;
-        }
-
-        const prompt = `Translate the following Dutch music album story to English. Keep the same tone, style and markdown formatting. Do NOT add any commentary, just provide the translation.
+        const prompt = `Translate the following Dutch music story to English. Keep the same tone, style and markdown formatting. Do NOT add any commentary, just provide the translation.
 
 Title: ${story.title}
 Story content:
@@ -69,7 +78,7 @@ ${story.story_content?.substring(0, 6000)}`;
             messages: [
               {
                 role: "system",
-                content: "You are a professional music journalist translator. Translate Dutch music album stories to English while preserving markdown formatting, musical terminology, and artist/album names. Return ONLY the translated content in this exact JSON format: {\"title\": \"...\", \"story_content\": \"...\", \"meta_title\": \"...\", \"meta_description\": \"...\", \"social_post\": \"...\"}",
+                content: "You are a professional music journalist translator. Translate Dutch music stories to English while preserving markdown formatting, musical terminology, and artist/album names. Return ONLY the translated content in this exact JSON format: {\"title\": \"...\", \"story_content\": \"...\", \"meta_title\": \"...\", \"meta_description\": \"...\", \"social_post\": \"...\"}",
               },
               { role: "user", content: prompt },
             ],
@@ -101,7 +110,7 @@ ${story.story_content?.substring(0, 6000)}`;
           p_slug: enSlug,
           p_content_language: 'en',
           p_artist: story.artist,
-          p_single_name: null,
+          p_single_name: story.single_name,
           p_year: story.year,
           p_label: story.label,
           p_catalog: story.catalog,

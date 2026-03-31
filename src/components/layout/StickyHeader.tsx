@@ -11,14 +11,15 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 const useNavLinks = () => {
   const { language } = useLanguage();
-  return [
+  const links = [
     { label: 'Scan', href: '/ai-scan-v2' },
     { label: language === 'nl' ? 'Verhalen' : 'Stories', href: '/verhalen' },
     { label: 'Shop', href: '/shop' },
     { label: 'Quiz', href: '/quizzen' },
-    { label: 'Podcasts', href: '/podcasts' },
+    ...(language === 'nl' ? [{ label: 'Podcasts', href: '/podcasts' }] : []),
     { label: 'Magic Mike', href: '/echo' },
   ];
+  return links;
 };
 
 const useMenuLabels = () => {

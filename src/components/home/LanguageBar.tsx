@@ -11,7 +11,7 @@ export function LanguageBar() {
   const { language, setLanguage } = useLanguage();
 
   return (
-    <section className="bg-muted/50 border-b border-border">
+    <section className="bg-muted/50 border-b border-border md:hidden">
       <div className="container mx-auto px-4 py-1.5 flex items-center justify-center gap-2">
         <Globe className="w-3.5 h-3.5 text-muted-foreground" />
         <div className="flex items-center gap-2">

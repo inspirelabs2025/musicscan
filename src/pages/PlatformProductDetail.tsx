@@ -388,7 +388,7 @@ export default function PlatformProductDetail() {
           )}
 
           {/* Price & Stock */}
-          <Card className="p-6 space-y-4">
+          <Card className="p-4 md:p-6 space-y-4">
             <div className="flex items-baseline gap-3">
               <span className="text-3xl font-bold">
                 {product.currency}{product.price}

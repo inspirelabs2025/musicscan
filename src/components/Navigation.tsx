@@ -45,11 +45,8 @@ export function Navigation() {
     { title: t('nav.metalPrints'), url: "/metaalprints", icon: Images },
     { title: t('nav.posters'), url: "/shop/posters", icon: Images },
     { title: t('nav.canvasArt'), url: "/shop/canvas", icon: Images },
-    { title: t('nav.tshirts'), url: "/shop/tshirts", icon: Package },
     { title: t('nav.socks'), url: "/shop/sokken", icon: Package },
-    { title: t('nav.buttonsBadges'), url: "/shop/buttons", icon: CircleDot },
     { title: t('nav.allShops'), url: "/shops", icon: Store },
-    { title: t('nav.marketplace'), url: "/marketplace", icon: ShoppingCart },
     { title: t('nav.catalog'), url: "/catalog", icon: Library },
     { title: t('nav.myShop'), url: "/my-shop", icon: Store, requiresAuth: true }
   ];

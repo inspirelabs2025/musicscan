@@ -13,11 +13,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Search, 
   ShoppingBag, 
-  Shirt as _Shirt, 
   Image as ImageIcon,
   ArrowRight,
   Sparkles,
-  CircleDot,
   ChevronRight
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";

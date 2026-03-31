@@ -63,23 +63,24 @@ export default function ArtShop() {
     })
     .sort((a, b) => {
       switch (sortBy) {
-        case "price-asc":
-          return a.price - b.price;
-        case "price-desc":
-          return b.price - a.price;
-        case "popular":
-          return b.view_count - a.view_count;
-        case "newest":
-        default:
-          return 0;
+        case "price-asc": return a.price - b.price;
+        case "price-desc": return b.price - a.price;
+        case "popular": return b.view_count - a.view_count;
+        default: return 0;
       }
     });
 
-  const [shuffleSeed] = useState(() => Math.random());
+  // Stable seeded shuffle for "newest" (default) sort
+  const [shuffleOrder] = useState<Record<string, number>>({});
   const displayProducts = useMemo(() => {
-    if (!filteredProducts || sortBy !== 'newest') return filteredProducts;
-    return [...filteredProducts].sort(() => shuffleSeed - 0.5 + (Math.random() - 0.5) * 0.01);
-  }, [filteredProducts, sortBy, shuffleSeed]);
+    if (!filteredProducts) return filteredProducts;
+    if (sortBy !== 'newest') return filteredProducts;
+    // Assign a stable random value per product id
+    filteredProducts.forEach(p => {
+      if (!(p.id in shuffleOrder)) shuffleOrder[p.id] = Math.random();
+    });
+    return [...filteredProducts].sort((a, b) => shuffleOrder[a.id] - shuffleOrder[b.id]);
+  }, [filteredProducts, sortBy, shuffleOrder]);
 
   const featuredCount = products?.filter(p => p.is_featured).length || 0;
   const onSaleCount = products?.filter(p => p.is_on_sale).length || 0;

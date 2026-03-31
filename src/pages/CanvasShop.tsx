@@ -47,19 +47,19 @@ export default function CanvasShop() {
         case "price-asc": return a.price - b.price;
         case "price-desc": return b.price - a.price;
         case "popular": return b.view_count - a.view_count;
-        case "newest":
         default: return 0;
       }
     });
 
-  const [shuffleSeed] = useState(() => Math.random());
+  const [shuffleOrder] = useState<Record<string, number>>({});
   const displayProducts = useMemo(() => {
-    if (!filteredProducts || sortBy !== 'newest') return filteredProducts;
-    return [...filteredProducts].sort(() => {
-      const seed = shuffleSeed;
-      return seed - 0.5 + (Math.random() - 0.5) * 0.01;
+    if (!filteredProducts) return filteredProducts;
+    if (sortBy !== 'newest') return filteredProducts;
+    filteredProducts.forEach(p => {
+      if (!(p.id in shuffleOrder)) shuffleOrder[p.id] = Math.random();
     });
-  }, [filteredProducts, sortBy, shuffleSeed]);
+    return [...filteredProducts].sort((a, b) => shuffleOrder[a.id] - shuffleOrder[b.id]);
+  }, [filteredProducts, sortBy, shuffleOrder]);
 
   const featuredCount = canvasProducts?.filter(p => p.is_featured).length || 0;
   const onSaleCount = canvasProducts?.filter(p => p.is_on_sale).length || 0;

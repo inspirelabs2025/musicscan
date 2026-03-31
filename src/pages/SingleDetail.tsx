@@ -367,22 +367,24 @@ export default function SingleDetail() {
 }
 
 function ScanCTABlock() {
+  const { tr } = useLanguage();
+  const m = tr.miscUI;
   return (
     <div className="mt-12 rounded-2xl overflow-hidden">
       <div className="bg-gradient-to-r from-[hsl(240_20%_12%)] via-[hsl(260_25%_18%)] to-[hsl(240_20%_12%)] p-8 md:p-12 text-center">
         <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
-          Heb je deze plaat? Ontdek de waarde!
+          {m.scanCtaTitle}
         </h2>
         <p className="text-white/70 mb-6 max-w-lg mx-auto">
-          Scan je vinyl of CD en ontdek direct de marktwaarde met Magic Mike
+          {m.scanCtaDesc}
         </p>
         <Link
           to="/ai-scan-v2"
           className="inline-flex items-center gap-2 bg-[hsl(45_100%_51%)] hover:bg-[hsl(45_100%_45%)] text-[hsl(240_20%_12%)] font-bold px-8 py-3 rounded-xl text-lg transition-colors"
         >
-          📸 Start Scannen
+          {m.startScanning}
         </Link>
-        <p className="text-white/50 text-sm mt-4">Gratis - Geen account nodig</p>
+        <p className="text-white/50 text-sm mt-4">{m.scanCtaFree}</p>
       </div>
     </div>
   );

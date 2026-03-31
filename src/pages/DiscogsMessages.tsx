@@ -399,7 +399,7 @@ const DiscogsMessages = () => {
                         return (
                           <div key={i} className={`flex w-full min-w-0 ${isMe ? "justify-end" : "justify-start"}`}>
                             <div
-                              className={`w-fit max-w-[96%] sm:max-w-[80%] rounded-xl px-3 py-2 overflow-hidden ${
+                              className={`w-fit max-w-[85%] sm:max-w-[80%] rounded-xl px-3 py-2 overflow-hidden ${
                                 isMe ? "bg-primary text-primary-foreground" : "bg-muted"
                               }`}
                             >

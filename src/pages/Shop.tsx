@@ -101,16 +101,14 @@ const Shop = () => {
   const postersQuery = useCategoryProducts('posters', CATEGORIES.find(c => c.key === 'posters')!.dbFilter);
   const canvasQuery = useCategoryProducts('canvas', CATEGORIES.find(c => c.key === 'canvas')!.dbFilter);
   const metalQuery = useCategoryProducts('metal', CATEGORIES.find(c => c.key === 'metal')!.dbFilter);
-  const clothingQuery = useCategoryProducts('clothing', CATEGORIES.find(c => c.key === 'clothing')!.dbFilter);
   const countsQuery = useCategoryCounts();
 
-  const isLoading = postersQuery.isLoading || canvasQuery.isLoading || metalQuery.isLoading || clothingQuery.isLoading;
+  const isLoading = postersQuery.isLoading || canvasQuery.isLoading || metalQuery.isLoading;
 
   const productsByCategory: Record<string, ShopProduct[]> = {
     posters: postersQuery.data || [],
     canvas: canvasQuery.data || [],
     metal: metalQuery.data || [],
-    clothing: clothingQuery.data || [],
   };
 
   const getFilteredProducts = (products: ShopProduct[]) => {
@@ -131,11 +129,11 @@ const Shop = () => {
     });
   };
 
-  const counts: Record<string, number> = (countsQuery.data as Record<string, number>) || { posters: 0, canvas: 0, metal: 0, clothing: 0 };
+  const counts: Record<string, number> = (countsQuery.data as Record<string, number>) || { posters: 0, canvas: 0, metal: 0 };
   const totalProducts = Object.values(counts).reduce((a, b) => a + b, 0);
 
   const allDisplayProducts = [...(productsByCategory.posters || []), ...(productsByCategory.canvas || []), 
-    ...(productsByCategory.metal || []).slice(0, 10), ...(productsByCategory.clothing || [])];
+    ...(productsByCategory.metal || []).slice(0, 10)];
   
   const structuredData = {
     "@context": "https://schema.org",

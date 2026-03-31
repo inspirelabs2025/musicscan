@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Search, 
   ShoppingBag, 
-  Shirt, 
+  Shirt as _Shirt, 
   Image as ImageIcon,
   ArrowRight,
   Sparkles,

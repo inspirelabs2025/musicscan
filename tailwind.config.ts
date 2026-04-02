@@ -66,7 +66,7 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				vinyl: {
+				vinyly: {
 					gold: 'hsl(var(--vinyl-gold))',
 					silver: 'hsl(var(--vinyl-silver))',
 					black: 'hsl(var(--vinyl-black))',
@@ -173,7 +173,7 @@ export default {
 							fontWeight: '600',
 							color: 'inherit',
 						},
-						a: {
+					a: {
 							color: 'hsl(var(--primary))',
 							textDecoration: 'none',
 							'&:hover': {
@@ -182,7 +182,7 @@ export default {
 						},
 					},
 				},
-			},
+			}
 		}
 	},
 	plugins: [],

@@ -1,4 +1,45 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, Component, type ReactNode, type ErrorInfo } from 'react';
+
+// Retry wrapper for lazy imports — handles stale chunks after deploy
+function lazyWithRetry(importFn: () => Promise<any>) {
+  return lazy(() =>
+    importFn().catch((error: any) => {
+      // Only retry once per session per module
+      const key = 'chunk_retry_' + importFn.toString().slice(0, 80);
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        window.location.reload();
+        return new Promise(() => {}); // never resolves, page reloads
+      }
+      throw error;
+    })
+  );
+}
+
+// Route-level error boundary for chunk load failures
+class RouteErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('Route error:', error, info);
+    if (error.message?.includes('dynamically imported module') || error.message?.includes('Failed to fetch')) {
+      window.location.reload();
+    }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 p-8">
+          <p className="text-lg text-muted-foreground">Er ging iets mis bij het laden.</p>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-primary text-primary-foreground rounded-md">
+            Pagina herladen
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 import { createBrowserRouter, Navigate, Outlet, useParams } from 'react-router-dom';
 
@@ -18,187 +59,189 @@ const AdminLayoutWrapper = () => (
 import App from './App';
 import { PageLoader } from './components/shared/page-loader';
 
-// Lazy-load pages
-const Home = lazy(() => import('./pages/Home'));
-const Auth = lazy(() => import('./pages/Auth'));
-const Welkom = lazy(() => import('./pages/Welkom'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const NotFound = lazy(() => import('./pages/NotFound'));
-const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
-const Shop = lazy(() => import('./pages/Shop'));
-const Artists = lazy(() => import('./pages/Artists'));
-const ArtistDetail = lazy(() => import('./pages/ArtistDetail'));
-const Singles = lazy(() => import('./pages/Singles'));
-const SingleDetail = lazy(() => import('./pages/SingleDetail'));
-const MuziekVerhaal = lazy(() => import('./pages/MuziekVerhaal'));
-const AnecdotesOverview = lazy(() => import('./pages/AnecdotesOverview'));
-const AnecdoteDetail = lazy(() => import('./pages/AnecdoteDetail'));
-const Nieuws = lazy(() => import('./pages/Nieuws'));
-const NewsPost = lazy(() => import('./pages/NewsPost').then(m => ({ default: m.NewsPost })));
-const MusicHistory = lazy(() => import('./pages/MusicHistory'));
-const Quiz = lazy(() => import('./pages/Quiz'));
-const QuizHub = lazy(() => import('./pages/QuizHub'));
-const QuizResult = lazy(() => import('./pages/QuizResult'));
-const CategoryQuiz = lazy(() => import('./pages/CategoryQuiz'));
-const MyQuizzes = lazy(() => import('./pages/MyQuizzes'));
-const CollectionOverview = lazy(() => import('./pages/CollectionOverview'));
-const MyCollection = lazy(() => import('./pages/MyCollection'));
-const Profile = lazy(() => import('./pages/Profile'));
-const Scan = lazy(() => import('./pages/Scan'));
-const AIScanV2 = lazy(() => import('./pages/AIScanV2'));
-const AIScanV2Overview = lazy(() => import('./pages/AIScanV2Overview'));
-const PosterShop = lazy(() => import('./pages/PosterShop'));
-const CanvasShop = lazy(() => import('./pages/CanvasShop'));
-const TshirtsShop = lazy(() => import('./pages/TshirtsShop'));
-const SocksShop = lazy(() => import('./pages/SocksShop'));
-const ButtonsShop = lazy(() => import('./pages/ButtonsShop'));
-const ArtShop = lazy(() => import('./pages/ArtShop'));
-const MerchandiseShop = lazy(() => import('./pages/MerchandiseShop'));
-const PlatformProductDetail = lazy(() => import('./pages/PlatformProductDetail'));
-const NederlandseMuziek = lazy(() => import('./pages/NederlandseMuziek'));
-const FranseMuziek = lazy(() => import('./pages/FranseMuziek'));
-const DanceHouseMuziek = lazy(() => import('./pages/DanceHouseMuziek'));
-const NewReleaseDetail = lazy(() => import('./pages/NewReleaseDetail'));
-const Community = lazy(() => import('./pages/Community'));
-const Chat = lazy(() => import('./pages/chat'));
-const Privacy = lazy(() => import('./pages/Privacy'));
-const Voorwaarden = lazy(() => import('./pages/Voorwaarden'));
-const ReturnPolicy = lazy(() => import('./pages/ReturnPolicy'));
-const About = lazy(() => import('./pages/About'));
-const Pricing = lazy(() => import('./pages/Pricing'));
-const Verhalen = lazy(() => import('./pages/Verhalen'));
-const Releases = lazy(() => import('./pages/Releases'));
-const ReleaseDetail = lazy(() => import('./pages/ReleaseDetail'));
-const AlbumDetail = lazy(() => import('./pages/AlbumDetail'));
-const SetPassword = lazy(() => import('./pages/SetPassword'));
-const OrderSuccess = lazy(() => import('./pages/OrderSuccess').then(m => ({ default: m.OrderSuccess })));
-const TrackOrder = lazy(() => import('./pages/TrackOrder').then(m => ({ default: m.TrackOrder })));
-const PublicCollection = lazy(() => import('./pages/PublicCollection'));
-const PublicCatalog = lazy(() => import('./pages/PublicCatalog'));
-const PublicShop = lazy(() => import('./pages/PublicShop'));
-const PublicShopsOverview = lazy(() => import('./pages/PublicShopsOverview'));
-const Marketplace = lazy(() => import('./pages/Marketplace'));
-const MarketplaceOverview = lazy(() => import('./pages/MarketplaceOverview'));
-const MyShop = lazy(() => import('./pages/MyShop'));
-const Forum = lazy(() => import('./pages/Forum'));
-const ForumTopic = lazy(() => import('./pages/ForumTopic'));
-const Echo = lazy(() => import('./pages/Echo'));
-const Podcasts = lazy(() => import('./pages/Podcasts'));
-const PodcastDetail = lazy(() => import('./pages/PodcastDetail'));
-const CollectionChat = lazy(() => import('./pages/CollectionChat'));
-const Prestaties = lazy(() => import('./pages/Prestaties'));
-const Social = lazy(() => import('./pages/Social'));
-const FanWall = lazy(() => import('./pages/FanWall'));
-const ArtistFanWall = lazy(() => import('./pages/ArtistFanWall'));
-const ArtistFanWallOverview = lazy(() => import('./pages/ArtistFanWallOverview'));
-const ArtistSpotlight = lazy(() => import('./pages/ArtistSpotlight'));
-const ArtistSpotlights = lazy(() => import('./pages/ArtistSpotlights'));
-const AIFeaturesPage = lazy(() => import('./pages/AIFeaturesPage').then(m => ({ default: m.AIFeaturesPage })));
-const Filmmuziek = lazy(() => import('./pages/Filmmuziek'));
-const StudioStories = lazy(() => import('./pages/StudioStories'));
-const StudioStoryDetail = lazy(() => import('./pages/StudioStoryDetail'));
-const TimeMachine = lazy(() => import('./pages/TimeMachine'));
-const TimeMachineStory = lazy(() => import('./pages/TimeMachineStory'));
-const MonthOverview = lazy(() => import('./pages/MonthOverview'));
-const YearOverview = lazy(() => import('./pages/YearOverview'));
-const UploadPhoto = lazy(() => import('./pages/UploadPhoto'));
-const MyPhotos = lazy(() => import('./pages/MyPhotos'));
-const PhotoDetail = lazy(() => import('./pages/PhotoDetail'));
-const LikedPhotos = lazy(() => import('./pages/LikedPhotos'));
-const Reviews = lazy(() => import('./pages/Reviews'));
-const ReviewDetail = lazy(() => import('./pages/ReviewDetail'));
-const Top2000Analyse = lazy(() => import('./pages/Top2000Analyse'));
-const YouTubeDiscoveries = lazy(() => import('./pages/YouTubeDiscoveries'));
-const Christmas = lazy(() => import('./pages/Christmas'));
-const MijnDiscogs = lazy(() => import('./pages/MijnDiscogs'));
-const DiscogsMessages = lazy(() => import('./pages/DiscogsMessages'));
-const SpotifyProfile = lazy(() => import('./pages/SpotifyProfile'));
-const SpotifyCallback = lazy(() => import('./pages/SpotifyCallback'));
-const DePlaatEnHetVerhaal = lazy(() => import('./pages/DePlaatEnHetVerhaal'));
-const PodcastVerhalen = lazy(() => import('./pages/PodcastVerhalen'));
-const PlaatVerhaal = lazy(() => import('./pages/PlaatVerhaal').then(m => ({ default: m.PlaatVerhaal })));
-const QuickPriceCheck = lazy(() => import('./pages/QuickPriceCheck'));
-const ShopOrProductRouter = lazy(() => import('./pages/ShopOrProductRouter'));
-const UnifiedScanner = lazy(() => import('./pages/UnifiedScanner'));
-const UnifiedScanOverview = lazy(() => import('./pages/UnifiedScanOverview'));
-const NLMuziekDecennium = lazy(() => import('./pages/NLMuziekDecennium'));
-const NLMuziekFeitDetail = lazy(() => import('./pages/NLMuziekFeitDetail'));
-const DanceHouseFeitDetail = lazy(() => import('./pages/DanceHouseFeitDetail'));
-const FilmmuziekFeitDetail = lazy(() => import('./pages/FilmmuziekFeitDetail'));
-const MusicNews = lazy(() => import('./pages/MusicNews'));
+// Lazy-load pages (with retry for chunk load failures after deploy)
+const Home = lazyWithRetry(() => import('./pages/Home'));
+const Auth = lazyWithRetry(() => import('./pages/Auth'));
+const Welkom = lazyWithRetry(() => import('./pages/Welkom'));
+const Dashboard = lazyWithRetry(() => import('./pages/Dashboard'));
+const NotFound = lazyWithRetry(() => import('./pages/NotFound'));
+const Settings = lazyWithRetry(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
+const Shop = lazyWithRetry(() => import('./pages/Shop'));
+const Artists = lazyWithRetry(() => import('./pages/Artists'));
+const ArtistDetail = lazyWithRetry(() => import('./pages/ArtistDetail'));
+const Singles = lazyWithRetry(() => import('./pages/Singles'));
+const SingleDetail = lazyWithRetry(() => import('./pages/SingleDetail'));
+const MuziekVerhaal = lazyWithRetry(() => import('./pages/MuziekVerhaal'));
+const AnecdotesOverview = lazyWithRetry(() => import('./pages/AnecdotesOverview'));
+const AnecdoteDetail = lazyWithRetry(() => import('./pages/AnecdoteDetail'));
+const Nieuws = lazyWithRetry(() => import('./pages/Nieuws'));
+const NewsPost = lazyWithRetry(() => import('./pages/NewsPost').then(m => ({ default: m.NewsPost })));
+const MusicHistory = lazyWithRetry(() => import('./pages/MusicHistory'));
+const Quiz = lazyWithRetry(() => import('./pages/Quiz'));
+const QuizHub = lazyWithRetry(() => import('./pages/QuizHub'));
+const QuizResult = lazyWithRetry(() => import('./pages/QuizResult'));
+const CategoryQuiz = lazyWithRetry(() => import('./pages/CategoryQuiz'));
+const MyQuizzes = lazyWithRetry(() => import('./pages/MyQuizzes'));
+const CollectionOverview = lazyWithRetry(() => import('./pages/CollectionOverview'));
+const MyCollection = lazyWithRetry(() => import('./pages/MyCollection'));
+const Profile = lazyWithRetry(() => import('./pages/Profile'));
+const Scan = lazyWithRetry(() => import('./pages/Scan'));
+const AIScanV2 = lazyWithRetry(() => import('./pages/AIScanV2'));
+const AIScanV2Overview = lazyWithRetry(() => import('./pages/AIScanV2Overview'));
+const PosterShop = lazyWithRetry(() => import('./pages/PosterShop'));
+const CanvasShop = lazyWithRetry(() => import('./pages/CanvasShop'));
+const TshirtsShop = lazyWithRetry(() => import('./pages/TshirtsShop'));
+const SocksShop = lazyWithRetry(() => import('./pages/SocksShop'));
+const ButtonsShop = lazyWithRetry(() => import('./pages/ButtonsShop'));
+const ArtShop = lazyWithRetry(() => import('./pages/ArtShop'));
+const MerchandiseShop = lazyWithRetry(() => import('./pages/MerchandiseShop'));
+const PlatformProductDetail = lazyWithRetry(() => import('./pages/PlatformProductDetail'));
+const NederlandseMuziek = lazyWithRetry(() => import('./pages/NederlandseMuziek'));
+const FranseMuziek = lazyWithRetry(() => import('./pages/FranseMuziek'));
+const DanceHouseMuziek = lazyWithRetry(() => import('./pages/DanceHouseMuziek'));
+const NewReleaseDetail = lazyWithRetry(() => import('./pages/NewReleaseDetail'));
+const Community = lazyWithRetry(() => import('./pages/Community'));
+const Chat = lazyWithRetry(() => import('./pages/chat'));
+const Privacy = lazyWithRetry(() => import('./pages/Privacy'));
+const Voorwaarden = lazyWithRetry(() => import('./pages/Voorwaarden'));
+const ReturnPolicy = lazyWithRetry(() => import('./pages/ReturnPolicy'));
+const About = lazyWithRetry(() => import('./pages/About'));
+const Pricing = lazyWithRetry(() => import('./pages/Pricing'));
+const Verhalen = lazyWithRetry(() => import('./pages/Verhalen'));
+const Releases = lazyWithRetry(() => import('./pages/Releases'));
+const ReleaseDetail = lazyWithRetry(() => import('./pages/ReleaseDetail'));
+const AlbumDetail = lazyWithRetry(() => import('./pages/AlbumDetail'));
+const SetPassword = lazyWithRetry(() => import('./pages/SetPassword'));
+const OrderSuccess = lazyWithRetry(() => import('./pages/OrderSuccess').then(m => ({ default: m.OrderSuccess })));
+const TrackOrder = lazyWithRetry(() => import('./pages/TrackOrder').then(m => ({ default: m.TrackOrder })));
+const PublicCollection = lazyWithRetry(() => import('./pages/PublicCollection'));
+const PublicCatalog = lazyWithRetry(() => import('./pages/PublicCatalog'));
+const PublicShop = lazyWithRetry(() => import('./pages/PublicShop'));
+const PublicShopsOverview = lazyWithRetry(() => import('./pages/PublicShopsOverview'));
+const Marketplace = lazyWithRetry(() => import('./pages/Marketplace'));
+const MarketplaceOverview = lazyWithRetry(() => import('./pages/MarketplaceOverview'));
+const MyShop = lazyWithRetry(() => import('./pages/MyShop'));
+const Forum = lazyWithRetry(() => import('./pages/Forum'));
+const ForumTopic = lazyWithRetry(() => import('./pages/ForumTopic'));
+const Echo = lazyWithRetry(() => import('./pages/Echo'));
+const Podcasts = lazyWithRetry(() => import('./pages/Podcasts'));
+const PodcastDetail = lazyWithRetry(() => import('./pages/PodcastDetail'));
+const CollectionChat = lazyWithRetry(() => import('./pages/CollectionChat'));
+const Prestaties = lazyWithRetry(() => import('./pages/Prestaties'));
+const Social = lazyWithRetry(() => import('./pages/Social'));
+const FanWall = lazyWithRetry(() => import('./pages/FanWall'));
+const ArtistFanWall = lazyWithRetry(() => import('./pages/ArtistFanWall'));
+const ArtistFanWallOverview = lazyWithRetry(() => import('./pages/ArtistFanWallOverview'));
+const ArtistSpotlight = lazyWithRetry(() => import('./pages/ArtistSpotlight'));
+const ArtistSpotlights = lazyWithRetry(() => import('./pages/ArtistSpotlights'));
+const AIFeaturesPage = lazyWithRetry(() => import('./pages/AIFeaturesPage').then(m => ({ default: m.AIFeaturesPage })));
+const Filmmuziek = lazyWithRetry(() => import('./pages/Filmmuziek'));
+const StudioStories = lazyWithRetry(() => import('./pages/StudioStories'));
+const StudioStoryDetail = lazyWithRetry(() => import('./pages/StudioStoryDetail'));
+const TimeMachine = lazyWithRetry(() => import('./pages/TimeMachine'));
+const TimeMachineStory = lazyWithRetry(() => import('./pages/TimeMachineStory'));
+const MonthOverview = lazyWithRetry(() => import('./pages/MonthOverview'));
+const YearOverview = lazyWithRetry(() => import('./pages/YearOverview'));
+const UploadPhoto = lazyWithRetry(() => import('./pages/UploadPhoto'));
+const MyPhotos = lazyWithRetry(() => import('./pages/MyPhotos'));
+const PhotoDetail = lazyWithRetry(() => import('./pages/PhotoDetail'));
+const LikedPhotos = lazyWithRetry(() => import('./pages/LikedPhotos'));
+const Reviews = lazyWithRetry(() => import('./pages/Reviews'));
+const ReviewDetail = lazyWithRetry(() => import('./pages/ReviewDetail'));
+const Top2000Analyse = lazyWithRetry(() => import('./pages/Top2000Analyse'));
+const YouTubeDiscoveries = lazyWithRetry(() => import('./pages/YouTubeDiscoveries'));
+const Christmas = lazyWithRetry(() => import('./pages/Christmas'));
+const MijnDiscogs = lazyWithRetry(() => import('./pages/MijnDiscogs'));
+const DiscogsMessages = lazyWithRetry(() => import('./pages/DiscogsMessages'));
+const SpotifyProfile = lazyWithRetry(() => import('./pages/SpotifyProfile'));
+const SpotifyCallback = lazyWithRetry(() => import('./pages/SpotifyCallback'));
+const DePlaatEnHetVerhaal = lazyWithRetry(() => import('./pages/DePlaatEnHetVerhaal'));
+const PodcastVerhalen = lazyWithRetry(() => import('./pages/PodcastVerhalen'));
+const PlaatVerhaal = lazyWithRetry(() => import('./pages/PlaatVerhaal').then(m => ({ default: m.PlaatVerhaal })));
+const QuickPriceCheck = lazyWithRetry(() => import('./pages/QuickPriceCheck'));
+const ShopOrProductRouter = lazyWithRetry(() => import('./pages/ShopOrProductRouter'));
+const UnifiedScanner = lazyWithRetry(() => import('./pages/UnifiedScanner'));
+const UnifiedScanOverview = lazyWithRetry(() => import('./pages/UnifiedScanOverview'));
+const NLMuziekDecennium = lazyWithRetry(() => import('./pages/NLMuziekDecennium'));
+const NLMuziekFeitDetail = lazyWithRetry(() => import('./pages/NLMuziekFeitDetail'));
+const DanceHouseFeitDetail = lazyWithRetry(() => import('./pages/DanceHouseFeitDetail'));
+const FilmmuziekFeitDetail = lazyWithRetry(() => import('./pages/FilmmuziekFeitDetail'));
+const MusicNews = lazyWithRetry(() => import('./pages/MusicNews'));
 
-const CollectionItemPage = lazy(() => import('./pages/CollectionItemPage'));
+const CollectionItemPage = lazyWithRetry(() => import('./pages/CollectionItemPage'));
 
 
 // Admin pages
-const AdminMainAdmin = lazy(() => import('./pages/admin/MainAdmin'));
-const AdminStatusDashboard = lazy(() => import('./pages/admin/StatusDashboard'));
+const AdminMainAdmin = lazyWithRetry(() => import('./pages/admin/MainAdmin'));
+const AdminStatusDashboard = lazyWithRetry(() => import('./pages/admin/StatusDashboard'));
 
-const AdminRecentScans = lazy(() => import('./pages/admin/RecentScans'));
+const AdminRecentScans = lazyWithRetry(() => import('./pages/admin/RecentScans'));
 
-const AdminEmailNotifications = lazy(() => import('./pages/admin/EmailNotificationsPage'));
-const AdminUserManagement = lazy(() => import('./pages/admin/UserManagement'));
-const AdminAllProducts = lazy(() => import('./pages/admin/AllProducts'));
-const AdminPlatformProducts = lazy(() => import('./pages/admin/PlatformProducts'));
-const AdminShopProducts = lazy(() => import('./pages/admin/ShopProducts').then(m => ({ default: m.ShopProducts })));
-const AdminShopOrders = lazy(() => import('./pages/admin/ShopOrders'));
-const AdminTimeMachineManager = lazy(() => import('./pages/admin/TimeMachineManager'));
-const AdminMediaLibrary = lazy(() => import('./pages/admin/MediaLibrary'));
-const AdminArtGenerator = lazy(() => import('./pages/admin/ArtGenerator'));
-const AdminBulkArtGenerator = lazy(() => import('./pages/admin/BulkArtGenerator'));
-const AdminSketchArtGenerator = lazy(() => import('./pages/admin/SketchArtGenerator'));
-const AdminLyricPosterGenerator = lazy(() => import('./pages/admin/LyricPosterGenerator'));
-const AdminSockGenerator = lazy(() => import('./pages/admin/SockGenerator'));
-const AdminTshirtGenerator = lazy(() => import('./pages/admin/TshirtGenerator'));
-const AdminButtonGenerator = lazy(() => import('./pages/admin/ButtonGenerator'));
-const AdminPhotoStylizer = lazy(() => import('./pages/admin/PhotoStylizer'));
-const AdminSinglesImporter = lazy(() => import('./pages/admin/SinglesImporterPage'));
-const AdminArtistStoriesGenerator = lazy(() => import('./pages/admin/ArtistStoriesGenerator'));
-const AdminArtistSpotlights = lazy(() => import('./pages/admin/ArtistSpotlights'));
-const AdminTop2000Importer = lazy(() => import('./pages/admin/Top2000Importer'));
-const AdminMasterArtists = lazy(() => import('./pages/admin/MasterArtists'));
-const AdminAlbumReviews = lazy(() => import('./pages/admin/AdminAlbumReviews'));
-const AdminStudioStories = lazy(() => import('./pages/admin/StudioStoriesPage'));
-const AdminOwnPodcasts = lazy(() => import('./pages/admin/OwnPodcasts'));
-const AdminNewsRssManager = lazy(() => import('./pages/admin/NewsRssManager'));
-const AdminCuratedArtists = lazy(() => import('./pages/admin/CuratedArtists'));
-const AdminDiscogsLookup = lazy(() => import('./pages/admin/DiscogsLookup'));
-const AdminDiscogsMessages = lazy(() => import('./pages/admin/AdminDiscogsMessages'));
-const AdminDiscogsBulkEmail = lazy(() => import('./pages/admin/AdminDiscogsBulkEmail'));
-const AdminPhotoModeration = lazy(() => import('./pages/admin/PhotoModeration'));
-const AdminAutoComments = lazy(() => import('./pages/admin/AutoComments'));
-const AdminMagicMikeProfile = lazy(() => import('./pages/admin/MagicMikeProfile'));
+const AdminEmailNotifications = lazyWithRetry(() => import('./pages/admin/EmailNotificationsPage'));
+const AdminUserManagement = lazyWithRetry(() => import('./pages/admin/UserManagement'));
+const AdminAllProducts = lazyWithRetry(() => import('./pages/admin/AllProducts'));
+const AdminPlatformProducts = lazyWithRetry(() => import('./pages/admin/PlatformProducts'));
+const AdminShopProducts = lazyWithRetry(() => import('./pages/admin/ShopProducts').then(m => ({ default: m.ShopProducts })));
+const AdminShopOrders = lazyWithRetry(() => import('./pages/admin/ShopOrders'));
+const AdminTimeMachineManager = lazyWithRetry(() => import('./pages/admin/TimeMachineManager'));
+const AdminMediaLibrary = lazyWithRetry(() => import('./pages/admin/MediaLibrary'));
+const AdminArtGenerator = lazyWithRetry(() => import('./pages/admin/ArtGenerator'));
+const AdminBulkArtGenerator = lazyWithRetry(() => import('./pages/admin/BulkArtGenerator'));
+const AdminSketchArtGenerator = lazyWithRetry(() => import('./pages/admin/SketchArtGenerator'));
+const AdminLyricPosterGenerator = lazyWithRetry(() => import('./pages/admin/LyricPosterGenerator'));
+const AdminSockGenerator = lazyWithRetry(() => import('./pages/admin/SockGenerator'));
+const AdminTshirtGenerator = lazyWithRetry(() => import('./pages/admin/TshirtGenerator'));
+const AdminButtonGenerator = lazyWithRetry(() => import('./pages/admin/ButtonGenerator'));
+const AdminPhotoStylizer = lazyWithRetry(() => import('./pages/admin/PhotoStylizer'));
+const AdminSinglesImporter = lazyWithRetry(() => import('./pages/admin/SinglesImporterPage'));
+const AdminArtistStoriesGenerator = lazyWithRetry(() => import('./pages/admin/ArtistStoriesGenerator'));
+const AdminArtistSpotlights = lazyWithRetry(() => import('./pages/admin/ArtistSpotlights'));
+const AdminTop2000Importer = lazyWithRetry(() => import('./pages/admin/Top2000Importer'));
+const AdminMasterArtists = lazyWithRetry(() => import('./pages/admin/MasterArtists'));
+const AdminAlbumReviews = lazyWithRetry(() => import('./pages/admin/AdminAlbumReviews'));
+const AdminStudioStories = lazyWithRetry(() => import('./pages/admin/StudioStoriesPage'));
+const AdminOwnPodcasts = lazyWithRetry(() => import('./pages/admin/OwnPodcasts'));
+const AdminNewsRssManager = lazyWithRetry(() => import('./pages/admin/NewsRssManager'));
+const AdminCuratedArtists = lazyWithRetry(() => import('./pages/admin/CuratedArtists'));
+const AdminDiscogsLookup = lazyWithRetry(() => import('./pages/admin/DiscogsLookup'));
+const AdminDiscogsMessages = lazyWithRetry(() => import('./pages/admin/AdminDiscogsMessages'));
+const AdminDiscogsBulkEmail = lazyWithRetry(() => import('./pages/admin/AdminDiscogsBulkEmail'));
+const AdminPhotoModeration = lazyWithRetry(() => import('./pages/admin/PhotoModeration'));
+const AdminAutoComments = lazyWithRetry(() => import('./pages/admin/AutoComments'));
+const AdminMagicMikeProfile = lazyWithRetry(() => import('./pages/admin/MagicMikeProfile'));
 
-const AdminSitemapManagement = lazy(() => import('./pages/admin/SitemapManagement'));
-const AdminPriceHistory = lazy(() => import('./pages/admin/PriceHistoryAdmin'));
-const AdminFixBlogSlugs = lazy(() => import('./pages/admin/FixBlogSlugs'));
-const AdminFixProductTitles = lazy(() => import('./pages/admin/FixProductTitles'));
-const AdminBulkCleanup = lazy(() => import('./pages/admin/BulkProductCleanup'));
-const AdminAutoCleanupToday = lazy(() => import('./pages/admin/AutoCleanupToday'));
-const AdminBackfillFanwalls = lazy(() => import('./pages/admin/BackfillArtistFanwalls'));
-const AdminCreateFanwall = lazy(() => import('./pages/admin/CreateArtistFanwall'));
-const AdminGenerateSeed = lazy(() => import('./pages/admin/GenerateSeed'));
-const AdminBulkPosterUpload = lazy(() => import('./pages/admin/BulkPosterUpload'));
-const AdminPopupManager = lazy(() => import('./pages/admin/PopupManager'));
-const AdminRenderQueue = lazy(() => import('./pages/admin/RenderQueue'));
-const AdminTikTokVideos = lazy(() => import('./pages/admin/TikTokVideoAdmin'));
-const AdminMetricool = lazy(() => import('./pages/admin/MetricoolAdmin'));
-const AdminFacebookAdmin = lazy(() => import('./pages/admin/FacebookAdmin'));
-const AdminFacebookSync = lazy(() => import('./pages/admin/FacebookSync'));
-const AdminInstagramAdmin = lazy(() => import('./pages/admin/InstagramAdmin'));
-const AdminPromoCodes = lazy(() => import('./pages/admin/AdminPromoCodes'));
-const AdminSEOKeywords = lazy(() => import('./pages/admin/SEOKeywords'));
+const AdminSitemapManagement = lazyWithRetry(() => import('./pages/admin/SitemapManagement'));
+const AdminPriceHistory = lazyWithRetry(() => import('./pages/admin/PriceHistoryAdmin'));
+const AdminFixBlogSlugs = lazyWithRetry(() => import('./pages/admin/FixBlogSlugs'));
+const AdminFixProductTitles = lazyWithRetry(() => import('./pages/admin/FixProductTitles'));
+const AdminBulkCleanup = lazyWithRetry(() => import('./pages/admin/BulkProductCleanup'));
+const AdminAutoCleanupToday = lazyWithRetry(() => import('./pages/admin/AutoCleanupToday'));
+const AdminBackfillFanwalls = lazyWithRetry(() => import('./pages/admin/BackfillArtistFanwalls'));
+const AdminCreateFanwall = lazyWithRetry(() => import('./pages/admin/CreateArtistFanwall'));
+const AdminGenerateSeed = lazyWithRetry(() => import('./pages/admin/GenerateSeed'));
+const AdminBulkPosterUpload = lazyWithRetry(() => import('./pages/admin/BulkPosterUpload'));
+const AdminPopupManager = lazyWithRetry(() => import('./pages/admin/PopupManager'));
+const AdminRenderQueue = lazyWithRetry(() => import('./pages/admin/RenderQueue'));
+const AdminTikTokVideos = lazyWithRetry(() => import('./pages/admin/TikTokVideoAdmin'));
+const AdminMetricool = lazyWithRetry(() => import('./pages/admin/MetricoolAdmin'));
+const AdminFacebookAdmin = lazyWithRetry(() => import('./pages/admin/FacebookAdmin'));
+const AdminFacebookSync = lazyWithRetry(() => import('./pages/admin/FacebookSync'));
+const AdminInstagramAdmin = lazyWithRetry(() => import('./pages/admin/InstagramAdmin'));
+const AdminPromoCodes = lazyWithRetry(() => import('./pages/admin/AdminPromoCodes'));
+const AdminSEOKeywords = lazyWithRetry(() => import('./pages/admin/SEOKeywords'));
 
-const AdminRenderJobs = lazy(() => import('./pages/admin/RenderJobsPage'));
-const AdminFacebookTestPost = lazy(() => import('./pages/admin/FacebookTestPost'));
-const AdminTestAnecdote = lazy(() => import('./pages/admin/TestAnecdoteGeneration'));
-const AdminChristmasImporter = lazy(() => import('./pages/admin/ChristmasImporter'));
-const AdminChristmasImportLogs = lazy(() => import('./pages/admin/ChristmasImportLogs'));
+const AdminRenderJobs = lazyWithRetry(() => import('./pages/admin/RenderJobsPage'));
+const AdminFacebookTestPost = lazyWithRetry(() => import('./pages/admin/FacebookTestPost'));
+const AdminTestAnecdote = lazyWithRetry(() => import('./pages/admin/TestAnecdoteGeneration'));
+const AdminChristmasImporter = lazyWithRetry(() => import('./pages/admin/ChristmasImporter'));
+const AdminChristmasImportLogs = lazyWithRetry(() => import('./pages/admin/ChristmasImportLogs'));
 
 const wrap = (Component: React.LazyExoticComponent<any>) => (
-  <Suspense fallback={<PageLoader />}>
-    <Component />
-  </Suspense>
+  <RouteErrorBoundary>
+    <Suspense fallback={<PageLoader />}>
+      <Component />
+    </Suspense>
+  </RouteErrorBoundary>
 );
 
 export const router = createBrowserRouter([

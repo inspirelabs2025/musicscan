@@ -86,7 +86,7 @@ const CollectionOverview = lazy(() => import('./pages/CollectionOverview'));
 const MyCollection = lazy(() => import('./pages/MyCollection'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Scan = lazy(() => import('./pages/Scan'));
-const AIScanV2 = lazy(() => import('./pages/AIScanV2'));
+const AIScanV2 = lazyWithRetry(() => import('./pages/AIScanV2'));
 const AIScanV2Overview = lazy(() => import('./pages/AIScanV2Overview'));
 const PosterShop = lazy(() => import('./pages/PosterShop'));
 const CanvasShop = lazy(() => import('./pages/CanvasShop'));

@@ -1,4 +1,45 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, Component, type ReactNode, type ErrorInfo } from 'react';
+
+// Retry wrapper for lazy imports — handles stale chunks after deploy
+function lazyWithRetry(importFn: () => Promise<any>) {
+  return lazy(() =>
+    importFn().catch((error: any) => {
+      // Only retry once per session per module
+      const key = 'chunk_retry_' + importFn.toString().slice(0, 80);
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        window.location.reload();
+        return new Promise(() => {}); // never resolves, page reloads
+      }
+      throw error;
+    })
+  );
+}
+
+// Route-level error boundary for chunk load failures
+class RouteErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('Route error:', error, info);
+    if (error.message?.includes('dynamically imported module') || error.message?.includes('Failed to fetch')) {
+      window.location.reload();
+    }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 p-8">
+          <p className="text-lg text-muted-foreground">Er ging iets mis bij het laden.</p>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-primary text-primary-foreground rounded-md">
+            Pagina herladen
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 import { createBrowserRouter, Navigate, Outlet, useParams } from 'react-router-dom';
 

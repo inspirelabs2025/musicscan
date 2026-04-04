@@ -237,9 +237,11 @@ const AdminChristmasImporter = lazy(() => import('./pages/admin/ChristmasImporte
 const AdminChristmasImportLogs = lazy(() => import('./pages/admin/ChristmasImportLogs'));
 
 const wrap = (Component: React.LazyExoticComponent<any>) => (
-  <Suspense fallback={<PageLoader />}>
-    <Component />
-  </Suspense>
+  <RouteErrorBoundary>
+    <Suspense fallback={<PageLoader />}>
+      <Component />
+    </Suspense>
+  </RouteErrorBoundary>
 );
 
 export const router = createBrowserRouter([

@@ -1,47 +1,34 @@
 import React from 'react';
-import { MessageSquareText } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
 
 interface ChatNudgeProps {
-  chatMessageCount: number;
-  onDismiss?: () => void;
+  messageCount: number;
 }
 
-export const ChatNudge: React.FC<ChatNudgeProps> = ({ chatMessageCount, onDismiss }) => {
-  if (chatMessageCount > 0) {
-    return null; // Don't show nudge if there are already chat messages
+export const ChatNudge: React.FC<ChatNudgeProps> = ({ messageCount }) => {
+  if (messageCount > 0) {
+    return null; // Don't show nudge if user has already sent messages
   }
 
   return (
-    <Card className="w-full max-w-sm mx-auto shadow-lg hover:shadow-xl transition-shadow duration-300">
-      <CardHeader className="flex flex-row items-center space-x-4">
-        <MessageSquareText className="h-8 w-8 text-primary" />
-        <div>
-          <CardTitle>Chat al geprobeerd?</CardTitle>
-          <CardDescription>Sneller antwoord krijgen?</CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground">
-          Er zijn pas {chatMessageCount} chatberichten in je project. Het gebruik van de chatfunctie kan je helpen om sneller antwoorden te krijgen en efficiënter samen te werken.
-        </p>
-        <div className="mt-4 flex justify-end">
-          {onDismiss && (
-            <button
-              onClick={onDismiss}
-              className="text-sm text-muted-foreground hover:text-foreground underline"
-            >
-              Begrepen
-            </button>
-          )}
-          <a
-            href="/chat"
-            className="ml-2 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2"
-          >
-            Ga naar chat
-          </a>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="fixed bottom-4 right-4 z-50 animate-fade-in">
+      <Card className="w-[350px] bg-card-dark text-card-dark-foreground border-purple-500 shadow-lg">
+        <CardHeader className="flex flex-row items-center space-x-4">
+          <MessageSquare className="h-6 w-6 text-purple-400" />
+          <CardTitle className="text-lg">Heb je de chat al geprobeerd?</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CardDescription className="text-sm text-card-dark-foreground/80 mb-4">
+            Er zijn pas {messageCount} chatberichten in je project. 
+            Probeer de chatfunctie om sneller antwoorden te krijgen en te communiceren met je team of klanten!
+          </CardDescription>
+          <Link to="/chat" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-purple-600 text-primary-foreground shadow hover:bg-purple-500 h-9 px-4 py-2">
+            Open chat
+          </Link>
+        </CardContent>
+      </Card>
+    </div>
   );
 };

@@ -1,101 +1,52 @@
-// Register service worker for PWA offline support
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then((registration) => {
-      console.log('[MusicScan] SW registered:', registration.scope);
-    }).catch((err) => {
-      console.log('[MusicScan] SW registration failed:', err);
-    });
-  });
-}
-if ('caches' in window) {
-  caches.keys().then(names => {
-    Promise.all(names.map(name => caches.delete(name))).then(() => {
-      if (names.length > 0) {
-        console.log('[MusicScan] Cleared caches:', names);
-      }
-    });
-  });
-}
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import App from './App';
+import './index.css';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import { Provider } from 'react-redux';
+import { store } from './store';
+import AuthGuard from './components/AuthGuard';
+import AppLayout from './layouts/AppLayout';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import ReactGA from 'react-ga4';
+import { trackAiNudgeView } from './lib/aiNudgeTracking';
 
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.has('_v')) {
-  const cleanUrl = window.location.pathname + window.location.hash;
-  window.history.replaceState(null, '', cleanUrl);
-  sessionStorage.removeItem('musicscan_reload_count');
+// Initialize Google Analytics (GA4)
+const gaMeasurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+if (gaMeasurementId) {
+  ReactGA.initialize(gaMeasurementId);
+  ReactGA.send({ hitType: 'pageview', page: window.location.pathname + window.location.search });
 }
 
-import React, { useState, useEffect } from 'react';
-import { createRoot } from 'react-dom/client'
-import { RouterProvider } from 'react-router-dom'
-import './index.css'
-import { router } from './router'
+const queryClient = new QueryClient();
 
-const LoadingFallback = () => (
-  <div style={{ 
-    display: 'flex', justifyContent: 'center', alignItems: 'center', 
-    height: '100vh', flexDirection: 'column', gap: '16px',
-    background: '#0a0a0a', color: '#fff', fontFamily: 'system-ui, sans-serif'
-  }}>
-    <div style={{
-      width: '40px', height: '40px', border: '3px solid #333',
-      borderTop: '3px solid #8b5cf6', borderRadius: '50%',
-      animation: 'spin 1s linear infinite'
-    }} />
-    <p>MusicScan laden...</p>
-    <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-  </div>
+const router = createBrowserRouter([
+  { path: '/login', element: <LoginPage /> },
+  { path: '/register', element: <RegisterPage /> },
+  { 
+    path: '/',
+    element: <AuthGuard element={<AppLayout />} />,
+    children: [
+      { index: true, element: <App /> },
+      // Add more protected routes here as needed
+      { path: '/ai-features', element: <div>AI Features Page (coming soon!)</div> },
+    ]
+  },
+]);
+
+// Track AI Nudge view when the application first loads and AI usage is 0.
+// This needs to be slightly delayed or triggered after initial state is loaded
+// For now, we'll add a placeholder. The actual tracking logic for view will be in AiNudgeBanner.tsx
+// once the count is fetched.
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </Provider>
+  </React.StrictMode>
 );
-
-const ErrorFallback = ({ error }: { error: Error }) => (
-  <div style={{ 
-    display: 'flex', justifyContent: 'center', alignItems: 'center', 
-    height: '100vh', flexDirection: 'column', gap: '16px',
-    background: '#0a0a0a', color: '#fff', fontFamily: 'system-ui, sans-serif',
-    padding: '20px', textAlign: 'center'
-  }}>
-    <h1 style={{ color: '#ef4444' }}>Laad Fout</h1>
-    <p>Probeer de pagina te verversen (Ctrl+Shift+R)</p>
-    <pre style={{ background: '#1a1a1a', padding: '16px', borderRadius: '8px', maxWidth: '80%', overflow: 'auto', fontSize: '12px' }}>
-      {error.message}
-    </pre>
-    <button onClick={() => window.location.reload()} style={{
-      background: '#8b5cf6', color: '#fff', padding: '12px 24px',
-      borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '16px'
-    }}>Pagina Herladen</button>
-  </div>
-);
-
-function AppWrapper() {
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      setError(event.error || new Error(event.message));
-    };
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      setError(event.reason instanceof Error ? event.reason : new Error(String(event.reason)));
-    };
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
-    return () => {
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
-    };
-  }, []);
-
-  if (error) {
-    return <ErrorFallback error={error} />;
-  }
-
-  return <RouterProvider router={router} />;
-}
-
-const container = document.getElementById("root");
-if (container) {
-  createRoot(container).render(
-    <React.StrictMode>
-      <AppWrapper />
-    </React.StrictMode>
-  );
-}

@@ -40,15 +40,7 @@ export function MobileBottomNav() {
       ],
       requiresAuth: true,
     },
-    {
-      title: "Shop",
-      items: [
-        { icon: ShoppingCart, label: t('nav.shopOverview'), url: "/shop" },
-        { icon: Images, label: t('nav.artPrints'), url: "/shop/art-prints" },
-        { icon: Images, label: t('nav.posters'), url: "/shop/posters" },
-        { icon: Images, label: t('nav.canvasArt'), url: "/shop/canvas" },
-      ],
-    },
+    // Shop sectie verwijderd
     {
       title: t('nav.stories'),
       items: [

@@ -14,7 +14,7 @@ const GenresSection = lazy(() => import('@/components/home/sections/GenresSectio
 const CommunitySection = lazy(() => import('@/components/home/sections/CommunitySection').then(m => ({ default: m.CommunitySection })));
 const MagicMikeSection = lazy(() => import('@/components/home/sections/MagicMikeSection').then(m => ({ default: m.MagicMikeSection })));
 const MagicMikePodcastSection = lazy(() => import('@/components/home/sections/MagicMikePodcastSection').then(m => ({ default: m.MagicMikePodcastSection })));
-const ProductBanner = lazy(() => import('@/components/home/ProductBanner').then(m => ({ default: m.ProductBanner })));
+// ProductBanner verwijderd
 const MobileInstallBanner = lazy(() => import('@/components/MobileInstallBanner').then(m => ({ default: m.MobileInstallBanner })));
 const AppInstallBanner = lazy(() => import('@/components/home/AppInstallBanner').then(m => ({ default: m.AppInstallBanner })));
 
@@ -119,10 +119,7 @@ const Home = () => {
 
       <div className="py-2" />
 
-      {/* Sectie 7: Shop */}
-      <Suspense fallback={null}>
-        <ProductBanner />
-      </Suspense>
+      {/* Shop sectie verwijderd */}
 
       {/* PWA Install */}
       <Suspense fallback={null}>

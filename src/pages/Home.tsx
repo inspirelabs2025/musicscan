@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ScannerHero } from '@/components/home/ScannerHero';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { LogIn, UserPlus } from 'lucide-react';
+import { LogIn, UserPlus, LogOut } from 'lucide-react';
 import { SeoContentBlock } from '@/components/SEO/SeoContentBlock';
 
 // Lazy load sections
@@ -26,7 +26,7 @@ const SectionFallback = () => <div className="py-10"><Skeleton className="h-48 m
 
 const Home = () => {
   const { tr } = useLanguage();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   useSEO({
     title: tr.home.metaTitle,
@@ -70,23 +70,30 @@ const Home = () => {
       {/* Hero */}
       <ScannerHero />
 
-      {/* Login CTA */}
-      {!user && (
-        <div className="container mx-auto px-4 py-6 flex flex-wrap items-center justify-center gap-3">
-          <Button asChild size="lg">
-            <Link to="/auth">
-              <LogIn className="h-4 w-4 mr-2" />
-              Inloggen
-            </Link>
+      {/* Auth CTA */}
+      <div className="container mx-auto px-4 py-6 flex flex-wrap items-center justify-center gap-3">
+        {user ? (
+          <Button size="lg" variant="outline" onClick={() => signOut()}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Uitloggen
           </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link to="/auth">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Account aanmaken
-            </Link>
-          </Button>
-        </div>
-      )}
+        ) : (
+          <>
+            <Button asChild size="lg">
+              <Link to="/auth">
+                <LogIn className="h-4 w-4 mr-2" />
+                Inloggen
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link to="/auth">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Account aanmaken
+              </Link>
+            </Button>
+          </>
+        )}
+      </div>
 
       {/* App Install Banner (mobile only) */}
       <Suspense fallback={null}>

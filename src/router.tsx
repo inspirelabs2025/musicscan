@@ -93,7 +93,7 @@ const NederlandseMuziek = lazyWithRetry(() => import('./pages/NederlandseMuziek'
 const FranseMuziek = lazyWithRetry(() => import('./pages/FranseMuziek'));
 const DanceHouseMuziek = lazyWithRetry(() => import('./pages/DanceHouseMuziek'));
 const NewReleaseDetail = lazyWithRetry(() => import('./pages/NewReleaseDetail'));
-const Community = lazyWithRetry(() => import('./pages/Community'));
+// Community page disabled — DB tables intact
 const Chat = lazyWithRetry(() => import('./pages/chat'));
 const Privacy = lazyWithRetry(() => import('./pages/Privacy'));
 const Voorwaarden = lazyWithRetry(() => import('./pages/Voorwaarden'));

@@ -1,9 +1,13 @@
 import { lazy, Suspense } from 'react';
+import { Link } from 'react-router-dom';
 import { JsonLd } from '@/components/SEO/JsonLd';
 import { useSEO } from '@/hooks/useSEO';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { ScannerHero } from '@/components/home/ScannerHero';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { LogIn, UserPlus } from 'lucide-react';
 import { SeoContentBlock } from '@/components/SEO/SeoContentBlock';
 
 // Lazy load sections
@@ -22,6 +26,7 @@ const SectionFallback = () => <div className="py-10"><Skeleton className="h-48 m
 
 const Home = () => {
   const { tr } = useLanguage();
+  const { user } = useAuth();
 
   useSEO({
     title: tr.home.metaTitle,
@@ -64,6 +69,24 @@ const Home = () => {
       <JsonLd data={organizationSchema} />
       {/* Hero */}
       <ScannerHero />
+
+      {/* Login CTA (alleen voor uitgelogde bezoekers) */}
+      {!user && (
+        <div className="container mx-auto px-4 py-4 flex flex-wrap items-center justify-center gap-3">
+          <Button asChild size="lg">
+            <Link to="/auth">
+              <LogIn className="h-4 w-4 mr-2" />
+              Inloggen
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link to="/auth">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Account aanmaken
+            </Link>
+          </Button>
+        </div>
+      )}
 
       {/* App Install Banner (mobile only) */}
       <Suspense fallback={null}>

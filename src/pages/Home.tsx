@@ -68,31 +68,6 @@ const Home = () => {
       <JsonLd data={websiteSchema} />
       <JsonLd data={organizationSchema} />
 
-      {/* Auth CTA - boven hero, altijd zichtbaar */}
-      <div className="container mx-auto px-4 py-4 flex flex-wrap items-center justify-center gap-3 relative z-20">
-        {user ? (
-          <Button size="lg" variant="outline" onClick={() => signOut()}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Uitloggen
-          </Button>
-        ) : (
-          <>
-            <Button asChild size="lg">
-              <Link to="/auth">
-                <LogIn className="h-4 w-4 mr-2" />
-                Inloggen
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link to="/auth">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Account aanmaken
-              </Link>
-            </Button>
-          </>
-        )}
-      </div>
-
       {/* Hero */}
       <ScannerHero />
 

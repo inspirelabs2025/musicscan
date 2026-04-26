@@ -125,7 +125,13 @@ export function Navigation() {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-header text-header-foreground">
+    <header
+      className="sticky top-0 z-50 w-full border-b bg-[hsl(var(--header-background))] text-[hsl(var(--header-foreground))]"
+      style={{
+        backgroundColor: "hsl(var(--header-background))",
+        color: "hsl(var(--header-foreground))",
+      }}
+    >
       <div className="container flex h-16 items-center px-4">
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6 w-full">

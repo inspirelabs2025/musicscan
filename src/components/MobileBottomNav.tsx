@@ -42,19 +42,6 @@ export function MobileBottomNav() {
     },
     // Shop sectie verwijderd
     {
-      title: t('nav.stories'),
-      items: [
-        { icon: Music, label: t('nav.albumStories'), url: "/verhalen" },
-        { icon: BookOpen, label: t('nav.albumReviews'), url: "/reviews" },
-        { icon: Sparkles, label: t('nav.artistSpotlights'), url: "/artist-spotlights" },
-        { icon: Music, label: t('nav.singles'), url: "/singles" },
-        { icon: Users, label: t('nav.artists'), url: "/artists" },
-        { icon: Newspaper, label: t('nav.news'), url: "/nieuws" },
-        ...(language === 'nl' ? [{ icon: Headphones, label: t('nav.podcasts'), url: "/podcasts" }] : []),
-        { icon: Calendar, label: t('nav.musicHistory'), url: "/vandaag-in-de-muziekgeschiedenis" },
-      ],
-    },
-    {
       title: t('nav.smartTools'),
       items: [
         { icon: Music, label: t('nav.echo'), url: "/echo" },

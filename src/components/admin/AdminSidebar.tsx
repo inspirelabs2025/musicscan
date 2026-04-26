@@ -43,13 +43,9 @@ const menuItems: MenuSection[] = [
     ]
   },
   {
-    title: "Products & Shop",
-    icon: ShoppingBag,
+    title: "Time Machine",
+    icon: Clock,
     items: [
-      { title: "All Products", url: "/admin/products", icon: LayoutGrid },
-      { title: "Platform Products", url: "/admin/platform-products", icon: Package },
-      { title: "Shop Products", url: "/admin/shop-products", icon: ShoppingBag },
-      { title: "Shop Orders", url: "/admin/shop-orders", icon: ShoppingCart },
       { title: "Time Machine", url: "/admin/time-machine", icon: Clock },
     ]
   },
@@ -61,10 +57,7 @@ const menuItems: MenuSection[] = [
       { title: "Art Generator", url: "/admin/art-generator", icon: Palette },
       { title: "Bulk Art Generator", url: "/admin/bulk-art-generator", icon: Wand2 },
       { title: "Sketch Art", url: "/admin/sketch-art-generator", icon: PenTool },
-      { title: "Lyric Posters", url: "/admin/lyric-poster-generator", icon: Music },
-      { title: "Socks Designer", url: "/admin/sock-generator", icon: Brush },
-      { title: "T-Shirt Designer", url: "/admin/tshirt-generator", icon: Brush },
-      { title: "Button Designer", url: "/admin/button-generator", icon: Disc },
+      // Product designers verwijderd
       { title: "Photo Stylizer", url: "/admin/photo-stylizer", icon: Wand2 },
       { title: "Singles Importer", url: "/admin/singles-importer", icon: Music },
       { title: "Artist Stories", url: "/admin/artist-stories-generator", icon: Users },
@@ -102,13 +95,13 @@ const menuItems: MenuSection[] = [
     icon: Wrench,
     items: [
       { title: "Fix Blog Slugs", url: "/admin/fix-blog-slugs", icon: LinkIcon },
-      { title: "Fix Product Titles", url: "/admin/fix-product-titles", icon: Settings },
+      
       { title: "Bulk Cleanup", url: "/admin/bulk-cleanup", icon: Wrench },
       { title: "Auto Cleanup Today", url: "/admin/auto-cleanup-today", icon: RefreshCw },
       { title: "Backfill FanWalls", url: "/admin/backfill-artist-fanwalls", icon: RefreshCw },
       { title: "Create FanWall", url: "/admin/create-artist-fanwall", icon: Users },
       { title: "Generate Seed", url: "/admin/generate-seed", icon: Settings },
-      { title: "Bulk Poster Upload", url: "/admin/bulk-poster-upload", icon: Image },
+      
     ]
   },
   {

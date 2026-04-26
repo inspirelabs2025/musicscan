@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { SubscriptionStatus } from "@/components/SubscriptionStatus";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { ShoppingCartWidget } from "@/components/ShoppingCartWidget";
+// ShoppingCartWidget verwijderd
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const getProfileMenuItem = (userId?: string, label?: string) => {
@@ -39,17 +39,8 @@ export function Navigation() {
   const { t } = useLanguage();
 
   // Menu items using translations
-  const shopMenuItems = [
-    { title: t('nav.shopOverview'), url: "/shop", icon: ShoppingCart, highlight: true },
-    { title: t('nav.artPrints'), url: "/shop/art-prints", icon: Images },
-    { title: t('nav.metalPrints'), url: "/metaalprints", icon: Images },
-    { title: t('nav.posters'), url: "/shop/posters", icon: Images },
-    { title: t('nav.canvasArt'), url: "/shop/canvas", icon: Images },
-    { title: t('nav.socks'), url: "/shop/sokken", icon: Package },
-    { title: t('nav.allShops'), url: "/shops", icon: Store },
-    { title: t('nav.catalog'), url: "/catalog", icon: Library },
-    { title: t('nav.myShop'), url: "/my-shop", icon: Store, requiresAuth: true }
-  ];
+  // Shop menu items verwijderd — webshop is uitgeschakeld
+  const shopMenuItems: Array<{ title: string; url: string; icon: any; requiresAuth?: boolean; highlight?: boolean }> = [];
 
   const verhalenMenuItems = [
     { title: t('nav.albumStories'), url: "/verhalen", icon: Music },
@@ -319,7 +310,6 @@ export function Navigation() {
         <div className="flex items-center gap-2 flex-shrink-0">
           <LanguageSwitcher />
           {user && <NotificationsDropdown />}
-          <ShoppingCartWidget />
         </div>
       </div>
 

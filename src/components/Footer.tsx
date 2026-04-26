@@ -38,9 +38,6 @@ export const Footer = () => {
               <Link to="/collection-chat" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                 {t('footer.collectionChat')}
               </Link>
-              <Link to="/catalog" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
-                {t('footer.publicCatalog')}
-              </Link>
             </div>
           </div>
 
@@ -50,9 +47,6 @@ export const Footer = () => {
             <div className="space-y-2">
               <Link to="/news" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                 {t('footer.musicNews')}
-              </Link>
-              <Link to="/shops" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
-                {t('footer.shops')}
               </Link>
               <Link to="/social" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                 {t('footer.social')}
@@ -81,9 +75,6 @@ export const Footer = () => {
               </Link>
               <Link to="/voorwaarden" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                 {t('footer.terms')}
-              </Link>
-              <Link to="/retourbeleid" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
-                {t('footer.returnPolicy')}
               </Link>
             </div>
           </div>

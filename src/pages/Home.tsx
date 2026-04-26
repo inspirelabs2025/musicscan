@@ -11,7 +11,7 @@ const PopularSinglesSection = lazy(() => import('@/components/home/sections/Popu
 const ArtistsSection = lazy(() => import('@/components/home/sections/ArtistsSection').then(m => ({ default: m.ArtistsSection })));
 const StoriesSection = lazy(() => import('@/components/home/sections/StoriesSection').then(m => ({ default: m.StoriesSection })));
 const GenresSection = lazy(() => import('@/components/home/sections/GenresSection').then(m => ({ default: m.GenresSection })));
-const CommunitySection = lazy(() => import('@/components/home/sections/CommunitySection').then(m => ({ default: m.CommunitySection })));
+// CommunitySection verwijderd van homepage
 const MagicMikeSection = lazy(() => import('@/components/home/sections/MagicMikeSection').then(m => ({ default: m.MagicMikeSection })));
 const MagicMikePodcastSection = lazy(() => import('@/components/home/sections/MagicMikePodcastSection').then(m => ({ default: m.MagicMikePodcastSection })));
 // ProductBanner verwijderd
@@ -112,12 +112,7 @@ const Home = () => {
 
       <div className="py-2" />
 
-      {/* Sectie 5: Community */}
-      <Suspense fallback={<SectionFallback />}>
-        <CommunitySection />
-      </Suspense>
-
-      <div className="py-2" />
+      {/* Sectie 5: Community sectie verwijderd */}
 
       {/* Shop sectie verwijderd */}
 

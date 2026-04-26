@@ -70,24 +70,6 @@ const Home = () => {
       {/* Hero */}
       <ScannerHero />
 
-      {/* Login CTA (alleen voor uitgelogde bezoekers) */}
-      {!user && (
-        <div className="container mx-auto px-4 py-4 flex flex-wrap items-center justify-center gap-3">
-          <Button asChild size="lg">
-            <Link to="/auth">
-              <LogIn className="h-4 w-4 mr-2" />
-              Inloggen
-            </Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link to="/auth">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Account aanmaken
-            </Link>
-          </Button>
-        </div>
-      )}
-
       {/* App Install Banner (mobile only) */}
       <Suspense fallback={null}>
         <AppInstallBanner />

@@ -38,19 +38,7 @@ export const QuickActionsHero: React.FC<QuickActionsHeroProps> = ({
             </div>
           </Button>
           
-          <Button 
-            size="lg" 
-            variant="outline" 
-            className="h-20 hover:bg-vinyl-gold/10 group"
-            asChild
-          >
-            <Link to="/community">
-              <div className="flex flex-col items-center gap-2">
-                <Users className="w-6 h-6 group-hover:animate-pulse" />
-                <span>{s.communityHub}</span>
-              </div>
-            </Link>
-          </Button>
+          {/* Community knop verwijderd — community sectie is uitgeschakeld */}
           
           <Button 
             size="lg" 

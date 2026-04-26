@@ -72,7 +72,7 @@ export default function PublicCollection() {
                 Het profiel dat je zoekt bestaat niet of is privé.
               </p>
               <Button asChild>
-                <Link to="/community">Terug naar Community</Link>
+                <Link to="/">Terug naar home</Link>
               </Button>
             </Card>
           </div>

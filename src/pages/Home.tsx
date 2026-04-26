@@ -67,11 +67,9 @@ const Home = () => {
     <div className="min-h-screen bg-background pt-14">
       <JsonLd data={websiteSchema} />
       <JsonLd data={organizationSchema} />
-      {/* Hero */}
-      <ScannerHero />
 
-      {/* Auth CTA */}
-      <div className="container mx-auto px-4 py-6 flex flex-wrap items-center justify-center gap-3">
+      {/* Auth CTA - boven hero, altijd zichtbaar */}
+      <div className="container mx-auto px-4 py-4 flex flex-wrap items-center justify-center gap-3 relative z-20">
         {user ? (
           <Button size="lg" variant="outline" onClick={() => signOut()}>
             <LogOut className="h-4 w-4 mr-2" />
@@ -94,6 +92,9 @@ const Home = () => {
           </>
         )}
       </div>
+
+      {/* Hero */}
+      <ScannerHero />
 
       {/* App Install Banner (mobile only) */}
       <Suspense fallback={null}>

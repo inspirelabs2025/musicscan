@@ -4,11 +4,13 @@ const config: CapacitorConfig = {
   appId: 'com.inspirelabs.musicscan',
   appName: 'MusicScan',
   webDir: 'dist',
-  server: {
-    androidScheme: 'https',
-    url: 'https://0638cdc3-ae41-4fe5-9a88-2b2d34d360f4.lovableproject.com?forceHideBadge=true',
-    cleartext: true,
-  },
+  // NOTE: server.url is intentionally disabled for Play Store release builds.
+  // Re-enable only for local hot-reload development against the Lovable sandbox:
+  // server: {
+  //   androidScheme: 'https',
+  //   url: 'https://0638cdc3-ae41-4fe5-9a88-2b2d34d360f4.lovableproject.com?forceHideBadge=true',
+  //   cleartext: true,
+  // },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,

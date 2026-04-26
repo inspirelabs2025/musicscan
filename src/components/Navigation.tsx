@@ -43,13 +43,9 @@ export function Navigation() {
   const shopMenuItems: Array<{ title: string; url: string; icon: any; requiresAuth?: boolean; highlight?: boolean }> = [];
 
   const verhalenMenuItems = [
-    { title: t('nav.albumStories'), url: "/verhalen", icon: Music },
     { title: t('nav.albumReviews'), url: "/reviews", icon: BookOpen },
-    { title: t('nav.artistSpotlights'), url: "/artist-spotlights", icon: Sparkles },
     { title: t('nav.singles'), url: "/singles", icon: Music },
     { title: t('nav.artists'), url: "/artists", icon: Users },
-    { title: t('nav.studios'), url: "/studio-stories", icon: Building2 },
-    { title: t('nav.anecdotes'), url: "/anekdotes", icon: BookOpen },
     { title: t('nav.fanwall'), url: "/fanwall", icon: Images },
     { title: t('nav.youtubeDiscoveries'), url: "/youtube-discoveries", icon: Youtube },
     { title: t('nav.news'), url: "/nieuws", icon: Newspaper },

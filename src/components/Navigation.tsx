@@ -86,14 +86,8 @@ export function Navigation() {
     { title: t('nav.spotifyProfile'), url: "/spotify-profile", icon: Music }
   ];
 
-  const communityMenuItems = [
-    { title: t('nav.fanwall'), url: "/fanwall", icon: Images },
-    { title: t('nav.myLikes'), url: "/liked-photos", icon: Heart },
-    { title: t('nav.myQuizzes'), url: "/mijn-quizzen", icon: Trophy },
-    { title: t('nav.forum'), url: "/forum", icon: MessageCircle },
-    { title: t('nav.social'), url: "/social", icon: Users },
-    { title: t('nav.achievements'), url: "/prestaties", icon: Trophy }
-  ];
+  // Community menu items verwijderd — community sectie is uitgeschakeld
+  const communityMenuItems: Array<{ title: string; url: string; icon: any }> = [];
 
   const profileMenuItem = getProfileMenuItem(user?.id, t('nav.myProfile'));
   const isShopPageActive = shopMenuItems.some(item => currentPath === item.url);

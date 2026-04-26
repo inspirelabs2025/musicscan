@@ -93,7 +93,7 @@ const NederlandseMuziek = lazyWithRetry(() => import('./pages/NederlandseMuziek'
 const FranseMuziek = lazyWithRetry(() => import('./pages/FranseMuziek'));
 const DanceHouseMuziek = lazyWithRetry(() => import('./pages/DanceHouseMuziek'));
 const NewReleaseDetail = lazyWithRetry(() => import('./pages/NewReleaseDetail'));
-const Community = lazyWithRetry(() => import('./pages/Community'));
+// Community page disabled — DB tables intact
 const Chat = lazyWithRetry(() => import('./pages/chat'));
 const Privacy = lazyWithRetry(() => import('./pages/Privacy'));
 const Voorwaarden = lazyWithRetry(() => import('./pages/Voorwaarden'));
@@ -287,8 +287,7 @@ export const router = createBrowserRouter([
       { path: 'unified-scan-overview', element: wrap(UnifiedScanOverview) },
       { path: 'quick-price-check', element: wrap(QuickPriceCheck) },
       
-      // Community
-      { path: 'community', element: wrap(Community) },
+      // Community page removed — section disabled in UI (DB intact)
       { path: 'chat', element: wrap(Chat) },
       { path: 'collection-chat', element: wrap(CollectionChat) },
       { path: 'forum', element: wrap(Forum) },

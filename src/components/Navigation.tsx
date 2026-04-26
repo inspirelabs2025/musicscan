@@ -125,7 +125,7 @@ export function Navigation() {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white text-foreground">
+    <header className="sticky top-0 z-50 w-full border-b bg-header text-header-foreground">
       <div className="container flex h-16 items-center px-4">
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6 w-full">

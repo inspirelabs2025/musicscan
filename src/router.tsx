@@ -287,8 +287,7 @@ export const router = createBrowserRouter([
       { path: 'unified-scan-overview', element: wrap(UnifiedScanOverview) },
       { path: 'quick-price-check', element: wrap(QuickPriceCheck) },
       
-      // Community
-      { path: 'community', element: wrap(Community) },
+      // Community page removed — section disabled in UI (DB intact)
       { path: 'chat', element: wrap(Chat) },
       { path: 'collection-chat', element: wrap(CollectionChat) },
       { path: 'forum', element: wrap(Forum) },

@@ -64,16 +64,7 @@ export function MobileBottomNav() {
       ],
       requiresAuth: true,
     },
-    {
-      title: "Community",
-      items: [
-        { icon: Images, label: t('nav.fanwall'), url: "/fanwall" },
-        { icon: Heart, label: t('nav.myLikes'), url: "/liked-photos" },
-        { icon: Trophy, label: t('nav.myQuizzes'), url: "/mijn-quizzen" },
-        { icon: MessageCircle, label: t('nav.forum'), url: "/forum" },
-      ],
-      requiresAuth: true,
-    },
+    // Community sectie verwijderd
   ];
 
   return (

@@ -1,48 +1,39 @@
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import Router from "@/pages/Router";
+import { Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Analytics from "./Analytics";
-import { useEffect } from "react";
-import { toast } from "sonner";
+
+import Home from "./pages/Home";
+import AuthCallback from "./pages/AuthCallback";
+import Layout from "./components/Layout";
+import Projects from "./pages/Projects";
+import ProjectView from "./pages/ProjectView";
+import ProjectSettings from "./pages/ProjectSettings";
+import Onboarding from "./pages/Onboarding";
+import { Toaster } from "./components/ui/sonner";
+import Chat from "./pages/Chat";
+import ChatProvider from "./context/ChatContext";
 
 const queryClient = new QueryClient();
 
 function App() {
-  useEffect(() => {
-    // Simulate fetching chat message count for the current user/project
-    // In a real application, replace this with an actual API call
-    const hasChatMessages = localStorage.getItem('has_sent_chat_message');
-    const chatMessagesCount = hasChatMessages ? 1 : 0; // 0 for new user, >0 if they've used chat
-
-    if (chatMessagesCount === 0) {
-      const chatNudgeShown = localStorage.getItem('chat_nudge_shown');
-      if (!chatNudgeShown) {
-        toast("💬 Gebruik je de chat al?", {
-          description: "Er zijn pas 0 chatberichten in je project. Probeer de chatfunctie om sneller antwoorden te krijgen!",
-          action: {
-            label: "Start Chat",
-            onClick: () => {
-              // Simulate navigating to chat or opening chat widget
-              console.log("User clicked to start chat");
-              localStorage.setItem('has_sent_chat_message', 'true'); // Assume they will use it now
-              // Potentially redirect to chat page or open a chat widget
-            },
-          },
-          duration: 10000,
-        });
-        localStorage.setItem('chat_nudge_shown', 'true');
-      }
-    }
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Router />
-        <Toaster />
-      </TooltipProvider>
-      <Analytics />
+      <ChatProvider>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/:projectId" element={<ProjectView />} />
+            <Route
+              path="/projects/:projectId/settings"
+              element={<ProjectSettings />}
+            />
+             <Route path="/projects/:projectId/chat" element={<Chat />} />
+          </Route>
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+        </Routes>
+      </ChatProvider>
+      <Toaster />
     </QueryClientProvider>
   );
 }

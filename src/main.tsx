@@ -1,94 +1,30 @@
-// Register service worker for PWA offline support
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then((registration) => {
-      console.log('[MusicScan] SW registered:', registration.scope);
-    }).catch((err) => {
-      console.log('[MusicScan] SW registration failed:', err);
-    });
-  });
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+// Google Analytics Initialization
+const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
+
+if (GA_MEASUREMENT_ID) {
+  const script1 = document.createElement('script');
+  script1.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+  script1.async = true;
+  document.head.appendChild(script1);
+
+  const script2 = document.createElement('script');
+  script2.innerHTML = `
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', '${GA_MEASUREMENT_ID}');
+  `;
+  document.head.appendChild(script2);
 }
-// Cache management handled by service worker versioning — no blanket deletion
 
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.has('_v')) {
-  const cleanUrl = window.location.pathname + window.location.hash;
-  window.history.replaceState(null, '', cleanUrl);
-  sessionStorage.removeItem('musicscan_reload_count');
-}
-
-import React, { useState, useEffect } from 'react';
-import { createRoot } from 'react-dom/client'
-import { RouterProvider } from 'react-router-dom'
-import './index.css'
-import { router } from './router'
-
-
-const LoadingFallback = () => (
-  <div style={{ 
-    display: 'flex', justifyContent: 'center', alignItems: 'center', 
-    height: '100vh', flexDirection: 'column', gap: '16px',
-    background: '#0a0a0a', color: '#fff', fontFamily: 'system-ui, sans-serif'
-  }}>
-    <div style={{
-      width: '40px', height: '40px', border: '3px solid #333',
-      borderTop: '3px solid #8b5cf6', borderRadius: '50%',
-      animation: 'spin 1s linear infinite'
-    }} />
-    <p>MusicScan laden...</p>
-    <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-  </div>
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 );
-
-const ErrorFallback = ({ error }: { error: Error }) => (
-  <div style={{ 
-    display: 'flex', justifyContent: 'center', alignItems: 'center', 
-    height: '100vh', flexDirection: 'column', gap: '16px',
-    background: '#0a0a0a', color: '#fff', fontFamily: 'system-ui, sans-serif',
-    padding: '20px', textAlign: 'center'
-  }}>
-    <h1 style={{ color: '#ef4444' }}>Laad Fout</h1>
-    <p>Probeer de pagina te verversen (Ctrl+Shift+R)</p>
-    <pre style={{ background: '#1a1a1a', padding: '16px', borderRadius: '8px', maxWidth: '80%', overflow: 'auto', fontSize: '12px' }}>
-      {error.message}
-    </pre>
-    <button onClick={() => window.location.reload()} style={{
-      background: '#8b5cf6', color: '#fff', padding: '12px 24px',
-      borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '16px'
-    }}>Pagina Herladen</button>
-  </div>
-);
-
-function AppWrapper() {
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      setError(event.error || new Error(event.message));
-    };
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      setError(event.reason instanceof Error ? event.reason : new Error(String(event.reason)));
-    };
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
-    return () => {
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
-    };
-  }, []);
-
-  if (error) {
-    return <ErrorFallback error={error} />;
-  }
-
-  return <RouterProvider router={router} />;
-}
-
-const container = document.getElementById("root");
-if (container) {
-  createRoot(container).render(
-    <React.StrictMode>
-      <AppWrapper />
-    </React.StrictMode>
-  );
-}

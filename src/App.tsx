@@ -1,104 +1,118 @@
-import { lazy, Suspense, useEffect } from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from './lib/query-client';
-import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import { Toaster } from '@/components/ui/sonner';
-import { AiNudge } from './components/ui/ai-nudge';
-import { trackPageView } from './lib/analytics';
+import './App.css';
+import { useEffect, useState, Suspense, lazy } from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from './components/ui/sonner';
+import { TooltipProvider } from './components/ui/tooltip';
+import { useAuth } from './hooks/useAuth';
+import { Loader } from 'lucide-react';
+import { LovableClient } from 'lovable-tagger';
+import { Badge } from './components/ui/badge';
+import { supabase } from '@/supabaseClient';
 
-const Layout = lazy(() => import('./components/Layout'));
-const HomePage = lazy(() => import('./pages/HomePage'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const RegisterPage = lazy(() => import('./pages/RegisterPage'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage'));
-const SearchPage = lazy(() => import('./pages/SearchPage'));
-const ArtistDetailsPage = lazy(() => import('./pages/ArtistDetailsPage'));
-const AlbumDetailsPage = lazy(() => import('./pages/AlbumDetailsPage'));
-const TrackDetailsPage = lazy(() => import('./pages/TrackDetailsPage'));
-const ScanPage = lazy(() => import('./pages/ScanPage'));
-const ReleasesPage = lazy(() => import('./pages/ReleasesPage'));
-const ReleaseDetailsPage = lazy(() => import('./pages/ReleaseDetailsPage'));
-const NewReleasePage = lazy(() => import('./pages/NewReleasePage'));
-const AIAnalyzePage = lazy(() => import('./pages/AIAnalyzePage'));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const AppRoutes = lazy(() => import('./AppRoutes'));
 
-const router = createBrowserRouter([
-  {
-    path: '/login',
-    element: (
-      <Suspense fallback={<div>Loading...</div>}>
-        <LoginPage />
-      </Suspense>
-    ),
-  },
-  {
-    path: '/register',
-    element: (
-      <Suspense fallback={<div>Loading...</div>}>
-        <RegisterPage />
-      </Suspense>
-    ),
-  },
-  {
-    path: '/',
-    element: (
-      <ProtectedRoute>
-        <Suspense fallback={<div>Loading...</div>}>
-          <Layout />
-        </Suspense>
-      </ProtectedRoute>
-    ),
-    children: [
-      { path: '/', element: <HomePage /> },
-      { path: '/profile/:userId?', element: <ProfilePage /> },
-      { path: '/settings', element: <SettingsPage /> },
-      { path: '/search', element: <SearchPage /> },
-      { path: '/artist/:artistId', element: <ArtistDetailsPage /> },
-      { path: '/album/:albumId', element: <AlbumDetailsPage /> },
-      { path: '/track/:trackId', element: <TrackDetailsPage /> },
-      { path: '/scan', element: <ScanPage /> },
-      { path: '/releases', element: <ReleasesPage /> },
-      { path: '/release/new', element: <NewReleasePage /> },
-      { path: '/release/:releaseId', element: <ReleaseDetailsPage /> },
-      { path: '/ai-analyze', element: <AIAnalyzePage /> },
+const queryClient = new QueryClient();
 
-      // Catch-all route for 404
-      { path: '*', element: <NotFoundPage /> },
-    ],
-  },
-]);
+const lovable = new LovableClient();
 
 function App() {
+  const { user, loading } = useAuth();
+  const [showChatNudge, setShowChatNudge] = useState(false);
 
   useEffect(() => {
-    // Initialize Google Analytics page view tracking
-    const handleRouteChange = () => {
-      trackPageView(window.location.pathname + window.location.search);
-    };
+    if (user && !loading) {
+      const checkChatMessages = async () => {
+        // Fetch project_id for the current user's active project
+        const { data: projectData, error: projectError } = await supabase
+          .from('projects')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
 
-    // Initial page view
-    handleRouteChange();
+        if (projectError) {
+          console.error('Error fetching project:', projectError.message);
+          return;
+        }
 
-    // Listen for route changes
-    window.addEventListener('popstate', handleRouteChange);
-    // For react-router-dom, you might need to tap into its navigation events
-    // or use a custom hook if you need to track hash changes or specific internal navigations accurately.
+        if (projectData) {
+          const { count, error: chatCountError } = await supabase
+            .from('chat_messages')
+            .select('*', { count: 'exact' })
+            .eq('project_id', projectData.id);
 
-    return () => {
-      window.removeEventListener('popstate', handleRouteChange);
-    };
+          if (chatCountError) {
+            console.error('Error fetching chat messages count:', chatCountError.message);
+            return;
+          }
+
+          if (count === 0) {
+            setShowChatNudge(true);
+          }
+        }
+      };
+
+      checkChatMessages();
+    }
+  }, [user, loading]);
+
+  // Lovable sandbox badge
+  useEffect(() => {
+    if (lovable.isDevelopment() && lovable.isLovableSandbox() && lovable.shouldShowBadge()) {
+      const currentURL = window.location.href;
+      const url = new URL(currentURL);
+      const forceHideBadge = url.searchParams.get('forceHideBadge');
+      if (forceHideBadge !== 'true') {
+        lovable.insertBadge({
+          position: 'bottom-left',
+          variant: 'floating',
+        });
+      }
+    } else {
+      lovable.removeBadge();
+    }
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RouterProvider router={router} />
-        <Toaster />
-        <AiNudge aiFeaturePath="/ai-analyze" />
-      </AuthProvider>
+      <BrowserRouter>
+        <TooltipProvider>
+          <Suspense
+            fallback={
+              <div className="flex h-screen items-center justify-center">
+                <Loader className="h-12 w-12 animate-spin text-primary" />
+              </div>
+            }
+          >
+            <AppRoutes />
+            <Toaster />
+            {showChatNudge && (
+              <div className="fixed bottom-4 right-4 z-[9999]">
+                <Badge
+                  variant="outline"
+                  className="transform cursor-pointer animate-fade-in border-ai-nudge-border bg-ai-nudge-background px-4 py-2 text-base text-ai-nudge-foreground shadow-lg transition-transform duration-300 ease-out hover:scale-105"
+                  onClick={() => {
+                    // Potentially navigate to chat or open chat widget
+                    // For now, just hide it after click
+                    setShowChatNudge(false);
+                    console.log('Chat nudge clicked!');
+                  }}
+                >
+                  💬 Heb je de chat al geprobeerd? Probeer de chatfunctie om sneller antwoorden te krijgen!
+                </Badge>
+              </div>
+            )}
+          </Suspense>
+        </TooltipProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }

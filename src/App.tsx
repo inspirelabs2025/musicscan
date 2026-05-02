@@ -1,120 +1,63 @@
-import './App.css';
-import { useEffect, useState, Suspense, lazy } from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from './components/ui/sonner';
-import { TooltipProvider } from './components/ui/tooltip';
-import { useAuth } from './hooks/useAuth';
-import { Loader } from 'lucide-react';
-import { LovableClient } from 'lovable-tagger';
-import { Badge } from './components/ui/badge';
-import { supabase } from '@/supabaseClient';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import MainLayout from '@/layouts/MainLayout';
+import HomePage from '@/pages/HomePage';
+import ProfilePage from '@/pages/ProfilePage';
+import StudioPage from '@/pages/StudioPage';
+import ProjectPage from '@/pages/ProjectPage';
+import ScanPage from '@/pages/ScanPage';
+import LoginPage from '@/pages/LoginPage';
+import RegisterPage from '@/pages/RegisterPage';
+import ConfirmEmailPage from '@/pages/ConfirmEmailPage';
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
+import ResetPasswordPage from '@/pages/ResetPasswordPage';
+import AuthWatcher from '@/components/AuthWatcher';
+// Ensure analytics is initialized very early.
+import { initializeAnalytics, trackPageView } from '@/lib/analytics';
 
-const AppRoutes = lazy(() => import('./AppRoutes'));
+// Initialize GA as early as possible
+initializeAnalytics(import.meta.env.VITE_GA_MEASUREMENT_ID);
 
-const queryClient = new QueryClient();
-
-const lovable = new LovableClient();
-
-function App() {
-  const { user, loading } = useAuth();
-  const [showChatNudge, setShowChatNudge] = useState(false);
+const AppRoutes: React.FC = () => {
+  const location = useLocation();
 
   useEffect(() => {
-    if (user && !loading) {
-      const checkChatMessages = async () => {
-        // Fetch project_id for the current user's active project
-        const { data: projectData, error: projectError } = await supabase
-          .from('projects')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
+    // Dynamically set page title (can be enhanced with route-specific titles)
+    const defaultTitle = "MusicScan";
+    document.title = defaultTitle;
 
-        if (projectError) {
-          console.error('Error fetching project:', projectError.message);
-          return;
-        }
-
-        if (projectData) {
-          const { count, error: chatCountError } = await supabase
-            .from('chat_messages')
-            .select('*', { count: 'exact' })
-            .eq('project_id', projectData.id);
-
-          if (chatCountError) {
-            console.error('Error fetching chat messages count:', chatCountError.message);
-            return;
-          }
-
-          if (count === 0) {
-            setShowChatNudge(true);
-          }
-        }
-      };
-
-      checkChatMessages();
-    }
-  }, [user, loading]);
-
-  // Lovable sandbox badge
-  useEffect(() => {
-    if (lovable.isDevelopment() && lovable.isLovableSandbox() && lovable.shouldShowBadge()) {
-      const currentURL = window.location.href;
-      const url = new URL(currentURL);
-      const forceHideBadge = url.searchParams.get('forceHideBadge');
-      if (forceHideBadge !== 'true') {
-        lovable.insertBadge({
-          position: 'bottom-left',
-          variant: 'floating',
-        });
-      }
-    } else {
-      lovable.removeBadge();
-    }
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
+    // Track page view on route change
+    trackPageView(location.pathname + location.search, document.title);
+  }, [location]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <TooltipProvider>
-          <Suspense
-            fallback={
-              <div className="flex h-screen items-center justify-center">
-                <Loader className="h-12 w-12 animate-spin text-primary" />
-              </div>
-            }
-          >
-            <AppRoutes />
-            <Toaster />
-            {showChatNudge && (
-              <div className="fixed bottom-4 right-4 z-[9999]">
-                <Badge
-                  variant="outline"
-                  className="transform cursor-pointer animate-fade-in border-ai-nudge-border bg-ai-nudge-background px-4 py-2 text-base text-ai-nudge-foreground shadow-lg transition-transform duration-300 ease-out hover:scale-105"
-                  onClick={() => {
-                    // Potentially navigate to chat or open chat widget
-                    // For now, just hide it after click
-                    setShowChatNudge(false);
-                    console.log('Chat nudge clicked!');
-                  }}
-                >
-                  💬 Heb je de chat al geprobeerd? Probeer de chatfunctie om sneller antwoorden te krijgen!
-                </Badge>
-              </div>
-            )}
-          </Suspense>
-        </TooltipProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <Routes>
+      <Route element={<AuthWatcher />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/ai-features" element={<div>AI Features Page Placeholder</div>} /> {/* Placeholder for AI Features Page */}
+
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/studio" element={<StudioPage />} />
+          <Route path="/project/:id" element={<ProjectPage />} />
+          <Route path="/scan" element={<ScanPage />} />
+        </Route>
+      </Route>
+    </Routes>
   );
-}
+};
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <AppRoutes />
+    </Router>
+  );
+};
 
 export default App;

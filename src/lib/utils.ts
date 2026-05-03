@@ -1,42 +1,40 @@
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
-/**
- * Safely gets an item from localStorage.
- * @param key The key to retrieve.
- * @returns The stored value or null if not found/error.
- */
-export function localStorageGet(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch (error) {
-    console.error('Error getting item from localStorage:', error);
-    return null;
+// --- Cookie Utilities ---
+export function setCookie(name: string, value: string, days: number) {
+  const date = new Date();
+  date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+  const expires = "; expires=" + date.toUTCString();
+  document.cookie = name + "=" + (value || "") + expires + "; Path=/; SameSite=Lax";
+}
+
+export function getCookie(name: string): string | null {
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
   }
+  return null;
 }
 
-/**
- * Safely sets an item in localStorage.
- * @param key The key to set.
- * @param value The value to store.
- */
-export function localStorageSet(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value);
-  } catch (error) {
-    console.error('Error setting item in localStorage:', error);
-  }
-}
-
-/**
- * Normalize a path into a fully-qualified canonical URL on the production domain.
- */
 export function normalizeFullUrl(pathname: string): string {
-  const origin = 'https://musicscan.app';
-  const path = pathname.startsWith('/') ? pathname : `/${pathname}`;
-  return `${origin}${path}`;
+  const base = 'https://www.musicscan.app';
+  const clean = pathname.replace(/\/+$/, '') || '/';
+  return `${base}${clean}`;
+}
+
+export function extractDiscogsIdFromUrl(url: string | null | undefined): number | null {
+  if (!url) return null;
+  const match = url.match(/\/release\/(\d+)/);
+  if (match) return parseInt(match[1], 10);
+  const match2 = url.match(/\/master\/(\d+)/);
+  if (match2) return parseInt(match2[1], 10);
+  return null;
 }

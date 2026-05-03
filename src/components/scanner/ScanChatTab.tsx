@@ -594,13 +594,37 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
     sendMessage(sc.scanGuideRequest);
   };
 
+  const MAX_PHOTOS_PER_CHAT = 10;
   const handleFilesSelected = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/') && f.size <= 10 * 1024 * 1024);
     if (selected.length === 0) return;
-    setPendingFiles(prev => [...prev, ...selected]);
+    setPendingFiles(prev => {
+      const totalAlreadyInChat = photoUrls.length + prev.length;
+      const remaining = Math.max(0, MAX_PHOTOS_PER_CHAT - totalAlreadyInChat);
+      if (remaining <= 0) {
+        toast({
+          title: language === 'nl' ? 'Maximum aantal foto\'s bereikt' : 'Maximum number of photos reached',
+          description: language === 'nl'
+            ? `Je kunt maximaal ${MAX_PHOTOS_PER_CHAT} foto's per chat versturen. Start een nieuwe scan voor meer.`
+            : `You can send up to ${MAX_PHOTOS_PER_CHAT} photos per chat. Start a new scan for more.`,
+          variant: 'destructive',
+        });
+        return prev;
+      }
+      const accepted = selected.slice(0, remaining);
+      if (selected.length > accepted.length) {
+        toast({
+          title: language === 'nl' ? 'Te veel foto\'s' : 'Too many photos',
+          description: language === 'nl'
+            ? `Alleen de eerste ${accepted.length} foto's zijn toegevoegd (max ${MAX_PHOTOS_PER_CHAT} per chat).`
+            : `Only the first ${accepted.length} photos were added (max ${MAX_PHOTOS_PER_CHAT} per chat).`,
+        });
+      }
+      return [...prev, ...accepted];
+    });
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (cameraInputRef.current) cameraInputRef.current.value = '';
-  }, []);
+  }, [photoUrls.length, language]);
 
   const removePendingFile = useCallback((index: number) => {
     setPendingFiles(prev => prev.filter((_, i) => i !== index));

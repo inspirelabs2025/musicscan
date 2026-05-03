@@ -31,3 +31,12 @@ export function localStorageSet(key: string, value: string): void {
     console.error('Error setting item in localStorage:', error);
   }
 }
+
+/**
+ * Normalize a path into a fully-qualified canonical URL on the production domain.
+ */
+export function normalizeFullUrl(pathname: string): string {
+  const origin = 'https://musicscan.app';
+  const path = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  return `${origin}${path}`;
+}

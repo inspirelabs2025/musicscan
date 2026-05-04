@@ -1323,7 +1323,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   };
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-280px)]">
+    <div className="max-w-2xl mx-auto flex flex-col md:h-[calc(100vh-280px)]">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 px-3 py-3 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 shadow-sm">
         <div className="flex items-center gap-3">

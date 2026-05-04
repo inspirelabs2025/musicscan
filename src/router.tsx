@@ -278,6 +278,7 @@ export const router = createBrowserRouter([
       
       // Collection & Scan
       { path: 'collection-overview', element: wrap(CollectionOverview) },
+      { path: 'ai-analysis', element: wrap(AIAnalysis) },
       { path: 'mijn-collectie', element: wrap(MyCollection) },
       { path: 'my-collection', element: <Navigate to="/mijn-collectie" replace /> },
       { path: 'collection/:id', element: wrap(CollectionItemPage) },

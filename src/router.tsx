@@ -83,6 +83,7 @@ const QuizResult = lazyWithRetry(() => import('./pages/QuizResult'));
 const CategoryQuiz = lazyWithRetry(() => import('./pages/CategoryQuiz'));
 const MyQuizzes = lazyWithRetry(() => import('./pages/MyQuizzes'));
 const CollectionOverview = lazyWithRetry(() => import('./pages/CollectionOverview'));
+const AIAnalysis = lazyWithRetry(() => import('./pages/AIAnalysis'));
 const MyCollection = lazyWithRetry(() => import('./pages/MyCollection'));
 const Profile = lazyWithRetry(() => import('./pages/Profile'));
 const Scan = lazyWithRetry(() => import('./pages/Scan'));

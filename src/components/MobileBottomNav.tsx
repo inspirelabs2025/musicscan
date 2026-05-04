@@ -30,7 +30,7 @@ export function MobileBottomNav() {
     {
       title: t('nav.scanCollection'),
       items: [
-        { icon: User, label: t('nav.myProfile'), url: user ? `/profile/${user.id}` : "/auth" },
+        { icon: User, label: t('nav.myProfile'), url: "/profile" },
         { icon: Brain, label: t('nav.smartScan'), url: "/ai-scan-v2" },
         { icon: Music, label: t('nav.myCollection'), url: "/my-collection" },
         { icon: Disc3, label: m.myDiscogs, url: "/mijn-discogs" },

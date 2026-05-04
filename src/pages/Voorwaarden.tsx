@@ -324,11 +324,11 @@ export default function Voorwaarden() {
               Neem gerust contact met ons op als je vragen hebt over deze algemene voorwaarden.
             </p>
             <a 
-              href="mailto:info@musicscan.nl"
+              href="mailto:info@musicscan.app"
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
               <Mail className="h-4 w-4" />
-              info@musicscan.nl
+              info@musicscan.app
             </a>
           </CardContent>
         </Card>

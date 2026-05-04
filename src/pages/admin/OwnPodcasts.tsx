@@ -77,7 +77,7 @@ export default function OwnPodcasts() {
     slug: '',
     author: 'MusicScan',
     owner_name: 'MusicScan',
-    owner_email: 'podcast@musicscan.nl',
+    owner_email: 'podcast@musicscan.app',
     category: 'Music',
     explicit: false,
   });
@@ -126,7 +126,7 @@ export default function OwnPodcasts() {
         slug: '',
         author: 'MusicScan',
         owner_name: 'MusicScan',
-        owner_email: 'podcast@musicscan.nl',
+        owner_email: 'podcast@musicscan.app',
         category: 'Music',
         explicit: false,
       });

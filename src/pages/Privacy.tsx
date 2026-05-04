@@ -56,7 +56,7 @@ export default function Privacy() {
             <div className="bg-muted/50 p-4 rounded-lg">
               <p><strong>Contactgegevens:</strong></p>
               <p>MusicScan</p>
-              <p>E-mail: <a href="mailto:info@musicscan.nl" className="text-primary hover:underline">info@musicscan.nl</a></p>
+              <p>E-mail: <a href="mailto:info@musicscan.app" className="text-primary hover:underline">info@musicscan.app</a></p>
               <p>Website: <a href="https://www.musicscan.app" className="text-primary hover:underline">www.musicscan.app</a></p>
             </div>
           </CardContent>
@@ -305,8 +305,8 @@ export default function Privacy() {
             <div className="bg-primary/10 p-4 rounded-lg mt-4">
               <p>
                 Om een van deze rechten uit te oefenen, neem contact met ons op via{" "}
-                <a href="mailto:info@musicscan.nl" className="text-primary font-semibold hover:underline">
-                  info@musicscan.nl
+                <a href="mailto:info@musicscan.app" className="text-primary font-semibold hover:underline">
+                  info@musicscan.app
                 </a>
                 . Wij reageren binnen 30 dagen op je verzoek.
               </p>
@@ -369,11 +369,11 @@ export default function Privacy() {
               hoe wij omgaan met je persoonsgegevens.
             </p>
             <a 
-              href="mailto:info@musicscan.nl" 
+              href="mailto:info@musicscan.app" 
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
             >
               <Mail className="h-4 w-4" />
-              info@musicscan.nl
+              info@musicscan.app
             </a>
           </CardContent>
         </Card>

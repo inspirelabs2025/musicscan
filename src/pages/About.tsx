@@ -136,8 +136,8 @@ const About = () => {
                   <div>
                     <dt className="text-muted-foreground">E-mail</dt>
                     <dd>
-                      <a href="mailto:info@musicscan.nl" className="font-medium text-primary hover:underline">
-                        info@musicscan.nl
+                      <a href="mailto:info@musicscan.app" className="font-medium text-primary hover:underline">
+                        info@musicscan.app
                       </a>
                     </dd>
                   </div>

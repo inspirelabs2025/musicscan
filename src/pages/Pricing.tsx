@@ -432,7 +432,7 @@ const Pricing = () => {
           <div className="text-center mt-16">
             <p className="text-muted-foreground mb-4">{p.questionsAboutPricing}</p>
             <Button variant="outline" asChild>
-              <a href="mailto:support@musicscan.nl">{p.contactUs}</a>
+              <a href="mailto:support@musicscan.app">{p.contactUs}</a>
             </Button>
           </div>
         </div>

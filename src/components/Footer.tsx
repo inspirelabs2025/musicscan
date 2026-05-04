@@ -61,7 +61,7 @@ export const Footer = () => {
               <Link to="/pricing" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                 {t('footer.pricing')}
               </Link>
-              <a href="mailto:info@musicscan.nl" target="_blank" rel="noopener noreferrer" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a href="mailto:info@musicscan.app" target="_blank" rel="noopener noreferrer" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                 {t('footer.contact')}
               </a>
               <Link to="/privacy" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
@@ -94,7 +94,7 @@ export const Footer = () => {
             <a href="https://github.com/musicscan" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="GitHub">
               <Github className="w-5 h-5" />
             </a>
-            <a href="mailto:info@musicscan.nl" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Email">
+            <a href="mailto:info@musicscan.app" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Email">
               <Mail className="w-5 h-5" />
             </a>
           </div>

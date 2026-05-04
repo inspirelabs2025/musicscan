@@ -28,8 +28,14 @@ export const useUserManagement = () => {
       if (searchQuery) requestBody.search = searchQuery;
       if (roleFilter && roleFilter !== 'all') requestBody.role = roleFilter;
 
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Niet ingelogd. Log opnieuw in om gebruikers te beheren.');
+      }
+
       const { data, error } = await supabase.functions.invoke('manage-user-roles', {
         body: requestBody,
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
       if (error) throw error;

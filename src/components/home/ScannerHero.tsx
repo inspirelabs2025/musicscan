@@ -52,6 +52,33 @@ export const ScannerHero = () => {
             </Link>
           </Button>
 
+          {!user && (
+            <div className="mt-6 flex flex-col items-center gap-3 max-w-xs mx-auto">
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="w-full bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:text-white font-semibold"
+              >
+                <Link to="/login">
+                  <LogIn className="w-5 h-5 mr-2" />
+                  Login
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="ghost"
+                className="w-full text-white/90 hover:bg-white/10 hover:text-white font-semibold border border-white/15"
+              >
+                <Link to="/register">
+                  <UserPlus className="w-5 h-5 mr-2" />
+                  Sign up
+                </Link>
+              </Button>
+            </div>
+          )}
+
           <div className="mt-10 max-w-2xl mx-auto grid grid-cols-3 gap-3 md:gap-5 items-start">
             <div className="text-center">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 md:p-4 mb-2 mx-auto w-fit">

@@ -67,7 +67,7 @@ const MijnDiscogs = () => {
 
         <Card className="p-6 mb-6 text-center">
           <p className="text-sm text-muted-foreground mb-4">
-            Klik op de knop hieronder om je Discogs-account te koppelen. Je wordt omgeleid naar Discogs om toegang te verlenen.
+            {t.connectInstruction}
           </p>
           <div className="flex justify-center">
             <DiscogsConnectButton />

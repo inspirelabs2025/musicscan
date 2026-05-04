@@ -60,7 +60,7 @@ export const ScannerHero = () => {
                 variant="outline"
                 className="w-full bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:text-white font-semibold"
               >
-                <Link to="/login">
+                <Link to="/auth?mode=login">
                   <LogIn className="w-5 h-5 mr-2" />
                   Login
                 </Link>
@@ -71,7 +71,7 @@ export const ScannerHero = () => {
                 variant="ghost"
                 className="w-full text-white/90 hover:bg-white/10 hover:text-white font-semibold border border-white/15"
               >
-                <Link to="/register">
+                <Link to="/auth?mode=signup">
                   <UserPlus className="w-5 h-5 mr-2" />
                   Sign up
                 </Link>

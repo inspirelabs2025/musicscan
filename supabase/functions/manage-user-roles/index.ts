@@ -45,13 +45,17 @@ serve(async (req) => {
       }
     );
 
-    // Verify user is authenticated
+    // Verify user is authenticated using getClaims (works with new signing keys)
     const token = (authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader) as string;
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
-    console.log('User retrieved:', user ? user.email : 'null', 'Error:', userError?.message);
-    
-    if (userError || !user) {
-      console.error('User authentication failed:', userError);
+    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+    console.log('Claims retrieved:', claimsData?.claims?.sub ?? 'null', 'Error:', claimsError?.message);
+
+    const user = claimsData?.claims
+      ? { id: claimsData.claims.sub as string, email: (claimsData.claims as any).email as string }
+      : null;
+
+    if (claimsError || !user?.id) {
+      console.error('User authentication failed:', claimsError);
       return new Response(
         JSON.stringify({ error: 'Unauthorized: Invalid or expired token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

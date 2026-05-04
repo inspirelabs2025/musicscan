@@ -115,6 +115,40 @@ const About = () => {
               </div>
             </div>
 
+            {/* Bedrijfsinformatie */}
+            <Card className="border-2 bg-muted/30">
+              <CardContent className="p-8 md:p-10">
+                <h2 className="text-2xl font-bold mb-4">Over het bedrijf</h2>
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  MusicScan is een product van{' '}
+                  <span className="font-semibold text-foreground">Community Networkz BV</span>,
+                  een Nederlands bedrijf gespecialiseerd in digitale platformen voor muziekliefhebbers en verzamelaars.
+                </p>
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">Bedrijfsnaam</dt>
+                    <dd className="font-medium text-foreground">Community Networkz BV</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">KvK-nummer</dt>
+                    <dd className="font-medium text-foreground">59752556</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">E-mail</dt>
+                    <dd>
+                      <a href="mailto:info@musicscan.nl" className="font-medium text-primary hover:underline">
+                        info@musicscan.nl
+                      </a>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Website</dt>
+                    <dd className="font-medium text-foreground">musicscan.app</dd>
+                  </div>
+                </dl>
+              </CardContent>
+            </Card>
+
           </div>
         </div>
       </section>

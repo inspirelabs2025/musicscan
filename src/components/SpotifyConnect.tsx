@@ -314,9 +314,9 @@ export function SpotifyConnect() {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {spotifyStats.topArtists.slice(0, 6).map((artist, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded">
-                      <span className="font-medium">{artist.artist}</span>
-                      <Badge variant="outline">{artist.count} tracks</Badge>
+                    <div key={index} className="flex items-center justify-between gap-2 p-2 bg-muted/50 rounded">
+                      <span className="font-medium truncate min-w-0">{artist.artist}</span>
+                      <Badge variant="outline" className="shrink-0 whitespace-nowrap">{artist.count} tracks</Badge>
                     </div>
                   ))}
                 </div>

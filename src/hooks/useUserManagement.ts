@@ -82,8 +82,10 @@ export const useUserManagement = () => {
 
   const assignRole = async (userId: string, role: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const { data, error } = await supabase.functions.invoke('manage-user-roles', {
         body: { action: 'assign', userId, role },
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined,
       });
 
       if (error) throw error;
@@ -110,8 +112,10 @@ export const useUserManagement = () => {
 
   const removeRole = async (userId: string, role: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const { data, error } = await supabase.functions.invoke('manage-user-roles', {
         body: { action: 'remove', userId, role },
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined,
       });
 
       if (error) throw error;

@@ -3,17 +3,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Footer } from './Footer';
 
 export const ConditionalFooter = () => {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
 
-  // Don't show footer while loading auth state
-  if (loading) {
-    return null;
-  }
+  if (loading) return null;
 
-  // Only show footer when user is NOT logged in
-  if (user) {
-    return null;
-  }
-
-  return <Footer />;
+  // Tonen op desktop/tablet voor iedereen (ingelogd of niet),
+  // verbergen op mobiel om de mobiele ervaring schoon te houden.
+  return (
+    <div className="hidden md:block">
+      <Footer />
+    </div>
+  );
 };

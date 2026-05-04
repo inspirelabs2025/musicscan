@@ -55,7 +55,7 @@ export const Footer = () => {
           <div className="space-y-4">
             <h3 className="font-semibold text-foreground">{t('footer.support')}</h3>
             <div className="space-y-2">
-              <Link to="/about" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
+              <Link to="/over-ons" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                 {t('footer.aboutMusicScan')}
               </Link>
               <Link to="/pricing" className="block text-sm text-muted-foreground hover:text-primary transition-colors">

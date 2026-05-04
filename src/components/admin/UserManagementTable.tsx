@@ -29,13 +29,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { MoreVertical, Shield, UserMinus, UserPlus, Camera } from 'lucide-react';
+import { MoreVertical, Shield, UserMinus, UserPlus, Camera, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface UserManagementTableProps {
   users: UserWithRoles[];
   onAssignRole: (userId: string, role: string) => Promise<boolean>;
   onRemoveRole: (userId: string, role: string) => Promise<boolean>;
+  onDeleteUser: (userId: string) => Promise<boolean>;
   onUserClick?: (user: UserWithRoles) => void;
 }
 
@@ -51,6 +52,7 @@ export function UserManagementTable({
   users, 
   onAssignRole, 
   onRemoveRole,
+  onDeleteUser,
   onUserClick 
 }: UserManagementTableProps) {
   const [actionDialog, setActionDialog] = useState<{
@@ -58,6 +60,12 @@ export function UserManagementTable({
     action: 'assign' | 'remove';
     userId: string;
     role: string;
+    userEmail: string;
+  } | null>(null);
+
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    userId: string;
     userEmail: string;
   } | null>(null);
 
@@ -71,6 +79,12 @@ export function UserManagementTable({
     if (success) {
       setActionDialog(null);
     }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteDialog) return;
+    const success = await onDeleteUser(deleteDialog.userId);
+    if (success) setDeleteDialog(null);
   };
 
   const openAssignDialog = (userId: string, role: string, userEmail: string) => {
@@ -91,6 +105,10 @@ export function UserManagementTable({
       role,
       userEmail,
     });
+  };
+
+  const openDeleteDialog = (userId: string, userEmail: string) => {
+    setDeleteDialog({ open: true, userId, userEmail });
   };
 
   return (
@@ -216,6 +234,15 @@ export function UserManagementTable({
                             ))}
                           </>
                         )}
+
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => openDeleteDialog(user.id, user.email)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete user
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -251,6 +278,28 @@ export function UserManagementTable({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmAction}>
               Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete User Dialog */}
+      <AlertDialog open={deleteDialog?.open} onOpenChange={(open) => !open && setDeleteDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Gebruiker verwijderen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Weet je zeker dat je <strong>{deleteDialog?.userEmail}</strong> permanent wilt verwijderen?
+              Dit verwijdert het account en alle gerelateerde data (scans, rollen, profiel). Deze actie kan niet ongedaan worden gemaakt.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Verwijder permanent
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

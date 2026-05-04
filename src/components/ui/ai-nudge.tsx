@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { XCircle, Sparkles } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { trackEvent } from '@/lib/analytics';
-import { localStorageGet, localStorageSet } from '@/lib/utils';
+const localStorageGet = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
+const localStorageSet = (key: string, value: string) => { try { localStorage.setItem(key, value); } catch {} };
 
 interface AiNudgeProps {
   aiFeatureUsedCount?: number;

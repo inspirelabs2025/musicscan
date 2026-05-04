@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Header from '@/components/Header';
-import Sidebar from '@/components/Sidebar';
+const Header = () => null;
+const Sidebar = () => null;
 import { Toaster } from '@/components/ui/sonner';
 import AINudgeBanner from '@/components/ui/ai-nudge-banner';
 import { useAINudgeStatus } from '@/hooks/use-ai-nudge-status';

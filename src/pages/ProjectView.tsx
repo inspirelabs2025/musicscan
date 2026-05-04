@@ -67,7 +67,7 @@ const ProjectView: React.FC = () => {
 
       {showChatNudge && (
         <div className="mb-6">
-          <AiNudge message="💬 Er zijn pas 0 chatberichten in je project. Probeer de chatfunctie om sneller antwoorden te krijgen!" />
+          <AiNudge aiFeaturePath="/ai-features" />
         </div>
       )}
 

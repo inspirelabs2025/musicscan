@@ -83,6 +83,7 @@ const QuizResult = lazyWithRetry(() => import('./pages/QuizResult'));
 const CategoryQuiz = lazyWithRetry(() => import('./pages/CategoryQuiz'));
 const MyQuizzes = lazyWithRetry(() => import('./pages/MyQuizzes'));
 const CollectionOverview = lazyWithRetry(() => import('./pages/CollectionOverview'));
+const AIAnalysis = lazyWithRetry(() => import('./pages/AIAnalysis'));
 const MyCollection = lazyWithRetry(() => import('./pages/MyCollection'));
 const Profile = lazyWithRetry(() => import('./pages/Profile'));
 const Scan = lazyWithRetry(() => import('./pages/Scan'));
@@ -277,6 +278,7 @@ export const router = createBrowserRouter([
       
       // Collection & Scan
       { path: 'collection-overview', element: wrap(CollectionOverview) },
+      { path: 'ai-analysis', element: wrap(AIAnalysis) },
       { path: 'mijn-collectie', element: wrap(MyCollection) },
       { path: 'my-collection', element: <Navigate to="/mijn-collectie" replace /> },
       { path: 'collection/:id', element: wrap(CollectionItemPage) },

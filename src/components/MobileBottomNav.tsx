@@ -117,7 +117,7 @@ export function MobileBottomNav() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{user.email}</p>
                         <Link
-                          to={`/profile/${user.id}`}
+                          to="/profile"
                           onClick={() => setMenuOpen(false)}
                           className="text-xs text-primary hover:underline"
                         >

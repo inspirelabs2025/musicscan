@@ -1323,7 +1323,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   };
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-280px)]">
+    <div className="max-w-2xl mx-auto flex flex-col md:h-[calc(100vh-280px)]">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 px-3 py-3 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 shadow-sm">
         <div className="flex items-center gap-3">
@@ -1363,7 +1363,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
       />
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 scroll-smooth">
+      <div ref={scrollRef} className="flex-1 md:overflow-y-auto space-y-4 mb-4 pr-1 scroll-smooth pb-32 md:pb-4">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2.5 animate-fadeIn`}>
             {msg.role === 'assistant' && (

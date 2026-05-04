@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface UserWithRoles {
   id: string;
@@ -19,8 +20,11 @@ export const useUserManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const { toast } = useToast();
+  const { session, loading: authLoading } = useAuth();
 
   const fetchUsers = async () => {
+    if (authLoading) return;
+
     try {
       setLoading(true);
       
@@ -28,7 +32,6 @@ export const useUserManagement = () => {
       if (searchQuery) requestBody.search = searchQuery;
       if (roleFilter && roleFilter !== 'all') requestBody.role = roleFilter;
 
-      const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         throw new Error('Niet ingelogd. Log opnieuw in om gebruikers te beheren.');
       }
@@ -82,10 +85,13 @@ export const useUserManagement = () => {
 
   const assignRole = async (userId: string, role: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Niet ingelogd. Log opnieuw in om gebruikers te beheren.');
+      }
+
       const { data, error } = await supabase.functions.invoke('manage-user-roles', {
         body: { action: 'assign', userId, role },
-        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
       if (error) throw error;
@@ -112,10 +118,13 @@ export const useUserManagement = () => {
 
   const removeRole = async (userId: string, role: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Niet ingelogd. Log opnieuw in om gebruikers te beheren.');
+      }
+
       const { data, error } = await supabase.functions.invoke('manage-user-roles', {
         body: { action: 'remove', userId, role },
-        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
       if (error) throw error;
@@ -142,7 +151,7 @@ export const useUserManagement = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, [searchQuery, roleFilter]);
+  }, [searchQuery, roleFilter, session?.access_token, authLoading]);
 
   // Subscribe to real-time changes in user_roles table
   useEffect(() => {
@@ -164,7 +173,7 @@ export const useUserManagement = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [searchQuery, roleFilter]);
+  }, [searchQuery, roleFilter, session?.access_token, authLoading]);
 
   return {
     users,

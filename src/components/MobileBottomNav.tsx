@@ -15,9 +15,7 @@ export function MobileBottomNav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const m = tr.miscUI;
 
-  // Android system nav bar padding fix
-  const isAndroid = /android/i.test(navigator.userAgent);
-  const bottomPadding = isAndroid ? '48px' : 'max(env(safe-area-inset-bottom), 8px)';
+  const bottomPadding = 'max(env(safe-area-inset-bottom), 8px)';
 
   const navItems = [
     { icon: Home, label: t('nav.home'), url: "/" },
@@ -56,7 +54,14 @@ export function MobileBottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur border-t supports-[backdrop-filter]:bg-background/60" style={{ paddingBottom: bottomPadding }}>
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur border-t supports-[backdrop-filter]:bg-background/60"
+        style={{
+          paddingBottom: bottomPadding,
+          paddingLeft: 'env(safe-area-inset-left)',
+          paddingRight: 'env(safe-area-inset-right)',
+        }}
+      >
         <div className="flex items-center justify-around h-14">
           {filteredNavItems.map((item) => {
             const isActive = item.url === "/" ? currentPath === "/" : currentPath.startsWith(item.url);
@@ -65,12 +70,12 @@ export function MobileBottomNav() {
                 key={item.url}
                 to={item.url}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-foreground transition-colors",
+                  "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 h-full text-foreground transition-colors",
                   isActive && "text-primary"
                 )}
               >
                 <item.icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                <span className="hidden xs:block text-[10px] font-medium truncate w-full text-center px-0.5">{item.label}</span>
               </Link>
             );
           })}
@@ -80,12 +85,12 @@ export function MobileBottomNav() {
             <SheetTrigger asChild>
               <button
                 className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-foreground transition-colors",
+                  "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 h-full text-foreground transition-colors",
                   menuOpen && "text-primary"
                 )}
               >
                 <Menu className="h-5 w-5" />
-                <span className="text-[10px] font-medium">Menu</span>
+                <span className="hidden xs:block text-[10px] font-medium truncate w-full text-center px-0.5">Menu</span>
               </button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl p-0">

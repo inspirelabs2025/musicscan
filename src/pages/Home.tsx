@@ -136,6 +136,9 @@ const Home = () => {
 
       {/* SEO Content Block */}
       <SeoContentBlock text={tr.homeUI.seoBlock} />
+
+      {/* Footer met bedrijfsinformatie */}
+      <ConditionalFooter />
     </div>
   );
 };

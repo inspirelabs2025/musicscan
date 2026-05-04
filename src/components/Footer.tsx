@@ -105,6 +105,15 @@ export const Footer = () => {
             </a>
           </div>
         </div>
+
+        {/* Company info */}
+        <div className="border-t mt-6 pt-6 text-center text-xs text-muted-foreground space-y-1">
+          <p>
+            MusicScan is een product van{' '}
+            <span className="font-medium text-foreground">Community Networkz BV</span>
+          </p>
+          <p>KvK 59752556</p>
+        </div>
       </div>
     </footer>
   );

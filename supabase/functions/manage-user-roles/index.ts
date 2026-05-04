@@ -228,6 +228,37 @@ serve(async (req) => {
       );
     }
 
+    // DELETE - Permanently delete a user
+    if (action === 'delete') {
+      const { userId } = body;
+
+      if (!userId) {
+        return new Response(
+          JSON.stringify({ error: 'Missing userId' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (userId === user.id) {
+        return new Response(
+          JSON.stringify({ error: 'You cannot delete your own account' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+
+      if (deleteError) {
+        console.error('Error deleting user:', deleteError);
+        throw deleteError;
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, message: 'User deleted successfully' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }),
       { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, Search, ExternalLink, Disc3, Heart, ShoppingBag, ChevronLeft, ChevronRight, Link, MousePointerClick, CheckCircle2, ShieldCheck } from "lucide-react";
 import { useDiscogsConnection } from "@/hooks/useDiscogsConnection";
+import { DiscogsConnectButton } from "@/components/collection/DiscogsConnectButton";
 import {
   useDiscogsAccountData,
   DiscogsTarget,

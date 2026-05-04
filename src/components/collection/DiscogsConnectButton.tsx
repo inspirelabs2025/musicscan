@@ -27,7 +27,7 @@ export const DiscogsConnectButton = () => {
 
   if (isConnected && connection) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button size="sm" asChild>
           <a
             href={`https://www.discogs.com/user/${connection.discogs_username}`}
@@ -37,6 +37,19 @@ export const DiscogsConnectButton = () => {
             <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
             Discogs account: {connection.discogs_username}
           </a>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => disconnect()}
+          disabled={isDisconnecting}
+        >
+          {isDisconnecting ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+          ) : (
+            <Link2Off className="w-3.5 h-3.5 mr-1.5" />
+          )}
+          Ontkoppel
         </Button>
       </div>
     );

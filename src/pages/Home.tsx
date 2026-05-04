@@ -12,12 +12,9 @@ import { SeoContentBlock } from '@/components/SEO/SeoContentBlock';
 import { ConditionalFooter } from '@/components/ConditionalFooter';
 
 // Lazy load sections
-const ArtistsSection = lazy(() => import('@/components/home/sections/ArtistsSection').then(m => ({ default: m.ArtistsSection })));
-const StoriesSection = lazy(() => import('@/components/home/sections/StoriesSection').then(m => ({ default: m.StoriesSection })));
-const GenresSection = lazy(() => import('@/components/home/sections/GenresSection').then(m => ({ default: m.GenresSection })));
-// CommunitySection verwijderd van homepage
+// ArtistsSection, StoriesSection, GenresSection, MagicMikePodcastSection
+// verwijderd van de homepage — komen alleen nog voor op hun eigen detail-pagina's.
 const MagicMikeSection = lazy(() => import('@/components/home/sections/MagicMikeSection').then(m => ({ default: m.MagicMikeSection })));
-const MagicMikePodcastSection = lazy(() => import('@/components/home/sections/MagicMikePodcastSection').then(m => ({ default: m.MagicMikePodcastSection })));
 const PricingTeaser = lazy(() => import('@/components/home/sections/PricingTeaser').then(m => ({ default: m.PricingTeaser })));
 const DiscogsConnectSection = lazy(() => import('@/components/home/sections/DiscogsConnectSection').then(m => ({ default: m.DiscogsConnectSection })));
 // ProductBanner verwijderd
@@ -83,25 +80,6 @@ const Home = () => {
         <PricingTeaser />
       </Suspense>
 
-      {/* Podcast */}
-      <Suspense fallback={<SectionFallback />}>
-        <MagicMikePodcastSection />
-      </Suspense>
-
-      <div className="py-2" />
-
-      {/* Sectie 2: Artiesten */}
-      <Suspense fallback={<SectionFallback />}>
-        <ArtistsSection />
-      </Suspense>
-
-      <div className="py-2" />
-
-      {/* Sectie 3: Album Verhalen & Anekdotes */}
-      <Suspense fallback={<SectionFallback />}>
-        <StoriesSection />
-      </Suspense>
-
       <div className="py-2" />
 
       {/* Magic Mike */}
@@ -118,16 +96,14 @@ const Home = () => {
 
       <div className="py-2" />
 
-      {/* Sectie 4: Ontdek op Genre */}
-      <Suspense fallback={<SectionFallback />}>
-        <GenresSection />
-      </Suspense>
-
-      <div className="py-2" />
-
-      {/* Sectie 5: Community sectie verwijderd */}
-
-      {/* Shop sectie verwijderd */}
+      {/* Onderstaande secties stonden hier voorheen, maar zijn op verzoek
+          van de webversie/Lovable verwijderd om de homepage rustiger te maken:
+          - MagicMikePodcastSection (Podcast)
+          - ArtistsSection (Artiesten)
+          - StoriesSection (Album Verhalen)
+          - GenresSection (Ontdek op Genre)
+          - CommunitySection (was al weg)
+          - Shop (was al weg) */}
 
       {/* PWA Install */}
       <Suspense fallback={null}>

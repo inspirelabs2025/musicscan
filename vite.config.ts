@@ -11,7 +11,7 @@ function buildVersionPlugin(): Plugin {
     transformIndexHtml(html) {
       return html.replace(
         /content="[^"]*"(\s*\/?>)\s*(?=\s*<!--\s*Favicon)/,
-        `content="${buildTimestamp}"$1\n    <!-- Favicon`
+        `content="${buildTimestamp}"` + '$1\n    <!-- Favicon'
       ).replace(
         /name="build-version"\s+content="[^"]*"/,
         `name="build-version" content="${buildTimestamp}"`
@@ -24,6 +24,7 @@ function buildVersionPlugin(): Plugin {
 export default defineConfig(({ mode }) => ({
   define: {
     __BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString()),
+    'import.meta.env.VITE_AI_NUDGE_VARIANT': JSON.stringify(process.env.AI_NUDGE_VARIANT || 'nudge'),
   },
   server: {
     host: "::",

@@ -1,105 +1,109 @@
-import { lazy, Suspense, useEffect } from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from './lib/query-client';
-import { AuthProvider } from './context/AuthContext';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { supabase } from './supabaseClient';
+
+import './App.css';
+import { Login } from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Projects from './pages/Projects';
+import Settings from './pages/Settings';
+import Profile from './pages/Profile';
+import ProjectView from './pages/ProjectView';
+import Home from './pages/Home';
 import ProtectedRoute from './components/ProtectedRoute';
-import { Toaster } from '@/components/ui/sonner';
-import { AiNudge } from './components/ui/ai-nudge';
-import { trackPageView } from './lib/analytics';
-
-const Layout = lazy(() => import('./components/Layout'));
-const HomePage = lazy(() => import('./pages/HomePage'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const RegisterPage = lazy(() => import('./pages/RegisterPage'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage'));
-const SearchPage = lazy(() => import('./pages/SearchPage'));
-const ArtistDetailsPage = lazy(() => import('./pages/ArtistDetailsPage'));
-const AlbumDetailsPage = lazy(() => import('./pages/AlbumDetailsPage'));
-const TrackDetailsPage = lazy(() => import('./pages/TrackDetailsPage'));
-const ScanPage = lazy(() => import('./pages/ScanPage'));
-const ReleasesPage = lazy(() => import('./pages/ReleasesPage'));
-const ReleaseDetailsPage = lazy(() => import('./pages/ReleaseDetailsPage'));
-const NewReleasePage = lazy(() => import('./pages/NewReleasePage'));
-const AIAnalyzePage = lazy(() => import('./pages/AIAnalyzePage'));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
-
-const router = createBrowserRouter([
-  {
-    path: '/login',
-    element: (
-      <Suspense fallback={<div>Loading...</div>}>
-        <LoginPage />
-      </Suspense>
-    ),
-  },
-  {
-    path: '/register',
-    element: (
-      <Suspense fallback={<div>Loading...</div>}>
-        <RegisterPage />
-      </Suspense>
-    ),
-  },
-  {
-    path: '/',
-    element: (
-      <ProtectedRoute>
-        <Suspense fallback={<div>Loading...</div>}>
-          <Layout />
-        </Suspense>
-      </ProtectedRoute>
-    ),
-    children: [
-      { path: '/', element: <HomePage /> },
-      { path: '/profile/:userId?', element: <ProfilePage /> },
-      { path: '/settings', element: <SettingsPage /> },
-      { path: '/search', element: <SearchPage /> },
-      { path: '/artist/:artistId', element: <ArtistDetailsPage /> },
-      { path: '/album/:albumId', element: <AlbumDetailsPage /> },
-      { path: '/track/:trackId', element: <TrackDetailsPage /> },
-      { path: '/scan', element: <ScanPage /> },
-      { path: '/releases', element: <ReleasesPage /> },
-      { path: '/release/new', element: <NewReleasePage /> },
-      { path: '/release/:releaseId', element: <ReleaseDetailsPage /> },
-      { path: '/ai-analyze', element: <AIAnalyzePage /> },
-
-      // Catch-all route for 404
-      { path: '*', element: <NotFoundPage /> },
-    ],
-  },
-]);
+import Onboarding from './pages/Onboarding';
+import AnalyticsPage from './pages/AnalyticsPage';
+import IndexNow from './pages/IndexNow';
+import KeywordPage from './pages/KeywordPage';
+import { Toaster } from './components/ui/sonner';
+import { ThemeProvider } from './components/ThemeProvider';
+import { Layout } from './components/Layout';
+import ScanResultDetails from './pages/ScanResultDetails';
+import ScanResultSEO from './pages/ScanResultSEO';
+import { queryClient } from './main';
+import AuditPage from './pages/AuditPage';
+import { RecordUsage } from './components/RecordUsage';
+import AIMonitization from './pages/AIMonitization';
+import { useAIUsage } from './hooks/useAIUsage';
+import { AINudge } from './components/AINudge';
 
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [showNudge, setShowNudge] = useState(false);
+  const { hasUsedAI } = useAIUsage();
 
   useEffect(() => {
-    // Initialize Google Analytics page view tracking
-    const handleRouteChange = () => {
-      trackPageView(window.location.pathname + window.location.search);
-    };
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        navigate('/login');
+      } else if (session) {
+        // Check if the current path is /login and redirect to /dashboard
+        if (location.pathname === '/login') {
+          navigate('/dashboard');
+        }
+      } else {
+        navigate('/login');
+      }
+    });
+  }, [navigate, location.pathname]);
 
-    // Initial page view
-    handleRouteChange();
-
-    // Listen for route changes
-    window.addEventListener('popstate', handleRouteChange);
-    // For react-router-dom, you might need to tap into its navigation events
-    // or use a custom hook if you need to track hash changes or specific internal navigations accurately.
-
-    return () => {
-      window.removeEventListener('popstate', handleRouteChange);
-    };
-  }, []);
+  useEffect(() => {
+    // Only show nudge if AI features haven't been used AND the variant is active
+    if (!hasUsedAI && import.meta.env.VITE_AI_NUDGE_VARIANT === 'nudge') {
+      const timer = setTimeout(() => {
+        setShowNudge(true);
+      }, 5000); // Show nudge after 5 seconds
+      return () => clearTimeout(timer);
+    } else {
+      setShowNudge(false);
+    }
+  }, [hasUsedAI]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RouterProvider router={router} />
-        <Toaster />
-        <AiNudge aiFeaturePath="/ai-analyze" />
-      </AuthProvider>
-    </QueryClientProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <RecordUsage />
+      <Toaster />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/onboarding" element={<Onboarding />} />
+
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Routes>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/" element={<Home />} />
+                  <Route path="/projects" element={<Projects />} />
+                  <Route path="/project/:id" element={<ProjectView />} />
+                  <Route
+                    path="/project/:id/scan/:scanId"
+                    element={<ScanResultDetails />}
+                  />
+                  <Route
+                    path="/project/:id/scan/:scanId/seo"
+                    element={<ScanResultSEO />}
+                  />
+                  <Route
+                    path="/project/:id/audit/:auditId"
+                    element={<AuditPage />}
+                  />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/analytics" element={<AnalyticsPage />} />
+                  <Route path="/indexnow" element={<IndexNow />} />
+                  <Route path="/keywords" element={<KeywordPage />} />
+                  <Route path="/ai-monitization" element={<AIMonitization />} />
+                </Routes>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+      {showNudge && <AINudge onClose={() => setShowNudge(false)} />}
+    </ThemeProvider>
   );
 }
 

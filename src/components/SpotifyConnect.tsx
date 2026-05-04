@@ -202,15 +202,15 @@ export function SpotifyConnect() {
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center">
+      <CardHeader className="px-4 sm:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-start space-x-3 sm:space-x-4 min-w-0">
+            <div className="w-12 h-12 shrink-0 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center">
               <Headphones className="w-6 h-6 text-white" />
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <CardTitle className="text-xl">Spotify Gekoppeld</CardTitle>
-              <CardDescription>
+              <CardDescription className="break-words">
                 Verbonden als <span className="font-semibold">{spotifyDisplayName}</span>
                 {lastSync && (
                   <span className="block text-xs mt-1">
@@ -220,11 +220,11 @@ export function SpotifyConnect() {
               </CardDescription>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
             {needsReauth ? (
-              <Button onClick={handleReauth} variant="default" size="sm">
+              <Button onClick={handleReauth} variant="default" size="sm" className="flex-1 sm:flex-none">
                 <RefreshCw className="w-4 h-4 mr-1" />
-                Herautoriseer Spotify
+                Herautoriseer
               </Button>
             ) : (
               <Button
@@ -232,6 +232,7 @@ export function SpotifyConnect() {
                 size="sm"
                 onClick={handleSync}
                 disabled={isConnecting}
+                className="flex-1 sm:flex-none"
               >
                 <RefreshCw className="w-4 h-4 mr-1" />
                 Sync
@@ -242,6 +243,7 @@ export function SpotifyConnect() {
               size="sm"
               onClick={disconnectSpotify}
               disabled={isDisconnecting}
+              className="flex-1 sm:flex-none"
             >
               <Unlink className="w-4 h-4 mr-1" />
               Verbreek
@@ -250,7 +252,7 @@ export function SpotifyConnect() {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 px-4 sm:px-6">
         {needsReauth && (
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
             <div className="flex items-center gap-2 text-amber-800">
@@ -312,9 +314,9 @@ export function SpotifyConnect() {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {spotifyStats.topArtists.slice(0, 6).map((artist, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded">
-                      <span className="font-medium">{artist.artist}</span>
-                      <Badge variant="outline">{artist.count} tracks</Badge>
+                    <div key={index} className="flex items-center justify-between gap-2 p-2 bg-muted/50 rounded">
+                      <span className="font-medium truncate min-w-0">{artist.artist}</span>
+                      <Badge variant="outline" className="shrink-0 whitespace-nowrap">{artist.count} tracks</Badge>
                     </div>
                   ))}
                 </div>

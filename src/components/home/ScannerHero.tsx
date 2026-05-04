@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
-import { Camera, Disc3, Sparkles, ArrowRight, Zap } from 'lucide-react';
+import { Camera, Disc3, Sparkles, ArrowRight, Zap, LogIn, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/hooks/useAuth';
 
 export const ScannerHero = () => {
   const { t, tr } = useLanguage();
+  const { user } = useAuth();
   const h = tr.homeUI;
 
   return (

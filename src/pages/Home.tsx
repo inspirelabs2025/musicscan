@@ -75,6 +75,13 @@ const Home = () => {
         <AppInstallBanner />
       </Suspense>
 
+      {/* Discogs connect — direct onder hero */}
+      <Suspense fallback={<SectionFallback />}>
+        <DiscogsConnectSection />
+      </Suspense>
+
+      <div className="py-2" />
+
       {/* Pricing teaser */}
       <Suspense fallback={<SectionFallback />}>
         <PricingTeaser />
@@ -85,13 +92,6 @@ const Home = () => {
       {/* Magic Mike */}
       <Suspense fallback={<SectionFallback />}>
         <MagicMikeSection />
-      </Suspense>
-
-      <div className="py-2" />
-
-      {/* Discogs connect */}
-      <Suspense fallback={<SectionFallback />}>
-        <DiscogsConnectSection />
       </Suspense>
 
       <div className="py-2" />

@@ -1375,7 +1375,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
                 : 'bg-white/10 backdrop-blur-sm border border-white/15 rounded-bl-md text-white/90'
             }`}>
               {msg.role === 'assistant' ? (
-                <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:leading-relaxed [&_li]:leading-relaxed">
+                <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:leading-relaxed [&_li]:leading-relaxed [&_*]:!text-white/90 [&_strong]:!text-white [&_code]:!text-white [&_code]:!bg-white/10 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_pre]:!bg-white/10 [&_pre_code]:!bg-transparent [&_a]:!text-primary">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{

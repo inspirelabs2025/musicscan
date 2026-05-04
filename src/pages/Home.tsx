@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { LogIn, UserPlus, LogOut } from 'lucide-react';
 import { SeoContentBlock } from '@/components/SEO/SeoContentBlock';
+import { ConditionalFooter } from '@/components/ConditionalFooter';
 
 // Lazy load sections
 const ArtistsSection = lazy(() => import('@/components/home/sections/ArtistsSection').then(m => ({ default: m.ArtistsSection })));

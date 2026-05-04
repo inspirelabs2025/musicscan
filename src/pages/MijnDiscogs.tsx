@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, Search, ExternalLink, Disc3, Heart, ShoppingBag, ChevronLeft, ChevronRight, Link, MousePointerClick, CheckCircle2, ShieldCheck } from "lucide-react";
 import { useDiscogsConnection } from "@/hooks/useDiscogsConnection";
+import { DiscogsConnectButton } from "@/components/collection/DiscogsConnectButton";
 import {
   useDiscogsAccountData,
   DiscogsTarget,
@@ -54,14 +55,8 @@ const MijnDiscogs = () => {
   }
 
   if (!isConnected) {
-    const steps = [
-      { icon: Link, title: t.connectStep1Title, desc: t.connectStep1Desc },
-      { icon: MousePointerClick, title: t.connectStep2Title, desc: t.connectStep2Desc },
-      { icon: CheckCircle2, title: t.connectStep3Title, desc: t.connectStep3Desc },
-    ];
-
     return (
-      <div className="container mx-auto px-4 py-12 max-w-2xl">
+      <div className="container mx-auto px-4 py-12 max-w-xl">
         <div className="text-center mb-8">
           <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
             <Disc3 className="w-10 h-10 text-primary" />
@@ -70,35 +65,19 @@ const MijnDiscogs = () => {
           <p className="text-muted-foreground text-lg">{t.connectSubtitle}</p>
         </div>
 
-        <Card className="p-6 mb-6">
-          <div className="space-y-6">
-            {steps.map((step, i) => (
-              <div key={i} className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                  {i + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <step.icon className="w-4 h-4 text-primary flex-shrink-0" />
-                    <p className="font-semibold">{step.title}</p>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{step.desc}</p>
-                </div>
-              </div>
-            ))}
+        <Card className="p-6 mb-6 text-center">
+          <p className="text-sm text-muted-foreground mb-4">
+            Klik op de knop hieronder om je Discogs-account te koppelen. Je wordt omgeleid naar Discogs om toegang te verlenen.
+          </p>
+          <div className="flex justify-center">
+            <DiscogsConnectButton />
           </div>
         </Card>
 
-        <div className="text-center space-y-4">
-          <Button size="lg" className="gap-2 text-base px-8" onClick={() => navigate("/my-collection")}>
-            <Disc3 className="w-5 h-5" />
-            {t.connectButton}
-          </Button>
-          <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            {t.connectNote}
-          </p>
-        </div>
+        <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          {t.connectNote}
+        </p>
       </div>
     );
   }

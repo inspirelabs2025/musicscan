@@ -76,6 +76,11 @@ const Home = () => {
         <AppInstallBanner />
       </Suspense>
 
+      {/* Pricing teaser */}
+      <Suspense fallback={<SectionFallback />}>
+        <PricingTeaser />
+      </Suspense>
+
       {/* Podcast */}
       <Suspense fallback={<SectionFallback />}>
         <MagicMikePodcastSection />

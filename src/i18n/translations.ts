@@ -3551,6 +3551,7 @@ const translations = {
       of: "of",
       items: "items",
       sleeve: "Sleeve",
+      connectInstruction: "Click the button below to connect your Discogs account. You will be redirected to Discogs to grant access.",
     },
     echoPage: {
       title: "Magic Mike",

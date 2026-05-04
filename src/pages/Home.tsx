@@ -18,6 +18,7 @@ const GenresSection = lazy(() => import('@/components/home/sections/GenresSectio
 const MagicMikeSection = lazy(() => import('@/components/home/sections/MagicMikeSection').then(m => ({ default: m.MagicMikeSection })));
 const MagicMikePodcastSection = lazy(() => import('@/components/home/sections/MagicMikePodcastSection').then(m => ({ default: m.MagicMikePodcastSection })));
 const PricingTeaser = lazy(() => import('@/components/home/sections/PricingTeaser').then(m => ({ default: m.PricingTeaser })));
+const DiscogsConnectSection = lazy(() => import('@/components/home/sections/DiscogsConnectSection').then(m => ({ default: m.DiscogsConnectSection })));
 // ProductBanner verwijderd
 const MobileInstallBanner = lazy(() => import('@/components/MobileInstallBanner').then(m => ({ default: m.MobileInstallBanner })));
 const AppInstallBanner = lazy(() => import('@/components/home/AppInstallBanner').then(m => ({ default: m.AppInstallBanner })));

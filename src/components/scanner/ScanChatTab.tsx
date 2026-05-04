@@ -406,10 +406,18 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, pendingFiles]);
+    const frame = window.requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+
+      if (window.matchMedia('(max-width: 767px)').matches) {
+        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [messages, pendingFiles, mediaType, showWelcomeActions]);
 
 
   const pickMediaType = (type: 'vinyl' | 'cd') => {
@@ -1323,7 +1331,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   };
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col md:h-[calc(100vh-280px)]">
+    <div className="max-w-2xl mx-auto flex flex-col pb-44 md:h-[calc(100vh-280px)] md:pb-0">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 px-3 py-3 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 shadow-sm">
         <div className="flex items-center gap-3">
@@ -1363,7 +1371,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
       />
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 md:overflow-y-auto space-y-4 mb-4 pr-1 scroll-smooth pb-32 md:pb-4">
+      <div ref={scrollRef} className="flex-1 md:overflow-y-auto space-y-4 mb-4 pr-1 scroll-smooth pb-52 md:pb-4">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2.5 animate-fadeIn`}>
             {msg.role === 'assistant' && (

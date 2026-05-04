@@ -34,7 +34,13 @@ serve(async (req) => {
       );
     }
 
-    // Create anon client to verify user auth
+    // Create service role client for secure auth validation and admin operations
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Create anon client with the caller token for RLS-backed role checks
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -45,17 +51,19 @@ serve(async (req) => {
       }
     );
 
-    // Verify user is authenticated using getClaims (works with new signing keys)
+    // Verify the caller token server-side. In Edge Runtime, getClaims(token) can
+    // fall back to session storage and fail with AuthSessionMissingError, so use
+    // the auth server via the service-role client while never exposing that key.
     const token = (authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader) as string;
-    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
-    console.log('Claims retrieved:', claimsData?.claims?.sub ?? 'null', 'Error:', claimsError?.message);
+    const { data: userData, error: authError } = await supabaseAdmin.auth.getUser(token);
+    console.log('User verified:', userData?.user?.id ?? 'null', 'Error:', authError?.message);
 
-    const user = claimsData?.claims
-      ? { id: claimsData.claims.sub as string, email: (claimsData.claims as any).email as string }
+    const user = userData?.user
+      ? { id: userData.user.id, email: userData.user.email }
       : null;
 
-    if (claimsError || !user?.id) {
-      console.error('User authentication failed:', claimsError);
+    if (authError || !user?.id) {
+      console.error('User authentication failed:', authError);
       return new Response(
         JSON.stringify({ error: 'Unauthorized: Invalid or expired token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -73,12 +81,6 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Create service role client for admin operations
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
 
     const url = new URL(req.url);
     

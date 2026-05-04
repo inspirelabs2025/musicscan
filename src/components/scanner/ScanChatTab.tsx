@@ -1363,7 +1363,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
       />
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 scroll-smooth">
+      <div ref={scrollRef} className="flex-1 md:overflow-y-auto space-y-4 mb-4 pr-1 scroll-smooth pb-32 md:pb-4">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2.5 animate-fadeIn`}>
             {msg.role === 'assistant' && (

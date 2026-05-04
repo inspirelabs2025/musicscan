@@ -1,11 +1,23 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ScanLine, ShoppingCart, Trophy, Menu, X, User, LogIn, LogOut, Music, Images, Brain, MessageCircle, DollarSign, BarChart3, Newspaper, Headphones, Clock, Calendar, BookOpen, Sparkles, CircleDot, Youtube, Globe, Flag, Building2, Store, Library, Package, Heart, Users, Archive, Disc3 } from "lucide-react";
+import { Home, ScanLine, ShoppingCart, Trophy, Menu, X, User, LogIn, LogOut, Music, Images, Brain, MessageCircle, DollarSign, BarChart3, Newspaper, Headphones, Clock, Calendar, BookOpen, Sparkles, CircleDot, Youtube, Globe, Flag, Building2, Store, Library, Package, Heart, Users, Archive, Disc3, RefreshCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { hardReset } from "@/utils/appReset";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function MobileBottomNav() {
   const location = useLocation();
@@ -176,6 +188,47 @@ export function MobileBottomNav() {
                         </Link>
                       </Button>
                     )}
+                  </div>
+
+                  {/* App resetten — noodknop voor vastlopende cache/state */}
+                  <div className="pt-2">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-xs text-muted-foreground/70 hover:text-foreground"
+                        >
+                          <RefreshCcw className="h-3.5 w-3.5 mr-2" />
+                          {language === 'nl' ? 'App resetten' : 'Reset app'}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            {language === 'nl' ? 'App opnieuw instellen?' : 'Reset the app?'}
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {language === 'nl'
+                              ? 'Hiermee wis je de lokale opslag van de app. Je wordt uitgelogd en moet opnieuw inloggen. Gebruik dit alleen als de app raar doet of niet meer werkt zoals verwacht. Je collectie en gegevens op de server blijven behouden.'
+                              : 'This clears the app\'s local storage. You will be logged out and need to sign in again. Use this only if the app is misbehaving. Your collection and data on the server are not affected.'}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>
+                            {language === 'nl' ? 'Annuleren' : 'Cancel'}
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => {
+                              setMenuOpen(false);
+                              void hardReset();
+                            }}
+                          >
+                            {language === 'nl' ? 'Ja, app resetten' : 'Yes, reset app'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               </div>

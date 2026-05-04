@@ -149,6 +149,38 @@ export const useUserManagement = () => {
     }
   };
 
+  const deleteUser = async (userId: string) => {
+    try {
+      if (!session) {
+        throw new Error('Niet ingelogd. Log opnieuw in om gebruikers te beheren.');
+      }
+
+      const { data, error } = await supabase.functions.invoke('manage-user-roles', {
+        body: { action: 'delete', userId },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({
+        title: 'Gebruiker verwijderd',
+        description: 'De gebruiker is permanent verwijderd.',
+      });
+
+      await fetchUsers();
+      return true;
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete user',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, [searchQuery, roleFilter, session?.access_token, authLoading]);
@@ -184,6 +216,7 @@ export const useUserManagement = () => {
     setRoleFilter,
     assignRole,
     removeRole,
+    deleteUser,
     refetch: fetchUsers,
   };
 };

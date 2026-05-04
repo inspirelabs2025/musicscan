@@ -140,6 +140,7 @@ function ScanStatsCards() {
     setRoleFilter,
     assignRole,
     removeRole,
+    deleteUser,
     refetch,
   } = useUserManagement();
 
@@ -269,6 +270,7 @@ function ScanStatsCards() {
               users={users}
               onAssignRole={assignRole}
               onRemoveRole={removeRole}
+              onDeleteUser={deleteUser}
               onUserClick={handleUserClick}
             />
           )}

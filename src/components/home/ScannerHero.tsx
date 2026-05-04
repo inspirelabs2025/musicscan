@@ -32,7 +32,7 @@ export const ScannerHero = () => {
             {t('hero.badge')}
           </div>
           
-          <h1 className="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white mb-6 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white mb-6 tracking-tight">
             {h.heroTitle}
           </h1>
           
@@ -43,7 +43,7 @@ export const ScannerHero = () => {
           <Button 
             asChild 
             size="lg"
-            className="bg-gradient-to-r from-vinyl-gold via-yellow-500 to-vinyl-gold hover:from-yellow-500 hover:via-vinyl-gold hover:to-yellow-500 text-black font-bold text-xl md:text-2xl px-10 md:px-14 py-8 md:py-10 rounded-2xl shadow-2xl shadow-vinyl-gold/40 hover:shadow-vinyl-gold/60 transition-all duration-300 hover:scale-105 group"
+            className="w-full max-w-[480px] mx-auto bg-gradient-to-r from-vinyl-gold via-yellow-500 to-vinyl-gold hover:from-yellow-500 hover:via-vinyl-gold hover:to-yellow-500 text-black font-bold text-xl md:text-2xl px-10 md:px-14 py-8 md:py-10 rounded-2xl shadow-2xl shadow-vinyl-gold/40 hover:shadow-vinyl-gold/60 transition-all duration-300 hover:scale-105 group"
           >
             <Link to="/ai-scan-v2">
               <Camera className="w-7 h-7 md:w-8 md:h-8 mr-3" />

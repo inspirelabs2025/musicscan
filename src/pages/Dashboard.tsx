@@ -198,45 +198,7 @@ const Dashboard = () => {
 
           <LatestAlbumsSection />
 
-          {/* Navigation Shortcuts */}
-          <section className="mb-12 animate-fade-in delay-700">
-            <Card className="border-2 hover:border-primary/50 transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="w-5 h-5 text-primary" />
-                  {t.dashboard.quickNavigation}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-                  <Button asChild variant="outline" className="h-14 sm:h-16 flex flex-col gap-1 sm:gap-2 hover:bg-vinyl-purple/10 text-foreground min-h-[44px]">
-                    <Link to="/collection-overview"><TrendingUp className="w-5 h-5" /><span className="text-xs">{t.dashboard.overview}</span></Link>
-                  </Button>
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-gold/10">
-                    <Link to="/echo"><MessageSquare className="w-5 h-5" /><span className="text-xs">💬 {t.dashboard.chat}</span></Link>
-                  </Button>
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-accent/20">
-                    <Link to="/mijn-winkel"><Star className="w-5 h-5" /><span className="text-xs">{t.dashboard.myShop}</span></Link>
-                  </Button>
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-secondary/50">
-                    <Link to="/unified-scan-overview"><BarChart3 className="w-5 h-5" /><span className="text-xs">{t.dashboard.allScans}</span></Link>
-                  </Button>
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-amber-500/10">
-                    <Link to="/quizzen"><Trophy className="w-5 h-5 text-amber-500" /><span className="text-xs">{t.dashboard.quizzes}</span></Link>
-                  </Button>
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-purple-500/10">
-                    <Link to="/mijn-quizzen"><Target className="w-5 h-5 text-purple-500" /><span className="text-xs">{t.dashboard.scores}</span></Link>
-                  </Button>
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-cyan-500/10">
-                    <Link to="/artists"><Users className="w-5 h-5 text-cyan-500" /><span className="text-xs">🎤 {t.nav.artists}</span></Link>
-                  </Button>
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-pink-500/10">
-                    <Link to="/shop"><ShoppingBag className="w-5 h-5 text-pink-500" /><span className="text-xs">🛍️ {t.nav.shop}</span></Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
+
 
           {/* Top Genres/Artists Quick Preview */}
           {collectionStats && !collectionLoading && (

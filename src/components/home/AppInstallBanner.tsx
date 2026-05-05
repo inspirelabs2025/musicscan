@@ -2,16 +2,20 @@ import { useState } from 'react';
 import { X, Smartphone, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useIsNativeApp } from '@/hooks/useIsNativeApp';
 
 export const AppInstallBanner = () => {
   const { tr } = useLanguage();
   const h = tr.homeUI;
+  const isNativeApp = useIsNativeApp();
 
   const [dismissed, setDismissed] = useState(() => {
     const d = localStorage.getItem('app-install-banner-dismissed');
     return d ? Date.now() - parseInt(d) < 14 * 24 * 60 * 60 * 1000 : false;
   });
 
+  // Verberg in Capacitor native app — gebruiker heeft de app al.
+  if (isNativeApp) return null;
   if (typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches) return null;
   if (dismissed) return null;
 
@@ -58,7 +62,7 @@ export const AppInstallBanner = () => {
           </div>
         ) : (
           <a
-            href="https://play.google.com/store/apps/details?id=com.inspirelabs.musicscan"
+            href="https://play.google.com/store/apps/details?id=com.musicscan.app"
             target="_blank"
             rel="noopener noreferrer"
           >

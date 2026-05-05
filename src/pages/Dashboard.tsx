@@ -81,69 +81,14 @@ const Dashboard = () => {
         completeOnboarding={completeOnboarding} skipOnboarding={skipOnboarding}
       />
       <div className="min-h-screen pt-16 bg-gradient-to-br from-background via-accent/3 to-background">
-        {/* Musical Background Elements */}
-        <div className="fixed inset-0 opacity-5 pointer-events-none">
-          <div className="absolute top-20 left-10 text-4xl animate-pulse">🎵</div>
-          <div className="absolute top-40 right-20 text-3xl animate-pulse delay-500">🎶</div>
-          <div className="absolute bottom-40 left-20 text-4xl animate-pulse delay-1000">🎼</div>
-          <div className="absolute bottom-20 right-10 text-3xl animate-pulse delay-700">🎸</div>
-        </div>
-
         <div className="container mx-auto px-4 py-8 relative">
           {/* Welcome Header */}
-          <div className="text-center mb-8 animate-fade-in">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Sparkles className="w-8 h-8 text-vinyl-purple animate-pulse" />
-              <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold bg-clip-text text-transparent">
-                {t.dashboard.welcomeBack}
-              </h1>
-              <Sparkles className="w-8 h-8 text-vinyl-gold animate-pulse delay-300" />
-            </div>
+          <div className="mb-8 animate-fade-in">
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold bg-clip-text text-transparent mb-2">
+              {t.dashboard.welcomeBack}
+            </h1>
             <p className="text-muted-foreground text-lg">{t.dashboard.personalExperience}</p>
           </div>
-
-          {/* Quick Actions Hero */}
-          <section className="mb-12 animate-fade-in delay-200">
-            <div 
-              className="relative overflow-hidden rounded-2xl p-6 shadow-xl"
-              style={{ background: 'linear-gradient(135deg, hsl(270 70% 40%), hsl(270 60% 50%), hsl(260 70% 55%))' }}
-            >
-              <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-3 left-6 text-3xl opacity-20 animate-bounce" style={{ animationDelay: '0.1s' }}>🎵</div>
-                <div className="absolute top-5 right-10 text-2xl opacity-20 animate-pulse" style={{ animationDelay: '0.5s' }}>🎶</div>
-                <div className="absolute bottom-3 left-1/3 text-xl opacity-20 animate-pulse" style={{ animationDelay: '0.3s' }}>🎸</div>
-                <div className="absolute bottom-4 right-1/4 text-2xl opacity-20 animate-bounce" style={{ animationDelay: '0.7s' }}>🥁</div>
-                <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, hsl(45 100% 60%), transparent)' }} />
-                <div className="absolute -left-6 -bottom-6 w-28 h-28 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, white, transparent)' }} />
-              </div>
-              <div className="relative z-10">
-                <h3 className="text-lg font-bold flex items-center gap-2 mb-5" style={{ color: 'hsl(45 100% 60%)' }}>
-                  <Zap className="w-5 h-5" style={{ color: 'hsl(45 100% 60%)' }} />
-                  <span className="font-extrabold tracking-wide">{t.dashboard.quickActions}</span>
-                </h3>
-                <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                  <Link to="/ai-scan-v2" className="flex flex-col items-center justify-center gap-1.5 sm:gap-2 h-20 sm:h-24 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-xl group" style={{ background: 'linear-gradient(135deg, hsl(45 100% 55%), hsl(45 100% 50%))', color: 'black' }}>
-                    <div className="p-2 sm:p-2.5 rounded-full" style={{ background: 'rgba(0,0,0,0.12)' }}>
-                      <Camera className="w-5 h-5 sm:w-6 sm:h-6 group-hover:animate-pulse" />
-                    </div>
-                    <span className="text-center leading-tight">{t.dashboard.scanNow}</span>
-                  </Link>
-                  <Link to="/mijn-collectie" className="flex flex-col items-center justify-center gap-1.5 sm:gap-2 h-20 sm:h-24 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 hover:scale-[1.03] group" style={{ background: 'hsl(0 0% 100%)', border: '2px solid hsl(270 40% 85%)', color: 'hsl(270 50% 20%)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                    <div className="p-2 sm:p-2.5 rounded-full" style={{ background: 'rgba(120,60,180,0.15)' }}>
-                      <Search className="w-5 h-5 sm:w-6 sm:h-6 group-hover:animate-pulse" />
-                    </div>
-                    <span className="text-center leading-tight">{t.dashboard.myCollection}</span>
-                  </Link>
-                  <button onClick={() => window.dispatchEvent(new Event('open-magic-mike'))} className="flex flex-col items-center justify-center gap-1.5 sm:gap-2 h-20 sm:h-24 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 hover:scale-[1.03] group cursor-pointer" style={{ background: 'hsl(0 0% 100%)', border: '2px solid hsl(270 40% 85%)', color: 'hsl(270 50% 20%)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                    <div className="p-2 sm:p-2.5 rounded-full" style={{ background: 'rgba(120,60,180,0.15)' }}>
-                      <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 group-hover:animate-pulse" />
-                    </div>
-                    <span className="text-center leading-tight">{t.dashboard.chat}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
 
           {/* Credits & Subscription */}
           <section className="mb-12 animate-fade-in delay-250 grid grid-cols-1 md:grid-cols-2 gap-6">

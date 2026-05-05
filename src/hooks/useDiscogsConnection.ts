@@ -30,17 +30,11 @@ export const useDiscogsConnection = () => {
       return data as DiscogsConnection | null;
     },
     enabled: !!user?.id,
-    // Override the global staleTime: connection state may have changed in
-    // another tab (the OAuth callback opens in a new window). Always refetch
-    // on focus so the user sees the up-to-date connection status.
     staleTime: 0,
     refetchOnWindowFocus: "always",
     refetchOnMount: "always",
   });
 
-  // Cross-tab sync: when the OAuth callback succeeds in another tab, that tab
-  // posts to the BroadcastChannel and we invalidate the query here so this tab
-  // picks up the new connection without a manual refresh.
   useEffect(() => {
     if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") return;
     const ch = new BroadcastChannel(DISCOGS_BROADCAST_CHANNEL);
@@ -52,8 +46,6 @@ export const useDiscogsConnection = () => {
     return () => ch.close();
   }, [queryClient]);
 
-  // When the document regains visibility (e.g., user returns from external
-  // browser on Android, or switches back to this tab), refetch.
   useEffect(() => {
     if (typeof document === "undefined") return;
     const onVisibility = () => {
@@ -81,10 +73,6 @@ export const useDiscogsConnection = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Niet ingelogd");
 
-      // Always use a public, internet-reachable domain as Discogs OAuth callback.
-      // - Lovable preview (lovableproject.com) â use the published Lovable URL
-      // - Capacitor native app (window.location.origin = http://localhost) â use production
-      // - Web â use whatever origin we're on
       const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
       const isNativeApp = cap?.isNativePlatform?.() === true;
       const origin = isNativeApp
@@ -92,7 +80,7 @@ export const useDiscogsConnection = () => {
         : window.location.hostname.includes('lovableproject.com')
         ? 'https://musicscan.lovable.app'
         : window.location.origin;
-      const callbackUrl = `${origin}/my-collection?discogs=callback`;
+      const callbackUrl = `${origin}/mijn-collectie?discogs=callback`;
 
       const res = await fetch(
         `https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/discogs-oauth-start`,
@@ -112,7 +100,6 @@ export const useDiscogsConnection = () => {
       }
 
       const { authorize_url } = await res.json();
-      // Open Discogs in a new tab (preview iframe blocks same-window redirects)
       window.open(authorize_url, '_blank');
     },
     onError: (error: Error) => {
@@ -150,8 +137,6 @@ export const useDiscogsConnection = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["discogs-connection"] });
-      // Notify any other open tabs that the connection succeeded so they
-      // refetch and show the connected state without a manual refresh.
       broadcast("connected");
       toast({
         title: "Discogs gekoppeld!",

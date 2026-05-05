@@ -34,9 +34,16 @@ export const useDiscogsConnection = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Niet ingelogd");
 
-      // Always use published domain for OAuth callback
-      const origin = window.location.hostname.includes('lovableproject.com') 
-        ? 'https://musicscan.lovable.app' 
+      // Always use a public, internet-reachable domain as Discogs OAuth callback.
+      // - Lovable preview (lovableproject.com) → use the published Lovable URL
+      // - Capacitor native app (window.location.origin = http://localhost) → use production
+      // - Web → use whatever origin we're on
+      const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+      const isNativeApp = cap?.isNativePlatform?.() === true;
+      const origin = isNativeApp
+        ? 'https://www.musicscan.app'
+        : window.location.hostname.includes('lovableproject.com')
+        ? 'https://musicscan.lovable.app'
         : window.location.origin;
       const callbackUrl = `${origin}/my-collection?discogs=callback`;
 

@@ -59,6 +59,15 @@ export const useUnifiedScansStats = () => {
 
       // Calculate combined statistics
       const totalScans = aiScans.length + cdScans.length + vinylScans.length;
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const startOfMonthMs = startOfMonth.getTime();
+      const inThisMonth = (d: string | null | undefined) => d ? new Date(d).getTime() >= startOfMonthMs : false;
+      const thisMonth =
+        aiScans.filter(s => inThisMonth(s.created_at)).length +
+        cdScans.filter(s => inThisMonth(s.created_at)).length +
+        vinylScans.filter(s => inThisMonth(s.created_at)).length;
       
       // AI scans have status fields
       const aiCompletedScans = aiScans.filter(scan => scan.status === "completed").length;
@@ -106,6 +115,7 @@ export const useUnifiedScansStats = () => {
 
       return {
         totalScans,
+        thisMonth,
         completedScans,
         failedScans,
         pendingScans,

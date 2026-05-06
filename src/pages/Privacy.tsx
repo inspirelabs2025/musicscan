@@ -266,8 +266,16 @@ export default function Privacy() {
               </div>
               
               <div className="bg-muted/50 p-4 rounded-lg">
-                <h4 className="font-semibold">OpenAI / Anthropic (AI-diensten)</h4>
-                <p className="text-sm text-muted-foreground">AI-analyses worden uitgevoerd met geanonimiseerde data waar mogelijk.</p>
+                <h4 className="font-semibold">Lovable AI Gateway (powered by Google Gemini 2.5 Flash)</h4>
+                <p className="text-sm text-muted-foreground">
+                  Voor scan-functionaliteit (vinyl- en CD-herkenning) worden geüploade foto's verstuurd
+                  naar de Lovable AI Gateway, die de afbeeldingen verwerkt via Google Gemini 2.5 Flash
+                  voor herkenning van albums, artiesten en releases. Foto's worden bewaard zolang jouw
+                  scan-historie bestaat, zodat je eerdere scans kunt terugzien. Je kunt individuele
+                  scan-foto's op elk moment zelf verwijderen via de verwijder-functie in je
+                  scan-historie in je account; daarmee worden de bijbehorende afbeeldingen permanent
+                  uit ons systeem verwijderd.
+                </p>
               </div>
               
               <div className="bg-muted/50 p-4 rounded-lg">

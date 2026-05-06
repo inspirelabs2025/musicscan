@@ -1,46 +1,70 @@
-import { useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
-import { Providers } from './providers';
-import { Toaster } from './components/ui/sonner';
-import { TooltipProvider } from './components/ui/tooltip';
-import { MobileBottomNav } from './components/MobileBottomNav';
-import { StickyHeader } from './components/layout/StickyHeader';
-import { useAppVersionCheck } from './hooks/useAppVersionCheck';
-import { hardReset } from './utils/appReset';
+import { useContext, useEffect, useState } from "react";
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
-function AppShell() {
-  const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { RouterProvider } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
 
-  // Silent: drops stale caches whenever a new AAB is detected.
-  useAppVersionCheck();
+import { ThemeProvider } from "./components/theme-provider";
+import router from "./router";
 
-  // Remote-support escape hatch: visiting <app>/?reset=hard nukes everything
-  // and reloads. Useful when a tester is fully stuck.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('reset') === 'hard') {
-      void hardReset();
-    }
-  }, []);
+import { LovableProvider } from "lovable-tagger";
+import { lovConfig } from "./lovable.config";
+import { AudioProvider } from "./components/audio-provider";
+import { ModalsProvider } from "./components/modals-provider";
+import { SettingsProvider } from "./components/settings-provider";
+import { CurrentProjectContext } from "./contexts/current-project-context";
+import { ChatNudge } from "./components/common/chat-nudge.tsx";
 
-  return (
-    <>
-      <TooltipProvider>
-        {!isAdminRoute && <StickyHeader />}
-        <Outlet />
-      </TooltipProvider>
-      <Toaster />
-      {!isAdminRoute && <MobileBottomNav />}
-    </>
-  );
-}
+const queryClient = new QueryClient();
 
 function App() {
+  const { currentProject } = useContext(CurrentProjectContext);
+  const [showChatNudge, setShowChatNudge] = useState(false);
+
+  useEffect(() => {
+    if (currentProject?.id && currentProject.chatMessagesCount === 0) {
+      const hasDismissedNudge = localStorage.getItem(`chatNudgeDismissed-${currentProject.id}`);
+      if (!hasDismissedNudge) {
+        setShowChatNudge(true);
+      }
+    } else {
+      setShowChatNudge(false);
+    }
+  }, [currentProject]);
+
+  const handleDismissChatNudge = () => {
+    if (currentProject?.id) {
+      localStorage.setItem(`chatNudgeDismissed-${currentProject.id}`, 'true');
+    }
+    setShowChatNudge(false);
+  };
+
   return (
-    <Providers>
-      <AppShell />
-    </Providers>
+    <LovableProvider config={lovConfig}>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <QueryClientProvider client={queryClient}>
+          <SettingsProvider>
+            <AudioProvider>
+              <ModalsProvider>
+                <RouterProvider router={router} />
+                <Toaster richColors />
+
+                {showChatNudge && (
+                  <div className="fixed bottom-4 right-4 z-50 animate-fade-in">
+                    <ChatNudge isVisible={showChatNudge} onClose={handleDismissChatNudge} />
+                  </div>
+                )}
+
+              </ModalsProvider>
+            </AudioProvider>
+          </SettingsProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+      <Analytics />
+      <SpeedInsights />
+    </LovableProvider>
   );
 }
 

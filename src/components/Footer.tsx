@@ -70,6 +70,9 @@ export const Footer = () => {
               <Link to="/voorwaarden" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                 {t('footer.terms')}
               </Link>
+              <Link to="/account-verwijderen" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
+                Account verwijderen
+              </Link>
             </div>
           </div>
         </div>

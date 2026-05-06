@@ -303,7 +303,7 @@ export default function Privacy() {
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
               <li><strong className="text-foreground">Recht op inzage:</strong> Je kunt opvragen welke gegevens wij van je hebben.</li>
               <li><strong className="text-foreground">Recht op rectificatie:</strong> Je kunt onjuiste gegevens laten corrigeren.</li>
-              <li><strong className="text-foreground">Recht op verwijdering:</strong> Je kunt verzoeken om verwijdering van je gegevens.</li>
+              <li><strong className="text-foreground">Recht op verwijdering:</strong> Je kunt verzoeken om verwijdering van je gegevens. Zie onze pagina <a href="/account-verwijderen" className="text-primary underline">Account verwijderen</a> voor instructies.</li>
               <li><strong className="text-foreground">Recht op beperking:</strong> Je kunt de verwerking van je gegevens laten beperken.</li>
               <li><strong className="text-foreground">Recht op dataportabiliteit:</strong> Je kunt je gegevens in een leesbaar formaat opvragen.</li>
               <li><strong className="text-foreground">Recht op bezwaar:</strong> Je kunt bezwaar maken tegen bepaalde verwerkingen.</li>

@@ -97,6 +97,7 @@ const NewReleaseDetail = lazyWithRetry(() => import('./pages/NewReleaseDetail'))
 // Community page disabled — DB tables intact
 const Chat = lazyWithRetry(() => import('./pages/chat'));
 const Privacy = lazyWithRetry(() => import('./pages/Privacy'));
+const AccountVerwijderen = lazyWithRetry(() => import('./pages/AccountVerwijderen'));
 const Voorwaarden = lazyWithRetry(() => import('./pages/Voorwaarden'));
 const ReturnPolicy = lazyWithRetry(() => import('./pages/ReturnPolicy'));
 const About = lazyWithRetry(() => import('./pages/About'));
@@ -339,6 +340,8 @@ export const router = createBrowserRouter([
       
       // Info
       { path: 'privacy', element: wrap(Privacy) },
+      { path: 'account-verwijderen', element: wrap(AccountVerwijderen) },
+      { path: 'delete-account', element: <Navigate to="/account-verwijderen" replace /> },
       { path: 'voorwaarden', element: wrap(Voorwaarden) },
       { path: 'retourbeleid', element: wrap(ReturnPolicy) },
       { path: 'over-ons', element: wrap(About) },

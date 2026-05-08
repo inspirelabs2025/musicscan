@@ -12,7 +12,7 @@ const MainLayout: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-background">
       {showNudge && (
-        <AINudgeBanner onDismiss={dismissNudge} aiFeatureUsedCount={aiFeatureUsedCount} />
+        <AiNudgeBanner onDismiss={dismissNudge} />
       )}
       
       <Sidebar />

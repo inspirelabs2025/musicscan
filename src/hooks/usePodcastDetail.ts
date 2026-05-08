@@ -90,8 +90,8 @@ export function usePodcastEpisodeBySlug(podcastSlug: string | undefined, episode
       if (podcastError) throw podcastError;
       if (!podcast) return null;
 
-      // Then get the episode
-      const { data: episode, error: episodeError } = await supabase
+      // Then get the episode by slug
+      let { data: episode, error: episodeError } = await supabase
         .from('own_podcast_episodes')
         .select('*')
         .eq('podcast_id', podcast.id)
@@ -100,6 +100,21 @@ export function usePodcastEpisodeBySlug(podcastSlug: string | undefined, episode
         .maybeSingle();
 
       if (episodeError) throw episodeError;
+
+      // Fallback for defensive links that use the episode id when a slug is missing
+      if (!episode && episodeSlug.length > 30) {
+        const { data: episodeById, error: episodeByIdError } = await supabase
+          .from('own_podcast_episodes')
+          .select('*')
+          .eq('podcast_id', podcast.id)
+          .eq('id', episodeSlug)
+          .eq('is_published', true)
+          .maybeSingle();
+
+        if (episodeByIdError) throw episodeByIdError;
+        episode = episodeById;
+      }
+
       if (!episode) return null;
 
       // Increment view count

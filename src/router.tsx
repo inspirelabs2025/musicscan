@@ -115,6 +115,7 @@ const ForumTopic = lazyWithRetry(() => import('./pages/ForumTopic'));
 const Echo = lazyWithRetry(() => import('./pages/Echo'));
 const Podcasts = lazyWithRetry(() => import('./pages/Podcasts'));
 const PodcastDetail = lazyWithRetry(() => import('./pages/PodcastDetail'));
+const PodcastEpisodeDetail = lazyWithRetry(() => import('./pages/PodcastEpisodeDetail'));
 const CollectionChat = lazyWithRetry(() => import('./pages/CollectionChat'));
 const Prestaties = lazyWithRetry(() => import('./pages/Prestaties'));
 const Social = lazyWithRetry(() => import('./pages/Social'));
@@ -314,7 +315,8 @@ export const router = createBrowserRouter([
       { path: 'echo', element: wrap(Echo) },
       { path: 'podcasts', element: wrap(Podcasts) },
       { path: 'podcasts/het-verhaal-achter-de-podcast', element: wrap(PodcastVerhalen) },
-      { path: 'podcasts/:slug', element: wrap(PodcastDetail) },
+{ path: 'podcasts/:slug', element: wrap(PodcastDetail) },
+{ path: 'podcast/:podcastSlug/:episodeSlug', element: wrap(PodcastEpisodeDetail) },
       { path: 'tijdmachine', element: wrap(TimeMachine) },
       { path: 'tijdmachine/:slug', element: wrap(TimeMachineStory) },
       { path: 'de-plaat-en-het-verhaal', element: wrap(DePlaatEnHetVerhaal) },

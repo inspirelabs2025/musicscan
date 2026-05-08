@@ -3,11 +3,11 @@ import { Outlet } from 'react-router-dom';
 const Header = () => null;
 const Sidebar = () => null;
 import { Toaster } from '@/components/ui/sonner';
-import AINudgeBanner from '@/components/ui/ai-nudge-banner';
+import { AiNudgeBanner } from '@/components/ui/ai-nudge-banner';
 import { useAINudgeStatus } from '@/hooks/use-ai-nudge-status';
 
 const MainLayout: React.FC = () => {
-  const { showNudge, aiFeatureUsedCount, dismissNudge } = useAINudgeStatus();
+  const { showNudge, dismissNudge } = useAINudgeStatus();
 
   return (
     <div className="flex min-h-screen bg-background">

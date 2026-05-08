@@ -1,49 +1,40 @@
-import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'sonner';
-import { useNProgress } from '@tanstack/react-query-nprogress';
-import { Outlet } from 'react-router-dom';
-import { AiNudgeBanner } from './components/ui/ai-nudge-banner';
-import { useAiNudge } from './hooks/use-ai-nudge';
+import { useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import { Providers } from './providers';
+import { Toaster } from './components/ui/sonner';
+import { TooltipProvider } from './components/ui/tooltip';
+import { MobileBottomNav } from './components/MobileBottomNav';
+import { StickyHeader } from './components/layout/StickyHeader';
+import { useAppVersionCheck } from './hooks/useAppVersionCheck';
+import { hardReset } from './utils/appReset';
 
-const queryClient = new QueryClient();
-
-function App() {
-  useNProgress(queryClient);
-  const [userId, setUserId] = useState<string | undefined>(undefined);
+function AppShell() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  useAppVersionCheck();
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUserId(user?.id);
-    };
-    getSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
-      setUserId(session?.user?.id);
-    });
-
-    return () => {
-      authListener.unsubscribe();
-    };
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('reset') === 'hard') void hardReset();
   }, []);
 
-  const { showNudge, dismissNudge, isLoading: isNudgeLoading } = useAiNudge(userId);
-
   return (
-    <QueryClientProvider client={queryClient}>
-      {/* Global AI Nudge Banner */}
-      {!isNudgeLoading && showNudge && (
-        <AiNudgeBanner onDismiss={dismissNudge} />
-      )}
-
-      {/* Main app content, adjusted for banner */}
-      <div className={!isNudgeLoading && showNudge ? 'mt-16' : ''}> {/* Adjust margin if banner is shown */}
+    <>
+      <TooltipProvider>
+        {!isAdminRoute && <StickyHeader />}
         <Outlet />
-      </div>
+      </TooltipProvider>
       <Toaster />
-    </QueryClientProvider>
+      {!isAdminRoute && <MobileBottomNav />}
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Providers>
+      <AppShell />
+    </Providers>
   );
 }
 

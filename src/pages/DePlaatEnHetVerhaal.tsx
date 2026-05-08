@@ -206,7 +206,7 @@ export default function DePlaatEnHetVerhaal() {
                   >
                     <CardContent className="p-4">
                       <Link 
-                        to={`/podcast/${PODCAST_SLUG}/${episode.slug}`}
+                        to={`/podcast/${PODCAST_SLUG}/${episode.slug || episode.id}`}
                         className="flex items-center gap-4"
                       >
                         {/* Episode Number/Artwork */}

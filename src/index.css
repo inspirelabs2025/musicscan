@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+@source "../src/**/*.{ts,tsx,js,jsx,html}";
 
 @layer base {
   :root {

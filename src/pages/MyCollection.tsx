@@ -41,7 +41,7 @@ const CollectionCard = ({ item, onExportSingle, onClick, t }: { item: Collection
         
         {item.calculated_advice_price != null && item.calculated_advice_price > 0 && (
           <div className="absolute bottom-2 left-2 bg-primary text-primary-foreground px-2 py-1 rounded-md text-sm font-semibold backdrop-blur-sm">
-            â¬{item.calculated_advice_price.toFixed(2)}
+            €{item.calculated_advice_price.toFixed(2)}
           </div>
         )}
       </div>
@@ -53,12 +53,12 @@ const CollectionCard = ({ item, onExportSingle, onClick, t }: { item: Collection
         <div className="flex items-center gap-1.5 flex-wrap">
           {item.condition_grade && item.condition_grade !== 'Not Graded' && (
             <Badge variant="outline" className="text-xs px-1.5 py-0">
-              {item.media_type === 'vinyl' ? 'ð¿' : 'ð'} {item.condition_grade}
+              {item.media_type === 'vinyl' ? '💿' : '📀'} {item.condition_grade}
             </Badge>
           )}
           {item.marketplace_sleeve_condition && (
             <Badge variant="outline" className="text-xs px-1.5 py-0">
-              ð¦ {item.marketplace_sleeve_condition}
+              📦 {item.marketplace_sleeve_condition}
             </Badge>
           )}
           {item.is_for_sale && (
@@ -72,7 +72,7 @@ const CollectionCard = ({ item, onExportSingle, onClick, t }: { item: Collection
         {(item.lowest_price || item.highest_price) && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <TrendingUp className="w-3 h-3" />
-            <span>{item.lowest_price ? `â¬${item.lowest_price.toFixed(2)}` : '?'} â {item.highest_price ? `â¬${item.highest_price.toFixed(2)}` : '?'}</span>
+            <span>{item.lowest_price ? `€${item.lowest_price.toFixed(2)}` : '?'} → {item.highest_price ? `€${item.highest_price.toFixed(2)}` : '?'}</span>
           </div>
         )}
         
@@ -102,7 +102,7 @@ export default function MyCollection() {
   const { isConnected, handleCallback, isHandlingCallback } = useDiscogsConnection();
 
   useEffect(() => {
-    // Wait for Supabase auth to hydrate before processing the OAuth callback â
+    // Wait for Supabase auth to hydrate before processing the OAuth callback —
     // on a fresh tab opened by Discogs, the session is loaded asynchronously
     // from localStorage and getSession() would otherwise return null, causing
     // the callback to fail with "Niet ingelogd" and the connection to never
@@ -166,7 +166,7 @@ export default function MyCollection() {
             <div>
               <h1 className="text-2xl font-bold text-foreground">{t.title}</h1>
               <p className="text-sm text-muted-foreground mt-1">
-                {items.length} {t.items}{totalValue > 0 ? ` Â· ${t.totalValue} â¬${totalValue.toFixed(2)}` : ''}
+                {items.length} {t.items}{totalValue > 0 ? ` · ${t.totalValue} €${totalValue.toFixed(2)}` : ''}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -191,7 +191,7 @@ export default function MyCollection() {
             </Card>
             <Card className="p-4 flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/10"><Euro className="w-5 h-5 text-green-600" /></div>
-              <div><div className="text-xl font-bold">â¬{totalValue.toFixed(0)}</div><div className="text-xs text-muted-foreground">{t.value}</div></div>
+              <div><div className="text-xl font-bold">€{totalValue.toFixed(0)}</div><div className="text-xs text-muted-foreground">{t.value}</div></div>
             </Card>
             <Card className="p-4 flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-500/10"><Disc className="w-5 h-5 text-blue-600" /></div>

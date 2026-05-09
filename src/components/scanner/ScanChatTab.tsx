@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { preprocessImageClient } from '@/utils/clientImagePreprocess';
-import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check, Sparkles, MessageCircle, ScanLine, Search, HelpCircle, Mic } from 'lucide-react';
+import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check, Sparkles, MessageCircle, ScanLine, Search, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -360,7 +360,6 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   const { user } = useAuth();
   const { tr, language } = useLanguage();
   const sc = tr.scanChatUI;
-  const lastListenTrigger = useRef(0);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
@@ -391,9 +390,6 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
    const [isUploading, setIsUploading] = useState(false);
    const [showManualSearch, setShowManualSearch] = useState(false);
    const [isManualSearching, setIsManualSearching] = useState(false);
-   const [isListening, setIsListening] = useState(false);
-   const [listeningProgress, setListeningProgress] = useState(0);
-   const [isRecognizing, setIsRecognizing] = useState(false);
 
   // Artist content for platform enrichment
   const currentArtistName = verifiedResult?.artist || null;

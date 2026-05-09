@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { preprocessImageClient } from '@/utils/clientImagePreprocess';
-import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check, Sparkles, MessageCircle, ScanLine, Search, HelpCircle, Mic } from 'lucide-react';
+import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check, Sparkles, MessageCircle, ScanLine, Search, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -360,7 +360,6 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   const { user } = useAuth();
   const { tr, language } = useLanguage();
   const sc = tr.scanChatUI;
-  const lastListenTrigger = useRef(0);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
@@ -391,9 +390,6 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
    const [isUploading, setIsUploading] = useState(false);
    const [showManualSearch, setShowManualSearch] = useState(false);
    const [isManualSearching, setIsManualSearching] = useState(false);
-   const [isListening, setIsListening] = useState(false);
-   const [listeningProgress, setListeningProgress] = useState(0);
-   const [isRecognizing, setIsRecognizing] = useState(false);
 
   // Artist content for platform enrichment
   const currentArtistName = verifiedResult?.artist || null;
@@ -458,145 +454,6 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
       },
     ]);
   };
-
-  const startListening = useCallback(async () => {
-    if (typeof MediaRecorder === 'undefined') {
-      toast({ 
-        title: sc.notSupported, 
-        description: sc.notSupportedDesc, 
-        variant: "destructive" 
-      });
-      return;
-    }
-    console.log('[music-rec] MediaRecorder supported:', true);
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { 
-          echoCancellation: false, 
-          noiseSuppression: false, 
-          autoGainControl: false,
-          sampleRate: 44100,
-          channelCount: 1
-        } 
-      });
-      setIsListening(true);
-      setListeningProgress(0);
-      setShowWelcomeActions(false);
-
-      const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg']
-        .find(type => MediaRecorder.isTypeSupported(type)) || 'audio/webm';
-      console.log('[music-rec] Selected mimeType:', mimeType);
-      const mediaRecorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 256000 });
-      const chunks: Blob[] = [];
-      mediaRecorder.ondataavailable = (e) => { 
-        if (e.data.size > 0) {
-          chunks.push(e.data);
-          console.log(`[music-rec] chunk received: ${e.data.size} bytes`);
-        }
-      };
-
-      const totalSeconds = 12;
-      let elapsed = 0;
-      const interval = setInterval(() => {
-        elapsed++;
-        setListeningProgress(Math.round((elapsed / totalSeconds) * 100));
-        if (elapsed >= totalSeconds) clearInterval(interval);
-      }, 1000);
-
-      mediaRecorder.onstop = async () => {
-        clearInterval(interval);
-        setIsListening(false);
-        setListeningProgress(0);
-        stream.getTracks().forEach(t => t.stop());
-
-        const blob = new Blob(chunks, { type: mediaRecorder.mimeType });
-        const blobType = blob.type || mediaRecorder.mimeType || mimeType;
-        console.log(`[music-rec] Total blob size: ${blob.size} bytes, chunks: ${chunks.length}, type: ${blobType}`);
-        
-        if (blob.size < 10000) {
-          setMessages(prev => [...prev, {
-            role: 'assistant',
-            content: `${sc.tooLittleAudio} (${Math.round(blob.size/1024)}KB). ${sc.ensureMusicAudible}`,
-          }]);
-          return;
-        }
-        
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const base64 = (reader.result as string).split(',')[1];
-          if (!base64) return;
-
-          console.log(`[music-rec] Sending ${base64.length} chars base64 (${Math.round(base64.length * 0.75 / 1024)}KB), mimeType=${blobType}`);
-
-          setIsRecognizing(true);
-          setMessages(prev => [...prev, 
-            { role: 'user', content: sc.recognizeMusic },
-            { role: 'assistant', content: sc.listening }
-          ]);
-
-          try {
-            const { data, error } = await supabase.functions.invoke('recognize-music', {
-              body: { audio: base64, mimeType: blobType }
-            });
-
-            if (error) throw error;
-
-            setMessages(prev => prev.filter(m => !m.content.includes('luisteren') && !m.content.includes('Listening')));
-
-            if (data?.recognized) {
-              let msg = `${sc.songRecognized}\n\n`;
-              msg += `🎤 **${data.artist}** — *${data.title}*\n`;
-              if (data.album) msg += `💿 ${sc.album}: ${data.album}\n`;
-              if (data.release_date) msg += `📅 ${data.release_date}\n`;
-              if (data.spotify_url) msg += `\n🎧 [${sc.listenOnSpotify}](${data.spotify_url})\n`;
-              msg += `\n${sc.wantToKnowMore}`;
-
-              setMessages(prev => [...prev, { role: 'assistant', content: msg }]);
-            } else {
-              setMessages(prev => [...prev, {
-                role: 'assistant',
-                content: sc.notRecognized,
-              }]);
-            }
-          } catch (err) {
-            console.error('Music recognition error:', err);
-            setMessages(prev => prev.filter(m => !m.content.includes('luisteren') && !m.content.includes('Listening')));
-            setMessages(prev => [...prev, {
-              role: 'assistant',
-              content: `${sc.recognitionFailed} ${err instanceof Error ? err.message : ''}`,
-            }]);
-          } finally {
-            setIsRecognizing(false);
-          }
-        };
-        reader.readAsDataURL(blob);
-      };
-
-      mediaRecorder.start();
-      setTimeout(() => {
-        if (mediaRecorder.state === 'recording') {
-          mediaRecorder.stop();
-        }
-      }, totalSeconds * 1000);
-
-    } catch (err) {
-      console.error('Microphone error:', err);
-      setIsListening(false);
-      toast({ title: sc.micNotAvailable, description: sc.micNotAvailableDesc, variant: "destructive" });
-    }
-  }, [sc]);
-
-  React.useImperativeHandle(ref, () => ({
-    triggerListening: () => startListening(),
-  }), [startListening]);
-
-  useEffect(() => {
-    if (autoStartListening > 0 && autoStartListening !== lastListenTrigger.current) {
-      lastListenTrigger.current = autoStartListening;
-      startListening();
-    }
-  }, [autoStartListening, startListening]);
 
   const handleScanGuide = () => {
     sendMessage(sc.scanGuideRequest);
@@ -1695,7 +1552,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
               variant="ghost"
               size="icon"
               onClick={() => cameraInputRef.current?.click()}
-              disabled={isStreaming || isUploading || isRunningV2 || isListening || isRecognizing}
+              disabled={isStreaming || isUploading || isRunningV2}
               className="h-8 w-8 rounded-full hover:bg-primary/10"
               title={sc.takePhoto}
             >
@@ -1705,54 +1562,23 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
               variant="ghost"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isStreaming || isUploading || isRunningV2 || isListening || isRecognizing}
+              disabled={isStreaming || isUploading || isRunningV2}
               className="h-8 w-8 rounded-full hover:bg-primary/10"
               title={sc.chooseFromGallery}
             >
               <ImagePlus className="h-3.5 w-3.5 text-muted-foreground" />
             </Button>
-            <Button
-              variant={isListening ? "default" : "ghost"}
-              size="icon"
-              onClick={startListening}
-              disabled={isStreaming || isUploading || isRunningV2 || isListening || isRecognizing}
-              className={`h-8 w-8 rounded-full transition-all ${
-                isListening 
-                  ? 'bg-primary text-primary-foreground animate-pulse shadow-lg shadow-primary/30' 
-                  : 'hover:bg-primary/10'
-              }`}
-              title={isListening ? sc.listeningPlaceholder : sc.recognizeMusic2}
-            >
-              {isRecognizing ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Mic className={`h-3.5 w-3.5 ${isListening ? '' : 'text-amber-500'}`} />
-              )}
-            </Button>
           </div>
-          {isListening && (
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="relative h-2 w-12 bg-muted rounded-full overflow-hidden">
-                <div 
-                  className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-1000"
-                  style={{ width: `${listeningProgress}%` }}
-                />
-              </div>
-              <span className="text-xs text-muted-foreground font-medium">
-                {Math.ceil(8 - (listeningProgress / 100) * 8)}s
-              </span>
-            </div>
-          )}
           <Textarea
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isListening ? sc.listeningPlaceholder : sc.askYourQuestion}
+            placeholder={sc.askYourQuestion}
             className="min-h-[44px] max-h-[120px] flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60 text-sm py-3"
             rows={1}
-            disabled={isStreaming || isRunningV2 || isListening || isRecognizing}
+            disabled={isStreaming || isRunningV2}
           />
-          <Button onClick={handleSend} disabled={!input.trim() || isStreaming || isRunningV2 || isListening || isRecognizing} size="icon" className="shrink-0 h-8 w-8 rounded-full shadow-sm">
+          <Button onClick={handleSend} disabled={!input.trim() || isStreaming || isRunningV2} size="icon" className="shrink-0 h-8 w-8 rounded-full shadow-sm">
             {(isStreaming || isRunningV2) ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
           </Button>
         </div>

@@ -780,6 +780,20 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
 
       if (!resp.ok) {
         const errData = await resp.json().catch(() => ({ error: 'Onbekende fout' }));
+        if (resp.status === 403 && errData?.error === 'guest_limit_reached') {
+          setGuestLimitReached(true);
+          setIsStreaming(false);
+          setMessages(prev => {
+            const last = prev[prev.length - 1];
+            if (last?.role === 'assistant' && !last.content) return prev.slice(0, -1);
+            return prev;
+          });
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: `🔒 **${sc.guestLimitTitle}**\n\n${sc.guestLimitMessage}`,
+          }]);
+          return;
+        }
         throw new Error(errData.error || `HTTP ${resp.status}`);
       }
       if (!resp.body) throw new Error('Geen stream');

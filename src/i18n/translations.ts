@@ -792,7 +792,7 @@ const translations = {
     },
     authPage: {
       metaTitle: "Inloggen - MusicScan",
-      title: "Vinyl Scanner",
+      title: "MusicScan",
       subtitle: "Beheer je vinyl en CD collectie",
       signIn: "Inloggen",
       signUp: "Registreren",
@@ -3659,7 +3659,7 @@ const translations = {
     },
     authPage: {
       metaTitle: "Log in - MusicScan",
-      title: "Vinyl Scanner",
+      title: "MusicScan",
       subtitle: "Manage your vinyl and CD collection",
       signIn: "Log in",
       signUp: "Sign up",

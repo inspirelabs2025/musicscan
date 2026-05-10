@@ -1561,13 +1561,26 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
       {/* Input bar */}
       {true && (
         <div className="fixed left-0 right-0 z-40 px-3 pb-2" style={{ bottom: /android/i.test(navigator.userAgent) ? 'calc(56px + 48px)' : 'calc(56px + max(env(safe-area-inset-bottom), 8px))' }}>
+        {guestLimitReached && !user && (
+          <div className="max-w-2xl mx-auto mb-2 p-3 rounded-xl bg-primary/15 backdrop-blur-md border border-primary/30 text-sm text-white flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <span>🔒 {sc.guestLimitMessage}</span>
+            <div className="flex gap-2 shrink-0">
+              <Button size="sm" variant="secondary" onClick={() => window.location.assign('/auth')}>
+                {sc.guestLimitLogin}
+              </Button>
+              <Button size="sm" onClick={() => window.location.assign('/auth?mode=signup')}>
+                {sc.guestLimitCta}
+              </Button>
+            </div>
+          </div>
+        )}
         <div className="max-w-2xl mx-auto flex items-end gap-1.5 p-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 shadow-[0_-2px_15px_rgba(0,0,0,0.3)]">
           <div className="flex items-center gap-0.5 shrink-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => cameraInputRef.current?.click()}
-              disabled={isStreaming || isUploading || isRunningV2}
+              disabled={isStreaming || isUploading || isRunningV2 || guestLimitReached}
               className="h-8 w-8 rounded-full hover:bg-primary/10"
               title={sc.takePhoto}
             >
@@ -1577,7 +1590,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
               variant="ghost"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isStreaming || isUploading || isRunningV2}
+              disabled={isStreaming || isUploading || isRunningV2 || guestLimitReached}
               className="h-8 w-8 rounded-full hover:bg-primary/10"
               title={sc.chooseFromGallery}
             >
@@ -1588,12 +1601,12 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={sc.askYourQuestion}
+            placeholder={guestLimitReached ? sc.guestLimitTitle : sc.askYourQuestion}
             className="min-h-[44px] max-h-[120px] flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60 text-sm py-3"
             rows={1}
-            disabled={isStreaming || isRunningV2}
+            disabled={isStreaming || isRunningV2 || guestLimitReached}
           />
-          <Button onClick={handleSend} disabled={!input.trim() || isStreaming || isRunningV2} size="icon" className="shrink-0 h-8 w-8 rounded-full shadow-sm">
+          <Button onClick={handleSend} disabled={!input.trim() || isStreaming || isRunningV2 || guestLimitReached} size="icon" className="shrink-0 h-8 w-8 rounded-full shadow-sm">
             {(isStreaming || isRunningV2) ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
           </Button>
         </div>

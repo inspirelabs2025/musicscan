@@ -976,7 +976,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   };
 
   const handleSend = () => {
-    if (!input.trim() || isStreaming || isRunningV2) return;
+    if (!input.trim() || isStreaming || isRunningV2 || guestLimitReached) return;
     const trimmed = input.trim();
 
     const rejectKeywords = ['niet juist', 'niet correct', 'verkeerde', 'fout', 'klopt niet',

@@ -24,6 +24,9 @@ import { ScanChatTab, ScanChatTabHandle } from '@/components/scanner/ScanChatTab
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useCreditThresholdAlert } from '@/hooks/useCreditThresholdAlert';
+import { useCredits } from '@/hooks/useCredits';
+import { Coins } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 // Simple V2 components for media type and condition selection
 

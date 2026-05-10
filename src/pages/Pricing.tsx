@@ -41,14 +41,35 @@ const Pricing = () => {
   const isIOS = useIsIOS();
 
   useEffect(() => {
+    const sessionId = searchParams.get('session_id');
     const creditsPurchased = searchParams.get('credits_purchased');
-    if (creditsPurchased && user) {
+    if (!user) return;
+
+    const finalize = async (credits: number) => {
       toast({
-        title: `${creditsPurchased} ${p.creditsAdded}`,
+        title: `${credits} ${p.creditsAdded}`,
         description: p.creditsAvailableForUse,
       });
       queryClient.invalidateQueries({ queryKey: ['user-credits'] });
       window.history.replaceState({}, '', '/pricing');
+    };
+
+    if (sessionId) {
+      (async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke('verify-credit-purchase', {
+            body: { sessionId },
+          });
+          if (error) throw error;
+          if (data?.success) {
+            await finalize(data.credits ?? Number(creditsPurchased) ?? 0);
+          }
+        } catch (e: any) {
+          toast({ title: tr.common.error, description: e.message || p.tryAgain, variant: 'destructive' });
+        }
+      })();
+    } else if (creditsPurchased) {
+      finalize(Number(creditsPurchased));
     }
   }, [searchParams, user]);
 

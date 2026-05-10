@@ -116,6 +116,37 @@ serve(async (req) => {
     // Rate tracking (non-blocking, alert-only)
     await checkScanRate(req, undefined, "chat");
 
+    // Guest quota: max 10 chats per device fingerprint
+    const GUEST_CHAT_LIMIT = 10;
+    if (!userId) {
+      const fingerprint = req.headers.get("x-device-fingerprint") || ipAddress || "unknown";
+      try {
+        const supabaseAdmin = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        );
+        const { data: newCount, error: rpcErr } = await supabaseAdmin.rpc("increment_guest_chat", {
+          p_fingerprint: fingerprint,
+          p_ip: ipAddress,
+        });
+        if (rpcErr) {
+          console.error("[scan-chat] increment_guest_chat error:", rpcErr.message);
+        } else if (typeof newCount === "number" && newCount > GUEST_CHAT_LIMIT) {
+          console.log(`[scan-chat] Guest limit reached for ${fingerprint}: ${newCount}/${GUEST_CHAT_LIMIT}`);
+          return new Response(
+            JSON.stringify({
+              error: "guest_limit_reached",
+              limit: GUEST_CHAT_LIMIT,
+              used: newCount,
+            }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } catch (guestErr) {
+        console.error("[scan-chat] Guest tracking failed:", guestErr);
+      }
+    }
+
     const { messages, photoUrls, mediaType, language } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");

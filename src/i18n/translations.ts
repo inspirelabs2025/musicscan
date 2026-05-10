@@ -2750,6 +2750,11 @@ const translations = {
       cannotSave: "Kan niet opslaan",
       cannotSaveDesc: "Je moet ingelogd zijn en een geverifieerde release hebben.",
       saveFailed: "Opslaan mislukt",
+      guestLimitTitle: "Gratis chats opgebruikt",
+      guestLimitMessage: "Je hebt je 10 gratis chats gebruikt. Maak een gratis account aan om verder te chatten en je scans op te slaan.",
+      guestLimitCta: "Gratis account aanmaken",
+      guestLimitLogin: "Inloggen",
+      guestRemainingChats: "Nog {remaining} van 10 gratis chats",
       manualSearch: "🔍 Handmatig zoeken: {desc}",
       searching: "🔎 **Zoeken...** Even geduld, ik doorzoek de database voor \"{desc}\"...",
       noResultsFound: "⚠️ **Geen resultaten gevonden** voor \"{desc}\".\n\nProbeer andere zoektermen of upload foto's voor een betere match.",
@@ -5562,6 +5567,11 @@ const translations = {
       cannotSave: "Cannot save",
       cannotSaveDesc: "You must be logged in and have a verified release.",
       saveFailed: "Save failed",
+      guestLimitTitle: "Free chats used up",
+      guestLimitMessage: "You've used your 10 free chats. Create a free account to keep chatting and to save your scans.",
+      guestLimitCta: "Create free account",
+      guestLimitLogin: "Log in",
+      guestRemainingChats: "{remaining} of 10 free chats left",
 
       // Manual search
       manualSearch: "🔍 Manual search: {desc}",

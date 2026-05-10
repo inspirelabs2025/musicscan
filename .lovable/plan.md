@@ -1,29 +1,58 @@
 ## Doel
-Admin kan vanuit `/admin/users` een gebruiker volledig verwijderen (auth.users + gerelateerde data via cascade).
+Een gast (niet-ingelogde gebruiker) op `/ai-scan-v2` mag maximaal **10 chatberichten** sturen naar Magic Mike. Daarna wordt verdere chat geblokkeerd en krijgt de gast een login/registratie prompt. Ingelogde gebruikers behouden hun bestaande limieten via `useUsageTracking` (geen verandering).
+
+## Wat telt als 1 "chat"
+Elk POST-request van een gast naar de `scan-chat` edge function = 1 chat. Foto-upload + tekst in één bericht = 1 chat. Volgvragen tellen elk apart.
+
+## Identificatie van een gast
+Combinatie van:
+- `x-device-fingerprint` header (al aanwezig, via `getDeviceFingerprint()`)
+- IP-adres als fallback (al gelogd)
+
+We tellen op **device fingerprint** als hoofdsleutel met IP als secundair (om reset te voorkomen bij wisselen van fingerprint vanaf hetzelfde IP).
 
 ## Wijzigingen
 
-### 1. Edge function `manage-user-roles/index.ts`
-Nieuwe `action: 'delete'` toevoegen:
-- Valideert admin (al aanwezig)
-- Voorkomt dat admin zichzelf verwijdert (`userId === user.id` → 400)
-- Roept `supabaseAdmin.auth.admin.deleteUser(userId)` aan
-- Bestaande `user_roles`/`profiles` rijen worden via foreign-key cascade opgeruimd (al ingericht in DB)
+### 1. Database (migratie)
+Nieuwe tabel `guest_chat_usage`:
+- `fingerprint` (text, primary key)
+- `ip_address` (text)
+- `chat_count` (int, default 0)
+- `first_seen_at`, `last_seen_at` (timestamptz)
 
-### 2. Hook `src/hooks/useUserManagement.ts`
-- Nieuwe functie `deleteUser(userId: string)` met dezelfde session/header pattern als `assignRole`
-- Toast feedback (success/error) + `fetchUsers()` refresh
-- Exporteren in return object
+RLS aan, geen public policies — alleen service role schrijft (vanuit edge function).
 
-### 3. Component `src/components/admin/UserManagementTable.tsx`
-- Nieuwe prop `onDeleteUser: (userId: string) => Promise<boolean>`
-- In dropdown menu (na rol-acties): `DropdownMenuSeparator` + rode "Delete user" item met `Trash2` icon
-- Aparte `AlertDialog` met duidelijke waarschuwing ("Dit verwijdert de gebruiker en alle scans permanent. Niet ongedaan te maken.")
-- Confirm-knop in destructive variant
+RPC functie `increment_guest_chat(p_fingerprint, p_ip)` die het aantal returnt en ophoogt (atomisch, UPSERT).
 
-### 4. Pagina `src/pages/admin/Users.tsx` (of waar de tabel gebruikt wordt)
-- `deleteUser` uit hook doorgeven aan `<UserManagementTable onDeleteUser={...} />`
+### 2. Edge function `scan-chat`
+Vóór de AI-call:
+- Als er **geen `userId`** is (gast):
+  - Lees `x-device-fingerprint` + IP
+  - Roep `increment_guest_chat` aan
+  - Als nieuwe count > **10**: return HTTP 403 met JSON `{ error: 'guest_limit_reached', limit: 10 }`
+- Ingelogde users: ongewijzigd
 
-## Notities
-- Geen DB-migratie nodig (cascade staat).
-- Self-delete wordt server-side geblokkeerd om lockout te voorkomen.
+### 3. Frontend `ScanChatTab.tsx`
+- Detecteer `guest_limit_reached` response in `sendMessage` 
+- Toon vriendelijke modal/banner: *"Je hebt je 10 gratis chats gebruikt. Maak een gratis account aan om verder te chatten en je scans op te slaan."* met knoppen **Inloggen** / **Registreren** (links naar `/auth`)
+- Disable de Send-knop + foto-upload knoppen wanneer de limiet bereikt is (state `guestLimitReached`)
+- Optioneel: toon een subtiele teller bovenin chat voor gasten ("Nog 7 van 10 gratis chats")
+
+### 4. Tekst toevoegen aan `LanguageContext` (NL + EN)
+- `guestLimitTitle`, `guestLimitMessage`, `guestRemainingChats`
+
+## Wat niet verandert
+- Save-to-collection blijft login-only (zoals nu)
+- V2 pipeline / foto-analyse zelf krijgt geen aparte limiet — die loopt mee in de chat-call dus wordt automatisch begrensd
+- Bestaande `checkScanRate` (abuse alert) blijft staan
+
+## Edge cases
+- Gast logt in halverwege → telling wordt niet meer gebruikt; telt vanaf dat moment via `useUsageTracking`
+- Fingerprint wissel (incognito): nieuwe teller mogelijk, maar IP-veld maakt admin-monitoring mogelijk
+- Geen rate-limit-style blocking op IP zelf (we hebben geen rate-limit primitives — dit is alleen een gast-quota)
+
+## Bestanden die wijzigen
+- **Migratie**: nieuwe tabel + RPC
+- `supabase/functions/scan-chat/index.ts` — guest check toevoegen
+- `src/components/scanner/ScanChatTab.tsx` — limiet-handling + UI
+- `src/contexts/LanguageContext.tsx` — vertalingen

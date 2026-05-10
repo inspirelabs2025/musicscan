@@ -104,6 +104,7 @@ export default function AIScanV2() {
     subscription
   } = useSubscriptionContext();
   const { checkAndAlert: checkCreditThreshold } = useCreditThresholdAlert();
+  const { data: credits } = useCredits();
 
   // Discogs search for automatic pricing
   const {

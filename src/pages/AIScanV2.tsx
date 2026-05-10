@@ -24,6 +24,9 @@ import { ScanChatTab, ScanChatTabHandle } from '@/components/scanner/ScanChatTab
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useCreditThresholdAlert } from '@/hooks/useCreditThresholdAlert';
+import { useCredits } from '@/hooks/useCredits';
+import { Coins } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 // Simple V2 components for media type and condition selection
 
@@ -101,6 +104,7 @@ export default function AIScanV2() {
     subscription
   } = useSubscriptionContext();
   const { checkAndAlert: checkCreditThreshold } = useCreditThresholdAlert();
+  const { data: credits } = useCredits();
 
   // Discogs search for automatic pricing
   const {
@@ -339,6 +343,17 @@ export default function AIScanV2() {
                 <Badge variant="secondary" className="ml-1 text-[10px] md:text-xs">BETA</Badge>
               </h1>
               <LanguageSwitcher />
+              {user && (
+                <Link
+                  to="/pricing"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/10 hover:bg-white/15 transition-colors px-3 py-1.5 text-xs md:text-sm text-white border border-white/15"
+                  title="Bekijk credits / koop bij"
+                >
+                  <Coins className="h-3.5 w-3.5 md:h-4 md:w-4 text-yellow-400" />
+                  <span className="font-semibold">{credits?.balance ?? 0}</span>
+                  <span className="text-white/60 hidden md:inline">credits</span>
+                </Link>
+              )}
               {/* SoundScan - temporarily hidden for testing
               <div className="h-6 w-px bg-border hidden md:block" />
               <button

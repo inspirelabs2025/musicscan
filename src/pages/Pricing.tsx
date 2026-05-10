@@ -79,6 +79,9 @@ const Pricing = () => {
       })();
     } else if (creditsPurchased) {
       finalize(Number(creditsPurchased));
+    } else if (searchParams.get('canceled') === 'true') {
+      toast({ title: 'Aankoop geannuleerd', variant: 'destructive' });
+      window.history.replaceState({}, '', '/pricing');
     }
   }, [searchParams, user]);
 

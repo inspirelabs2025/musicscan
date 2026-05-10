@@ -3533,6 +3533,30 @@ export type Database = {
         }
         Relationships: []
       }
+      guest_chat_usage: {
+        Row: {
+          chat_count: number
+          fingerprint: string
+          first_seen_at: string
+          ip_address: string | null
+          last_seen_at: string
+        }
+        Insert: {
+          chat_count?: number
+          fingerprint: string
+          first_seen_at?: string
+          ip_address?: string | null
+          last_seen_at?: string
+        }
+        Update: {
+          chat_count?: number
+          fingerprint?: string
+          first_seen_at?: string
+          ip_address?: string | null
+          last_seen_at?: string
+        }
+        Relationships: []
+      }
       indexnow_queue: {
         Row: {
           content_type: string
@@ -10943,6 +10967,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_guest_chat: {
+        Args: { p_fingerprint: string; p_ip: string }
+        Returns: number
       }
       increment_podcast_rotation: {
         Args: { p_episode_id: string }

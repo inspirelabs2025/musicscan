@@ -390,6 +390,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
    const [isUploading, setIsUploading] = useState(false);
    const [showManualSearch, setShowManualSearch] = useState(false);
    const [isManualSearching, setIsManualSearching] = useState(false);
+   const [guestLimitReached, setGuestLimitReached] = useState(false);
 
   // Artist content for platform enrichment
   const currentArtistName = verifiedResult?.artist || null;

@@ -1,5 +1,8 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.stripe-webhook]
+verify_jwt = false
+
 [functions.recognize-music]
 verify_jwt = false
 

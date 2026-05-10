@@ -58,7 +58,7 @@ serve(async (req) => {
       payment_method_types: ["card", "ideal"],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/pricing?credits_purchased=${creditsAmount}`,
+      success_url: `${req.headers.get("origin")}/pricing?session_id={CHECKOUT_SESSION_ID}&credits_purchased=${creditsAmount}`,
       cancel_url: `${req.headers.get("origin")}/pricing`,
       metadata: {
         user_id: user.id,

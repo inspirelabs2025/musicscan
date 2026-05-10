@@ -40,6 +40,15 @@ const Pricing = () => {
   const p = tr.pricing;
   const isIOS = useIsIOS();
 
+  // Always refetch credits when landing on /pricing (e.g. returning from Stripe in another tab)
+  useEffect(() => {
+    if (!user) return;
+    queryClient.invalidateQueries({ queryKey: ['user-credits'] });
+    const onFocus = () => queryClient.invalidateQueries({ queryKey: ['user-credits'] });
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [user, queryClient]);
+
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
     const creditsPurchased = searchParams.get('credits_purchased');

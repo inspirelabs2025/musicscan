@@ -5567,6 +5567,11 @@ const translations = {
       cannotSave: "Cannot save",
       cannotSaveDesc: "You must be logged in and have a verified release.",
       saveFailed: "Save failed",
+      guestLimitTitle: "Free chats used up",
+      guestLimitMessage: "You've used your 10 free chats. Create a free account to keep chatting and to save your scans.",
+      guestLimitCta: "Create free account",
+      guestLimitLogin: "Log in",
+      guestRemainingChats: "{remaining} of 10 free chats left",
 
       // Manual search
       manualSearch: "🔍 Manual search: {desc}",

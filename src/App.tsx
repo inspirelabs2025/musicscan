@@ -1,91 +1,84 @@
-import './App.css';
-import { useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import PrivateRoute from './components/PrivateRoute';
-import Navbar from './components/Navbar';
-import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import LandingPage from './pages/LandingPage';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import AuthCallback from './pages/AuthCallback';
-import { Toaster } from 'sonner';
-import { useAuth } from './hooks/useAuth';
-import { useChatMessages } from './hooks/useChatMessages';
-import { toast } from '@/components/ui/use-toast';
-import { BellRing } from 'lucide-react';
-import { Button } from './components/ui/button';
+import { useEffect, useState } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import { ThemeProvider } from '@/components/ThemeProvider';
+import { Toaster } from '@/components/ui/sonner';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { CommandKMenu } from '@/components/command-k-menu/CommandKMenu';
+import { checkAndFetchProfile, getSupabase } from './supabase';
+import { useUserStore } from './utils/stores/userStore';
+import { useThemeStore } from './utils/stores/themeStore';
+import { lov_initialise } from 'lovable-tagger';
+import { AIHelpNudge } from './components/ai-nudge/AIHelpNudge';
+import { MobileFab } from './components/mobile-fab/MobileFab';
+import { ChatNudge } from './components/chat/ChatNudge';
+
+const queryClient = new QueryClient();
 
 function App() {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const setUser = useUserStore((state) => state.setUser);
+  const supabase = getSupabase();
   const location = useLocation();
-  const { data: chatMessages } = useChatMessages();
+  const { resolvedTheme, theme } = useThemeStore();
 
   useEffect(() => {
-    if (!loading && user && (location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/')) {
-      navigate('/dashboard');
-    }
-  }, [user, loading, navigate, location.pathname]);
+    // Initialize Lovable Tagger only once
+    lov_initialise();
+  }, []);
 
   useEffect(() => {
-    if (!loading && user && chatMessages && chatMessages.length === 0) {
-      toast({
-        title: '💬 Heb je de chat al geprobeerd?',
-        description: 'Er zijn pas 0 chatberichten in je project. Probeer de chatfunctie om sneller antwoorden te krijgen!',
-        action: (
-          <Button
-            variant="ghost"
-            className="text-primary-foreground hover:bg-primary-foreground/10"
-            onClick={() => navigate('/dashboard?tab=chat')}
-          >
-            Probeer chat
-          </Button>
-        ),
-        icon: <BellRing className="h-5 w-5" />,
-        duration: 10000,
-      });
-    }
-  }, [user, loading, chatMessages, navigate]);
+    const handleAuthChange = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        const profile = await checkAndFetchProfile(data.session);
+        if (profile) {
+          setUser(profile);
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    };
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
+      handleAuthChange();
+    });
+
+    handleAuthChange(); // Initial check on load
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [supabase, setUser]);
+
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  if (loading) {
+    return (
+      <div
+        className={`flex min-h-screen items-center justify-center bg-background ${resolvedTheme === 'dark' ? 'dark' : ''}`}
+      >
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="App min-h-screen flex flex-col bg-background text-foreground">
-      {user && <Navbar />}
-      <main className="flex-grow">
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <PrivateRoute>
-                <Profile />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <PrivateRoute>
-                <Settings />
-              </PrivateRoute>
-            }
-          />
-        </Routes>
-      </main>
-      <Toaster />
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+        <div className={`app ${resolvedTheme === 'dark' ? 'dark' : ''}`}>
+          <Outlet />
+          <Toaster />
+          <CommandKMenu />
+          <AIHelpNudge />
+          <MobileFab />
+          <ChatNudge /> { /* Add the ChatNudge component here */}
+        </div>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 

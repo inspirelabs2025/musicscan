@@ -34,7 +34,7 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("Niet ingelogd");
 
-    const { priceId } = await req.json();
+    const { priceId, origin: bodyOrigin } = await req.json();
     if (!priceId || !CREDIT_PACKAGES[priceId]) {
       throw new Error("Ongeldig credit pakket");
     }
@@ -52,14 +52,20 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
+    // Determine redirect origin. Reject unusable origins (Capacitor sends https://localhost).
+    const headerOrigin = req.headers.get("origin") ?? "";
+    const candidate = (bodyOrigin && /^https?:\/\//.test(bodyOrigin)) ? bodyOrigin : headerOrigin;
+    const isUsable = candidate && !/localhost|127\.0\.0\.1|capacitor:\/\//i.test(candidate);
+    const redirectOrigin = isUsable ? candidate : "https://musicscan.app";
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       payment_method_types: ["card", "ideal"],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/pricing?session_id={CHECKOUT_SESSION_ID}&credits_purchased=${creditsAmount}`,
-      cancel_url: `${req.headers.get("origin")}/pricing?canceled=true`,
+      success_url: `${redirectOrigin}/pricing?session_id={CHECKOUT_SESSION_ID}&credits_purchased=${creditsAmount}`,
+      cancel_url: `${redirectOrigin}/pricing?canceled=true`,
       metadata: {
         user_id: user.id,
         credits_amount: creditsAmount.toString(),

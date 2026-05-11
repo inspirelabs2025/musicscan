@@ -9,10 +9,11 @@ export const openExternalPayment = async (url: string) => {
     return;
   }
 
-  // Try opening in a new tab first; fall back to same-tab redirect
-  // when the popup is blocked (common after async awaits).
-  const popup = window.open(url, '_blank', 'noopener,noreferrer');
-  if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-    window.location.href = url;
-  }
+  // On web (non-native) redirect in the same tab. Opening a new tab via
+  // window.open() after an async await is unreliable: popup blockers cancel
+  // it, and inside iframes (like the Lovable preview) it often returns a
+  // non-null blank window that never navigates — so the buy button looks
+  // like it does nothing. App-store compliance only requires the external
+  // browser on native platforms, which is handled above.
+  window.location.href = url;
 };

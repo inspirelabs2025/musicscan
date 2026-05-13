@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://www.musicscan.app/sm/sitemap-static.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.musicscan.app/sm/sitemap-artists.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.musicscan.app/sm/sitemap-singles.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.musicscan.app/sm/sitemap-music-stories.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.musicscan.app/sm/sitemap-blog.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.musicscan.app/sm/sitemap-news.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.musicscan.app/sm/sitemap-anecdotes.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.musicscan.app/sm/sitemap-products.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.musicscan.app/sm/sitemap-music-history.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.musicscan.app/sm/sitemap-new-releases.xml</loc>
+  </sitemap>
+</sitemapindex>

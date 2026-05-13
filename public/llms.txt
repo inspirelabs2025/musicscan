@@ -1,104 +1,31 @@
-# MusicScan - AI-Powered Music Collection Platform
+# MusicScan
 
-> MusicScan is een Nederlands platform voor muziekverzamelaars die hun vinyl platen 
-> en CD's willen digitaliseren, waarderen en beheren met behulp van AI-technologie.
+> Hét Nederlandse muziekplatform voor verzamelaars: scan vinyl en CD's, ontdek verhalen, koop unieke muziek-art en speel quizzen.
 
-## Site Beschrijving
+MusicScan helpt muziekliefhebbers hun collectie te digitaliseren en waarderen, en biedt een uitgebreide bibliotheek aan artiesten, albums, singles, nieuws en anekdotes — plus een shop met posters, canvas, metaal prints, t-shirts, sokken en buttons.
 
-MusicScan helpt muziekliefhebbers en verzamelaars om:
-- Vinyl platen en CD's te scannen met AI-herkenning
-- Collecties digitaal te beheren en catalogiseren
-- Actuele prijswaarderingen te krijgen via Discogs
-- Muziekgeschiedenis te ontdekken via verhalen en anekdotes
-- Unieke muziek art producten te kopen (posters, metaalprints, sokken, t-shirts)
+## Pages
 
-## Belangrijkste Features
+- [Home](/): Overzicht van het platform, trending content en nieuwste releases.
+- [Artiesten](/artists): Database met artiestenverhalen en biografieën.
+- [Singles](/singles): Achtergrondverhalen bij bekende singles.
+- [Album verhalen](/muziek-verhaal): Uitgebreide stories over iconische albums.
+- [Plaat verhalen](/plaat-verhaal): Reviews en achtergronden bij vinyl releases.
+- [Anekdotes](/anekdotes): Korte muziek anekdotes en weetjes.
+- [Nieuws](/nieuws): Actueel muzieknieuws en updates.
+- [New releases](/new-release): Nieuwste releases via Spotify.
+- [Vandaag in de muziekgeschiedenis](/vandaag-in-de-muziekgeschiedenis): Dagelijkse muziekgeschiedenis.
+- [Quizzen](/quizzen): Muziekquizzen met leaderboards en badges.
+- [Nederland](/nederland): Hub voor Nederlandse muziek.
+- [Frankrijk](/frankrijk): Hub voor Franse muziek.
+- [Dance & House](/dance-house): Hub voor dance- en housemuziek.
+- [Shop](/shop): Alle producten — posters, canvas, metaal, t-shirts, sokken, buttons.
+- [Art shop](/art-shop): Album-art posters en prints.
+- [Marktplaats](/marketplace): Tweedehands vinyl en CD's tussen verzamelaars.
+- [Publieke catalogus](/public-catalog): Verzamelingen van andere gebruikers.
+- [Over MusicScan](/about): Achtergrond en missie van het platform.
 
-### AI Scanner
-- Automatische herkenning van albums via foto's
-- Directe koppeling met Discogs database
-- Conditie beoordeling en waardering
+## Optional
 
-### Collectie Management
-- Persoonlijke vinyl en CD collecties
-- Publieke en private verzamelingen
-- Gedetailleerde album informatie
-
-### Art Shop
-- Album cover posters (standaard en metaal)
-- Songtekst posters
-- Album t-shirts en sokken
-- Custom designs op basis van albums
-
-### Content Platform
-- Muziekverhalen en geschiedenis
-- Artiesten biografie en verhalen
-- Muziek anekdotes
-- Nieuws en reviews
-
-## Content Categorieën
-
-### Artiesten & Muziek
-- /artists - Database met artiesten
-- /singles - Singles en releases overzicht
-- /muziek-verhaal - Uitgebreide muziekverhalen
-- /plaat-verhaal - Album verhalen en achtergronden
-- /anekdotes - Muziek anekdotes en weetjes
-- /nieuws - Muziek nieuws en updates
-- /vandaag-in-de-muziekgeschiedenis - Dagelijkse muziekgeschiedenis
-
-### Shop & Producten
-- /shop - Alle producten overzicht (vinyl, CD's, merchandise, art)
-- /art-shop - Overzicht van alle art producten
-- /posters - Album cover posters
-- /product/[slug] - Individuele product pagina's
-- /lyric-posters - Songtekst posters
-- /merchandise - Muziek merchandise
-- /socks - Album sokken
-- /shirts - Album t-shirts
-
-### Tools & Scanner
-- /scanner - AI vinyl en CD scanner
-- /public-catalog - Publieke collecties catalogus
-- /collection/[username] - Persoonlijke collecties
-
-## Primaire Doelgroep
-
-- Vinyl verzamelaars en liefhebbers
-- CD verzamelaars
-- Muziekgeschiedenis enthousiastelingen
-- Muziek art kopers
-- Nederlandse en internationale gebruikers
-
-## Talen
-
-- Nederlands (primair)
-- Engels (secundair)
-
-## Contact & Links
-
-- Website: https://www.musicscan.app
-- Support: info@musicscan.app
-- Sitemaps: https://www.musicscan.app/sitemap.xml
-
-## Technologie
-
-- AI-powered muziekherkenning
-- Discogs integratie voor prijzen en data
-- Real-time collectie synchronisatie
-- E-commerce platform voor art producten
-
-## Best Content voor LLM Indexatie
-
-Prioriteit content voor LLM crawlers:
-1. Artiesten database (/artists/*)
-2. Muziekverhalen (/muziek-verhaal/*)
-3. Album verhalen (/plaat-verhaal/*)
-4. Anekdotes (/anekdotes/*)
-5. Singles database (/singles/*)
-6. Nieuws artikelen (/nieuws/*)
-
----
-
-Last updated: 2025-01
-Version: 1.0
+- [Return policy](/return-policy): Retourbeleid voor de shop.
+- [Account verwijderen](/account-verwijderen): Verwijder je account en data.

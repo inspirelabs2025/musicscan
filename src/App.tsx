@@ -1,84 +1,67 @@
+import './App.css';
 import { useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
-import { ThemeProvider } from '@/components/ThemeProvider';
-import { Toaster } from '@/components/ui/sonner';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { CommandKMenu } from '@/components/command-k-menu/CommandKMenu';
-import { checkAndFetchProfile, getSupabase } from './supabase';
-import { useUserStore } from './utils/stores/userStore';
-import { useThemeStore } from './utils/stores/themeStore';
-import { lov_initialise } from 'lovable-tagger';
-import { AIHelpNudge } from './components/ai-nudge/AIHelpNudge';
-import { MobileFab } from './components/mobile-fab/MobileFab';
-import { ChatNudge } from './components/chat/ChatNudge';
-
-const queryClient = new QueryClient();
+import { BrowserRouter as Router } from 'react-router-dom';
+import AppRoutes from './AppRoutes';
+import { useAuth } from './hooks/useAuth';
+import { Toaster } from './components/ui/sonner';
+import { checkSupabaseAuth } from './api/auth';
+import SplashScreen from './components/SplashScreen';
+import AiNudge from './components/AiNudge'; // Import AiNudge
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from './supabaseClient';
 
 function App() {
-  const [loading, setLoading] = useState(true);
-  const setUser = useUserStore((state) => state.setUser);
-  const supabase = getSupabase();
-  const location = useLocation();
-  const { resolvedTheme, theme } = useThemeStore();
+  const { user, loading: authLoading, setSession } = useAuth();
+  const [isAppLoading, setIsAppLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize Lovable Tagger only once
-    lov_initialise();
-  }, []);
+    const initializeAuth = async () => {
+      setIsAppLoading(true);
+      await checkSupabaseAuth(setSession);
+      setIsAppLoading(false);
+    };
 
-  useEffect(() => {
-    const handleAuthChange = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        const profile = await checkAndFetchProfile(data.session);
-        if (profile) {
-          setUser(profile);
-        }
-      } else {
-        setUser(null);
+    initializeAuth();
+  }, [setSession]);
+
+  // Fetch chat message count for the nudge feature
+  const { data: chatMessageCount = 0, isLoading: loadingChatCount } = useQuery({
+    queryKey: ['chatMessagesCount', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const { count, error } = await supabase
+        .from('chat_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error fetching chat messages count:', error);
+        return 0;
       }
-      setLoading(false);
-    };
+      return count || 0;
+    },
+    enabled: !!user, // Only run if user is logged in
+  });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
-      handleAuthChange();
-    });
+  const showChatNudge = user && chatMessageCount === 0 && !loadingChatCount;
 
-    handleAuthChange(); // Initial check on load
 
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [supabase, setUser]);
-
-  // Scroll to top on route change
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
-
-  if (loading) {
-    return (
-      <div
-        className={`flex min-h-screen items-center justify-center bg-background ${resolvedTheme === 'dark' ? 'dark' : ''}`}
-      >
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+  if (isAppLoading || authLoading) {
+    return <SplashScreen />;
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-        <div className={`app ${resolvedTheme === 'dark' ? 'dark' : ''}`}>
-          <Outlet />
-          <Toaster />
-          <CommandKMenu />
-          <AIHelpNudge />
-          <MobileFab />
-          <ChatNudge /> { /* Add the ChatNudge component here */}
-        </div>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <Router>
+      <div className="relative flex flex-col min-h-screen">
+        <AppRoutes />
+        <Toaster />
+        {showChatNudge && (
+          <div className="fixed bottom-4 right-4 z-50 animate-fade-in">
+            <AiNudge variant="chat_encouragement" />
+          </div>
+        )}
+      </div>
+    </Router>
   );
 }
 

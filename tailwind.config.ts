@@ -48,7 +48,7 @@ export default {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
 				},
-				muted: {
+				muxed: {
 					DEFAULT: 'hsl(var(--muted))',
 					foreground: 'hsl(var(--muted-foreground))'
 				},
@@ -190,7 +190,7 @@ export default {
 							fontWeight: '600',
 							color: 'inherit',
 						},
-						a: {
+					a: {
 							color: 'hsl(var(--primary))',
 							textDecoration: 'none',
 							'&:hover': {

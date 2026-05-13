@@ -9,12 +9,12 @@ const corsHeaders = {
 
 // Credit packages mapping: price_id -> credits amount
 const CREDIT_PACKAGES: Record<string, number> = {
-  "price_1T13ukIWa9kBN7qAxdQu2r1P": 10,
-  "price_1T13vOIWa9kBN7qA6P75zHI5": 50,
-  "price_1T13vbIWa9kBN7qAcBAIDL43": 100,
-  "price_1T13w0IWa9kBN7qA6CeHdAKU": 250,
-  "price_1T13wJIWa9kBN7qAXmNQnrjl": 500,
-  "price_1T13wYIWa9kBN7qAE41S1xZg": 1000,
+  "price_1TWft6IHZHcZHyKVYrZoAW6P": 10,
+  "price_1TWftQIHZHcZHyKVT2yNX3TP": 50,
+  "price_1TWfu2IHZHcZHyKVUYQ3tPe4": 100,
+  "price_1TWfubIHZHcZHyKVrkM237tC": 250,
+  "price_1TWfvHIHZHcZHyKVT1ztzUjR": 500,
+  "price_1TWfvaIHZHcZHyKVeUAkKvQj": 1000,
 };
 
 serve(async (req) => {

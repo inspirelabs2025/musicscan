@@ -19,12 +19,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const CREDIT_PACKAGES = [
-  { credits: 10, price: '€2,95', priceId: 'price_1T13ukIWa9kBN7qAxdQu2r1P', perCredit: '€0,30' },
-  { credits: 50, price: '€9,95', priceId: 'price_1T13vOIWa9kBN7qA6P75zHI5', perCredit: '€0,20' },
-  { credits: 100, price: '€14,95', priceId: 'price_1T13vbIWa9kBN7qAcBAIDL43', perCredit: '€0,15', popular: true },
-  { credits: 250, price: '€29,95', priceId: 'price_1T13w0IWa9kBN7qA6CeHdAKU', perCredit: '€0,12' },
-  { credits: 500, price: '€49,95', priceId: 'price_1T13wJIWa9kBN7qAXmNQnrjl', perCredit: '€0,10' },
-  { credits: 1000, price: '€79,95', priceId: 'price_1T13wYIWa9kBN7qAE41S1xZg', perCredit: '€0,08', best: true },
+  { credits: 10, price: '€2,95', priceId: 'price_1TWft6IHZHcZHyKVYrZoAW6P', perCredit: '€0,30' },
+  { credits: 50, price: '€9,95', priceId: 'price_1TWftQIHZHcZHyKVT2yNX3TP', perCredit: '€0,20' },
+  { credits: 100, price: '€14,95', priceId: 'price_1TWfu2IHZHcZHyKVUYQ3tPe4', perCredit: '€0,15', popular: true },
+  { credits: 250, price: '€29,95', priceId: 'price_1TWfubIHZHcZHyKVrkM237tC', perCredit: '€0,12' },
+  { credits: 500, price: '€49,95', priceId: 'price_1TWfvHIHZHcZHyKVT1ztzUjR', perCredit: '€0,10' },
+  { credits: 1000, price: '€79,95', priceId: 'price_1TWfvaIHZHcZHyKVeUAkKvQj', perCredit: '€0,08', best: true },
 ];
 
 const Pricing = () => {

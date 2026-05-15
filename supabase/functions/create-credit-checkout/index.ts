@@ -7,16 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Credit packages mapping: price_id -> credits amount
-const CREDIT_PACKAGES: Record<string, number> = {
-  "price_1TWft6IHZHcZHyKVYrZoAW6P": 10,
-  "price_1TWftQIHZHcZHyKVT2yNX3TP": 50,
-  "price_1TWfu2IHZHcZHyKVUYQ3tPe4": 100,
-  "price_1TWfubIHZHcZHyKVrkM237tC": 250,
-  "price_1TWfvHIHZHcZHyKVT1ztzUjR": 500,
-  "price_1TWfvaIHZHcZHyKVeUAkKvQj": 1000,
-};
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -27,6 +17,11 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_ANON_KEY") ?? ""
   );
 
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  );
+
   try {
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
@@ -35,11 +30,22 @@ serve(async (req) => {
     if (!user?.email) throw new Error("Niet ingelogd");
 
     const { priceId, origin: bodyOrigin } = await req.json();
-    if (!priceId || !CREDIT_PACKAGES[priceId]) {
-      throw new Error("Ongeldig credit pakket");
-    }
+    if (!priceId) throw new Error("Ongeldig credit pakket");
 
-    const creditsAmount = CREDIT_PACKAGES[priceId];
+    // Lookup credit package by Stripe price_id (single source of truth)
+    const { data: pkg, error: pkgErr } = await supabaseAdmin
+      .from('credit_packages')
+      .select('credits, active')
+      .eq('stripe_price_id', priceId)
+      .eq('active', true)
+      .maybeSingle();
+    if (pkgErr || !pkg) {
+      return new Response(JSON.stringify({ error: 'Invalid or inactive price ID' }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const creditsAmount = pkg.credits;
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",

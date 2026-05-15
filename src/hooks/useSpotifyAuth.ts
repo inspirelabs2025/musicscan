@@ -263,11 +263,12 @@ export const useSpotifyAuth = () => {
           spotify_connected: false,
           spotify_user_id: null,
           spotify_display_name: null,
-          spotify_email: null,
-          spotify_refresh_token: null,
           spotify_last_sync: null,
         })
         .eq('user_id', user.id);
+
+      // Delete refresh token from private table
+      await supabase.from('user_spotify_tokens').delete().eq('user_id', user.id);
 
       // Delete user's Spotify data
       await Promise.all([

@@ -31,6 +31,20 @@ const Pricing = () => {
   const p = tr.pricing;
   const isIOS = useIsIOS();
 
+  const { data: creditPackages = [] } = useQuery({
+    queryKey: ['credit-packages'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('credit_packages')
+        .select('*')
+        .eq('active', true)
+        .order('sort_order');
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 60 * 60 * 1000,
+  });
+
   // Always refetch credits when landing on /pricing (e.g. returning from Stripe in another tab)
   useEffect(() => {
     if (!user) return;

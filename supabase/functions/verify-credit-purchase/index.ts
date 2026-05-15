@@ -45,9 +45,22 @@ serve(async (req) => {
       });
     }
 
-    // Check metadata
-    const creditsAmount = parseInt(session.metadata?.credits_amount || "0");
+    // Resolve credits amount: prefer DB lookup on price_id (single source of truth),
+    // fall back to session metadata.credits_amount if no price_id was stored.
     const userId = session.metadata?.user_id;
+    const priceId = session.metadata?.price_id;
+    let creditsAmount = 0;
+    if (priceId) {
+      const { data: pkg } = await supabaseAdmin
+        .from('credit_packages')
+        .select('credits')
+        .eq('stripe_price_id', priceId)
+        .maybeSingle();
+      if (pkg?.credits) creditsAmount = pkg.credits;
+    }
+    if (!creditsAmount) {
+      creditsAmount = parseInt(session.metadata?.credits_amount || "0");
+    }
 
     if (!creditsAmount || !userId || userId !== user.id) {
       throw new Error("Ongeldige sessie data");

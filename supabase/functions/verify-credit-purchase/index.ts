@@ -7,15 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Same mapping as create-credit-checkout
-const CREDIT_PACKAGES: Record<string, number> = {
-  "price_1TWft6IHZHcZHyKVYrZoAW6P": 10,
-  "price_1TWftQIHZHcZHyKVT2yNX3TP": 50,
-  "price_1TWfu2IHZHcZHyKVUYQ3tPe4": 100,
-  "price_1TWfubIHZHcZHyKVrkM237tC": 250,
-  "price_1TWfvHIHZHcZHyKVT1ztzUjR": 500,
-  "price_1TWfvaIHZHcZHyKVeUAkKvQj": 1000,
-};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

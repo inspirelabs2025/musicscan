@@ -677,6 +677,22 @@ serve(async (req) => {
         } else {
           console.log('✅ Usage counter incremented successfully');
         }
+
+        // After successful increment, deduct a credit if user is OVER plan limit
+        try {
+          const { data: post } = await supabase.rpc('check_usage_limit', {
+            p_user_id: user.id,
+            p_usage_type: 'ai_scans',
+          });
+          const postRow = post && post[0];
+          if (postRow && postRow.limit_amount !== null && postRow.current_usage > postRow.limit_amount) {
+            const { data: deducted, error: deductErr } = await supabase.rpc('deduct_scan_credit', { p_user_id: user.id });
+            if (deductErr) console.error('⚠️ deduct_scan_credit error:', deductErr);
+            else console.log('💳 Scan credit deducted:', deducted);
+          }
+        } catch (e) {
+          console.error('⚠️ post-scan accounting error:', e);
+        }
       }
 
       // Automatic artwork enrichment after successful scan (skip if skipSave)

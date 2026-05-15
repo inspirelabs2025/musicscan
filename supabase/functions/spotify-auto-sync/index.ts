@@ -19,12 +19,25 @@ serve(async (req) => {
 
     console.log('🔄 Starting automatic Spotify sync for all connected users...');
 
-    // Find all users with active Spotify connections
-    const { data: connectedUsers, error: usersError } = await supabase
-      .from('profiles')
-      .select('user_id, spotify_display_name, spotify_last_sync')
-      .eq('spotify_connected', true)
-      .not('spotify_refresh_token', 'is', null);
+    // Find all users with active Spotify connections (refresh token lives in user_spotify_tokens)
+    const { data: tokenRows, error: tokensError } = await supabase
+      .from('user_spotify_tokens')
+      .select('user_id');
+
+    if (tokensError) {
+      console.error('Error fetching spotify token rows:', tokensError);
+      throw tokensError;
+    }
+
+    const tokenUserIds = (tokenRows ?? []).map(r => r.user_id);
+
+    const { data: connectedUsers, error: usersError } = tokenUserIds.length === 0
+      ? { data: [], error: null } as any
+      : await supabase
+          .from('profiles')
+          .select('user_id, spotify_display_name, spotify_last_sync')
+          .eq('spotify_connected', true)
+          .in('user_id', tokenUserIds);
 
     if (usersError) {
       console.error('Error fetching connected users:', usersError);

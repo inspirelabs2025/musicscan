@@ -133,8 +133,6 @@ export const useSpotifyAuth = () => {
           spotify_connected: true,
           spotify_user_id: tokenData.user_data.id,
           spotify_display_name: tokenData.user_data.display_name,
-          spotify_email: tokenData.user_data.email,
-          spotify_refresh_token: tokenData.refresh_token,
           spotify_last_sync: new Date().toISOString(),
         })
         .eq('user_id', user.id);
@@ -142,6 +140,20 @@ export const useSpotifyAuth = () => {
       if (profileError) {
         console.error('❌ Profile update error:', profileError);
         throw profileError;
+      }
+
+      // Store refresh token + email in private user_spotify_tokens table
+      const { error: tokenError } = await supabase
+        .from('user_spotify_tokens')
+        .upsert({
+          user_id: user.id,
+          spotify_refresh_token: tokenData.refresh_token,
+          spotify_email: tokenData.user_data.email,
+        }, { onConflict: 'user_id' });
+
+      if (tokenError) {
+        console.error('❌ Spotify token store error:', tokenError);
+        throw tokenError;
       }
 
       console.log('✅ Profile updated successfully');
@@ -251,11 +263,12 @@ export const useSpotifyAuth = () => {
           spotify_connected: false,
           spotify_user_id: null,
           spotify_display_name: null,
-          spotify_email: null,
-          spotify_refresh_token: null,
           spotify_last_sync: null,
         })
         .eq('user_id', user.id);
+
+      // Delete refresh token from private table
+      await supabase.from('user_spotify_tokens').delete().eq('user_id', user.id);
 
       // Delete user's Spotify data
       await Promise.all([

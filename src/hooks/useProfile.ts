@@ -23,8 +23,6 @@ export interface Profile {
   spotify_connected: boolean | null;
   spotify_user_id: string | null;
   spotify_display_name: string | null;
-  spotify_email: string | null;
-  spotify_refresh_token: string | null;
   spotify_last_sync: string | null;
   spotify_sync_enabled: boolean | null;
   // Onboarding fields

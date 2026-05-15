@@ -6351,10 +6351,8 @@ export type Database = {
           spotify_connected: boolean | null
           spotify_country: string | null
           spotify_display_name: string | null
-          spotify_email: string | null
           spotify_followers: number | null
           spotify_last_sync: string | null
-          spotify_refresh_token: string | null
           spotify_sync_enabled: boolean | null
           spotify_user_id: string | null
           total_followers: number | null
@@ -6387,10 +6385,8 @@ export type Database = {
           spotify_connected?: boolean | null
           spotify_country?: string | null
           spotify_display_name?: string | null
-          spotify_email?: string | null
           spotify_followers?: number | null
           spotify_last_sync?: string | null
-          spotify_refresh_token?: string | null
           spotify_sync_enabled?: boolean | null
           spotify_user_id?: string | null
           total_followers?: number | null
@@ -6423,10 +6419,8 @@ export type Database = {
           spotify_connected?: boolean | null
           spotify_country?: string | null
           spotify_display_name?: string | null
-          spotify_email?: string | null
           spotify_followers?: number | null
           spotify_last_sync?: string | null
-          spotify_refresh_token?: string | null
           spotify_sync_enabled?: boolean | null
           spotify_user_id?: string | null
           total_followers?: number | null
@@ -9759,6 +9753,30 @@ export type Database = {
           updated_at?: string
           user_id?: string
           view_count?: number | null
+        }
+        Relationships: []
+      }
+      user_spotify_tokens: {
+        Row: {
+          created_at: string
+          spotify_email: string | null
+          spotify_refresh_token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          spotify_email?: string | null
+          spotify_refresh_token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          spotify_email?: string | null
+          spotify_refresh_token?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

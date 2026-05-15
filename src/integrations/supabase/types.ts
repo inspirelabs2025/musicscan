@@ -5268,7 +5268,6 @@ export type Database = {
           is_published: boolean
           language: string
           name: string
-          owner_email: string
           owner_name: string
           slug: string
           subcategory: string | null
@@ -5287,7 +5286,6 @@ export type Database = {
           is_published?: boolean
           language?: string
           name: string
-          owner_email?: string
           owner_name?: string
           slug: string
           subcategory?: string | null
@@ -5306,7 +5304,6 @@ export type Database = {
           is_published?: boolean
           language?: string
           name?: string
-          owner_email?: string
           owner_name?: string
           slug?: string
           subcategory?: string | null
@@ -5315,6 +5312,32 @@ export type Database = {
           website_url?: string | null
         }
         Relationships: []
+      }
+      own_podcasts_private: {
+        Row: {
+          owner_email: string
+          podcast_id: string
+          updated_at: string
+        }
+        Insert: {
+          owner_email?: string
+          podcast_id: string
+          updated_at?: string
+        }
+        Update: {
+          owner_email?: string
+          podcast_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "own_podcasts_private_podcast_id_fkey"
+            columns: ["podcast_id"]
+            isOneToOne: true
+            referencedRelation: "own_podcasts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pageviews: {
         Row: {

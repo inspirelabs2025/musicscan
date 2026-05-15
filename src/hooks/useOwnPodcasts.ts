@@ -10,7 +10,6 @@ export interface OwnPodcast {
   artwork_url: string | null;
   author: string;
   owner_name: string;
-  owner_email: string;
   language: string;
   category: string;
   subcategory: string | null;
@@ -47,7 +46,6 @@ export interface CreatePodcastInput {
   artwork_url?: string;
   author?: string;
   owner_name?: string;
-  owner_email?: string;
   language?: string;
   category?: string;
   subcategory?: string;

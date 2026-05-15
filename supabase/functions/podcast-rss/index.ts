@@ -35,6 +35,13 @@ serve(async (req) => {
       return new Response("Podcast not found", { status: 404 });
     }
 
+    const { data: priv } = await supabase
+      .from("own_podcasts_private")
+      .select("owner_email")
+      .eq("podcast_id", podcast.id)
+      .maybeSingle();
+    (podcast as any).owner_email = priv?.owner_email || "podcast@musicscan.app";
+
     // Fetch episodes
     const { data: episodes, error: episodesError } = await supabase
       .from("own_podcast_episodes")

@@ -154,6 +154,36 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // Server-side plan + credit check (only for authenticated users)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    if (userId) {
+      try {
+        const { data: usageCheck, error: usageErr } = await supabaseAdmin.rpc("check_usage_limit", {
+          p_user_id: userId,
+          p_usage_type: "ai_chat",
+        });
+        if (usageErr) {
+          console.error("[scan-chat] check_usage_limit error:", usageErr.message);
+        } else if (usageCheck && usageCheck[0] && usageCheck[0].can_use === false) {
+          await logCreditAlert("scan-chat", "credit_depleted", { user_id: userId });
+          await logScanActivity({
+            user_id: userId, action_type: "scan_chat", function_name: "scan-chat",
+            status: "failed", error_message: "No chat credits", ip_address: ipAddress,
+            duration_ms: Date.now() - startTime,
+          });
+          return new Response(
+            JSON.stringify({ error: "Geen chat-credits meer beschikbaar" }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+      } catch (e) {
+        console.error("[scan-chat] usage check failed:", e);
+      }
+    }
+
     // Log scan-chat activity
     const hasPhotos = photoUrls?.length > 0;
     logScanActivity({
@@ -257,6 +287,29 @@ serve(async (req) => {
       function_name: 'scan-chat', status: 'completed', media_type: mediaType || null,
       image_count: photoUrls?.length || 0, ip_address: ipAddress, duration_ms: Date.now() - startTime,
     });
+
+    // Server-side usage accounting + credit deduct when over plan limit (non-blocking)
+    if (userId) {
+      (async () => {
+        try {
+          await supabaseAdmin.rpc("increment_usage", {
+            p_user_id: userId,
+            p_usage_type: "ai_chat",
+            p_increment: 1,
+          });
+          const { data: post } = await supabaseAdmin.rpc("check_usage_limit", {
+            p_user_id: userId,
+            p_usage_type: "ai_chat",
+          });
+          const row = post && post[0];
+          if (row && row.limit_amount !== null && row.current_usage >= row.limit_amount) {
+            await supabaseAdmin.rpc("deduct_chat_credit", { p_user_id: userId });
+          }
+        } catch (acctErr) {
+          console.error("[scan-chat] accounting failed:", acctErr);
+        }
+      })();
+    }
 
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },

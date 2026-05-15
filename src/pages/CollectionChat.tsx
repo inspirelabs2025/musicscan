@@ -158,7 +158,7 @@ const CollectionChat = () => {
       });
       if (error) throw error;
 
-      try { await incrementUsage('ai_chat', 1); } catch {}
+      // Server-side increment + credit-deduct happens in collection-chat edge function
       await loadMessages();
       setSuggestedQuestions(getRandomSuggestedQuestions());
     } catch (error) {

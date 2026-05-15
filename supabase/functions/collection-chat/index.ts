@@ -149,6 +149,24 @@ Deno.serve(async (req) => {
     console.log('Processing chat message:', message, 'for user:', userId, 'session:', session_id);
     const startTime = Date.now();
 
+    // Server-side plan + credit check
+    try {
+      const { data: usageCheck, error: usageErr } = await supabase.rpc('check_usage_limit', {
+        p_user_id: userId,
+        p_usage_type: 'ai_chat',
+      });
+      if (usageErr) {
+        console.error('[collection-chat] check_usage_limit error:', usageErr.message);
+      } else if (usageCheck && usageCheck[0] && usageCheck[0].can_use === false) {
+        return new Response(
+          JSON.stringify({ error: 'Geen chat-credits meer beschikbaar' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } catch (e) {
+      console.error('[collection-chat] usage check failed:', e);
+    }
+
     // Fetch chat history for session context to avoid repetition
     const { data: sessionMessages } = await supabase
       .from('chat_messages')
@@ -552,15 +570,36 @@ ${JSON.stringify(collectionStats.sampleItems.slice(0, 20), null, 1)}`}`
 
     console.log('Chat response generated successfully');
 
+    // Server-side usage accounting + credit deduct (non-blocking)
+    (async () => {
+      try {
+        await supabase.rpc('increment_usage', {
+          p_user_id: userId,
+          p_usage_type: 'ai_chat',
+          p_increment: 1,
+        });
+        const { data: post } = await supabase.rpc('check_usage_limit', {
+          p_user_id: userId,
+          p_usage_type: 'ai_chat',
+        });
+        const row = post && post[0];
+        if (row && row.limit_amount !== null && row.current_usage >= row.limit_amount) {
+          await supabase.rpc('deduct_chat_credit', { p_user_id: userId });
+        }
+      } catch (acctErr) {
+        console.error('[collection-chat] accounting failed:', acctErr);
+      }
+    })();
+
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         message: aiMessage,
         tokens_used: tokensUsed,
         response_time_ms: responseTime,
         collection_stats: collectionStats
       }),
-      { 
-        status: 200, 
+      {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );

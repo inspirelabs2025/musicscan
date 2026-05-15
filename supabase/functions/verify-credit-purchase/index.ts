@@ -62,43 +62,25 @@ serve(async (req) => {
       throw new Error("Ongeldige sessie data");
     }
 
-    // Check if already fulfilled (idempotency)
-    const { data: existing } = await supabaseAdmin
-      .from("credit_transactions")
-      .select("id")
-      .eq("reference_id", sessionId)
-      .eq("transaction_type", "purchase")
-      .maybeSingle();
-
-    if (existing) {
-      return new Response(JSON.stringify({ success: true, credits: creditsAmount, already_fulfilled: true }), {
+    const { data: result, error: rpcError } = await supabaseAdmin.rpc("purchase_credits", {
+      p_user_id: userId,
+      p_amount: creditsAmount,
+      p_reference_id: sessionId,
+      p_description: `Aankoop: ${creditsAmount} credits`,
+    });
+    if (rpcError) {
+      console.error("[verify-credit-purchase] RPC error:", rpcError);
+      throw new Error("Credits konden niet worden toegevoegd");
+    }
+    const row = result && result[0];
+    if (row && row.fulfilled === false) {
+      return new Response(JSON.stringify({ success: true, credits: creditsAmount, already_fulfilled: true, balance: row.balance }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    console.log(`[verify-credit-purchase] Fulfilled ${creditsAmount} credits for user ${userId}, new balance: ${row?.balance}`);
 
-    // Add credits using the atomic RPC function
-    const { error: creditError } = await supabaseAdmin.rpc("add_user_credits", {
-      p_user_id: userId,
-      p_amount: creditsAmount,
-    });
-
-    if (creditError) {
-      console.error("[verify-credit-purchase] Failed to add credits:", creditError);
-      throw new Error("Credits konden niet worden toegevoegd");
-    }
-
-    // Log transaction
-    await supabaseAdmin.from("credit_transactions").insert({
-      user_id: userId,
-      amount: creditsAmount,
-      transaction_type: "purchase",
-      reference_id: sessionId,
-      description: `Aankoop: ${creditsAmount} credits`,
-    });
-
-    console.log(`[verify-credit-purchase] Fulfilled ${creditsAmount} credits for user ${userId}`);
-
-    return new Response(JSON.stringify({ success: true, credits: creditsAmount }), {
+    return new Response(JSON.stringify({ success: true, credits: creditsAmount, balance: row?.balance }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

@@ -67,42 +67,27 @@ serve(async (req) => {
         });
       }
 
-      // Idempotency check
-      const { data: existing } = await supabaseAdmin
-        .from("credit_transactions")
-        .select("id")
-        .eq("reference_id", session.id)
-        .eq("transaction_type", "purchase")
-        .maybeSingle();
+      const { data: result, error: rpcError } = await supabaseAdmin.rpc("purchase_credits", {
+        p_user_id: userId,
+        p_amount: creditsAmount,
+        p_reference_id: session.id,
+        p_description: `Aankoop: ${creditsAmount} credits (webhook)`,
+      });
 
-      if (existing) {
+      if (rpcError) {
+        console.error("[stripe-webhook] RPC error:", rpcError);
+        throw new Error("Credits could not be added");
+      }
+
+      const row = result && result[0];
+      if (row && row.fulfilled === false) {
         console.log(`[stripe-webhook] Already fulfilled: ${session.id}`);
         return new Response(JSON.stringify({ received: true, already_fulfilled: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      // Add credits via atomic RPC
-      const { error: creditError } = await supabaseAdmin.rpc("add_user_credits", {
-        p_user_id: userId,
-        p_amount: creditsAmount,
-      });
-
-      if (creditError) {
-        console.error("[stripe-webhook] Failed to add credits:", creditError);
-        throw new Error("Credits could not be added");
-      }
-
-      // Log transaction
-      await supabaseAdmin.from("credit_transactions").insert({
-        user_id: userId,
-        amount: creditsAmount,
-        transaction_type: "purchase",
-        reference_id: session.id,
-        description: `Aankoop: ${creditsAmount} credits (webhook)`,
-      });
-
-      console.log(`[stripe-webhook] Fulfilled ${creditsAmount} credits for user ${userId} via webhook`);
+      console.log(`[stripe-webhook] Fulfilled ${creditsAmount} credits for user ${userId} via webhook, new balance: ${row?.balance}`);
     }
 
     return new Response(JSON.stringify({ received: true }), {

@@ -75,6 +75,7 @@ serve(async (req) => {
       metadata: {
         user_id: user.id,
         credits_amount: creditsAmount.toString(),
+        price_id: priceId,
         type: "credit_purchase",
       },
     });

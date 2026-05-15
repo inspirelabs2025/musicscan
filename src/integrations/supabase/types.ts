@@ -2056,6 +2056,45 @@ export type Database = {
           },
         ]
       }
+      credit_packages: {
+        Row: {
+          active: boolean
+          badge: string | null
+          created_at: string
+          credits: number
+          id: string
+          per_credit_label: string
+          price_label: string
+          sort_order: number
+          stripe_price_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          badge?: string | null
+          created_at?: string
+          credits: number
+          id?: string
+          per_credit_label: string
+          price_label: string
+          sort_order?: number
+          stripe_price_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          badge?: string | null
+          created_at?: string
+          credits?: number
+          id?: string
+          per_credit_label?: string
+          price_label?: string
+          sort_order?: number
+          stripe_price_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_transactions: {
         Row: {
           amount: number

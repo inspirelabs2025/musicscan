@@ -288,6 +288,29 @@ serve(async (req) => {
       image_count: photoUrls?.length || 0, ip_address: ipAddress, duration_ms: Date.now() - startTime,
     });
 
+    // Server-side usage accounting + credit deduct when over plan limit (non-blocking)
+    if (userId) {
+      (async () => {
+        try {
+          await supabaseAdmin.rpc("increment_usage", {
+            p_user_id: userId,
+            p_usage_type: "ai_chat",
+            p_increment: 1,
+          });
+          const { data: post } = await supabaseAdmin.rpc("check_usage_limit", {
+            p_user_id: userId,
+            p_usage_type: "ai_chat",
+          });
+          const row = post && post[0];
+          if (row && row.limit_amount !== null && row.current_usage >= row.limit_amount) {
+            await supabaseAdmin.rpc("deduct_chat_credit", { p_user_id: userId });
+          }
+        } catch (acctErr) {
+          console.error("[scan-chat] accounting failed:", acctErr);
+        }
+      })();
+    }
+
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });

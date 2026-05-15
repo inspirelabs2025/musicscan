@@ -154,6 +154,36 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // Server-side plan + credit check (only for authenticated users)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    if (userId) {
+      try {
+        const { data: usageCheck, error: usageErr } = await supabaseAdmin.rpc("check_usage_limit", {
+          p_user_id: userId,
+          p_usage_type: "ai_chat",
+        });
+        if (usageErr) {
+          console.error("[scan-chat] check_usage_limit error:", usageErr.message);
+        } else if (usageCheck && usageCheck[0] && usageCheck[0].can_use === false) {
+          await logCreditAlert("scan-chat", "credit_depleted", { user_id: userId });
+          await logScanActivity({
+            user_id: userId, action_type: "scan_chat", function_name: "scan-chat",
+            status: "failed", error_message: "No chat credits", ip_address: ipAddress,
+            duration_ms: Date.now() - startTime,
+          });
+          return new Response(
+            JSON.stringify({ error: "Geen chat-credits meer beschikbaar" }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+      } catch (e) {
+        console.error("[scan-chat] usage check failed:", e);
+      }
+    }
+
     // Log scan-chat activity
     const hasPhotos = photoUrls?.length > 0;
     logScanActivity({

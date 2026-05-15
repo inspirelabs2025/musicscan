@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -105,6 +106,7 @@ export default function AIScanV2() {
   } = useSubscriptionContext();
   const { checkAndAlert: checkCreditThreshold } = useCreditThresholdAlert();
   const { data: credits } = useCredits();
+  const queryClient = useQueryClient();
 
   // Discogs search for automatic pricing
   const {

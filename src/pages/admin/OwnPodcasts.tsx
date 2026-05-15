@@ -235,7 +235,7 @@ export default function OwnPodcasts() {
       slug: podcast.slug,
       author: podcast.author,
       owner_name: podcast.owner_name,
-      owner_email: podcast.owner_email,
+      owner_email: 'podcast@musicscan.app',
       category: podcast.category,
       explicit: podcast.explicit,
     });

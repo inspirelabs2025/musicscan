@@ -83,11 +83,17 @@ serve(async (req) => {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('spotify_refresh_token, spotify_connected')
+      .select('spotify_connected')
       .eq('user_id', user_id)
       .single();
 
-    if (profileError || !profile?.spotify_connected || !profile?.spotify_refresh_token) {
+    const { data: tokenRow } = await supabase
+      .from('user_spotify_tokens')
+      .select('spotify_refresh_token')
+      .eq('user_id', user_id)
+      .maybeSingle();
+
+    if (profileError || !profile?.spotify_connected || !tokenRow?.spotify_refresh_token) {
       return new Response(
         JSON.stringify({ error: 'User not connected to Spotify or missing refresh token' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -96,7 +102,7 @@ serve(async (req) => {
 
     let accessToken: string;
     try {
-      accessToken = await refreshAccessToken(profile.spotify_refresh_token);
+      accessToken = await refreshAccessToken(tokenRow.spotify_refresh_token);
     } catch (err) {
       const msg = err.message || '';
       if (msg.startsWith('REAUTH_REQUIRED')) {

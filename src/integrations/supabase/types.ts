@@ -11024,6 +11024,18 @@ export type Database = {
           processed_count: number
         }[]
       }
+      purchase_credits: {
+        Args: {
+          p_amount: number
+          p_description?: string
+          p_reference_id: string
+          p_user_id: string
+        }
+        Returns: {
+          balance: number
+          fulfilled: boolean
+        }[]
+      }
       redeem_promo_code: { Args: { p_code: string }; Returns: Json }
       refresh_featured_photos: { Args: never; Returns: undefined }
       refresh_notification_stats: { Args: never; Returns: undefined }

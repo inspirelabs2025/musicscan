@@ -260,7 +260,7 @@ export default function OwnPodcasts() {
         description: podcastForm.description || null,
         author: podcastForm.author,
         owner_name: podcastForm.owner_name,
-        owner_email: podcastForm.owner_email,
+        
         category: podcastForm.category,
         explicit: podcastForm.explicit,
         artwork_url: artworkUrl,

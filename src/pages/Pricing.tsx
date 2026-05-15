@@ -322,21 +322,29 @@ const Pricing = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                {CREDIT_PACKAGES.map((pkg) => (
+                {creditPackages.map((pkg) => {
+                  const isPopular = pkg.badge === 'Populairste';
+                  const isBest = pkg.badge === 'Beste Deal';
+                  return (
                   <Card
-                    key={pkg.credits}
+                    key={pkg.stripe_price_id}
                     className={`relative p-6 transition-all duration-300 hover:scale-105 ${
-                      pkg.popular ? 'ring-2 ring-primary' : ''
-                    } ${pkg.best ? 'ring-2 ring-primary' : ''}`}
+                      pkg.badge ? 'ring-2 ring-primary' : ''
+                    }`}
                   >
-                    {pkg.popular && (
+                    {isPopular && (
                       <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
                         {p.mostPopular}
                       </Badge>
                     )}
-                    {pkg.best && (
+                    {isBest && (
                       <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-purple-600">
                         <Sparkles className="h-3 w-3 mr-1" /> {p.bestDeal}
+                      </Badge>
+                    )}
+                    {pkg.badge && !isPopular && !isBest && (
+                      <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
+                        {pkg.badge}
                       </Badge>
                     )}
 
@@ -346,10 +354,10 @@ const Pricing = () => {
                       </div>
                       <div>
                         <h3 className="text-xl font-bold">{pkg.credits} Credits</h3>
-                        <p className="text-sm text-muted-foreground">{pkg.perCredit} {p.perCredit}</p>
+                        <p className="text-sm text-muted-foreground">{pkg.per_credit_label} {p.perCredit}</p>
                       </div>
                       <div>
-                        <span className="text-3xl font-bold">{pkg.price}</span>
+                        <span className="text-3xl font-bold">{pkg.price_label}</span>
                       </div>
                       {isIOS ? (
                         <div className="text-center space-y-2">
@@ -368,11 +376,11 @@ const Pricing = () => {
                       ) : (
                         <Button
                           className="w-full"
-                          variant={pkg.popular || pkg.best ? 'default' : 'outline'}
-                          onClick={() => handleBuyCredits(pkg.priceId)}
-                          disabled={buyingPriceId === pkg.priceId}
+                          variant={pkg.badge ? 'default' : 'outline'}
+                          onClick={() => handleBuyCredits(pkg.stripe_price_id)}
+                          disabled={buyingPriceId === pkg.stripe_price_id}
                         >
-                          {buyingPriceId === pkg.priceId ? (
+                          {buyingPriceId === pkg.stripe_price_id ? (
                             <><Loader2 className="h-4 w-4 animate-spin mr-2" />{p.patience}</>
                           ) : (
                             p.buy
@@ -381,7 +389,8 @@ const Pricing = () => {
                       )}
                     </div>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="text-center mt-8 text-sm text-muted-foreground">

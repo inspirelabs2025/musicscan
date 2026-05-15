@@ -149,6 +149,24 @@ Deno.serve(async (req) => {
     console.log('Processing chat message:', message, 'for user:', userId, 'session:', session_id);
     const startTime = Date.now();
 
+    // Server-side plan + credit check
+    try {
+      const { data: usageCheck, error: usageErr } = await supabase.rpc('check_usage_limit', {
+        p_user_id: userId,
+        p_usage_type: 'ai_chat',
+      });
+      if (usageErr) {
+        console.error('[collection-chat] check_usage_limit error:', usageErr.message);
+      } else if (usageCheck && usageCheck[0] && usageCheck[0].can_use === false) {
+        return new Response(
+          JSON.stringify({ error: 'Geen chat-credits meer beschikbaar' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } catch (e) {
+      console.error('[collection-chat] usage check failed:', e);
+    }
+
     // Fetch chat history for session context to avoid repetition
     const { data: sessionMessages } = await supabase
       .from('chat_messages')

@@ -280,6 +280,34 @@ serve(async (req) => {
   const userId = getUserIdFromRequest(req);
   const ipAddress = getIpFromRequest(req);
 
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  // Server-side plan + credit check (only for authenticated users)
+  if (userId) {
+    try {
+      const { data: usageCheck } = await supabaseAdmin.rpc("check_usage_limit", {
+        p_user_id: userId,
+        p_usage_type: "ai_scans",
+      });
+      if (usageCheck && usageCheck[0] && usageCheck[0].can_use === false) {
+        await logScanActivity({
+          user_id: userId, action_type: 'vinyl_scan', function_name: 'analyze-vinyl-images',
+          status: 'failed', error_message: 'No scan credits', ip_address: ipAddress,
+          duration_ms: Date.now() - startTime
+        });
+        return new Response(
+          JSON.stringify({ error: 'USAGE_LIMIT_EXCEEDED', message: 'Geen scan-credits meer beschikbaar. Upgrade je plan of koop extra credits.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } catch (e) {
+      console.error('[analyze-vinyl-images] usage check failed:', e);
+    }
+  }
+
   try {
     const body = await req.json().catch(() => ({} as any));
 

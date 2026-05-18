@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { logCreditAlert } from "../_shared/credit-alert.ts";
-import { logScanActivity, getUserIdFromRequest, getIpFromRequest } from "../_shared/scan-activity-logger.ts";
+import { logScanActivity, getUserIdFromRequest, getVerifiedUserIdFromRequest, getIpFromRequest } from "../_shared/scan-activity-logger.ts";
 import { checkScanRate } from "../_shared/rate-check.ts";
 
 const corsHeaders = {
@@ -159,18 +159,19 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-    if (userId) {
+    const verifiedUserId = await getVerifiedUserIdFromRequest(req, supabaseAdmin);
+    if (verifiedUserId) {
       try {
         const { data: usageCheck, error: usageErr } = await supabaseAdmin.rpc("check_usage_limit", {
-          p_user_id: userId,
+          p_user_id: verifiedUserId,
           p_usage_type: "ai_chat",
         });
         if (usageErr) {
           console.error("[scan-chat] check_usage_limit error:", usageErr.message);
         } else if (usageCheck && usageCheck[0] && usageCheck[0].can_use === false) {
-          await logCreditAlert("scan-chat", "credit_depleted", { user_id: userId });
+          await logCreditAlert("scan-chat", "credit_depleted", { user_id: verifiedUserId });
           await logScanActivity({
-            user_id: userId, action_type: "scan_chat", function_name: "scan-chat",
+            user_id: verifiedUserId, action_type: "scan_chat", function_name: "scan-chat",
             status: "failed", error_message: "No chat credits", ip_address: ipAddress,
             duration_ms: Date.now() - startTime,
           });
@@ -289,21 +290,21 @@ serve(async (req) => {
     });
 
     // Server-side usage accounting + credit deduct when over plan limit (non-blocking)
-    if (userId) {
+    if (verifiedUserId) {
       (async () => {
         try {
           await supabaseAdmin.rpc("increment_usage", {
-            p_user_id: userId,
+            p_user_id: verifiedUserId,
             p_usage_type: "ai_chat",
             p_increment: 1,
           });
           const { data: post } = await supabaseAdmin.rpc("check_usage_limit", {
-            p_user_id: userId,
+            p_user_id: verifiedUserId,
             p_usage_type: "ai_chat",
           });
           const row = post && post[0];
           if (row && row.limit_amount !== null && row.current_usage > row.limit_amount) {
-            await supabaseAdmin.rpc("deduct_chat_credit", { p_user_id: userId });
+            await supabaseAdmin.rpc("deduct_chat_credit", { p_user_id: verifiedUserId });
           }
         } catch (acctErr) {
           console.error("[scan-chat] accounting failed:", acctErr);

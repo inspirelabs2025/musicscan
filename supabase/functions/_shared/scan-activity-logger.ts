@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -52,6 +52,27 @@ export function getUserIdFromRequest(req: Request): string | undefined {
     const token = authHeader.split(" ")[1];
     const payload = JSON.parse(atob(token.split(".")[1]));
     return payload.sub;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Verified version of getUserIdFromRequest — validates JWT signature against Supabase Auth.
+ * MUST be used for any authorization or credit-spend decision. The non-verified version
+ * is only safe for opaque logging/analytics.
+ */
+export async function getVerifiedUserIdFromRequest(
+  req: Request,
+  supabaseAdmin: SupabaseClient,
+): Promise<string | undefined> {
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) return undefined;
+  const token = authHeader.split(" ")[1];
+  try {
+    const { data, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !data?.user) return undefined;
+    return data.user.id;
   } catch {
     return undefined;
   }

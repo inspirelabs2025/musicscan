@@ -2,7 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { logScanActivity, getUserIdFromRequest, getIpFromRequest } from "../_shared/scan-activity-logger.ts";
+import { logScanActivity, getUserIdFromRequest, getVerifiedUserIdFromRequest, getIpFromRequest } from "../_shared/scan-activity-logger.ts";
 
 const CD_FUNCTION_VERSION = "V3.0-TWO-PASS-VERIFICATION";
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -296,16 +296,18 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  const verifiedUserId = await getVerifiedUserIdFromRequest(req, supabaseAdmin);
+
   // Server-side plan + credit check (only for authenticated users)
-  if (userId) {
+  if (verifiedUserId) {
     try {
       const { data: usageCheck } = await supabaseAdmin.rpc("check_usage_limit", {
-        p_user_id: userId,
+        p_user_id: verifiedUserId,
         p_usage_type: "ai_scans",
       });
       if (usageCheck && usageCheck[0] && usageCheck[0].can_use === false) {
         await logScanActivity({
-          user_id: userId, action_type: 'cd_scan', function_name: 'analyze-cd-images',
+          user_id: verifiedUserId, action_type: 'cd_scan', function_name: 'analyze-cd-images',
           status: 'failed', error_message: 'No scan credits', ip_address: ipAddress,
           duration_ms: Date.now() - startTime
         });
@@ -397,18 +399,18 @@ serve(async (req) => {
     });
 
     // Server-side usage accounting + credit deduct when over plan limit (non-blocking)
-    if (userId) {
+    if (verifiedUserId) {
       (async () => {
         try {
           await supabaseAdmin.rpc("increment_usage", {
-            p_user_id: userId, p_usage_type: "ai_scans", p_increment: 1,
+            p_user_id: verifiedUserId, p_usage_type: "ai_scans", p_increment: 1,
           });
           const { data: post } = await supabaseAdmin.rpc("check_usage_limit", {
-            p_user_id: userId, p_usage_type: "ai_scans",
+            p_user_id: verifiedUserId, p_usage_type: "ai_scans",
           });
           const row = post && post[0];
           if (row && row.limit_amount !== null && row.current_usage > row.limit_amount) {
-            await supabaseAdmin.rpc("deduct_scan_credit", { p_user_id: userId });
+            await supabaseAdmin.rpc("deduct_scan_credit", { p_user_id: verifiedUserId });
           }
         } catch (acctErr) {
           console.error('[analyze-cd-images] accounting failed:', acctErr);

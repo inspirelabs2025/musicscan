@@ -384,6 +384,26 @@ serve(async (req) => {
       metadata: { confidence: finalResult.confidence?.overall, version: VINYL_FUNCTION_VERSION }
     });
 
+    // Server-side usage accounting + credit deduct when over plan limit (non-blocking)
+    if (userId) {
+      (async () => {
+        try {
+          await supabaseAdmin.rpc("increment_usage", {
+            p_user_id: userId, p_usage_type: "ai_scans", p_increment: 1,
+          });
+          const { data: post } = await supabaseAdmin.rpc("check_usage_limit", {
+            p_user_id: userId, p_usage_type: "ai_scans",
+          });
+          const row = post && post[0];
+          if (row && row.limit_amount !== null && row.current_usage > row.limit_amount) {
+            await supabaseAdmin.rpc("deduct_scan_credit", { p_user_id: userId });
+          }
+        } catch (acctErr) {
+          console.error('[analyze-vinyl-images] accounting failed:', acctErr);
+        }
+      })();
+    }
+
     return new Response(
       JSON.stringify(finalResult),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

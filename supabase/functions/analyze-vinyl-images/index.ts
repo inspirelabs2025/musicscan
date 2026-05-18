@@ -285,16 +285,18 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  const verifiedUserId = await getVerifiedUserIdFromRequest(req, supabaseAdmin);
+
   // Server-side plan + credit check (only for authenticated users)
-  if (userId) {
+  if (verifiedUserId) {
     try {
       const { data: usageCheck } = await supabaseAdmin.rpc("check_usage_limit", {
-        p_user_id: userId,
+        p_user_id: verifiedUserId,
         p_usage_type: "ai_scans",
       });
       if (usageCheck && usageCheck[0] && usageCheck[0].can_use === false) {
         await logScanActivity({
-          user_id: userId, action_type: 'vinyl_scan', function_name: 'analyze-vinyl-images',
+          user_id: verifiedUserId, action_type: 'vinyl_scan', function_name: 'analyze-vinyl-images',
           status: 'failed', error_message: 'No scan credits', ip_address: ipAddress,
           duration_ms: Date.now() - startTime
         });

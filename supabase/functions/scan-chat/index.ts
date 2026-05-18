@@ -159,18 +159,19 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-    if (userId) {
+    const verifiedUserId = await getVerifiedUserIdFromRequest(req, supabaseAdmin);
+    if (verifiedUserId) {
       try {
         const { data: usageCheck, error: usageErr } = await supabaseAdmin.rpc("check_usage_limit", {
-          p_user_id: userId,
+          p_user_id: verifiedUserId,
           p_usage_type: "ai_chat",
         });
         if (usageErr) {
           console.error("[scan-chat] check_usage_limit error:", usageErr.message);
         } else if (usageCheck && usageCheck[0] && usageCheck[0].can_use === false) {
-          await logCreditAlert("scan-chat", "credit_depleted", { user_id: userId });
+          await logCreditAlert("scan-chat", "credit_depleted", { user_id: verifiedUserId });
           await logScanActivity({
-            user_id: userId, action_type: "scan_chat", function_name: "scan-chat",
+            user_id: verifiedUserId, action_type: "scan_chat", function_name: "scan-chat",
             status: "failed", error_message: "No chat credits", ip_address: ipAddress,
             duration_ms: Date.now() - startTime,
           });

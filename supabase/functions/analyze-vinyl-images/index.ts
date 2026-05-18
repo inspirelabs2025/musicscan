@@ -1,6 +1,7 @@
 // V6.0 - Two-Pass Verification System to prevent AI hallucination
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { logScanActivity, getUserIdFromRequest, getIpFromRequest } from "../_shared/scan-activity-logger.ts";
 
 const VINYL_FUNCTION_VERSION = "V6.0-TWO-PASS-VERIFICATION";
@@ -279,6 +280,34 @@ serve(async (req) => {
   const userId = getUserIdFromRequest(req);
   const ipAddress = getIpFromRequest(req);
 
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  // Server-side plan + credit check (only for authenticated users)
+  if (userId) {
+    try {
+      const { data: usageCheck } = await supabaseAdmin.rpc("check_usage_limit", {
+        p_user_id: userId,
+        p_usage_type: "ai_scans",
+      });
+      if (usageCheck && usageCheck[0] && usageCheck[0].can_use === false) {
+        await logScanActivity({
+          user_id: userId, action_type: 'vinyl_scan', function_name: 'analyze-vinyl-images',
+          status: 'failed', error_message: 'No scan credits', ip_address: ipAddress,
+          duration_ms: Date.now() - startTime
+        });
+        return new Response(
+          JSON.stringify({ error: 'USAGE_LIMIT_EXCEEDED', message: 'Geen scan-credits meer beschikbaar. Upgrade je plan of koop extra credits.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } catch (e) {
+      console.error('[analyze-vinyl-images] usage check failed:', e);
+    }
+  }
+
   try {
     const body = await req.json().catch(() => ({} as any));
 
@@ -354,6 +383,26 @@ serve(async (req) => {
       discogs_id: finalResult.discogs_id, ip_address: ipAddress,
       metadata: { confidence: finalResult.confidence?.overall, version: VINYL_FUNCTION_VERSION }
     });
+
+    // Server-side usage accounting + credit deduct when over plan limit (non-blocking)
+    if (userId) {
+      (async () => {
+        try {
+          await supabaseAdmin.rpc("increment_usage", {
+            p_user_id: userId, p_usage_type: "ai_scans", p_increment: 1,
+          });
+          const { data: post } = await supabaseAdmin.rpc("check_usage_limit", {
+            p_user_id: userId, p_usage_type: "ai_scans",
+          });
+          const row = post && post[0];
+          if (row && row.limit_amount !== null && row.current_usage > row.limit_amount) {
+            await supabaseAdmin.rpc("deduct_scan_credit", { p_user_id: userId });
+          }
+        } catch (acctErr) {
+          console.error('[analyze-vinyl-images] accounting failed:', acctErr);
+        }
+      })();
+    }
 
     return new Response(
       JSON.stringify(finalResult),

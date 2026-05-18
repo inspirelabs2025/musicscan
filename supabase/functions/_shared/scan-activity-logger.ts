@@ -57,6 +57,27 @@ export function getUserIdFromRequest(req: Request): string | undefined {
   }
 }
 
+/**
+ * Verified version of getUserIdFromRequest — validates JWT signature against Supabase Auth.
+ * MUST be used for any authorization or credit-spend decision. The non-verified version
+ * is only safe for opaque logging/analytics.
+ */
+export async function getVerifiedUserIdFromRequest(
+  req: Request,
+  supabaseAdmin: SupabaseClient,
+): Promise<string | undefined> {
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) return undefined;
+  const token = authHeader.split(" ")[1];
+  try {
+    const { data, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !data?.user) return undefined;
+    return data.user.id;
+  } catch {
+    return undefined;
+  }
+}
+
 export function getIpFromRequest(req: Request): string | null {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
          req.headers.get("cf-connecting-ip") || null;

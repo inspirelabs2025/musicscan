@@ -48,7 +48,7 @@ export default {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
 				},
-				muted: {
+				muxed: {
 					DEFAULT: 'hsl(var(--muted))',
 					foreground: 'hsl(var(--muted-foreground))'
 				},
@@ -102,11 +102,17 @@ export default {
 					background: 'hsl(var(--ai-nudge-background))',
 					foreground: 'hsl(var(--ai-nudge-foreground))',
 					border: 'hsl(var(--ai-nudge-border))'
+				},
+				'ai-glow': {
+					start: 'hsl(var(--ai-glow-start))',
+					middle: 'hsl(var(--ai-glow-middle))',
+					end: 'hsl(var(--ai-glow-end))'
 				}
 			},
 			backgroundImage: {
 				'gradient-vinyl': 'var(--gradient-vinyl)',
-				'gradient-scan': 'var(--gradient-scan)'
+				'gradient-scan': 'var(--gradient-scan)',
+				'gradient-ai-glow': 'linear-gradient(90deg, var(--ai-glow-start) 0%, var(--ai-glow-middle) 50%, var(--ai-glow-end) 100%)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -155,6 +161,10 @@ export default {
 					'50%': {
 						boxShadow: '0 0 0 15px hsl(var(--primary) / 0)'
 					}
+				},
+				'ai-glow-pulse': {
+					'0%, 100%': { opacity: '0.7' },
+					'50%': { opacity: '1' }
 				}
 			},
 			animation: {
@@ -163,7 +173,8 @@ export default {
 				'vinyl-spin': 'vinyl-spin 4s linear infinite',
 				'fade-in': 'fade-in 0.6s ease-out',
 				'scan-pulse': 'scan-pulse 2s infinite',
-				'spin-slow': 'spin 3s linear infinite'
+				'spin-slow': 'spin 3s linear infinite',
+				'ai-glow-pulse': 'ai-glow-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
 			},
 			typography: {
 				DEFAULT: {

@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --header-background: 0 0% 100%;
+    --header-foreground: 222.2 84% 4.9%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 215 20.4% 69%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 217.2 32.6% 17.5%;
+    --sidebar-foreground: 222.2 47.4% 91.2%; /* Lightened foreground for better contrast */
+    --sidebar-primary: 210 40% 90%; /* Lighter primary for sidebar items */
+    --sidebar-primary-foreground: 217.2 32.6% 10%;
+    --sidebar-accent: 217.2 32.6% 25%; /* Slightly darker accent for hovers */
+    --sidebar-accent-foreground: 222.2 47.4% 98%;
+    --sidebar-border: 217.2 32.6% 22%;
+    --sidebar-ring: 217.2 32.6% 30%;
+
+    --ai-nudge-background: 210 40% 96.1%; /* Muted background */
+    --ai-nudge-foreground: 222.2 47.4% 11.2%; /* Primary foreground */
+    --ai-nudge-border: 214.3 31.8% 91.4%; /* Border color */
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --header-background: 222.2 84% 4.9%;
+    --header-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.4% 69%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --card-dark: 217.2 32.6% 10%;
+    --card-dark-foreground: 210 40% 98%;
+    --card-purple: 250 50% 15%;
+    --card-purple-foreground: 250 80% 90%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 217.2 32.6% 27.5%;
+
+    --sidebar-background: 217.2 32.6% 17.5%;
+    --sidebar-foreground: 210 40% 90%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 217.2 32.6% 25%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 22%;
+    --sidebar-ring: 217.2 32.6% 30%;
+
+    --vinyl-gold: 40 90% 70%;
+    --vinyl-silver: 200 10% 80%;
+    --vinyl-black: 0 0% 15%;
+    --vinyl-purple: 280 60% 70%;
+
+    --echo-violet: 280 50% 60%;
+    --echo-lavender: 260 70% 85%;
+    --echo-gold: 40 90% 80%;
+    --echo-cream: 30 100% 95%;
+
+    --christmas-red: 0 70% 50%;
+    --christmas-green: 150 60% 40%;
+    --christmas-gold: 40 90% 60%;
+    --christmas-cream: 30 100% 90%;
+    --christmas-burgundy: 340 60% 30%;
+    --christmas-pine: 180 40% 25%;
+
+    --ai-nudge-background: 217.2 32.6% 17.5%; /* Darker background */
+    --ai-nudge-foreground: 210 40% 98%; /* Light foreground */
+    --ai-nudge-border: 217.2 32.6% 27.5%; /* Border color */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    background-color: hsl(var(--background)); /* Ensure background color is applied */
+  }
+}
+
+/* Custom scrollbar for webkit browsers */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--foreground));
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.custom-scrollbar {
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden; /* Prevent body scroll, let specific components scroll */
+}

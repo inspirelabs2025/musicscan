@@ -1,57 +1,45 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createClient } from '@supabase/supabase-js';
-import { Toaster } from 'sonner';
-
-import './index.css';
-import { ThemeProvider } from './components/ThemeProvider';
-import AppRoutes from './AppRoutes';
-import { CommandK } from './components/CommandK';
-import { supabase } from './lib/supabase';
+import { Toaster } from 'react-hot-toast';
+import { TooltipProvider } from './components/ui/tooltip';
+import { AppRoutes } from './routes';
+import { useEffect } from 'react';
+import { useCustomerFeedback } from '@/hooks/useCustomerFeedback';
 import { useAuth } from './hooks/useAuth';
 
-const queryClient = new QueryClient();
-
 function App() {
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-        <AnalyticsWrapper />
-        <AppRoutes />
-        <CommandK />
-        <Toaster />
-      </ThemeProvider>
-    </QueryClientProvider>
-  );
-}
-
-// TODO: This wrapper is temporary; eventually, user data/chat messages should be globally accessible or fetched more efficiently.
-const AnalyticsWrapper: React.FC = () => {
-  const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const customerFeedback = useCustomerFeedback();
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (user && profile?.chat_messages_count === 0) {
-      // Display a nudge to encourage chat usage
-      // This is a simple example; a more sophisticated solution might involve a dedicated notification system.
-      console.log('Nudge: Try the chat feature!');
-      // You might want to display a toast, a modal, or a small banner here.
-      // For now, let's just log it and potentially navigate or show a temporary message.
-      // Example with sonner toast (if sonner is used for toasts in the app):
-      // toast.info("Heb je de chat al geprobeerd? Er zijn pas 0 chatberichten in je project. Probeer de chatfunctie om sneller antwoorden te krijgen!", {
-      //   duration: 10000,
-      //   action: {
-      //     label: "Naar chat",
-      //     onClick: () => navigate('/chat'),
-      //   },
-      // });
+    if (user?.id) {
+      // Example: Triggering feedback based on user activity
+      // This is a placeholder for actual logic to determine when to show the nudge
+      // For this task, we're assuming a condition like 'no chat messages sent'
+      // The actual analytics event for chat messages would be integrated here.
+      const hasChatMessages = false; // Replace with actual check for chat messages
+      if (!hasChatMessages) {
+        customerFeedback.triggerNudge({
+          id: 'chat-nudge-0-messages',
+          title: 'Heb je de chat al geprobeerd?',
+          message: 'Er zijn pas 0 chatberichten in je project. Probeer de chatfunctie om sneller antwoorden te krijgen!',
+          actionLabel: 'Naar chat', // Example action, assuming there's a chat page
+          onAction: () => {
+            // Navigate to the chat page or open chat widget
+            console.log('User clicked to go to chat');
+            // Programmatically navigate or open chat interface
+            // For example: window.location.href = '/chat';
+          },
+          type: 'info',
+        });
+      }
     }
-  }, [user, profile, navigate]);
+  }, [user?.id, customerFeedback]); // Dependency on user.id to trigger once per user session
 
-  return null;
-};
-
+  return (
+    <TooltipProvider>
+      <AppRoutes />
+      <Toaster />
+    </TooltipProvider>
+  );
+}
 
 export default App;

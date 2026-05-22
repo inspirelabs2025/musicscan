@@ -190,7 +190,7 @@ export default {
 							fontWeight: '600',
 							color: 'inherit',
 						},
-					a: {
+						a: {
 							color: 'hsl(var(--primary))',
 							textDecoration: 'none',
 							'&:hover': {

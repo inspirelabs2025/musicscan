@@ -174,7 +174,7 @@ export function AdminSidebar() {
           return (
             <Collapsible
               key={section.title}
-              defaultOpen={defaultOpen || groupActive}
+              defaultOpen={section.defaultOpen === false ? false : (defaultOpen || groupActive)}
             >
               <CollapsibleTrigger asChild>
                 <button className="flex items-center w-full gap-2 px-3 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground/70 hover:text-muted-foreground transition-colors rounded-md">

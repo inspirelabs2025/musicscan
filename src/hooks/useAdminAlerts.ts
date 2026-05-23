@@ -21,6 +21,7 @@ export function useAdminAlerts() {
         .from('admin_alerts')
         .select('*')
         .eq('is_read', false)
+        .neq('alert_type', 'abuse_detected')
         .order('created_at', { ascending: false })
         .limit(20);
       if (error) throw error;

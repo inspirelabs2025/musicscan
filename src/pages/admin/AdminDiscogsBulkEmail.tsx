@@ -145,6 +145,8 @@ export default function AdminDiscogsBulkEmail() {
 
   const handleLanguageChange = (lang: string) => {
     setLanguage(lang);
+    // Auto-sync region with language: NL taal → alleen NL contacten, EN → internationaal
+    setCountryFilter(lang === "nl" ? "nl" : "intl");
     const template = DEFAULT_TEMPLATES.find(t => t.id === selectedTemplate);
     if (template && selectedTemplate !== "custom") {
       setSubject(lang === "nl" ? template.subject_nl : template.subject_en);
@@ -341,12 +343,21 @@ export default function AdminDiscogsBulkEmail() {
                     </Select>
                   </div>
 
-                  <div className="pt-2 border-t">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">
-                        {contactsLoading ? "Laden..." : `${contacts?.length || 0} ontvangers`}
-                      </span>
+                  <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
+                    <div className="flex items-start gap-2">
+                      <Globe className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <div className="space-y-1">
+                        <p className="font-medium">
+                          {countryFilter === "nl" && "Alleen Nederlandse ontvangers"}
+                          {countryFilter === "intl" && "Alleen internationale ontvangers (buiten NL)"}
+                          {countryFilter === "all" && "Alle ontvangers (NL + internationaal)"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {contactsLoading
+                            ? "Laden..."
+                            : `${contacts?.length || 0} contacten ontvangen dit bericht in het ${language === "nl" ? "Nederlands" : "Engels"}.`}
+                        </p>
+                      </div>
                     </div>
                   </div>
 

@@ -106,6 +106,9 @@ const menuItems: MenuSection[] = [
       { title: "Christmas Import Logs", url: "/admin/christmas-import-logs", icon: FileText },
     ]
   },
+];
+
+
 
 
 export function AdminSidebar() {

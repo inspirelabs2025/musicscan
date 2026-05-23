@@ -28,11 +28,10 @@ interface MenuSection {
 
 const menuItems: MenuSection[] = [
   {
-    title: "Dashboard",
-    icon: LayoutDashboard,
+    title: "Scans",
+    icon: Disc,
     items: [
       { title: "Recente Scans", url: "/admin/recent-scans", icon: Disc },
-      { title: "Email & Notifications", url: "/admin/email-notifications", icon: Mail },
     ]
   },
   {
@@ -43,104 +42,22 @@ const menuItems: MenuSection[] = [
     ]
   },
   {
-    title: "Time Machine",
-    icon: Clock,
-    items: [
-      { title: "Time Machine", url: "/admin/time-machine", icon: Clock },
-    ]
-  },
-  {
-    title: "Generators",
-    icon: Wand2,
-    items: [
-      { title: "Media Library", url: "/admin/media-library", icon: CloudUpload },
-      { title: "Art Generator", url: "/admin/art-generator", icon: Palette },
-      { title: "Bulk Art Generator", url: "/admin/bulk-art-generator", icon: Wand2 },
-      { title: "Sketch Art", url: "/admin/sketch-art-generator", icon: PenTool },
-      // Product designers verwijderd
-      { title: "Photo Stylizer", url: "/admin/photo-stylizer", icon: Wand2 },
-      { title: "Singles Importer", url: "/admin/singles-importer", icon: Music },
-      { title: "Artist Stories", url: "/admin/artist-stories-generator", icon: Users },
-      { title: "Artist Spotlights", url: "/admin/artist-spotlights", icon: Sparkles },
-      { title: "Top 2000 Importer", url: "/admin/top2000-importer", icon: ListMusic },
-    ]
-  },
-  {
-    title: "Content",
-    icon: BookOpen,
-    items: [
-      { title: "Master Artists", url: "/admin/master-artists", icon: Crown },
-      { title: "Verhalen", url: "/admin/album-reviews", icon: BookOpen },
-      { title: "Studio Stories", url: "/admin/studio-stories", icon: Mic },
-      { title: "Eigen Podcasts", url: "/admin/own-podcasts", icon: Mic },
-      { title: "RSS News Manager", url: "/admin/news-rss-manager", icon: Newspaper },
-      { title: "Curated Artists (LP)", url: "/admin/curated-artists", icon: Music },
-      { title: "Discogs Lookup", url: "/admin/discogs-lookup", icon: Database },
-      { title: "Discogs Bulk Berichten", url: "/admin/discogs-messages", icon: MessageSquare },
-      { title: "Photo Moderation", url: "/admin/photo-moderation", icon: Image },
-      { title: "Auto Comments", url: "/admin/auto-comments", icon: MessageSquare },
-      { title: "Magic Mike Profiel", url: "/admin/magic-mike", icon: Bot },
-    ]
-  },
-  {
-    title: "SEO & Analytics",
-    icon: BarChart3,
-    items: [
-      { title: "Sitemap Management", url: "/admin/sitemap-management", icon: FileText },
-      { title: "Price History", url: "/admin/price-history", icon: BarChart3 },
-    ]
-  },
-  {
-    title: "Maintenance",
-    icon: Wrench,
-    items: [
-      { title: "Fix Blog Slugs", url: "/admin/fix-blog-slugs", icon: LinkIcon },
-      
-      { title: "Bulk Cleanup", url: "/admin/bulk-cleanup", icon: Wrench },
-      { title: "Auto Cleanup Today", url: "/admin/auto-cleanup-today", icon: RefreshCw },
-      { title: "Backfill FanWalls", url: "/admin/backfill-artist-fanwalls", icon: RefreshCw },
-      { title: "Create FanWall", url: "/admin/create-artist-fanwall", icon: Users },
-      { title: "Generate Seed", url: "/admin/generate-seed", icon: Settings },
-      
-    ]
-  },
-  {
     title: "Marketing",
     icon: Bell,
     items: [
       { title: "Popup Beheer", url: "/admin/popups", icon: Bell },
-      { title: "Discogs Bulk Email", url: "/admin/discogs-bulk-email", icon: Mail },
     ]
   },
   {
-    title: "Integraties",
-    icon: Cog,
+    title: "Discogs",
+    icon: MessageSquare,
     items: [
-      { title: "Render Queue", url: "/admin/render-queue", icon: Cog },
-      { title: "TikTok Videos", url: "/admin/tiktok-videos", icon: Video },
-      { title: "Metricool Social", url: "/admin/metricool", icon: Send },
-      { title: "Facebook Admin", url: "/admin/facebook-admin", icon: Facebook },
-      { title: "Facebook Sync", url: "/admin/facebook-sync", icon: Facebook },
-      { title: "Instagram Admin", url: "/admin/instagram-admin", icon: Instagram },
+      { title: "Discogs Bulk Berichten", url: "/admin/discogs-messages", icon: MessageSquare },
+      { title: "Discogs Email Box", url: "/admin/discogs-bulk-email", icon: Mail },
     ]
   },
-  {
-    title: "Testing",
-    icon: Disc,
-    defaultOpen: false,
-    items: [
-      { title: "Music News", url: "/admin/test/music-news", icon: Newspaper },
-      { title: "News Update", url: "/admin/test/news-update", icon: RefreshCw },
-      { title: "Blog Regeneration", url: "/admin/test/blog-regeneration", icon: FileText },
-      { title: "Discogs Flow", url: "/admin/test/discogs-flow", icon: Disc },
-      { title: "Discogs Blog Gen", url: "/admin/test/discogs-blog-generation", icon: FileText },
-      { title: "Discogs ID Finder", url: "/admin/test/discogs-id", icon: Database },
-      { title: "Album Cover Backfill", url: "/admin/test/album-cover-backfill", icon: Image },
-      { title: "Base64 Image Cleanup", url: "/admin/test/base64-image-cleanup", icon: Image },
-      { title: "Anekdote Generatie", url: "/admin/test/anecdote-generation", icon: BookOpen },
-    ]
-  }
 ];
+
 
 export function AdminSidebar() {
   const location = useLocation();

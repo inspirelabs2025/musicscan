@@ -238,8 +238,12 @@ export default function AdminDiscogsBulkEmail() {
           </p>
         </div>
 
-        <Tabs defaultValue="compose" className="space-y-6">
+        <Tabs defaultValue="inbox" className="space-y-6">
           <TabsList>
+            <TabsTrigger value="inbox" className="flex items-center gap-2">
+              <Inbox className="h-4 w-4" />
+              Inbox ({inboxMessages?.length || 0})
+            </TabsTrigger>
             <TabsTrigger value="compose" className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
               Opstellen
@@ -249,6 +253,55 @@ export default function AdminDiscogsBulkEmail() {
               Geschiedenis
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="inbox" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Inbox className="h-5 w-5" />
+                  Discogs Mailbox
+                </CardTitle>
+                <CardDescription>
+                  Berichten gesynchroniseerd vanuit je gekoppelde Discogs account (laatste 200)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {inboxLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Laden...
+                  </div>
+                ) : !inboxMessages || inboxMessages.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">
+                    Nog geen berichten gesynchroniseerd. Open een order in Discogs Bulk Berichten om messages op te halen.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {inboxMessages.map((m: any) => (
+                      <div key={m.id} className="p-3 rounded-lg border space-y-2">
+                        <div className="flex flex-wrap items-center gap-2 text-sm">
+                          <Badge variant="outline">#{m.discogs_order_id}</Badge>
+                          <span className="font-medium">{m.sender_username || "Onbekend"}</span>
+                          <span className="text-muted-foreground ml-auto">
+                            {m.message_timestamp
+                              ? format(new Date(m.message_timestamp), "d MMM yyyy HH:mm", { locale: nl })
+                              : "—"}
+                          </span>
+                        </div>
+                        {m.subject && (
+                          <p className="text-sm font-medium">{m.subject}</p>
+                        )}
+                        {m.message && (
+                          <p className="text-sm whitespace-pre-wrap text-muted-foreground">{m.message}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+
 
           <TabsContent value="compose" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

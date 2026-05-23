@@ -145,6 +145,8 @@ export default function AdminDiscogsBulkEmail() {
 
   const handleLanguageChange = (lang: string) => {
     setLanguage(lang);
+    // Auto-sync region with language: NL taal → alleen NL contacten, EN → internationaal
+    setCountryFilter(lang === "nl" ? "nl" : "intl");
     const template = DEFAULT_TEMPLATES.find(t => t.id === selectedTemplate);
     if (template && selectedTemplate !== "custom") {
       setSubject(lang === "nl" ? template.subject_nl : template.subject_en);

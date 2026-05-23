@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Users, Mail, Globe, Clock, CheckCircle2, XCircle, Loader2, FileText, Eye } from "lucide-react";
+import { Send, Users, Mail, Globe, Clock, CheckCircle2, XCircle, Loader2, FileText, Eye, Inbox } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -115,6 +115,20 @@ export default function AdminDiscogsBulkEmail() {
         .select("*")
         .order("created_at", { ascending: false })
         .limit(20);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch Discogs inbox messages (synced via discogs-order-message list mode)
+  const { data: inboxMessages, isLoading: inboxLoading } = useQuery({
+    queryKey: ["discogs-inbox-messages"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discogs_order_messages")
+        .select("*")
+        .order("message_timestamp", { ascending: false, nullsFirst: false })
+        .limit(200);
       if (error) throw error;
       return data;
     },
@@ -224,8 +238,12 @@ export default function AdminDiscogsBulkEmail() {
           </p>
         </div>
 
-        <Tabs defaultValue="compose" className="space-y-6">
+        <Tabs defaultValue="inbox" className="space-y-6">
           <TabsList>
+            <TabsTrigger value="inbox" className="flex items-center gap-2">
+              <Inbox className="h-4 w-4" />
+              Inbox ({inboxMessages?.length || 0})
+            </TabsTrigger>
             <TabsTrigger value="compose" className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
               Opstellen
@@ -235,6 +253,55 @@ export default function AdminDiscogsBulkEmail() {
               Geschiedenis
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="inbox" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Inbox className="h-5 w-5" />
+                  Discogs Mailbox
+                </CardTitle>
+                <CardDescription>
+                  Berichten gesynchroniseerd vanuit je gekoppelde Discogs account (laatste 200)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {inboxLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Laden...
+                  </div>
+                ) : !inboxMessages || inboxMessages.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">
+                    Nog geen berichten gesynchroniseerd. Open een order in Discogs Bulk Berichten om messages op te halen.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {inboxMessages.map((m: any) => (
+                      <div key={m.id} className="p-3 rounded-lg border space-y-2">
+                        <div className="flex flex-wrap items-center gap-2 text-sm">
+                          <Badge variant="outline">#{m.discogs_order_id}</Badge>
+                          <span className="font-medium">{m.sender_username || "Onbekend"}</span>
+                          <span className="text-muted-foreground ml-auto">
+                            {m.message_timestamp
+                              ? format(new Date(m.message_timestamp), "d MMM yyyy HH:mm", { locale: nl })
+                              : "—"}
+                          </span>
+                        </div>
+                        {m.subject && (
+                          <p className="text-sm font-medium">{m.subject}</p>
+                        )}
+                        {m.message && (
+                          <p className="text-sm whitespace-pre-wrap text-muted-foreground">{m.message}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+
 
           <TabsContent value="compose" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

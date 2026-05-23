@@ -56,7 +56,59 @@ const menuItems: MenuSection[] = [
       { title: "Discogs Email Box", url: "/admin/discogs-bulk-email", icon: Mail },
     ]
   },
+  {
+    title: "Overige",
+    icon: Cog,
+    defaultOpen: false,
+    items: [
+      { title: "Status Dashboard", url: "/admin/status", icon: BarChart3 },
+      { title: "Email Notifications", url: "/admin/email-notifications", icon: Mail },
+      { title: "Time Machine", url: "/admin/time-machine", icon: Clock },
+      { title: "Media Library", url: "/admin/media-library", icon: Image },
+      { title: "Art Generator", url: "/admin/art-generator", icon: Palette },
+      { title: "Bulk Art Generator", url: "/admin/bulk-art-generator", icon: Brush },
+      { title: "Sketch Art Generator", url: "/admin/sketch-art-generator", icon: PenTool },
+      { title: "Photo Stylizer", url: "/admin/photo-stylizer", icon: Wand2 },
+      { title: "Singles Importer", url: "/admin/singles-importer", icon: ListMusic },
+      { title: "Artist Stories Generator", url: "/admin/artist-stories-generator", icon: BookOpen },
+      { title: "Artist Spotlights", url: "/admin/artist-spotlights", icon: Sparkles },
+      { title: "Top 2000 Importer", url: "/admin/top2000-importer", icon: ListMusic },
+      { title: "Master Artists", url: "/admin/master-artists", icon: Crown },
+      { title: "Album Reviews", url: "/admin/album-reviews", icon: FileText },
+      { title: "Studio Stories", url: "/admin/studio-stories", icon: BookOpen },
+      { title: "Own Podcasts", url: "/admin/own-podcasts", icon: Mic },
+      { title: "News RSS Manager", url: "/admin/news-rss-manager", icon: Newspaper },
+      { title: "Curated Artists", url: "/admin/curated-artists", icon: Users },
+      { title: "Discogs Lookup", url: "/admin/discogs-lookup", icon: Search },
+      { title: "Photo Moderation", url: "/admin/photo-moderation", icon: Image },
+      { title: "Auto Comments", url: "/admin/auto-comments", icon: Bot },
+      { title: "Magic Mike", url: "/admin/magic-mike", icon: Sparkles },
+      { title: "Sitemap Management", url: "/admin/sitemap-management", icon: FileText },
+      { title: "Price History", url: "/admin/price-history", icon: BarChart3 },
+      { title: "Fix Blog Slugs", url: "/admin/fix-blog-slugs", icon: Wrench },
+      { title: "Bulk Cleanup", url: "/admin/bulk-cleanup", icon: RefreshCw },
+      { title: "Auto Cleanup Today", url: "/admin/auto-cleanup-today", icon: RefreshCw },
+      { title: "Backfill Fanwalls", url: "/admin/backfill-artist-fanwalls", icon: RefreshCw },
+      { title: "Create Fanwall", url: "/admin/create-artist-fanwall", icon: Users },
+      { title: "Generate Seed", url: "/admin/generate-seed", icon: Database },
+      { title: "Render Queue", url: "/admin/render-queue", icon: Server },
+      { title: "Render Jobs", url: "/admin/render-jobs", icon: Cpu },
+      { title: "TikTok Videos", url: "/admin/tiktok-videos", icon: Video },
+      { title: "Metricool", url: "/admin/metricool", icon: BarChart3 },
+      { title: "Facebook Admin", url: "/admin/facebook-admin", icon: Facebook },
+      { title: "Facebook Sync", url: "/admin/facebook-sync", icon: Facebook },
+      { title: "Facebook Test Post", url: "/admin/facebook-test-post", icon: Send },
+      { title: "Instagram Admin", url: "/admin/instagram-admin", icon: Instagram },
+      { title: "Promo Codes", url: "/admin/promo-codes", icon: Sparkles },
+      { title: "SEO Keywords", url: "/admin/seo-keywords", icon: Search },
+      { title: "Test Anecdote", url: "/admin/test/anecdote", icon: FileText },
+      { title: "Christmas Importer", url: "/admin/christmas-importer", icon: CloudUpload },
+      { title: "Christmas Import Logs", url: "/admin/christmas-import-logs", icon: FileText },
+    ]
+  },
 ];
+
+
 
 
 export function AdminSidebar() {
@@ -122,7 +174,7 @@ export function AdminSidebar() {
           return (
             <Collapsible
               key={section.title}
-              defaultOpen={defaultOpen || groupActive}
+              defaultOpen={section.defaultOpen === false ? false : (defaultOpen || groupActive)}
             >
               <CollapsibleTrigger asChild>
                 <button className="flex items-center w-full gap-2 px-3 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground/70 hover:text-muted-foreground transition-colors rounded-md">

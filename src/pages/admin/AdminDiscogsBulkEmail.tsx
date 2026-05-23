@@ -120,6 +120,20 @@ export default function AdminDiscogsBulkEmail() {
     },
   });
 
+  // Fetch Discogs inbox messages (synced via discogs-order-message list mode)
+  const { data: inboxMessages, isLoading: inboxLoading } = useQuery({
+    queryKey: ["discogs-inbox-messages"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discogs_order_messages")
+        .select("*")
+        .order("message_timestamp", { ascending: false, nullsFirst: false })
+        .limit(200);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const handleTemplateChange = (templateId: string) => {
     setSelectedTemplate(templateId);
     const template = DEFAULT_TEMPLATES.find(t => t.id === templateId);

@@ -49,12 +49,16 @@ const FanwallSlugRedirect = () => {
 };
 
 import { AdminLayout } from './components/admin/AdminLayout';
+import { AdminGuard } from './components/admin/AdminGuard';
 
 const AdminLayoutWrapper = () => (
-  <AdminLayout>
-    <Outlet />
-  </AdminLayout>
+  <AdminGuard>
+    <AdminLayout>
+      <Outlet />
+    </AdminLayout>
+  </AdminGuard>
 );
+
 
 import App from './App';
 import { PageLoader } from './components/shared/page-loader';

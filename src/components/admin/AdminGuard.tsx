@@ -37,6 +37,18 @@ export const AdminGuard = ({ children }: AdminGuardProps) => {
     return <Navigate to="/auth" replace />;
   }
 
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">

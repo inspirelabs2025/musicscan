@@ -9,7 +9,7 @@ interface AdminGuardProps {
 }
 
 export const AdminGuard = ({ children }: AdminGuardProps) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const { data: isAdmin, isLoading } = useQuery({
     queryKey: ['is-admin', user?.id],

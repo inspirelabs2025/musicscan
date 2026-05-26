@@ -9,7 +9,7 @@ interface AdminGuardProps {
 }
 
 export const AdminGuard = ({ children }: AdminGuardProps) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const { data: isAdmin, isLoading } = useQuery({
     queryKey: ['is-admin', user?.id],
@@ -32,6 +32,18 @@ export const AdminGuard = ({ children }: AdminGuardProps) => {
     },
     enabled: !!user?.id,
   });
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   if (!user) {
     return <Navigate to="/auth" replace />;

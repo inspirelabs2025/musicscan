@@ -33,10 +33,6 @@ export const AdminGuard = ({ children }: AdminGuardProps) => {
     enabled: !!user?.id,
   });
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">

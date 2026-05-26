@@ -101,12 +101,7 @@ export default {
 				'ai-nudge': {
 					background: 'hsl(var(--ai-nudge-background))',
 					foreground: 'hsl(var(--ai-nudge-foreground))',
-					border: 'hsl(var(--ai-nudge-border))',
-					'chat-encouragement': {
-						background: 'hsl(var(--ai-nudge-chat-encouragement-background))',
-						foreground: 'hsl(var(--ai-nudge-chat-encouragement-foreground))',
-						border: 'hsl(var(--ai-nudge-chat-encouragement-border))'
-					}
+					border: 'hsl(var(--ai-nudge-border))'
 				}
 			},
 			backgroundImage: {

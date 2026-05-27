@@ -248,6 +248,99 @@ export default function AdminDiscogsBulkEmail() {
     },
   });
 
+  const sendTestEmail = useMutation({
+    mutationFn: async () => {
+      console.log("[BulkEmail] === START sendTestEmail ===");
+
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      console.log("[BulkEmail] auth.getUser:", { user: userData?.user?.id, err: userErr });
+      if (userErr || !userData?.user?.email) throw new Error("Niet ingelogd");
+
+      const adminEmail = userData.user.email;
+      const adminUsername = adminEmail.split("@")[0];
+
+      const { data: roleData, error: roleErr } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userData.user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      console.log("[BulkEmail] admin role check:", { roleData, roleErr });
+      if (roleErr) throw new Error(`Role check: ${roleErr.message}`);
+      if (!roleData) throw new Error("Geen admin rol — toegang geweigerd");
+
+      const testSubject = subject.trim() || "Test mail";
+      const testBody = body.trim() || "Hello, how are you";
+      const testContacts = [{ email: adminEmail, username: adminUsername }];
+
+      // 1. Create campaign
+      console.log("[BulkEmail] STAP 1: campaign insert (TEST)", { subject: testSubject, language, countryFilter, recipients: 1 });
+      const { data: campaign, error: campError } = await supabase
+        .from("discogs_bulk_email_campaigns")
+        .insert({
+          subject: testSubject,
+          html_content: testBody,
+          language,
+          country_filter: countryFilter,
+          recipient_count: 1,
+          status: "pending",
+          created_by: userData.user.id,
+        })
+        .select()
+        .single();
+
+      console.log("[BulkEmail] STAP 1 resultaat:", { campaign, campError });
+      if (campError) throw new Error(`Campagne aanmaken faalde: ${campError.message} (${campError.code || "?"})`);
+      if (!campaign) throw new Error("Campagne aanmaken: geen data terug");
+
+      // 2. Create individual sends
+      const sends = testContacts.map(c => ({
+        campaign_id: campaign.id,
+        buyer_email: c.email,
+        buyer_username: c.username,
+        status: "pending" as const,
+      }));
+
+      console.log(`[BulkEmail] STAP 2: ${sends.length} sends invoegen (TEST)`);
+      const { error: sendError } = await supabase
+        .from("discogs_bulk_email_sends")
+        .insert(sends);
+      if (sendError) {
+        console.error("[BulkEmail] STAP 2 fout", sendError);
+        throw new Error(`Sends invoegen faalde: ${sendError.message}`);
+      }
+      console.log("[BulkEmail] STAP 2 klaar");
+
+      // 3. Trigger edge function
+      console.log("[BulkEmail] STAP 3: edge function invoke (TEST)");
+      const { data, error } = await supabase.functions.invoke("send-discogs-bulk-email", {
+        body: { campaignId: campaign.id },
+      });
+
+      console.log("[BulkEmail] STAP 3 resultaat:", { data, error });
+      if (error) throw new Error(`Edge function: ${error.message}`);
+      if (data?.error) throw new Error(`Edge function error: ${data.error}`);
+      return { ...data, recipient: adminEmail };
+    },
+    onSuccess: (data: any) => {
+      console.log("[BulkEmail] SUCCESS (TEST)", data);
+      toast({
+        title: "Testmail verstuurd!",
+        description: `${data.sent} verzonden, ${data.failed} mislukt naar ${data.recipient}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["discogs-bulk-email-campaigns"] });
+    },
+    onError: (error: Error) => {
+      console.error("[BulkEmail] FOUT (TEST)", error);
+      toast({
+        title: "Fout bij testmail",
+        description: error.message || "Onbekende fout — check console",
+        variant: "destructive",
+        duration: 10000,
+      });
+    },
+  });
+
   const handlePreview = () => {
     if (!contacts || contacts.length === 0) return;
     const sample = contacts[0];

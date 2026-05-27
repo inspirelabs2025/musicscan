@@ -555,6 +555,18 @@ export default function AdminDiscogsBulkEmail() {
                       Preview
                     </Button>
                     <Button
+                      variant="secondary"
+                      onClick={() => sendTestEmail.mutate()}
+                      disabled={sendTestEmail.isPending}
+                    >
+                      {sendTestEmail.isPending ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Mail className="h-4 w-4 mr-2" />
+                      )}
+                      Stuur testmail naar mezelf
+                    </Button>
+                    <Button
                       onClick={handleSend}
                       disabled={sending || !contacts || contacts.length === 0 || !subject.trim() || !body.trim()}
                       className="min-h-[44px]"

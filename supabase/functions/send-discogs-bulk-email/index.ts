@@ -117,9 +117,20 @@ Deno.serve(async (req) => {
 
         if (res.ok) {
           sentCount++
+          let resendEmailId: string | null = null
+          try {
+            const body = await res.json()
+            resendEmailId = body?.id ?? null
+          } catch (_) {
+            // ignore JSON parse error
+          }
           await serviceClient
             .from('discogs_bulk_email_sends')
-            .update({ status: 'sent', sent_at: new Date().toISOString() })
+            .update({
+              status: 'sent',
+              sent_at: new Date().toISOString(),
+              resend_email_id: resendEmailId,
+            })
             .eq('id', send.id)
         } else {
           const errBody = await res.text()

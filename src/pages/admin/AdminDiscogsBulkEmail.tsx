@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Users, Mail, Globe, Clock, CheckCircle2, XCircle, Loader2, FileText, Eye, Inbox } from "lucide-react";
+import { Send, Users, Mail, Globe, Clock, CheckCircle2, XCircle, Loader2, FileText, Eye, Inbox, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";

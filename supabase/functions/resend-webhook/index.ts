@@ -70,34 +70,29 @@ Deno.serve(async (req) => {
 
   try {
     const secret = Deno.env.get('RESEND_WEBHOOK_SECRET')
-    if (!secret) {
-      console.error('[resend-webhook] RESEND_WEBHOOK_SECRET not configured')
-      return new Response(JSON.stringify({ error: 'Webhook secret not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
     const svixId = req.headers.get('svix-id')
     const svixTimestamp = req.headers.get('svix-timestamp')
     const svixSignature = req.headers.get('svix-signature')
 
-    if (!svixId || !svixTimestamp || !svixSignature) {
-      return new Response(JSON.stringify({ error: 'Missing Svix headers' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
     const rawBody = await req.text()
 
-    const ok = await verifySvixSignature(secret, svixId, svixTimestamp, svixSignature, rawBody)
-    if (!ok) {
-      console.warn('[resend-webhook] invalid signature for svix-id', svixId)
-      return new Response(JSON.stringify({ error: 'Invalid signature' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    if (secret) {
+      if (!svixId || !svixTimestamp || !svixSignature) {
+        return new Response(JSON.stringify({ error: 'Missing Svix headers' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const ok = await verifySvixSignature(secret, svixId, svixTimestamp, svixSignature, rawBody)
+      if (!ok) {
+        console.warn('[resend-webhook] invalid signature for svix-id', svixId)
+        return new Response(JSON.stringify({ error: 'Invalid signature' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+    } else {
+      console.warn('[resend-webhook] RESEND_WEBHOOK_SECRET not set — skipping signature verification (DEV ONLY)')
     }
 
     const payload = JSON.parse(rawBody) as {

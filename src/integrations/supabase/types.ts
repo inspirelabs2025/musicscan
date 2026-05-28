@@ -2479,8 +2479,10 @@ export type Database = {
           buyer_username: string | null
           campaign_id: string
           created_at: string
+          delivered_at: string | null
           error_message: string | null
           id: string
+          resend_email_id: string | null
           sent_at: string | null
           status: string
         }
@@ -2489,8 +2491,10 @@ export type Database = {
           buyer_username?: string | null
           campaign_id: string
           created_at?: string
+          delivered_at?: string | null
           error_message?: string | null
           id?: string
+          resend_email_id?: string | null
           sent_at?: string | null
           status?: string
         }
@@ -2499,8 +2503,10 @@ export type Database = {
           buyer_username?: string | null
           campaign_id?: string
           created_at?: string
+          delivered_at?: string | null
           error_message?: string | null
           id?: string
+          resend_email_id?: string | null
           sent_at?: string | null
           status?: string
         }

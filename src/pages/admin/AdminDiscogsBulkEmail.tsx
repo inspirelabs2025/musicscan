@@ -615,37 +615,14 @@ export default function AdminDiscogsBulkEmail() {
                 ) : (
                   <div className="space-y-3">
                     {campaigns.map((campaign: any) => (
-                      <div key={campaign.id} className="flex items-center justify-between p-3 rounded-lg border">
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium truncate">{campaign.subject}</p>
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                            <span>{format(new Date(campaign.created_at), "d MMM yyyy HH:mm", { locale: nl })}</span>
-                            <Badge variant="outline">{campaign.language?.toUpperCase()}</Badge>
-                            <Badge variant="outline">{campaign.country_filter === "nl" ? "🇳🇱 NL" : campaign.country_filter === "intl" ? "🌍 Intl" : "🌐 Alle"}</Badge>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4 shrink-0 ml-4">
-                          <div className="flex items-center gap-1 text-sm">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span>{campaign.sent_count}</span>
-                          </div>
-                          {campaign.failed_count > 0 && (
-                            <div className="flex items-center gap-1 text-sm">
-                              <XCircle className="h-4 w-4 text-red-500" />
-                              <span>{campaign.failed_count}</span>
-                            </div>
-                          )}
-                          <Badge variant={campaign.status === "completed" ? "default" : campaign.status === "sending" ? "secondary" : "outline"}>
-                            {campaign.status}
-                          </Badge>
-                        </div>
-                      </div>
+                      <CampaignRow key={campaign.id} campaign={campaign} />
                     ))}
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
+
         </Tabs>
       </div>
     </AdminGuard>

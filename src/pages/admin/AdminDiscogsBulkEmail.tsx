@@ -230,8 +230,8 @@ export default function AdminDiscogsBulkEmail() {
     onSuccess: (data) => {
       console.log("[BulkEmail] SUCCESS", data);
       toast({
-        title: "Campaign verzonden!",
-        description: `${data.sent} verzonden, ${data.failed} mislukt van ${data.total} totaal`,
+        title: "Campagne geïnitieerd",
+        description: `${data.sent} geaccepteerd door Resend, ${data.failed} direct geweigerd van ${data.total} totaal. Delivery-status update binnen ~1 minuut.`,
       });
       queryClient.invalidateQueries({ queryKey: ["discogs-bulk-email-campaigns"] });
       setSending(false);

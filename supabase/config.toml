@@ -760,3 +760,6 @@ verify_jwt = false
 
 [functions.create-playstore-demo-user]
 verify_jwt = false
+
+[functions.resend-webhook]
+verify_jwt = false

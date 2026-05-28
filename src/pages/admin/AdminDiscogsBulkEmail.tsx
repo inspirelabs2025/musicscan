@@ -60,7 +60,7 @@ export default function AdminDiscogsBulkEmail() {
   const [countryFilter, setCountryFilter] = useState<string>("all");
   const [subject, setSubject] = useState(DEFAULT_TEMPLATES[0].subject_nl);
   const [body, setBody] = useState(DEFAULT_TEMPLATES[0].body_nl);
-  const [sending, setSending] = useState(false);
+  
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
 
   // Fetch unique contacts from discogs_orders

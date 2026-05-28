@@ -567,16 +567,27 @@ export default function AdminDiscogsBulkEmail() {
                       Stuur testmail naar mezelf
                     </Button>
                     <Button
-                      onClick={handleSend}
-                      disabled={sending || !contacts || contacts.length === 0 || !subject.trim() || !body.trim()}
+                      onClick={() => {
+                        if (noRecipients) {
+                          toast({
+                            title: "Geen ontvangers",
+                            description: "De contacts-lijst is leeg. Pas het landfilter aan of synchroniseer Discogs orders.",
+                            variant: "destructive",
+                            duration: 8000,
+                          });
+                          return;
+                        }
+                        sendCampaign.mutate();
+                      }}
+                      disabled={sendCampaign.isPending || noRecipients || !subject.trim() || !body.trim()}
                       className="min-h-[44px]"
                     >
-                      {sending ? (
+                      {sendCampaign.isPending ? (
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       ) : (
                         <Send className="h-4 w-4 mr-2" />
                       )}
-                      {sending ? "Verzenden..." : `Verstuur naar ${contacts?.length || 0} ontvangers`}
+                      {sendCampaign.isPending ? "Verzenden..." : `Verstuur naar ${contacts?.length || 0} ontvangers`}
                     </Button>
                   </div>
                 </CardContent>

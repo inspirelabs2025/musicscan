@@ -350,10 +350,8 @@ export default function AdminDiscogsBulkEmail() {
     setPreviewHtml(previewBody);
   };
 
-  const handleSend = () => {
-    setSending(true);
-    sendCampaign.mutate();
-  };
+  const noRecipients = !contacts || contacts.length === 0;
+
 
   return (
     <AdminGuard>

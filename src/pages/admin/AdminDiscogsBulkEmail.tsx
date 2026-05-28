@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Users, Mail, Globe, Clock, CheckCircle2, XCircle, Loader2, FileText, Eye, Inbox } from "lucide-react";
+import { Send, Users, Mail, Globe, Clock, CheckCircle2, XCircle, Loader2, FileText, Eye, Inbox, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -615,39 +615,132 @@ export default function AdminDiscogsBulkEmail() {
                 ) : (
                   <div className="space-y-3">
                     {campaigns.map((campaign: any) => (
-                      <div key={campaign.id} className="flex items-center justify-between p-3 rounded-lg border">
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium truncate">{campaign.subject}</p>
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                            <span>{format(new Date(campaign.created_at), "d MMM yyyy HH:mm", { locale: nl })}</span>
-                            <Badge variant="outline">{campaign.language?.toUpperCase()}</Badge>
-                            <Badge variant="outline">{campaign.country_filter === "nl" ? "🇳🇱 NL" : campaign.country_filter === "intl" ? "🌍 Intl" : "🌐 Alle"}</Badge>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4 shrink-0 ml-4">
-                          <div className="flex items-center gap-1 text-sm">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span>{campaign.sent_count}</span>
-                          </div>
-                          {campaign.failed_count > 0 && (
-                            <div className="flex items-center gap-1 text-sm">
-                              <XCircle className="h-4 w-4 text-red-500" />
-                              <span>{campaign.failed_count}</span>
-                            </div>
-                          )}
-                          <Badge variant={campaign.status === "completed" ? "default" : campaign.status === "sending" ? "secondary" : "outline"}>
-                            {campaign.status}
-                          </Badge>
-                        </div>
-                      </div>
+                      <CampaignRow key={campaign.id} campaign={campaign} />
                     ))}
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
+
         </Tabs>
       </div>
     </AdminGuard>
+  );
+}
+
+function CampaignRow({ campaign }: { campaign: any }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const { data: sends, isLoading } = useQuery({
+    queryKey: ["discogs-bulk-email-sends", campaign.id],
+    enabled: open,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discogs_bulk_email_sends")
+        .select("id, buyer_email, buyer_username, status, resend_email_id, delivered_at, sent_at, error_message")
+        .eq("campaign_id", campaign.id)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const refresh = async () => {
+    setRefreshing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("refresh-delivery-status", {
+        body: { campaignId: campaign.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({
+        title: "Delivery-status ververst",
+        description: `${data.updated} van ${data.checked} sends bijgewerkt.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["discogs-bulk-email-sends", campaign.id] });
+    } catch (e: any) {
+      toast({ title: "Refresh mislukt", description: e.message, variant: "destructive" });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const statusIcon = (status: string) => {
+    const s = (status || "").toLowerCase();
+    if (s === "delivered") return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+    if (s === "bounced" || s === "failed" || s === "complained") return <XCircle className="h-4 w-4 text-red-500" />;
+    if (s === "queued" || s === "sending" || s === "sent" || s === "pending") return <Clock className="h-4 w-4 text-yellow-500" />;
+    return <Clock className="h-4 w-4 text-muted-foreground" />;
+  };
+
+  return (
+    <div className="rounded-lg border">
+      <div className="flex items-center justify-between p-3">
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="flex items-center gap-2 min-w-0 flex-1 text-left"
+        >
+          {open ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+          <div className="min-w-0 flex-1">
+            <p className="font-medium truncate">{campaign.subject}</p>
+            <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+              <span>{format(new Date(campaign.created_at), "d MMM yyyy HH:mm", { locale: nl })}</span>
+              <Badge variant="outline">{campaign.language?.toUpperCase()}</Badge>
+              <Badge variant="outline">{campaign.country_filter === "nl" ? "🇳🇱 NL" : campaign.country_filter === "intl" ? "🌍 Intl" : "🌐 Alle"}</Badge>
+            </div>
+          </div>
+        </button>
+        <div className="flex items-center gap-4 shrink-0 ml-4">
+          <div className="flex items-center gap-1 text-sm">
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <span>{campaign.sent_count}</span>
+          </div>
+          {campaign.failed_count > 0 && (
+            <div className="flex items-center gap-1 text-sm">
+              <XCircle className="h-4 w-4 text-red-500" />
+              <span>{campaign.failed_count}</span>
+            </div>
+          )}
+          <Badge variant={campaign.status === "completed" ? "default" : campaign.status === "sending" ? "secondary" : "outline"}>
+            {campaign.status}
+          </Badge>
+        </div>
+      </div>
+
+      {open && (
+        <div className="border-t p-3 space-y-3 bg-muted/30">
+          <div className="flex justify-end">
+            <Button size="sm" variant="outline" onClick={refresh} disabled={refreshing}>
+              {refreshing ? <Loader2 className="h-3 w-3 mr-2 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-2" />}
+              Refresh delivery status
+            </Button>
+          </div>
+          {isLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Laden...
+            </div>
+          ) : !sends || sends.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Geen sends gevonden.</p>
+          ) : (
+            <div className="space-y-1">
+              {sends.map((s: any) => (
+                <div key={s.id} className="flex items-center gap-3 text-sm py-1.5 px-2 rounded hover:bg-background">
+                  {statusIcon(s.status)}
+                  <span className="truncate flex-1">{s.buyer_email}</span>
+                  <Badge variant="outline" className="text-xs">{s.status}</Badge>
+                  {!s.resend_email_id && (
+                    <span className="text-xs text-muted-foreground">geen Resend ID</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

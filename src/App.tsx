@@ -1,67 +1,62 @@
-import './App.css';
-import { useEffect, useState } from 'react';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { BrowserRouter as Router } from 'react-router-dom';
-import AppRoutes from './AppRoutes';
-import { useAuth } from './hooks/useAuth';
-import { Toaster } from './components/ui/sonner';
-import { checkSupabaseAuth } from './api/auth';
-import SplashScreen from './components/SplashScreen';
-import AiNudge from './components/AiNudge'; // Import AiNudge
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from './supabaseClient';
+import { LovableWrapper } from '@/components/lovable-wrapper';
+import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import AppRoutes from '@/AppRoutes';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Nudge } from './components/cs-nudge'; // Import the Nudge component
+import { useEffect, useState } from 'react';
+
+const queryClient = new QueryClient();
 
 function App() {
-  const { user, loading: authLoading, setSession } = useAuth();
-  const [isAppLoading, setIsAppLoading] = useState(true);
+  const [showChatNudge, setShowChatNudge] = useState(false);
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      setIsAppLoading(true);
-      await checkSupabaseAuth(setSession);
-      setIsAppLoading(false);
-    };
+    // Simulate fetching chat message count and user status
+    const hasChatMessages = localStorage.getItem('hasChatMessages') === 'true';
+    const hasDismissedChatNudge = localStorage.getItem('hasDismissedChatNudge') === 'true';
 
-    initializeAuth();
-  }, [setSession]);
+    if (!hasChatMessages && !hasDismissedChatNudge) {
+      setShowChatNudge(true);
+    }
+  }, []);
 
-  // Fetch chat message count for the nudge feature
-  const { data: chatMessageCount = 0, isLoading: loadingChatCount } = useQuery({
-    queryKey: ['chatMessagesCount', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return 0;
-      const { count, error } = await supabase
-        .from('chat_messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
+  const handleDismissChatNudge = () => {
+    localStorage.setItem('hasDismissedChatNudge', 'true');
+    setShowChatNudge(false);
+  };
 
-      if (error) {
-        console.error('Error fetching chat messages count:', error);
-        return 0;
-      }
-      return count || 0;
-    },
-    enabled: !!user, // Only run if user is logged in
-  });
-
-  const showChatNudge = user && chatMessageCount === 0 && !loadingChatCount;
-
-
-  if (isAppLoading || authLoading) {
-    return <SplashScreen />;
-  }
+  const handleChatInitiated = () => {
+    localStorage.setItem('hasChatMessages', 'true');
+    setShowChatNudge(false);
+  };
 
   return (
-    <Router>
-      <div className="relative flex flex-col min-h-screen">
-        <AppRoutes />
-        <Toaster />
-        {showChatNudge && (
-          <div className="fixed bottom-4 right-4 z-50 animate-fade-in">
-            <AiNudge variant="chat_encouragement" />
-          </div>
-        )}
-      </div>
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <TooltipProvider>
+          <Router>
+            <LovableWrapper>
+              <AppRoutes />
+            </LovableWrapper>
+          </Router>
+          <Toaster />
+        </TooltipProvider>
+      </ThemeProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+      {showChatNudge && (
+        <Nudge
+          title="Heb je de chat al geprobeerd?"
+          message="Er zijn pas 0 chatberichten in je project. Probeer de chatfunctie om sneller antwoorden te krijgen!"
+          onDismiss={handleDismissChatNudge}
+          ctaText="Start een chat"
+          onCtaClick={handleChatInitiated}
+        />
+      )}
+    </QueryClientProvider>
   );
 }
 

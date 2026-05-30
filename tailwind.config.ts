@@ -102,6 +102,11 @@ export default {
 					background: 'hsl(var(--ai-nudge-background))',
 					foreground: 'hsl(var(--ai-nudge-foreground))',
 					border: 'hsl(var(--ai-nudge-border))'
+				},
+				'cs-nudge': {
+					background: 'hsl(var(--cs-nudge-background))',
+					foreground: 'hsl(var(--cs-nudge-foreground))',
+					border: 'hsl(var(--cs-nudge-border))'
 				}
 			},
 			backgroundImage: {

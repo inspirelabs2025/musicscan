@@ -1,0 +1,168 @@
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --header-background: 222.2 84% 4.9%;
+    --header-foreground: 210 20% 98%;
+
+    --vinyl-spin-border: 210 20% 98%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --card-dark: 222.2 84% 4.9%;
+    --card-dark-foreground: 210 20% 98%;
+    --card-purple: 262.1 83.3% 18.2%;
+    --card-purple-foreground: 210 20% 98%;
+
+    --primary: 262.1 83.3% 57%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+
+    --ring: 262.1 83.3% 57%;
+
+    --radius: 0.5rem;
+
+    /* Sidebar */
+    --sidebar-background: 222.2 84% 4.9%;
+    /* Dark background */
+    --sidebar-foreground: 210 20% 98%;
+    /* Light text */
+    --sidebar-primary: 262.1 83.3% 57%;
+    /* Accent purple */
+    --sidebar-primary-foreground: 210 20% 98%;
+    /* Light text on primary */
+    --sidebar-accent: 210 40% 96.1%;
+    /* Light gray for accents */
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    /* Dark text on accent */
+    --sidebar-border: 214.3 31.8% 91.4%;
+    /* Light border (might need adjustment for dark sidebar) */
+    --sidebar-ring: 262.1 83.3% 57%;
+    /* Accent purple for ring */
+
+    /* Vinyl Colors */
+    --vinyl-gold: 45 90% 55%;
+    --vinyl-silver: 210 10% 70%;
+    --vinyl-black: 0 0% 10%;
+    --vinyl-purple: 262.1 83.3% 18.2%;
+
+    /* Echo Colors */
+    --echo-violet: 260 50% 60%; /* A softer violet */
+    --echo-lavender: 270 60% 80%; /* A light, calming lavender */
+    --echo-gold: 40 90% 70%; /* A warm, inviting gold */
+    --echo-cream: 30 20% 95%; /* A soft, subtle cream */
+
+    /* Christmas Colors */
+    --christmas-red: 0 70% 50%;
+    --christmas-green: 140 60% 30%;
+    --christmas-gold: 40 90% 60%;
+    --christmas-cream: 30 20% 90%;
+    --christmas-burgundy: 340 60% 35%;
+    --christmas-pine: 160 40% 25%;
+
+    /* AI Nudge Colors */
+    --ai-nudge-background: 240 5% 10%; /* Dark, subtle background */
+    --ai-nudge-foreground: 210 20% 98%; /* Light text for readability */
+    --ai-nudge-border: 262.1 83.3% 50%; /* Primary color accent border */
+
+    --gradient-vinyl: conic-gradient(from 180deg at 50% 50%, rgba(255, 255, 255, 0.2) 0deg, rgba(255, 255, 255, 0.4) 30deg, rgba(255, 255, 255, 0) 60deg, rgba(0, 0, 0, 0) 360deg);
+    --gradient-scan: linear-gradient(to right, transparent, hsl(var(--primary)), transparent);
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 20% 98%;
+
+    --header-background: 222.2 84% 4.9%;
+    --header-foreground: 210 20% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.4% 65%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 20% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 20% 98%;
+    --card-dark: 222.2 84% 4.9%;
+    --card-dark-foreground: 210 20% 98%;
+    --card-purple: 262.1 83.3% 18.2%;
+    --card-purple-foreground: 210 20% 98%;
+
+    --primary: 262.1 83.3% 57%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 20% 98%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 20% 98%;
+
+    --destructive: 0 72.2% 50.6%;
+    --destructive-foreground: 210 20% 98%;
+
+    --ring: 262.1 83.3% 57%;
+
+    /* Sidebar */
+    --sidebar-background: 222.2 84% 4.9%;
+    /* Dark background */
+    --sidebar-foreground: 210 20% 98%;
+    /* Light text */
+    --sidebar-primary: 262.1 83.3% 57%;
+    /* Accent purple */
+    --sidebar-primary-foreground: 210 20% 98%;
+    /* Light text on primary */
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    /* Darker gray for accents */
+    --sidebar-accent-foreground: 210 20% 98%;
+    /* Light text on accent */
+    --sidebar-border: 217.2 32.6% 17.5%;
+    /* Dark border */
+    --sidebar-ring: 262.1 83.3% 57%;
+    /* Accent purple for ring */
+
+    /* Vinyl Colors */
+    --vinyl-gold: 45 90% 55%;
+    --vinyl-silver: 210 10% 70%;
+    --vinyl-black: 0 0% 10%;
+    --vinyl-purple: 262.1 83.3% 18.2%;
+
+    /* Echo Colors */
+    --echo-violet: 260 50% 60%;
+    --echo-lavender: 270 60% 80%;
+    --echo-gold: 40 90% 70%;
+    --echo-cream: 30 20% 95%;
+
+    /* Christmas Colors */
+    --christmas-red: 0 70% 50%;
+    --christmas-green: 140 60% 30%;
+    --christmas-gold: 40 90% 60%;
+    --christmas-cream: 30 20% 90%;
+    --christmas-burgundy: 340 60% 35%;
+    --christmas-pine: 160 40% 25%;
+
+    /* AI Nudge Colors */
+    --ai-nudge-background: 240 5% 10%; /* Dark, subtle background */
+    --ai-nudge-foreground: 210 20% 98%; /* Light text for readability */
+    --ai-nudge-border: 262.1 83.3% 50%; /* Primary color accent border */
+  }
+}

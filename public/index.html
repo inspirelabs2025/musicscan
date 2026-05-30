@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MusicScan</title>
+    <meta name="description" content="MusicScan: Ontdek, verzamel, en deel je favoriete muziek." />
+    <meta property="og:title" content="MusicScan" />
+    <meta property="og:description" content="Ontdek, verzamel, en deel je favoriete muziek." />
+    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:url" content="https://musicscan.app" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:creator" content="@jouwtwitter" />
+    <meta name="twitter:title" content="MusicScan" />
+    <meta name="twitter:description" content="Ontdek, verzamel, en deel je favoriete muziek." />
+    <meta name="twitter:image" content="/og-image.jpg" />
+    <meta name="build-version" content="__BUILD_TIMESTAMP__" />
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', '%VITE_GA_MEASUREMENT_ID%');
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

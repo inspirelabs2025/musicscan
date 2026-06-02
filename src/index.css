@@ -5,100 +5,128 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
+    --foreground: 222.2 84% 4.9%;
+
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 222.2 84% 4.9%;
+
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card-foreground: 222.2 84% 4.9%;
+
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
+
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
+
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 91% 51%;
+
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --ring: 222.2 47.4% 11.2%;
+
+    --ring: 222.2 84% 4.9%;
+
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222.2 47.4% 11.2%;
-    --sidebar-primary: 222.2 47.4% 11.2%;
-    --sidebar-primary-foreground: 210 40% 98%;
+    --card-dark: 220 14% 12%; /* Added a darker card background color */
+    --card-dark-foreground: 210 40% 98%; /* Light text for darker card */
+    --card-purple: 250 80% 20%;
+    --card-purple-foreground: 210 40% 98%;
+
+    --header-background: 0 0% 100%;
+    --header-foreground: 222.2 84% 4.9%;
+
+    --sidebar-background: 222.2 47.4% 11.2%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 96.1%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
     --sidebar-accent: 210 40% 96.1%;
     --sidebar-accent-foreground: 222.2 47.4% 11.2%;
     --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 222.2 47.4% 11.2%;
+    --sidebar-ring: 222.2 84% 4.9%;
 
-    /* AI Nudge */
-    --ai-nudge-background: 262 83% 53%; /* A vibrant purple-ish color */
-    --ai-nudge-foreground: 0 0% 100%; /* White text */
-    --ai-nudge-border: 262 83% 45%; 
 
-    /* Vinyl Colors */
-    --vinyl-gold: 42 94% 61%;
-    --vinyl-silver: 210 10% 80%;
-    --vinyl-black: 222.2 47.4% 11.2%;
-    --vinyl-purple: 262 83% 53%;
+    --vinyl-gold: 40 90% 70%;
+    --vinyl-silver: 200 10% 70%;
+    --vinyl-black: 220 10% 20%;
+    --vinyl-purple: 280 60% 40%;
 
-    /* Echo Colors */
-    --echo-violet: 265 89% 70%;
-    --echo-lavender: 260 80% 88%;
-    --echo-gold: 42 94% 61%;
-    --echo-cream: 40 24% 95%;
+    --gradient-vinyl: conic-gradient(from 180deg at 50% 50%, #996417 5%, #c59737 15%, #996417 25%, #c59737 35%, #996417 45%, #c59737 55%, #996417 65%, #c59737 75%, #996417 85%, #c59737 95%);
+    --gradient-scan: conic-gradient(from 180deg at 50% 50%, #996417 5%, #c59737 15%, #996417 25%, #c59737 35%, #996417 45%, #c59737 55%, #996417 65%, #c59737 75%, #996417 85%, #c59737 95%);
 
-    /* Christmas Colors */
-    --christmas-red: 0 84% 60%;
-    --christmas-green: 140 84% 30%;
-    --christmas-gold: 42 94% 61%;
-    --christmas-cream: 40 24% 95%;
+    
+    --echo-violet: 280 80% 60%; /* A vibrant violet */
+    --echo-lavender: 260 60% 75%; /* A soft lavender */
+    --echo-gold: 40 90% 70%;     /* A bright gold */
+    --echo-cream: 60 40% 95%;    /* A creamy off-white */
+
+    --christmas-red: 0 70% 50%;
+    --christmas-green: 120 70% 30%;
+    --christmas-gold: 40 90% 70%;
+    --christmas-cream: 60 40% 95%;
     --christmas-burgundy: 350 70% 30%;
-    --christmas-pine: 160 60% 20%;
+    --christmas-pine: 140 60% 20%;
 
-    /* Dynamic gradients based on theme */
-    --gradient-vinyl: linear-gradient(to right, hsl(var(--vinyl-gold)), hsl(var(--vinyl-silver)), hsl(var(--vinyl-black)));
-    --gradient-scan: linear-gradient(to right, hsl(0 0% 100% / 0), hsl(0 0% 100% / 0.5), hsl(0 0% 100% / 0));
+    --ai-nudge-background: 220 20% 95%; /* Light background for the nudge */
+    --ai-nudge-foreground: 220 20% 20%; /* Dark text for contrast */
+    --ai-nudge-border: 220 20% 80%; /* Subtle border */
   }
 
   .dark {
-    --background: 224 71% 4%;
+    --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    --muted: 215 27% 17%;
-    --muted-foreground: 217.9 10.6% 64.5%;
-    --popover: 224 71% 4%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-    --card: 224 71% 4%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
+
     --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-    --accent: 216 34% 17%;
+
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
+
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --ring: 216 34% 17%;
 
+    --ring: 217.2 32.6% 17.5%;
 
-    --sidebar-background: 224 71% 4%;
+    --card-dark: 220 14% 12%; /* Retain darker card background in dark mode */
+    --card-dark-foreground: 210 40% 98%; /* Light text for darker card */
+    --card-purple: 250 80% 20%;
+    --card-purple-foreground: 210 40% 98%;
+
+    --header-background: 222.2 84% 4.9%;
+    --header-foreground: 210 40% 98%;
+
+    --sidebar-background: 222.2 47.4% 11.2%; /* Same as primary dark */
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 210 40% 98%;
     --sidebar-primary-foreground: 222.2 47.4% 11.2%;
-    --sidebar-accent: 216 34% 17%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 216 34% 17%;
-    --sidebar-ring: 216 34% 17%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 217.2 32.6% 17.5%;
 
-    /* AI Nudge (Dark Mode) */
-    --ai-nudge-background: 262 83% 40%; /* Slightly darker purple */
-    --ai-nudge-foreground: 0 0% 100%;
-    --ai-nudge-border: 262 83% 30%;
+    --ai-nudge-background: 220 20% 15%; /* Dark background for the nudge */
+    --ai-nudge-foreground: 220 20% 85%; /* Light text for contrast */
+    --ai-nudge-border: 220 20% 30%; /* Subtle border */
   }
 }
 
@@ -109,5 +137,37 @@
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom scrollbar for Webkit browsers */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--muted);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-foreground);
+  }
+}
+
+@layer components {
+  .gradient-text {
+    @apply bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-transparent bg-clip-text;
+  }
+
+  .highlight-gradient {
+    @apply bg-gradient-to-r from-purple-400 to-pink-500 text-transparent bg-clip-text;
   }
 }

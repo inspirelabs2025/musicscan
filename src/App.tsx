@@ -1,92 +1,78 @@
-import { Routes, Route, Outlet } from 'react-router-dom';
-import { HomeLayout } from './layouts/home-layout';
-import { AuthLayout } from './layouts/auth-layout';
-import { DashboardLayout } from './layouts/dashboard-layout';
-import { LoginPage } from './pages/login';
-import { RegisterPage } from './pages/register';
-import { ForgotPasswordPage } from './pages/forgot-password';
-import { ResetPasswordPage } from './pages/reset-password';
-import { ConfirmEmailPage } from './pages/confirm-email';
-import { NotFoundPage } from './pages/not-found';
-import { DashboardOverviewPage } from './pages/dashboard/overview';
-import { DashboardProjectPage } from './pages/dashboard/project';
-import { DashboardSettingsPage } from './pages/dashboard/settings';
-import { DashboardAIConsolePage } from './pages/dashboard/ai-console';
-import { DashboardBillingPage } from './pages/dashboard/billing';
-import { DashboardProfilePage } from './pages/dashboard/settings/profile';
-import { DashboardAccountPage } from './pages/dashboard/settings/account';
-import { DashboardAppearancePage } from './pages/dashboard/settings/appearance';
-import { PublicProjectsPage } from './pages/public/projects';
-import { IndexPage } from './pages/index';
-import { AboutPage } from './pages/about';
-import { ContactPage } from './pages/contact';
-import { TermsPage } from './pages/terms';
-import { PrivacyPage } from './pages/privacy';
-import { FAQPage } from './pages/faq';
-import { useAuth } from './hooks/useAuth';
-import { PublicRoute } from './components/public-route';
-import { ProtectedRoute } from './components/protected-route';
-import { LoadingSpinner } from './components/loading-spinner';
+import './App.css';
+import { useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
+import * as amplitude from '@amplitude/analytics-browser';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import NotFound from './components/shared/NotFound';
+import Protected from './components/shared/Protected';
+import AuthGuard from './components/shared/AuthGuard';
+import PrivacyPolicy from './components/marketing/PrivacyPolicy';
+import CookiesPolicy from './components/marketing/CookiesPolicy';
+import TermsOfService from './components/marketing/TermsOfService';
+import Home from './components/app/Home';
+import Profile from './components/app/Profile';
+import Project from './components/app/Project';
+import ProjectSettings from './components/app/ProjectSettings';
 import { Toaster } from './components/ui/sonner';
+import { TooltipProvider } from './components/ui/tooltip';
+import { useAuth } from './hooks/useAuth';
+import { NudgeAI } from './components/growth/NudgeAI';
+
+const amplitudeApiKey = import.meta.env.VITE_AMPLITUDE_API_KEY;
 
 function App() {
-  const { loading } = useAuth();
+  const { user } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8 h-screen w-screen">
-        <LoadingSpinner size={48} />
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (amplitudeApiKey) {
+      amplitude.init(amplitudeApiKey, user?.id, {
+        defaultTracking: {
+          sessions: true,
+          pageViews: true,
+          formInteractions: true,
+        },
+      });
+    }
+  }, [user]);
 
   return (
-    <>      <Toaster richColors />
-
-
-      <Routes>
-        {/* Public Routes */}
-		<Route path="/" element={<HomeLayout />}>
-			<Route index element={<IndexPage />} />
-			<Route path="about" element={<AboutPage />} />
-			<Route path="contact" element={<ContactPage />} />
-			<Route path="terms" element={<TermsPage />} />
-			<Route path="privacy" element={<PrivacyPage />} />
-			<Route path="faq" element={<FAQPage />} />
-			<Route path="projects" element={<PublicProjectsPage />} />
-
-			{/* Auth Routes */}
-			<Route element={<PublicRoute />}>
-				<Route path="auth" element={<AuthLayout />}>
-					<Route path="login" element={<LoginPage />} />
-					<Route path="register" element={<RegisterPage />} />
-					<Route path="forgot-password" element={<ForgotPasswordPage />} />
-					<Route path="reset-password" element={<ResetPasswordPage />} />
-					<Route path="confirm-email" element={<ConfirmEmailPage />} />
-				</Route>
-			</Route>
-        </Route>
-
-        {/* Protected Routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<DashboardOverviewPage />} />
-            <Route path="project/:id" element={<DashboardProjectPage />} />
-            <Route path="ai" element={<DashboardAIConsolePage />} />
-            <Route path="billing" element={<DashboardBillingPage />} />
-            <Route path="settings" element={<Outlet />}>
-              <Route index element={<DashboardSettingsPage />} />
-              <Route path="profile" element={<DashboardProfilePage />} />
-              <Route path="account" element={<DashboardAccountPage />} />
-              <Route path="appearance" element={<DashboardAppearancePage />} />
-            </Route>
+    <TooltipProvider>
+      <Router>
+        <Toaster richColors />
+        {import.meta.env.VITE_AI_NUDGE_VARIANT === 'nudge' && (
+          <NudgeAI
+            message="Je hebt de AI features nog maar 0x gebruikt. Ontdek wat AI voor je project kan doen!"
+            linkText="Ontdek AI"
+            linkHref="/dashboard/ai"
+            onClose={() => console.log('AI Nudge closed')}
+          />
+        )}
+        <Routes>
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/cookies" element={<CookiesPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          {/* Protected routes */}          
+          <Route element={<Protected redirectPath="/login" />}>
+          <Route path="/home" element={<Home />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/project/:projectId" element={<Project />} />
+            <Route
+              path="/project/:projectId/settings"
+              element={<ProjectSettings />}
+            />
+            {/* Add more protected routes here */}
           </Route>
-        </Route>
-
-        {/* Catch-all for 404 */} 
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </>
+          {/* Auth-related routes, e.g., login, signup. Assumes AuthGuard handles redirection for authenticated users wanting to access auth pages */}
+          <Route element={<AuthGuard redirectPath="/home" />}>
+            {/* <Route path="/login" element={<Login />} /> */}
+            {/* <Route path="/signup" element={<SignUp />} /> */}
+            {/* Add other auth routes that should redirect if user is logged in */}
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
+      <Analytics />
+    </TooltipProvider>
   );
 }
 

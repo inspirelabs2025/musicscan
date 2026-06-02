@@ -306,9 +306,10 @@ export default function AdminDiscogsMessages() {
                     <Checkbox
                       checked={selectedOrders.has(order.discogs_order_id)}
                       onCheckedChange={() => toggleOrder(order.discogs_order_id)}
+                      onClick={(e) => e.stopPropagation()}
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-sm">{order.buyer_username}</span>
                         <Badge variant="secondary" className="text-xs">
                           #{order.discogs_order_id}
@@ -322,7 +323,13 @@ export default function AdminDiscogsMessages() {
                         >
                           {order.status || "Unknown"}
                         </Badge>
+                        {isUnmessagable(order.status) && (
+                          <Badge variant="outline" className="text-xs border-amber-500 text-amber-600">
+                            ⚠ Discogs blokkeert berichten
+                          </Badge>
+                        )}
                       </div>
+
                       <p className="text-xs text-muted-foreground truncate mt-0.5">
                         {itemSummary || "Geen items"}
                         {items.length > 2 && ` +${items.length - 2} meer`}

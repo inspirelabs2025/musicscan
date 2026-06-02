@@ -217,19 +217,33 @@ export default function AdminDiscogsMessages() {
               )}
 
               {sendResults && (
-                <div className="flex gap-4 p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-1 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    {sendResults.sent} verzonden
+                <div className="space-y-2">
+                  <div className="flex gap-4 p-3 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-1 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      {sendResults.sent} verzonden
+                    </div>
+                    <div className="flex items-center gap-1 text-sm">
+                      <XCircle className="h-4 w-4 text-red-500" />
+                      {sendResults.failed} mislukt
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    <XCircle className="h-4 w-4 text-red-500" />
-                    {sendResults.failed} mislukt
-                  </div>
+                  {sendResults.errors.length > 0 && (
+                    <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 max-h-60 overflow-y-auto space-y-1">
+                      <p className="text-xs font-medium text-destructive mb-1">Foutdetails:</p>
+                      {sendResults.errors.map((e, idx) => (
+                        <div key={idx} className="text-xs font-mono">
+                          <span className="text-muted-foreground">#{e.orderId}</span>{" "}
+                          <span className="text-destructive">{e.error}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
+
 
           {/* Filter & select */}
           <div className="flex items-center gap-3">

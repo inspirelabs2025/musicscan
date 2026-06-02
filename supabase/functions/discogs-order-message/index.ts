@@ -81,6 +81,51 @@ async function makeAuthenticatedRequest(
   })
 }
 
+function normalizeMessage(value: string): string {
+  return value.replace(/\r\n/g, '\n').trim()
+}
+
+async function saveDiscogsMessages(serviceClient: any, userId: string, orderId: string, messages: any[]) {
+  if (!messages.length) return
+
+  const seen = new Set<string>()
+  const rows = []
+  for (const m of messages) {
+    const sender = m.from?.username || m.actor?.username || null
+    const ts = m.timestamp || null
+    const key = `${orderId}_${sender}_${ts}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    rows.push({
+      user_id: userId,
+      discogs_order_id: orderId,
+      sender_username: sender,
+      message: m.message || null,
+      subject: m.subject || null,
+      original: m.original || null,
+      status_id: m.status_id || null,
+      message_timestamp: ts,
+    })
+  }
+
+  if (rows.length > 0) {
+    const { error: saveErr } = await serviceClient
+      .from('discogs_order_messages')
+      .upsert(rows, { onConflict: 'discogs_order_id,sender_username,message_timestamp' })
+
+    if (saveErr) console.error('Error saving messages:', saveErr.message)
+    else console.log(`Saved ${rows.length} messages for order ${orderId}`)
+  }
+}
+
+function findConfirmedSentMessage(messages: any[], ownUsername: string | null, message: string) {
+  const expected = normalizeMessage(message)
+  return messages.find((m) => {
+    const sender = m.from?.username || m.actor?.username || null
+    return sender === ownUsername && normalizeMessage(m.message || '') === expected
+  }) || null
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -148,39 +193,7 @@ Deno.serve(async (req) => {
       }
 
       const data = await res.json()
-      
-      // Save messages to database (deduplicate before upsert)
-      const msgs = data.messages || [];
-      if (msgs.length > 0) {
-        const seen = new Set<string>();
-        const rows = [];
-        for (const m of msgs) {
-          const sender = m.from?.username || m.actor?.username || null;
-          const ts = m.timestamp || null;
-          const key = `${order_id}_${sender}_${ts}`;
-          if (seen.has(key)) continue;
-          seen.add(key);
-          rows.push({
-            user_id: user.id,
-            discogs_order_id: order_id,
-            sender_username: sender,
-            message: m.message || null,
-            subject: m.subject || null,
-            original: m.original || null,
-            status_id: m.status_id || null,
-            message_timestamp: ts,
-          });
-        }
-        
-        if (rows.length > 0) {
-          const { error: saveErr } = await serviceClient
-            .from('discogs_order_messages')
-            .upsert(rows, { onConflict: 'discogs_order_id,sender_username,message_timestamp' });
-          
-          if (saveErr) console.error('Error saving messages:', saveErr.message);
-          else console.log(`Saved ${rows.length} messages for order ${order_id}`);
-        }
-      }
+      await saveDiscogsMessages(serviceClient, user.id, order_id, data.messages || [])
 
       return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -213,25 +226,46 @@ Deno.serve(async (req) => {
       })
     }
 
-    const data = await res.json()
-
-    // Log outbound message to DB so it shows in the inbox/history
-    if (message) {
-      const ts = data?.message?.timestamp || data?.timestamp || new Date().toISOString()
-      const { error: logErr } = await serviceClient
-        .from('discogs_order_messages')
-        .upsert({
-          user_id: user.id,
-          discogs_order_id: order_id,
-          sender_username: tokenData.discogs_username || 'self',
-          message,
-          subject: action ? `Status: ${action}` : null,
-          message_timestamp: ts,
-        }, { onConflict: 'discogs_order_id,sender_username,message_timestamp' })
-      if (logErr) console.error('Error logging outbound message:', logErr.message)
+    const rawBody = await res.text()
+    let data: any = null
+    try {
+      data = rawBody ? JSON.parse(rawBody) : null
+    } catch (_) {
+      data = { raw: rawBody }
     }
 
-    return new Response(JSON.stringify({ success: true, data }), {
+    let confirmedMessage: any = null
+    if (message) {
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const verifyRes = await makeAuthenticatedRequest(
+          'GET', apiUrl, consumerKey, consumerSecret, accessToken, accessTokenSecret
+        )
+
+        if (verifyRes.ok) {
+          const verifyData = await verifyRes.json()
+          const messages = verifyData.messages || []
+          await saveDiscogsMessages(serviceClient, user.id, order_id, messages)
+          confirmedMessage = findConfirmedSentMessage(messages, tokenData.discogs_username || null, message)
+          if (confirmedMessage) break
+        } else {
+          const verifyErr = await verifyRes.text()
+          console.error(`Discogs messages verification GET error ${verifyRes.status}:`, verifyErr)
+        }
+
+        if (attempt < 3) await new Promise((r) => setTimeout(r, 750))
+      }
+
+      if (!confirmedMessage) {
+        console.error(`[discogs-order-message] POST succeeded but sent message was not found in Discogs for order ${order_id}`)
+        return new Response(JSON.stringify({
+          error: 'Discogs bevestigde de verzending niet',
+          details: 'De POST-call gaf geen fout, maar het bericht staat na controle niet in de Discogs order messages.',
+          data,
+        }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      }
+    }
+
+    return new Response(JSON.stringify({ success: true, data, confirmed: !!confirmedMessage, confirmedMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {

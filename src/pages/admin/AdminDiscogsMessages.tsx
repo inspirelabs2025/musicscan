@@ -129,6 +129,16 @@ export default function AdminDiscogsMessages() {
     : [];
 
   const toggleOrder = (orderId: string) => {
+    const order = orders?.find((o) => o.discogs_order_id === orderId);
+    if (order && isUnmessagable(order.status) && !selectedOrders.has(orderId)) {
+      toast({
+        title: "Order kan niet geselecteerd worden",
+        description: `Discogs blokkeert berichten voor status: ${order.status}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSelectedOrders((prev) => {
       const next = new Set(prev);
       if (next.has(orderId)) next.delete(orderId);
@@ -137,12 +147,33 @@ export default function AdminDiscogsMessages() {
     });
   };
 
+  const getDiscogsSendError = async (res: any) => {
+    if (!res.error && !res.data?.error) return null;
+
+    const response = res.error?.context;
+    if (response?.json) {
+      try {
+        const body = await response.clone().json();
+        return [body?.error, body?.details].filter(Boolean).join(" — ") || res.error.message;
+      } catch (_) {
+        // Fallback below
+      }
+    }
+
+    if (res.data?.error) {
+      return [res.data.error, res.data.details].filter(Boolean).join(" — ");
+    }
+
+    return res.error?.message || "Onbekende Discogs fout";
+  };
+
   const selectAll = () => {
     if (!orders) return;
-    if (selectedOrders.size === orders.length) {
+    const selectableOrders = orders.filter((o) => !isUnmessagable(o.status)).map((o) => o.discogs_order_id);
+    if (selectedOrders.size === selectableOrders.length) {
       setSelectedOrders(new Set());
     } else {
-      setSelectedOrders(new Set(orders.map((o) => o.discogs_order_id)));
+      setSelectedOrders(new Set(selectableOrders));
     }
   };
 
@@ -171,9 +202,11 @@ export default function AdminDiscogsMessages() {
           body: { order_id: orderIds[i], message: message.trim() },
         });
 
-        if (res.error) throw res.error;
-        const dataErr = (res.data as any)?.error;
-        if (dataErr) throw new Error(typeof dataErr === "string" ? dataErr : JSON.stringify(dataErr));
+        const sendError = await getDiscogsSendError(res);
+        if (sendError) throw new Error(sendError);
+        if (!(res.data as any)?.success || !(res.data as any)?.confirmed) {
+          throw new Error("Discogs heeft de verzending niet bevestigd");
+        }
         sent++;
         sentOrderIds.push(orderIds[i]);
       } catch (err: any) {
@@ -442,6 +475,7 @@ export default function AdminDiscogsMessages() {
                   >
                     <Checkbox
                       checked={selectedOrders.has(order.discogs_order_id)}
+                      disabled={isUnmessagable(order.status)}
                       onCheckedChange={() => toggleOrder(order.discogs_order_id)}
                       onClick={(e) => e.stopPropagation()}
                     />

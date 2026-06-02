@@ -129,6 +129,16 @@ export default function AdminDiscogsMessages() {
     : [];
 
   const toggleOrder = (orderId: string) => {
+    const order = orders?.find((o) => o.discogs_order_id === orderId);
+    if (order && isUnmessagable(order.status) && !selectedOrders.has(orderId)) {
+      toast({
+        title: "Order kan niet geselecteerd worden",
+        description: `Discogs blokkeert berichten voor status: ${order.status}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSelectedOrders((prev) => {
       const next = new Set(prev);
       if (next.has(orderId)) next.delete(orderId);
@@ -465,6 +475,7 @@ export default function AdminDiscogsMessages() {
                   >
                     <Checkbox
                       checked={selectedOrders.has(order.discogs_order_id)}
+                      disabled={isUnmessagable(order.status)}
                       onCheckedChange={() => toggleOrder(order.discogs_order_id)}
                       onClick={(e) => e.stopPropagation()}
                     />

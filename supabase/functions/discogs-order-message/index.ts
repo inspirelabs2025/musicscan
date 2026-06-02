@@ -193,39 +193,7 @@ Deno.serve(async (req) => {
       }
 
       const data = await res.json()
-      
-      // Save messages to database (deduplicate before upsert)
-      const msgs = data.messages || [];
-      if (msgs.length > 0) {
-        const seen = new Set<string>();
-        const rows = [];
-        for (const m of msgs) {
-          const sender = m.from?.username || m.actor?.username || null;
-          const ts = m.timestamp || null;
-          const key = `${order_id}_${sender}_${ts}`;
-          if (seen.has(key)) continue;
-          seen.add(key);
-          rows.push({
-            user_id: user.id,
-            discogs_order_id: order_id,
-            sender_username: sender,
-            message: m.message || null,
-            subject: m.subject || null,
-            original: m.original || null,
-            status_id: m.status_id || null,
-            message_timestamp: ts,
-          });
-        }
-        
-        if (rows.length > 0) {
-          const { error: saveErr } = await serviceClient
-            .from('discogs_order_messages')
-            .upsert(rows, { onConflict: 'discogs_order_id,sender_username,message_timestamp' });
-          
-          if (saveErr) console.error('Error saving messages:', saveErr.message);
-          else console.log(`Saved ${rows.length} messages for order ${order_id}`);
-        }
-      }
+      await saveDiscogsMessages(serviceClient, user.id, order_id, data.messages || [])
 
       return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

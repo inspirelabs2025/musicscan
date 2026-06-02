@@ -214,6 +214,23 @@ Deno.serve(async (req) => {
     }
 
     const data = await res.json()
+
+    // Log outbound message to DB so it shows in the inbox/history
+    if (message) {
+      const ts = data?.message?.timestamp || data?.timestamp || new Date().toISOString()
+      const { error: logErr } = await serviceClient
+        .from('discogs_order_messages')
+        .upsert({
+          user_id: user.id,
+          discogs_order_id: order_id,
+          sender_username: tokenData.discogs_username || 'self',
+          message,
+          subject: action ? `Status: ${action}` : null,
+          message_timestamp: ts,
+        }, { onConflict: 'discogs_order_id,sender_username,message_timestamp' })
+      if (logErr) console.error('Error logging outbound message:', logErr.message)
+    }
+
     return new Response(JSON.stringify({ success: true, data }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

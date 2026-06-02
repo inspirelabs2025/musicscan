@@ -81,6 +81,51 @@ async function makeAuthenticatedRequest(
   })
 }
 
+function normalizeMessage(value: string): string {
+  return value.replace(/\r\n/g, '\n').trim()
+}
+
+async function saveDiscogsMessages(serviceClient: any, userId: string, orderId: string, messages: any[]) {
+  if (!messages.length) return
+
+  const seen = new Set<string>()
+  const rows = []
+  for (const m of messages) {
+    const sender = m.from?.username || m.actor?.username || null
+    const ts = m.timestamp || null
+    const key = `${orderId}_${sender}_${ts}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    rows.push({
+      user_id: userId,
+      discogs_order_id: orderId,
+      sender_username: sender,
+      message: m.message || null,
+      subject: m.subject || null,
+      original: m.original || null,
+      status_id: m.status_id || null,
+      message_timestamp: ts,
+    })
+  }
+
+  if (rows.length > 0) {
+    const { error: saveErr } = await serviceClient
+      .from('discogs_order_messages')
+      .upsert(rows, { onConflict: 'discogs_order_id,sender_username,message_timestamp' })
+
+    if (saveErr) console.error('Error saving messages:', saveErr.message)
+    else console.log(`Saved ${rows.length} messages for order ${orderId}`)
+  }
+}
+
+function findConfirmedSentMessage(messages: any[], ownUsername: string | null, message: string) {
+  const expected = normalizeMessage(message)
+  return messages.find((m) => {
+    const sender = m.from?.username || m.actor?.username || null
+    return sender === ownUsername && normalizeMessage(m.message || '') === expected
+  }) || null
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })

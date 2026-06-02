@@ -33,8 +33,12 @@ export default function AdminDiscogsMessages() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [countryFilter, setCountryFilter] = useState<string>("all");
   const [sending, setSending] = useState(false);
-  const [sendResults, setSendResults] = useState<{ sent: number; failed: number; total: number } | null>(null);
+  const [sendResults, setSendResults] = useState<{ sent: number; failed: number; total: number; errors: { orderId: string; error: string }[] } | null>(null);
   const [sendProgress, setSendProgress] = useState(0);
+
+  // Discogs Marketplace API weigert berichten op gesloten orders
+  const isUnmessagable = (status: string | null) =>
+    !!status && (status === "Shipped" || status === "Merged" || status.startsWith("Cancelled"));
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["admin-discogs-orders", statusFilter, countryFilter],

@@ -33,8 +33,12 @@ export default function AdminDiscogsMessages() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [countryFilter, setCountryFilter] = useState<string>("all");
   const [sending, setSending] = useState(false);
-  const [sendResults, setSendResults] = useState<{ sent: number; failed: number; total: number } | null>(null);
+  const [sendResults, setSendResults] = useState<{ sent: number; failed: number; total: number; errors: { orderId: string; error: string }[] } | null>(null);
   const [sendProgress, setSendProgress] = useState(0);
+
+  // Discogs Marketplace API weigert berichten op gesloten orders
+  const isUnmessagable = (status: string | null) =>
+    !!status && (status === "Shipped" || status === "Merged" || status.startsWith("Cancelled"));
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["admin-discogs-orders", statusFilter, countryFilter],
@@ -106,6 +110,7 @@ export default function AdminDiscogsMessages() {
     const orderIds = Array.from(selectedOrders);
     let sent = 0;
     let failed = 0;
+    const errors: { orderId: string; error: string }[] = [];
 
     for (let i = 0; i < orderIds.length; i++) {
       try {
@@ -117,10 +122,14 @@ export default function AdminDiscogsMessages() {
         });
 
         if (res.error) throw res.error;
+        const dataErr = (res.data as any)?.error;
+        if (dataErr) throw new Error(typeof dataErr === "string" ? dataErr : JSON.stringify(dataErr));
         sent++;
-      } catch (err) {
+      } catch (err: any) {
+        const msg = err?.message || String(err) || "Unknown error";
         console.error(`Failed to send to order ${orderIds[i]}:`, err);
         failed++;
+        errors.push({ orderId: orderIds[i], error: msg });
       }
 
       setSendProgress(Math.round(((i + 1) / orderIds.length) * 100));
@@ -131,17 +140,19 @@ export default function AdminDiscogsMessages() {
       }
     }
 
-    setSendResults({ sent, failed, total: orderIds.length });
+    setSendResults({ sent, failed, total: orderIds.length, errors });
     setSending(false);
 
     toast({
       title: `Bulk verzending voltooid`,
-      description: `${sent} verzonden, ${failed} mislukt van ${orderIds.length} orders`,
-      variant: failed > 0 ? "destructive" : "default",
+      description: `${sent} verzonden, ${failed} mislukt van ${orderIds.length} orders${failed > 0 ? " — zie foutenlijst onder de knop" : ""}`,
+      variant: failed > 0 && sent === 0 ? "destructive" : "default",
+      duration: 8000,
     });
   };
 
   const statusOptions = ["all", "New Order", "Payment Pending", "Payment Received", "In Progress", "Shipped", "Merged", "Order Changed", "Cancelled (Non-Payment)", "Cancelled (Item Unavailable)", "Cancelled (Per Buyer's Request)"];
+
 
   return (
     <AdminGuard>
@@ -206,19 +217,33 @@ export default function AdminDiscogsMessages() {
               )}
 
               {sendResults && (
-                <div className="flex gap-4 p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-1 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    {sendResults.sent} verzonden
+                <div className="space-y-2">
+                  <div className="flex gap-4 p-3 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-1 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      {sendResults.sent} verzonden
+                    </div>
+                    <div className="flex items-center gap-1 text-sm">
+                      <XCircle className="h-4 w-4 text-red-500" />
+                      {sendResults.failed} mislukt
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    <XCircle className="h-4 w-4 text-red-500" />
-                    {sendResults.failed} mislukt
-                  </div>
+                  {sendResults.errors.length > 0 && (
+                    <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 max-h-60 overflow-y-auto space-y-1">
+                      <p className="text-xs font-medium text-destructive mb-1">Foutdetails:</p>
+                      {sendResults.errors.map((e, idx) => (
+                        <div key={idx} className="text-xs font-mono">
+                          <span className="text-muted-foreground">#{e.orderId}</span>{" "}
+                          <span className="text-destructive">{e.error}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
+
 
           {/* Filter & select */}
           <div className="flex items-center gap-3">
@@ -281,9 +306,10 @@ export default function AdminDiscogsMessages() {
                     <Checkbox
                       checked={selectedOrders.has(order.discogs_order_id)}
                       onCheckedChange={() => toggleOrder(order.discogs_order_id)}
+                      onClick={(e) => e.stopPropagation()}
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-sm">{order.buyer_username}</span>
                         <Badge variant="secondary" className="text-xs">
                           #{order.discogs_order_id}
@@ -297,7 +323,13 @@ export default function AdminDiscogsMessages() {
                         >
                           {order.status || "Unknown"}
                         </Badge>
+                        {isUnmessagable(order.status) && (
+                          <Badge variant="outline" className="text-xs border-amber-500 text-amber-600">
+                            ⚠ Discogs blokkeert berichten
+                          </Badge>
+                        )}
                       </div>
+
                       <p className="text-xs text-muted-foreground truncate mt-0.5">
                         {itemSummary || "Geen items"}
                         {items.length > 2 && ` +${items.length - 2} meer`}

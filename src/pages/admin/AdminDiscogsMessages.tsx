@@ -110,6 +110,7 @@ export default function AdminDiscogsMessages() {
     const orderIds = Array.from(selectedOrders);
     let sent = 0;
     let failed = 0;
+    const errors: { orderId: string; error: string }[] = [];
 
     for (let i = 0; i < orderIds.length; i++) {
       try {
@@ -121,10 +122,14 @@ export default function AdminDiscogsMessages() {
         });
 
         if (res.error) throw res.error;
+        const dataErr = (res.data as any)?.error;
+        if (dataErr) throw new Error(typeof dataErr === "string" ? dataErr : JSON.stringify(dataErr));
         sent++;
-      } catch (err) {
+      } catch (err: any) {
+        const msg = err?.message || String(err) || "Unknown error";
         console.error(`Failed to send to order ${orderIds[i]}:`, err);
         failed++;
+        errors.push({ orderId: orderIds[i], error: msg });
       }
 
       setSendProgress(Math.round(((i + 1) / orderIds.length) * 100));
@@ -135,17 +140,19 @@ export default function AdminDiscogsMessages() {
       }
     }
 
-    setSendResults({ sent, failed, total: orderIds.length });
+    setSendResults({ sent, failed, total: orderIds.length, errors });
     setSending(false);
 
     toast({
       title: `Bulk verzending voltooid`,
-      description: `${sent} verzonden, ${failed} mislukt van ${orderIds.length} orders`,
-      variant: failed > 0 ? "destructive" : "default",
+      description: `${sent} verzonden, ${failed} mislukt van ${orderIds.length} orders${failed > 0 ? " — zie foutenlijst onder de knop" : ""}`,
+      variant: failed > 0 && sent === 0 ? "destructive" : "default",
+      duration: 8000,
     });
   };
 
   const statusOptions = ["all", "New Order", "Payment Pending", "Payment Received", "In Progress", "Shipped", "Merged", "Order Changed", "Cancelled (Non-Payment)", "Cancelled (Item Unavailable)", "Cancelled (Per Buyer's Request)"];
+
 
   return (
     <AdminGuard>

@@ -293,8 +293,80 @@ export default function AdminDiscogsMessages() {
             </CardContent>
           </Card>
 
+          {/* Outbox: verzonden berichten */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Inbox className="h-5 w-5" />
+                    Outbox — verzonden berichten
+                  </CardTitle>
+                  <CardDescription>
+                    Recent verzonden berichten vanuit dit account
+                    {myDiscogsUsername ? ` (${myDiscogsUsername})` : ""}.
+                    Nieuwe sends worden automatisch gelogd; klik Refresh op een order om Discogs opnieuw op te halen.
+                  </CardDescription>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => refetchOutbox()} disabled={outboxLoading}>
+                  <RefreshCw className={`h-4 w-4 ${outboxLoading ? "animate-spin" : ""}`} />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {outboxLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : outbox && outbox.length > 0 ? (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {outbox.map((m) => (
+                    <div key={m.id} className="rounded-lg border p-3 bg-card">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="secondary" className="text-xs">#{m.discogs_order_id}</Badge>
+                          {m.subject && <Badge variant="outline" className="text-xs">{m.subject}</Badge>}
+                          <span className="text-xs text-muted-foreground">
+                            {m.message_timestamp
+                              ? new Date(m.message_timestamp).toLocaleString("nl-NL")
+                              : new Date(m.created_at).toLocaleString("nl-NL")}
+                          </span>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => refreshOrderMessages(m.discogs_order_id)}
+                          disabled={refreshingOrder === m.discogs_order_id}
+                        >
+                          <RefreshCw className={`h-3.5 w-3.5 ${refreshingOrder === m.discogs_order_id ? "animate-spin" : ""}`} />
+                        </Button>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap line-clamp-4">{m.message}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-sm text-muted-foreground">
+                  Nog geen verzonden berichten in de outbox.
+                  {selectedOrders.size === 1 && (
+                    <div className="mt-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => refreshOrderMessages(Array.from(selectedOrders)[0])}
+                      >
+                        <RefreshCw className="h-3.5 w-3.5 mr-2" />
+                        Refresh berichten voor geselecteerde order
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Filter & select */}
+
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />

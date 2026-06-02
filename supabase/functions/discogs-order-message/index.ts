@@ -226,25 +226,46 @@ Deno.serve(async (req) => {
       })
     }
 
-    const data = await res.json()
-
-    // Log outbound message to DB so it shows in the inbox/history
-    if (message) {
-      const ts = data?.message?.timestamp || data?.timestamp || new Date().toISOString()
-      const { error: logErr } = await serviceClient
-        .from('discogs_order_messages')
-        .upsert({
-          user_id: user.id,
-          discogs_order_id: order_id,
-          sender_username: tokenData.discogs_username || 'self',
-          message,
-          subject: action ? `Status: ${action}` : null,
-          message_timestamp: ts,
-        }, { onConflict: 'discogs_order_id,sender_username,message_timestamp' })
-      if (logErr) console.error('Error logging outbound message:', logErr.message)
+    const rawBody = await res.text()
+    let data: any = null
+    try {
+      data = rawBody ? JSON.parse(rawBody) : null
+    } catch (_) {
+      data = { raw: rawBody }
     }
 
-    return new Response(JSON.stringify({ success: true, data }), {
+    let confirmedMessage: any = null
+    if (message) {
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const verifyRes = await makeAuthenticatedRequest(
+          'GET', apiUrl, consumerKey, consumerSecret, accessToken, accessTokenSecret
+        )
+
+        if (verifyRes.ok) {
+          const verifyData = await verifyRes.json()
+          const messages = verifyData.messages || []
+          await saveDiscogsMessages(serviceClient, user.id, order_id, messages)
+          confirmedMessage = findConfirmedSentMessage(messages, tokenData.discogs_username || null, message)
+          if (confirmedMessage) break
+        } else {
+          const verifyErr = await verifyRes.text()
+          console.error(`Discogs messages verification GET error ${verifyRes.status}:`, verifyErr)
+        }
+
+        if (attempt < 3) await new Promise((r) => setTimeout(r, 750))
+      }
+
+      if (!confirmedMessage) {
+        console.error(`[discogs-order-message] POST succeeded but sent message was not found in Discogs for order ${order_id}`)
+        return new Response(JSON.stringify({
+          error: 'Discogs bevestigde de verzending niet',
+          details: 'De POST-call gaf geen fout, maar het bericht staat na controle niet in de Discogs order messages.',
+          data,
+        }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      }
+    }
+
+    return new Response(JSON.stringify({ success: true, data, confirmed: !!confirmedMessage, confirmedMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {

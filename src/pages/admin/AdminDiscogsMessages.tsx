@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Users, CheckCircle2, XCircle, Loader2, MessageSquare, Filter } from "lucide-react";
+import { Send, Users, CheckCircle2, XCircle, Loader2, MessageSquare, Filter, Inbox, RefreshCw } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface DiscogsOrder {

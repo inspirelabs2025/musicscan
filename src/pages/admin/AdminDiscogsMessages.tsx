@@ -39,6 +39,55 @@ export default function AdminDiscogsMessages() {
   // Discogs Marketplace API weigert berichten op gesloten orders
   const isUnmessagable = (status: string | null) =>
     !!status && (status === "Shipped" || status === "Merged" || status.startsWith("Cancelled"));
+  // Eigen Discogs username (voor outbox-filter)
+  const { data: myDiscogsUsername } = useQuery({
+    queryKey: ["my-discogs-username"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data } = await supabase
+        .from("discogs_user_tokens")
+        .select("discogs_username")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      return data?.discogs_username || null;
+    },
+  });
+
+  // Outbox: verzonden berichten (sender = ik)
+  const { data: outbox, isLoading: outboxLoading, refetch: refetchOutbox } = useQuery({
+    queryKey: ["discogs-outbox", myDiscogsUsername],
+    enabled: !!myDiscogsUsername,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discogs_order_messages")
+        .select("id, discogs_order_id, message, subject, message_timestamp, created_at, sender_username")
+        .eq("sender_username", myDiscogsUsername!)
+        .order("message_timestamp", { ascending: false, nullsFirst: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Refresh: trekt voor een order alle Discogs-berichten op (vult outbox aan met net verzonden berichten)
+  const [refreshingOrder, setRefreshingOrder] = useState<string | null>(null);
+  const refreshOrderMessages = async (orderId: string) => {
+    setRefreshingOrder(orderId);
+    try {
+      const res = await supabase.functions.invoke("discogs-order-message", {
+        body: { order_id: orderId, mode: "list" },
+      });
+      if (res.error) throw res.error;
+      await refetchOutbox();
+      toast({ title: `Berichten voor #${orderId} ververst` });
+    } catch (err: any) {
+      toast({ title: "Refresh mislukt", description: err?.message || String(err), variant: "destructive" });
+    } finally {
+      setRefreshingOrder(null);
+    }
+  };
+
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["admin-discogs-orders", statusFilter, countryFilter],

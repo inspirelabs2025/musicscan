@@ -161,6 +161,7 @@ export default function AdminDiscogsMessages() {
     let failed = 0;
     const errors: { orderId: string; error: string }[] = [];
 
+    const sentOrderIds: string[] = [];
     for (let i = 0; i < orderIds.length; i++) {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -174,6 +175,7 @@ export default function AdminDiscogsMessages() {
         const dataErr = (res.data as any)?.error;
         if (dataErr) throw new Error(typeof dataErr === "string" ? dataErr : JSON.stringify(dataErr));
         sent++;
+        sentOrderIds.push(orderIds[i]);
       } catch (err: any) {
         const msg = err?.message || String(err) || "Unknown error";
         console.error(`Failed to send to order ${orderIds[i]}:`, err);
@@ -189,6 +191,19 @@ export default function AdminDiscogsMessages() {
       }
     }
 
+    // Auto-sync verzonden berichten terug vanuit Discogs zodat outbox altijd actueel is
+    for (const oid of sentOrderIds) {
+      try {
+        await supabase.functions.invoke("discogs-order-message", {
+          body: { order_id: oid, mode: "list" },
+        });
+      } catch (e) {
+        console.warn(`Auto-sync mislukt voor order ${oid}`, e);
+      }
+      await new Promise((r) => setTimeout(r, 400));
+    }
+    await refetchOutbox();
+
     setSendResults({ sent, failed, total: orderIds.length, errors });
     setSending(false);
 
@@ -199,6 +214,7 @@ export default function AdminDiscogsMessages() {
       duration: 8000,
     });
   };
+
 
   const statusOptions = ["all", "New Order", "Payment Pending", "Payment Received", "In Progress", "Shipped", "Merged", "Order Changed", "Cancelled (Non-Payment)", "Cancelled (Item Unavailable)", "Cancelled (Per Buyer's Request)"];
 

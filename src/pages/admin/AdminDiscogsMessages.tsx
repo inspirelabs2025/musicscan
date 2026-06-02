@@ -36,8 +36,8 @@ export default function AdminDiscogsMessages() {
   const [sendResults, setSendResults] = useState<{ sent: number; failed: number; total: number; errors: { orderId: string; error: string }[] } | null>(null);
   const [sendProgress, setSendProgress] = useState(0);
 
-  // Discogs Marketplace API weigert berichten op gesloten orders
-  const isUnmessagable = (status: string | null) =>
+  // Sommige Discogs-statussen kunnen beperkt zijn, maar Discogs beslist bij verzenden.
+  const hasRestrictedStatus = (status: string | null) =>
     !!status && (status === "Shipped" || status === "Merged" || status.startsWith("Cancelled"));
   // Eigen Discogs username (voor outbox-filter)
   const { data: myDiscogsUsername } = useQuery({
@@ -129,16 +129,6 @@ export default function AdminDiscogsMessages() {
     : [];
 
   const toggleOrder = (orderId: string) => {
-    const order = orders?.find((o) => o.discogs_order_id === orderId);
-    if (order && isUnmessagable(order.status) && !selectedOrders.has(orderId)) {
-      toast({
-        title: "Order kan niet geselecteerd worden",
-        description: `Discogs blokkeert berichten voor status: ${order.status}`,
-        variant: "destructive",
-      });
-      return;
-    }
-
     setSelectedOrders((prev) => {
       const next = new Set(prev);
       if (next.has(orderId)) next.delete(orderId);
@@ -169,11 +159,11 @@ export default function AdminDiscogsMessages() {
 
   const selectAll = () => {
     if (!orders) return;
-    const selectableOrders = orders.filter((o) => !isUnmessagable(o.status)).map((o) => o.discogs_order_id);
-    if (selectedOrders.size === selectableOrders.length) {
+    const allOrderIds = orders.map((o) => o.discogs_order_id);
+    if (selectedOrders.size === allOrderIds.length) {
       setSelectedOrders(new Set());
     } else {
-      setSelectedOrders(new Set(selectableOrders));
+      setSelectedOrders(new Set(allOrderIds));
     }
   };
 
@@ -475,7 +465,6 @@ export default function AdminDiscogsMessages() {
                   >
                     <Checkbox
                       checked={selectedOrders.has(order.discogs_order_id)}
-                      disabled={isUnmessagable(order.status)}
                       onCheckedChange={() => toggleOrder(order.discogs_order_id)}
                       onClick={(e) => e.stopPropagation()}
                     />
@@ -494,9 +483,9 @@ export default function AdminDiscogsMessages() {
                         >
                           {order.status || "Unknown"}
                         </Badge>
-                        {isUnmessagable(order.status) && (
+                        {hasRestrictedStatus(order.status) && (
                           <Badge variant="outline" className="text-xs border-amber-500 text-amber-600">
-                            ⚠ Discogs blokkeert berichten
+                            ⚠ status kan beperkt zijn
                           </Badge>
                         )}
                       </div>

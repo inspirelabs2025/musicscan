@@ -183,7 +183,7 @@ async function sendPrivateDiscogsMessage(
     }
 
     errors.push(`${attempt.url} ${attempt.form ? 'form' : 'json'} ${res.status}: ${raw.slice(0, 300)}`)
-    if (![400, 404, 405, 422].includes(res.status)) break
+    if (res.status === 401) break
   }
 
   return { success: false, errors }

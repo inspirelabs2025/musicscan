@@ -388,6 +388,7 @@ export const router = createBrowserRouter([
           { path: 'discogs-lookup', element: wrap(AdminDiscogsLookup) },
           { path: 'discogs-messages', element: wrap(AdminDiscogsMessages) },
           { path: 'discogs-bulk-email', element: wrap(AdminDiscogsBulkEmail) },
+          { path: 'email-center', element: wrap(AdminEmailCenter) },
           { path: 'photo-moderation', element: wrap(AdminPhotoModeration) },
           { path: 'auto-comments', element: wrap(AdminAutoComments) },
           { path: 'magic-mike', element: wrap(AdminMagicMikeProfile) },

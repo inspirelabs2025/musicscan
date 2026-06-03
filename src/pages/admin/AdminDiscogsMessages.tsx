@@ -213,6 +213,9 @@ export default function AdminDiscogsMessages() {
         if (!(res.data as any)?.success) {
           throw new Error("Geen success-respons van edge function");
         }
+        if (!(res.data as any)?.confirmed) {
+          throw new Error("Discogs heeft het bericht niet zichtbaar bevestigd in de conversatie");
+        }
         sent++;
         sentOrderIds.push(orderIds[i]);
       } catch (err: any) {

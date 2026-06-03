@@ -256,24 +256,42 @@ Deno.serve(async (req) => {
         confirmedMessage = findConfirmedSentMessage([data], tokenData.discogs_username || null, message, sentAfterMs)
       }
 
-      // Best-effort single verification GET — log only, never block success
-      try {
-        const verifyRes = await makeAuthenticatedRequest(
-          'GET', `${apiUrl}?per_page=10`, consumerKey, consumerSecret, accessToken, accessTokenSecret
-        )
-        if (verifyRes.ok) {
-          const verifyData = await verifyRes.json()
-          const messages = verifyData.messages || []
-          await saveDiscogsMessages(serviceClient, user.id, order_id, messages)
-          if (!confirmedMessage) {
+      // Discogs can return 2xx without the message becoming visible in the thread.
+      // Verify the outbox before reporting success, otherwise the admin UI shows false positives.
+      for (let attempt = 1; attempt <= 5 && !confirmedMessage; attempt++) {
+        try {
+          const verifyRes = await makeAuthenticatedRequest(
+            'GET', `${apiUrl}?per_page=25`, consumerKey, consumerSecret, accessToken, accessTokenSecret
+          )
+          if (verifyRes.ok) {
+            const verifyData = await verifyRes.json()
+            const messages = verifyData.messages || []
+            await saveDiscogsMessages(serviceClient, user.id, order_id, messages)
             confirmedMessage = findConfirmedSentMessage(messages, tokenData.discogs_username || null, message, sentAfterMs)
+          } else {
+            const verifyErr = await verifyRes.text()
+            console.warn(`[discogs-order-message] Verification GET ${verifyRes.status} attempt ${attempt}:`, verifyErr)
           }
-        } else {
-          const verifyErr = await verifyRes.text()
-          console.warn(`[discogs-order-message] Verification GET ${verifyRes.status} (non-fatal):`, verifyErr)
+        } catch (e) {
+          console.warn(`[discogs-order-message] Verification GET attempt ${attempt} failed`, e)
         }
-      } catch (e) {
-        console.warn('[discogs-order-message] Verification GET failed (non-fatal)', e)
+
+        if (!confirmedMessage && attempt < 5) {
+          await new Promise((resolve) => setTimeout(resolve, 1200))
+        }
+      }
+
+      if (!confirmedMessage) {
+        console.error(`[discogs-order-message] POST returned ${res.status}, but message was not found in Discogs thread for order ${order_id}`)
+        return new Response(JSON.stringify({
+          error: 'Discogs heeft de send-call geaccepteerd, maar het bericht staat niet in de Discogs conversatie.',
+          details: 'Niet als verzonden gemarkeerd; probeer een actieve order of controleer of Discogs berichten op deze orderstatus toestaat.',
+          discogsStatus: res.status,
+          data,
+        }), {
+          status: 502,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
       }
     }
 

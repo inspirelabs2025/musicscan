@@ -138,16 +138,6 @@ export default function AdminDiscogsMessages() {
     : [];
 
   const toggleOrder = (orderId: string) => {
-    const order = orders?.find((o) => o.discogs_order_id === orderId);
-    if (order && !isActiveOrderStatus(order.status)) {
-      toast({
-        title: "Order niet geselecteerd",
-        description: `Status '${order.status || "Unknown"}' is gesloten/beperkt. Kies actieve orders voor betrouwbare Discogs-verzending.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
     setSelectedOrders((prev) => {
       const next = new Set(prev);
       if (next.has(orderId)) next.delete(orderId);
@@ -178,12 +168,18 @@ export default function AdminDiscogsMessages() {
 
   const selectAll = () => {
     if (!orders) return;
-    const allOrderIds = orders.filter((o) => isActiveOrderStatus(o.status)).map((o) => o.discogs_order_id);
+    const allOrderIds = orders.map((o) => o.discogs_order_id);
     if (selectedOrders.size === allOrderIds.length) {
       setSelectedOrders(new Set());
     } else {
       setSelectedOrders(new Set(allOrderIds));
     }
+  };
+
+  const selectActive = () => {
+    if (!orders) return;
+    const activeIds = orders.filter((o) => isActiveOrderStatus(o.status)).map((o) => o.discogs_order_id);
+    setSelectedOrders(new Set(activeIds));
   };
 
   const handleBulkSend = async () => {
@@ -205,11 +201,6 @@ export default function AdminDiscogsMessages() {
     const sentOrderIds: string[] = [];
     for (let i = 0; i < orderIds.length; i++) {
       try {
-        const order = ordersByDiscogsId.get(orderIds[i]);
-        if (order && !isActiveOrderStatus(order.status)) {
-          throw new Error(`Orderstatus '${order.status || "Unknown"}' is gesloten/beperkt; Discogs toont bulkberichten alleen betrouwbaar bij actieve orders`);
-        }
-
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("Niet ingelogd");
 
@@ -219,8 +210,8 @@ export default function AdminDiscogsMessages() {
 
         const sendError = await getDiscogsSendError(res);
         if (sendError) throw new Error(sendError);
-        if (!(res.data as any)?.success || !(res.data as any)?.confirmed) {
-          throw new Error("Discogs heeft de verzending niet bevestigd");
+        if (!(res.data as any)?.success) {
+          throw new Error("Geen success-respons van edge function");
         }
         sent++;
         sentOrderIds.push(orderIds[i]);
@@ -460,7 +451,10 @@ export default function AdminDiscogsMessages() {
               </Select>
             </div>
             <Button variant="outline" size="sm" onClick={selectAll}>
-              {selectedOrders.size === (orders?.filter((o) => isActiveOrderStatus(o.status)).length || 0) ? "Deselecteer alles" : "Selecteer actieve orders"}
+              {selectedOrders.size === (orders?.length || 0) && (orders?.length || 0) > 0 ? "Deselecteer alles" : "Selecteer alles"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={selectActive}>
+              Selecteer actieve orders
             </Button>
           </div>
 
@@ -490,7 +484,6 @@ export default function AdminDiscogsMessages() {
                   >
                     <Checkbox
                       checked={selectedOrders.has(order.discogs_order_id)}
-                      disabled={!isActiveOrderStatus(order.status)}
                       onCheckedChange={() => toggleOrder(order.discogs_order_id)}
                       onClick={(e) => e.stopPropagation()}
                     />

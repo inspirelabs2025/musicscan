@@ -34,6 +34,8 @@ async function makeAuthenticatedRequest(
   accessToken: string,
   accessTokenSecret: string,
   body?: string,
+  contentType = 'application/json',
+  bodyParams?: Record<string, string>,
 ): Promise<Response> {
   const timestamp = Math.floor(Date.now() / 1000).toString()
   const nonce = generateNonce()
@@ -54,6 +56,11 @@ async function makeAuthenticatedRequest(
   urlObj.searchParams.forEach((value, key) => {
     allParams[key] = value
   })
+  if (bodyParams && contentType === 'application/x-www-form-urlencoded') {
+    Object.entries(bodyParams).forEach(([key, value]) => {
+      allParams[key] = value
+    })
+  }
 
   const paramString = Object.keys(allParams).sort()
     .map(k => `${percentEncode(k)}=${percentEncode(allParams[k])}`).join('&')
@@ -71,7 +78,7 @@ async function makeAuthenticatedRequest(
     'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
   }
   if (body) {
-    headers['Content-Type'] = 'application/json'
+    headers['Content-Type'] = contentType
   }
 
   return fetch(url, {
@@ -132,6 +139,56 @@ function findConfirmedSentMessage(messages: any[], ownUsername: string | null, m
   }) || null
 }
 
+async function sendPrivateDiscogsMessage(
+  username: string,
+  subject: string,
+  message: string,
+  consumerKey: string,
+  consumerSecret: string,
+  accessToken: string,
+  accessTokenSecret: string,
+) {
+  const attempts = [
+    { url: 'https://api.discogs.com/messages', body: { recipient: username, subject, message }, form: false },
+    { url: 'https://api.discogs.com/messages', body: { to: username, subject, message }, form: false },
+    { url: 'https://api.discogs.com/messages/compose', body: { recipient: username, subject, message }, form: false },
+    { url: 'https://api.discogs.com/messages/compose', body: { to: username, subject, message }, form: false },
+    { url: 'https://api.discogs.com/messages', body: { recipient: username, subject, message }, form: true },
+    { url: 'https://api.discogs.com/messages', body: { to: username, subject, message }, form: true },
+    { url: 'https://api.discogs.com/messages/compose', body: { recipient: username, subject, message }, form: true },
+    { url: 'https://api.discogs.com/messages/compose', body: { to: username, subject, message }, form: true },
+  ]
+
+  const errors: string[] = []
+  for (const attempt of attempts) {
+    const body = attempt.form
+      ? new URLSearchParams(attempt.body).toString()
+      : JSON.stringify(attempt.body)
+    const contentType = attempt.form ? 'application/x-www-form-urlencoded' : 'application/json'
+    const res = await makeAuthenticatedRequest(
+      'POST', attempt.url, consumerKey, consumerSecret, accessToken, accessTokenSecret,
+      body, contentType, attempt.form ? attempt.body : undefined,
+    )
+    const raw = await res.text()
+    let data: any = null
+    try {
+      data = raw ? JSON.parse(raw) : null
+    } catch (_) {
+      data = raw ? { raw } : null
+    }
+
+    if (res.ok) {
+      console.log(`[discogs-order-message] Private message sent to ${username} via ${attempt.url}`)
+      return { success: true, status: res.status, endpoint: attempt.url, data }
+    }
+
+    errors.push(`${attempt.url} ${attempt.form ? 'form' : 'json'} ${res.status}: ${raw.slice(0, 300)}`)
+    if (res.status === 401) break
+  }
+
+  return { success: false, errors }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -155,9 +212,9 @@ Deno.serve(async (req) => {
     }
 
     // Parse body once
-    const { order_id, message, action, mode } = await req.json()
+    const { order_id, buyer_username, subject, message, action, mode } = await req.json()
 
-    if (!order_id) {
+    if (!order_id && mode !== 'private' && mode !== 'api-probe') {
       return new Response(JSON.stringify({ error: 'order_id is required' }), { status: 400, headers: corsHeaders })
     }
 
@@ -182,6 +239,58 @@ Deno.serve(async (req) => {
     }
 
     const { oauth_token: accessToken, oauth_token_secret: accessTokenSecret } = tokenData
+
+    if (mode === 'api-probe') {
+      const probes = []
+      for (const probe of [
+        { method: 'GET', url: 'https://api.discogs.com/messages' },
+        { method: 'GET', url: 'https://api.discogs.com/messages/compose' },
+        { method: 'OPTIONS', url: 'https://api.discogs.com/messages' },
+        { method: 'OPTIONS', url: 'https://api.discogs.com/messages/compose' },
+      ]) {
+        const probeRes = await makeAuthenticatedRequest(probe.method, probe.url, consumerKey, consumerSecret, accessToken, accessTokenSecret)
+        probes.push({ method: probe.method, url: probe.url, status: probeRes.status, body: (await probeRes.text()).slice(0, 500) })
+      }
+      return new Response(JSON.stringify({ probes }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (mode === 'private') {
+      if (!buyer_username || !subject || !message) {
+        return new Response(JSON.stringify({ error: 'buyer_username, subject and message are required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      const privateResult = await sendPrivateDiscogsMessage(
+        buyer_username, subject, message, consumerKey, consumerSecret, accessToken, accessTokenSecret,
+      )
+
+      if (!privateResult.success) {
+        return new Response(JSON.stringify({
+          error: 'Discogs private message API niet gelukt',
+          details: privateResult.errors.join(' | '),
+        }), {
+          status: 502,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      if (order_id) {
+        await saveDiscogsMessages(serviceClient, user.id, order_id, [{
+          from: { username: tokenData.discogs_username || null },
+          message,
+          subject,
+          timestamp: new Date().toISOString(),
+        }])
+      }
+
+      return new Response(JSON.stringify({ success: true, confirmed: true, private: true, result: privateResult }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     const apiUrl = `https://api.discogs.com/marketplace/orders/${order_id}/messages`
 
     // mode=list → GET messages for this order

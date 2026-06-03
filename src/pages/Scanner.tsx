@@ -405,7 +405,7 @@ const Scanner = () => {
 
       const { data, error } = await supabase
         .from(tableName)
-        .insert(insertData)
+        .insert(insertData as any)
         .select()
         .single();
 

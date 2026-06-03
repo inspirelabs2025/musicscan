@@ -39,6 +39,7 @@ const ACTIVE_DISCOGS_STATUSES = new Set([
 export default function AdminDiscogsMessages() {
   const { toast } = useToast();
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
+  const [subject, setSubject] = useState("Musicscan");
   const [message, setMessage] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [countryFilter, setCountryFilter] = useState<string>("all");
@@ -183,8 +184,8 @@ export default function AdminDiscogsMessages() {
   };
 
   const handleBulkSend = async () => {
-    if (!message.trim() || selectedOrders.size === 0) {
-      toast({ title: "Vul een bericht in en selecteer orders", variant: "destructive" });
+    if (!subject.trim() || !message.trim() || selectedOrders.size === 0) {
+      toast({ title: "Vul onderwerp, bericht in en selecteer contacten", variant: "destructive" });
       return;
     }
 
@@ -204,8 +205,17 @@ export default function AdminDiscogsMessages() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("Niet ingelogd");
 
+        const order = ordersByDiscogsId.get(orderIds[i]);
+        if (!order?.buyer_username) throw new Error("Geen Discogs gebruikersnaam gevonden");
+
         const res = await supabase.functions.invoke("discogs-order-message", {
-          body: { order_id: orderIds[i], message: message.trim() },
+          body: {
+            mode: "private",
+            order_id: orderIds[i],
+            buyer_username: order.buyer_username,
+            subject: subject.trim(),
+            message: message.trim(),
+          },
         });
 
         const sendError = await getDiscogsSendError(res);
@@ -214,7 +224,7 @@ export default function AdminDiscogsMessages() {
           throw new Error("Geen success-respons van edge function");
         }
         if (!(res.data as any)?.confirmed) {
-          throw new Error("Discogs heeft het bericht niet zichtbaar bevestigd in de conversatie");
+          throw new Error("Discogs heeft het privébericht niet bevestigd");
         }
         sent++;
         sentOrderIds.push(orderIds[i]);
@@ -286,11 +296,18 @@ export default function AdminDiscogsMessages() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Bericht opstellen</CardTitle>
               <CardDescription>
-                Dit bericht wordt naar alle geselecteerde orders verzonden via de Discogs API.
-                Er wordt automatisch een MusicScan promotie-banner toegevoegd.
+                Dit bericht wordt als Discogs privébericht naar de geselecteerde gebruikers verzonden.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Onderwerp"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                maxLength={80}
+              />
               <Textarea
                 placeholder="Typ hier je bericht voor de kopers..."
                 value={message}
@@ -304,7 +321,7 @@ export default function AdminDiscogsMessages() {
                 </span>
                 <Button
                   onClick={handleBulkSend}
-                  disabled={sending || !message.trim() || selectedOrders.size === 0}
+                  disabled={sending || !subject.trim() || !message.trim() || selectedOrders.size === 0}
                   className="gap-2"
                 >
                   {sending ? (

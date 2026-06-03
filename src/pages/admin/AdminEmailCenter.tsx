@@ -242,6 +242,25 @@ function AdminEmailCenterContent() {
     onError: (e: any) => toast({ title: "Fout bij versturen", description: e.message, variant: "destructive" }),
   });
 
+  // Sync ALL Discogs orders (paginates through entire marketplace history)
+  const syncDiscogs = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("discogs-sync-all-orders", { body: {} });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      const totalSaved = (data?.summary || []).reduce((a: number, s: any) => a + (s.orders_saved || 0), 0);
+      const totalEmails = (data?.summary || []).reduce((a: number, s: any) => a + (s.orders_with_email || 0), 0);
+      toast({
+        title: "Discogs sync klaar",
+        description: `${totalSaved} orders opgeslagen, ${totalEmails} met email`,
+      });
+      refetchRecipients();
+    },
+    onError: (e: any) => toast({ title: "Sync mislukt", description: e.message, variant: "destructive" }),
+  });
+
   return (
     <div className="w-full min-w-0 p-4 space-y-6">
         <div className="flex items-center gap-3">
@@ -337,11 +356,23 @@ function AdminEmailCenterContent() {
 
                     {(["users", "newsletter", "discogs"] as const).map(t => (
                       <TabsContent key={t} value={t} className="space-y-2">
-                        <div className="flex gap-2 items-center">
-                          <Input placeholder="Zoek email of naam..." value={filter} onChange={(e) => setFilter(e.target.value)} />
+                        <div className="flex gap-2 items-center flex-wrap">
+                          <Input placeholder="Zoek email of naam..." value={filter} onChange={(e) => setFilter(e.target.value)} className="flex-1 min-w-[180px]" />
                           <Button variant="outline" size="sm" onClick={() => refetchRecipients()}>
                             <RefreshCw className="h-4 w-4" />
                           </Button>
+                          {t === "discogs" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={syncDiscogs.isPending}
+                              onClick={() => syncDiscogs.mutate()}
+                              title="Haalt ALLE Discogs orders op (alle pagina's) en slaat buyer emails op"
+                            >
+                              {syncDiscogs.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+                              Sync alle Discogs orders
+                            </Button>
+                          )}
                         </div>
                         <div className="flex gap-2 text-xs">
                           <Button variant="ghost" size="sm" onClick={selectAllVisible}>Alles selecteren ({activeList.length})</Button>

@@ -26,6 +26,16 @@ interface DiscogsOrder {
   discogs_created_at: string | null;
 }
 
+const ACTIVE_DISCOGS_STATUSES = new Set([
+  "New Order",
+  "Buyer Contacted",
+  "Invoice Sent",
+  "Payment Pending",
+  "Payment Received",
+  "In Progress",
+  "Order Changed",
+]);
+
 export default function AdminDiscogsMessages() {
   const { toast } = useToast();
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
@@ -36,9 +46,8 @@ export default function AdminDiscogsMessages() {
   const [sendResults, setSendResults] = useState<{ sent: number; failed: number; total: number; errors: { orderId: string; error: string }[] } | null>(null);
   const [sendProgress, setSendProgress] = useState(0);
 
-  // Sommige Discogs-statussen kunnen beperkt zijn, maar Discogs beslist bij verzenden.
-  const hasRestrictedStatus = (status: string | null) =>
-    !!status && (status === "Shipped" || status === "Merged" || status.startsWith("Cancelled"));
+  const isActiveOrderStatus = (status: string | null) => !!status && ACTIVE_DISCOGS_STATUSES.has(status);
+  const hasRestrictedStatus = (status: string | null) => !isActiveOrderStatus(status);
   // Eigen Discogs username (voor outbox-filter)
   const { data: myDiscogsUsername } = useQuery({
     queryKey: ["my-discogs-username"],
@@ -159,7 +168,7 @@ export default function AdminDiscogsMessages() {
 
   const selectAll = () => {
     if (!orders) return;
-    const allOrderIds = orders.map((o) => o.discogs_order_id);
+    const allOrderIds = orders.filter((o) => isActiveOrderStatus(o.status)).map((o) => o.discogs_order_id);
     if (selectedOrders.size === allOrderIds.length) {
       setSelectedOrders(new Set());
     } else {
@@ -178,6 +187,7 @@ export default function AdminDiscogsMessages() {
     setSendProgress(0);
 
     const orderIds = Array.from(selectedOrders);
+    const ordersByDiscogsId = new Map((orders || []).map((order) => [order.discogs_order_id, order]));
     let sent = 0;
     let failed = 0;
     const errors: { orderId: string; error: string }[] = [];
@@ -185,6 +195,11 @@ export default function AdminDiscogsMessages() {
     const sentOrderIds: string[] = [];
     for (let i = 0; i < orderIds.length; i++) {
       try {
+        const order = ordersByDiscogsId.get(orderIds[i]);
+        if (order && !isActiveOrderStatus(order.status)) {
+          throw new Error(`Orderstatus '${order.status || "Unknown"}' is gesloten/beperkt; Discogs toont bulkberichten alleen betrouwbaar bij actieve orders`);
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("Niet ingelogd");
 

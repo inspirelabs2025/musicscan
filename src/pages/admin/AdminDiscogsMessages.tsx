@@ -138,16 +138,6 @@ export default function AdminDiscogsMessages() {
     : [];
 
   const toggleOrder = (orderId: string) => {
-    const order = orders?.find((o) => o.discogs_order_id === orderId);
-    if (order && !isActiveOrderStatus(order.status)) {
-      toast({
-        title: "Order niet geselecteerd",
-        description: `Status '${order.status || "Unknown"}' is gesloten/beperkt. Kies actieve orders voor betrouwbare Discogs-verzending.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
     setSelectedOrders((prev) => {
       const next = new Set(prev);
       if (next.has(orderId)) next.delete(orderId);
@@ -178,12 +168,18 @@ export default function AdminDiscogsMessages() {
 
   const selectAll = () => {
     if (!orders) return;
-    const allOrderIds = orders.filter((o) => isActiveOrderStatus(o.status)).map((o) => o.discogs_order_id);
+    const allOrderIds = orders.map((o) => o.discogs_order_id);
     if (selectedOrders.size === allOrderIds.length) {
       setSelectedOrders(new Set());
     } else {
       setSelectedOrders(new Set(allOrderIds));
     }
+  };
+
+  const selectActive = () => {
+    if (!orders) return;
+    const activeIds = orders.filter((o) => isActiveOrderStatus(o.status)).map((o) => o.discogs_order_id);
+    setSelectedOrders(new Set(activeIds));
   };
 
   const handleBulkSend = async () => {

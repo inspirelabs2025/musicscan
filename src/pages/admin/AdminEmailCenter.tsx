@@ -341,10 +341,30 @@ function AdminEmailCenterContent() {
                     <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Email onderwerp" />
                   </div>
                   <div>
-                    <Label>Bericht (HTML)</Label>
-                    <div className="bg-background border rounded-md">
-                      <ReactQuill theme="snow" value={body} onChange={setBody} modules={quillModules} />
+                    <div className="flex items-center justify-between mb-1">
+                      <Label>Bericht (HTML)</Label>
+                      <span className="text-xs text-muted-foreground">Tip: gebruik kop, kleur, afbeelding, links & uitlijning voor een rijke opmaak</span>
                     </div>
+                    <div className="bg-background border rounded-md email-rich-editor">
+                      <ReactQuill
+                        theme="snow"
+                        value={body}
+                        onChange={setBody}
+                        modules={quillModules}
+                        formats={quillFormats}
+                        placeholder="Schrijf hier je email. Voeg koppen, afbeeldingen, kleuren en knoppen toe..."
+                      />
+                    </div>
+                    {body && (
+                      <details className="mt-3">
+                        <summary className="text-sm font-medium cursor-pointer text-muted-foreground hover:text-foreground">
+                          📧 Live preview tonen
+                        </summary>
+                        <div className="mt-2 border rounded-md p-4 bg-white max-h-[500px] overflow-auto">
+                          <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: body }} />
+                        </div>
+                      </details>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2 items-center pt-2 border-t">
                     <Input

@@ -81,6 +81,7 @@ function AdminEmailCenterContent() {
   // Compose state
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [bgColor, setBgColor] = useState("#f4f4f5");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [templateName, setTemplateName] = useState("");
 
@@ -202,6 +203,7 @@ function AdminEmailCenterContent() {
     if (!t) return;
     setSubject(t.subject);
     setBody(t.html_content);
+    setBgColor(t.bg_color || "#f4f4f5");
     setSelectedTemplateId(id);
     setTemplateName(t.name);
   };
@@ -215,13 +217,13 @@ function AdminEmailCenterContent() {
       if (selectedTemplateId) {
         const { error } = await supabase
           .from("email_center_templates")
-          .update({ name: templateName, subject, html_content: body })
+          .update({ name: templateName, subject, html_content: body, bg_color: bgColor })
           .eq("id", selectedTemplateId);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("email_center_templates")
-          .insert({ name: templateName, subject, html_content: body, created_by: user?.id });
+          .insert({ name: templateName, subject, html_content: body, bg_color: bgColor, created_by: user?.id });
         if (error) throw error;
       }
     },
@@ -261,6 +263,7 @@ function AdminEmailCenterContent() {
         body: {
           subject,
           html_content: body,
+          bg_color: bgColor,
           recipients: recipientsPayload.map(r => ({ email: r.email, name: r.name || null })),
           test_mode: test,
         },
@@ -336,9 +339,29 @@ function AdminEmailCenterContent() {
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <Label>Onderwerp</Label>
-                    <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Email onderwerp" />
+                  <div className="flex gap-3 items-end">
+                    <div className="flex-1">
+                      <Label>Onderwerp</Label>
+                      <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Email onderwerp" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Achtergrond</Label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={bgColor}
+                          onChange={(e) => setBgColor(e.target.value)}
+                          className="w-10 h-9 rounded cursor-pointer border p-0.5"
+                        />
+                        <Input
+                          type="text"
+                          value={bgColor}
+                          onChange={(e) => setBgColor(e.target.value)}
+                          className="w-24 h-9 text-xs font-mono"
+                          placeholder="#f4f4f5"
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
@@ -360,8 +383,10 @@ function AdminEmailCenterContent() {
                         <summary className="text-sm font-medium cursor-pointer text-muted-foreground hover:text-foreground">
                           📧 Live preview tonen
                         </summary>
-                        <div className="mt-2 border rounded-md p-4 bg-white max-h-[500px] overflow-auto">
-                          <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: body }} />
+                        <div className="mt-2 border rounded-md p-4 max-h-[500px] overflow-auto" style={{ backgroundColor: bgColor }}>
+                          <div className="max-w-[600px] mx-auto bg-white rounded-xl p-6 shadow-sm">
+                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: body }} />
+                          </div>
                         </div>
                       </details>
                     )}

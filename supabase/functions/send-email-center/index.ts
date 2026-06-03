@@ -16,6 +16,7 @@ interface SendRequest {
   recipients: Recipient[]
   test_mode?: boolean
   campaign_id?: string // when retrying an existing campaign
+  bg_color?: string
 }
 
 Deno.serve(async (req) => {
@@ -57,7 +58,7 @@ Deno.serve(async (req) => {
     if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY is not configured')
 
     const body: SendRequest = await req.json()
-    const { subject, html_content, recipients, test_mode } = body
+    const { subject, html_content, recipients, test_mode, bg_color } = body
 
     if (!subject || !html_content) {
       return new Response(JSON.stringify({ error: 'subject and html_content are required' }), { status: 400, headers: corsHeaders })
@@ -84,6 +85,7 @@ Deno.serve(async (req) => {
       .insert({
         subject,
         html_content,
+        bg_color: bg_color || '#f4f4f5',
         status: 'sending',
         total_count: cleanRecipients.length,
         test_mode: !!test_mode,
@@ -120,7 +122,8 @@ Deno.serve(async (req) => {
       const personalizedContent = content
         .replace(/\{\{name\}\}/g, name || 'there')
         .replace(/\{\{username\}\}/g, name || 'there')
-      return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body style="margin:0;padding:0;background-color:#f4f4f5;font-family:Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:30px 20px;"><div style="background:#ffffff;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">${personalizedContent}</div><p style="text-align:center;font-size:12px;color:#999;margin-top:20px;">MusicScan &bull; <a href="https://musicscan.app" style="color:#7c3aed;">musicscan.app</a></p></div></body></html>`
+      const bg = bg_color || '#f4f4f5'
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body style="margin:0;padding:0;background-color:${bg};font-family:Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:30px 20px;"><div style="background:#ffffff;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">${personalizedContent}</div><p style="text-align:center;font-size:12px;color:#999;margin-top:20px;">MusicScan &bull; <a href="https://musicscan.app" style="color:#7c3aed;">musicscan.app</a></p></div></body></html>`
     }
 
     let sentCount = 0

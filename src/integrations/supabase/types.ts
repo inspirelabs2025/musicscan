@@ -3120,6 +3120,7 @@ export type Database = {
       }
       email_center_campaigns: {
         Row: {
+          bg_color: string | null
           created_at: string
           created_by: string | null
           failed_count: number
@@ -3133,6 +3134,7 @@ export type Database = {
           total_count: number
         }
         Insert: {
+          bg_color?: string | null
           created_at?: string
           created_by?: string | null
           failed_count?: number
@@ -3146,6 +3148,7 @@ export type Database = {
           total_count?: number
         }
         Update: {
+          bg_color?: string | null
           created_at?: string
           created_by?: string | null
           failed_count?: number
@@ -3206,6 +3209,7 @@ export type Database = {
       }
       email_center_templates: {
         Row: {
+          bg_color: string | null
           created_at: string
           created_by: string | null
           html_content: string
@@ -3215,6 +3219,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bg_color?: string | null
           created_at?: string
           created_by?: string | null
           html_content: string
@@ -3224,6 +3229,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bg_color?: string | null
           created_at?: string
           created_by?: string | null
           html_content?: string

@@ -3118,6 +3118,122 @@ export type Database = {
         }
         Relationships: []
       }
+      email_center_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          failed_count: number
+          html_content: string
+          id: string
+          sent_at: string | null
+          sent_count: number
+          status: string
+          subject: string
+          test_mode: boolean
+          total_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number
+          html_content: string
+          id?: string
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject: string
+          test_mode?: boolean
+          total_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number
+          html_content?: string
+          id?: string
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject?: string
+          test_mode?: boolean
+          total_count?: number
+        }
+        Relationships: []
+      }
+      email_center_sends: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          recipient_email: string
+          recipient_name: string | null
+          resend_email_id: string | null
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          recipient_email: string
+          recipient_name?: string | null
+          resend_email_id?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          recipient_email?: string
+          recipient_name?: string | null
+          resend_email_id?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_center_sends_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_center_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_center_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          html_content: string
+          id: string
+          name: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          html_content: string
+          id?: string
+          name: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          html_content?: string
+          id?: string
+          name?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_logs: {
         Row: {
           created_at: string

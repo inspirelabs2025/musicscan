@@ -81,6 +81,7 @@ function AdminEmailCenterContent() {
   // Compose state
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [bgColor, setBgColor] = useState("#f4f4f5");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [templateName, setTemplateName] = useState("");
 

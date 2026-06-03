@@ -16,6 +16,7 @@ interface SendRequest {
   recipients: Recipient[]
   test_mode?: boolean
   campaign_id?: string // when retrying an existing campaign
+  bg_color?: string
 }
 
 Deno.serve(async (req) => {

@@ -242,6 +242,25 @@ function AdminEmailCenterContent() {
     onError: (e: any) => toast({ title: "Fout bij versturen", description: e.message, variant: "destructive" }),
   });
 
+  // Sync ALL Discogs orders (paginates through entire marketplace history)
+  const syncDiscogs = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("discogs-sync-all-orders", { body: {} });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      const totalSaved = (data?.summary || []).reduce((a: number, s: any) => a + (s.orders_saved || 0), 0);
+      const totalEmails = (data?.summary || []).reduce((a: number, s: any) => a + (s.orders_with_email || 0), 0);
+      toast({
+        title: "Discogs sync klaar",
+        description: `${totalSaved} orders opgeslagen, ${totalEmails} met email`,
+      });
+      refetchRecipients();
+    },
+    onError: (e: any) => toast({ title: "Sync mislukt", description: e.message, variant: "destructive" }),
+  });
+
   return (
     <div className="w-full min-w-0 p-4 space-y-6">
         <div className="flex items-center gap-3">

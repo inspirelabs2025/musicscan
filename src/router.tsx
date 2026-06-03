@@ -194,6 +194,7 @@ const AdminCuratedArtists = lazyWithRetry(() => import('./pages/admin/CuratedArt
 const AdminDiscogsLookup = lazyWithRetry(() => import('./pages/admin/DiscogsLookup'));
 const AdminDiscogsMessages = lazyWithRetry(() => import('./pages/admin/AdminDiscogsMessages'));
 const AdminDiscogsBulkEmail = lazyWithRetry(() => import('./pages/admin/AdminDiscogsBulkEmail'));
+const AdminEmailCenter = lazyWithRetry(() => import('./pages/admin/AdminEmailCenter'));
 const AdminPhotoModeration = lazyWithRetry(() => import('./pages/admin/PhotoModeration'));
 const AdminAutoComments = lazyWithRetry(() => import('./pages/admin/AutoComments'));
 const AdminMagicMikeProfile = lazyWithRetry(() => import('./pages/admin/MagicMikeProfile'));
@@ -387,6 +388,7 @@ export const router = createBrowserRouter([
           { path: 'discogs-lookup', element: wrap(AdminDiscogsLookup) },
           { path: 'discogs-messages', element: wrap(AdminDiscogsMessages) },
           { path: 'discogs-bulk-email', element: wrap(AdminDiscogsBulkEmail) },
+          { path: 'email-center', element: wrap(AdminEmailCenter) },
           { path: 'photo-moderation', element: wrap(AdminPhotoModeration) },
           { path: 'auto-comments', element: wrap(AdminAutoComments) },
           { path: 'magic-mike', element: wrap(AdminMagicMikeProfile) },

@@ -296,11 +296,18 @@ export default function AdminDiscogsMessages() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Bericht opstellen</CardTitle>
               <CardDescription>
-                Dit bericht wordt naar alle geselecteerde orders verzonden via de Discogs API.
-                Er wordt automatisch een MusicScan promotie-banner toegevoegd.
+                Dit bericht wordt als Discogs privébericht naar de geselecteerde gebruikers verzonden.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Onderwerp"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                maxLength={80}
+              />
               <Textarea
                 placeholder="Typ hier je bericht voor de kopers..."
                 value={message}
@@ -314,7 +321,7 @@ export default function AdminDiscogsMessages() {
                 </span>
                 <Button
                   onClick={handleBulkSend}
-                  disabled={sending || !message.trim() || selectedOrders.size === 0}
+                  disabled={sending || !subject.trim() || !message.trim() || selectedOrders.size === 0}
                   className="gap-2"
                 >
                   {sending ? (

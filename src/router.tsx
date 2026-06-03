@@ -194,6 +194,7 @@ const AdminCuratedArtists = lazyWithRetry(() => import('./pages/admin/CuratedArt
 const AdminDiscogsLookup = lazyWithRetry(() => import('./pages/admin/DiscogsLookup'));
 const AdminDiscogsMessages = lazyWithRetry(() => import('./pages/admin/AdminDiscogsMessages'));
 const AdminDiscogsBulkEmail = lazyWithRetry(() => import('./pages/admin/AdminDiscogsBulkEmail'));
+const AdminEmailCenter = lazyWithRetry(() => import('./pages/admin/AdminEmailCenter'));
 const AdminPhotoModeration = lazyWithRetry(() => import('./pages/admin/PhotoModeration'));
 const AdminAutoComments = lazyWithRetry(() => import('./pages/admin/AutoComments'));
 const AdminMagicMikeProfile = lazyWithRetry(() => import('./pages/admin/MagicMikeProfile'));

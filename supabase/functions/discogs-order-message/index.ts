@@ -149,17 +149,25 @@ async function sendPrivateDiscogsMessage(
   accessTokenSecret: string,
 ) {
   const attempts = [
-    { url: 'https://api.discogs.com/messages', body: { recipient: username, subject, message } },
-    { url: 'https://api.discogs.com/messages', body: { to: username, subject, message } },
-    { url: 'https://api.discogs.com/messages/compose', body: { recipient: username, subject, message } },
-    { url: 'https://api.discogs.com/messages/compose', body: { to: username, subject, message } },
+    { url: 'https://api.discogs.com/messages', body: { recipient: username, subject, message }, form: false },
+    { url: 'https://api.discogs.com/messages', body: { to: username, subject, message }, form: false },
+    { url: 'https://api.discogs.com/messages/compose', body: { recipient: username, subject, message }, form: false },
+    { url: 'https://api.discogs.com/messages/compose', body: { to: username, subject, message }, form: false },
+    { url: 'https://api.discogs.com/messages', body: { recipient: username, subject, message }, form: true },
+    { url: 'https://api.discogs.com/messages', body: { to: username, subject, message }, form: true },
+    { url: 'https://api.discogs.com/messages/compose', body: { recipient: username, subject, message }, form: true },
+    { url: 'https://api.discogs.com/messages/compose', body: { to: username, subject, message }, form: true },
   ]
 
   const errors: string[] = []
   for (const attempt of attempts) {
+    const body = attempt.form
+      ? new URLSearchParams(attempt.body).toString()
+      : JSON.stringify(attempt.body)
+    const contentType = attempt.form ? 'application/x-www-form-urlencoded' : 'application/json'
     const res = await makeAuthenticatedRequest(
       'POST', attempt.url, consumerKey, consumerSecret, accessToken, accessTokenSecret,
-      JSON.stringify(attempt.body),
+      body, contentType, attempt.form ? attempt.body : undefined,
     )
     const raw = await res.text()
     let data: any = null
@@ -174,7 +182,7 @@ async function sendPrivateDiscogsMessage(
       return { success: true, status: res.status, endpoint: attempt.url, data }
     }
 
-    errors.push(`${attempt.url} ${res.status}: ${raw.slice(0, 300)}`)
+    errors.push(`${attempt.url} ${attempt.form ? 'form' : 'json'} ${res.status}: ${raw.slice(0, 300)}`)
     if (![400, 404, 405, 422].includes(res.status)) break
   }
 

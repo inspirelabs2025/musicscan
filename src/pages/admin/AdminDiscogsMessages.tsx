@@ -201,11 +201,6 @@ export default function AdminDiscogsMessages() {
     const sentOrderIds: string[] = [];
     for (let i = 0; i < orderIds.length; i++) {
       try {
-        const order = ordersByDiscogsId.get(orderIds[i]);
-        if (order && !isActiveOrderStatus(order.status)) {
-          throw new Error(`Orderstatus '${order.status || "Unknown"}' is gesloten/beperkt; Discogs toont bulkberichten alleen betrouwbaar bij actieve orders`);
-        }
-
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("Niet ingelogd");
 
@@ -215,8 +210,8 @@ export default function AdminDiscogsMessages() {
 
         const sendError = await getDiscogsSendError(res);
         if (sendError) throw new Error(sendError);
-        if (!(res.data as any)?.success || !(res.data as any)?.confirmed) {
-          throw new Error("Discogs heeft de verzending niet bevestigd");
+        if (!(res.data as any)?.success) {
+          throw new Error("Geen success-respons van edge function");
         }
         sent++;
         sentOrderIds.push(orderIds[i]);

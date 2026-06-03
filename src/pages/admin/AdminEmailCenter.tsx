@@ -203,6 +203,7 @@ function AdminEmailCenterContent() {
     if (!t) return;
     setSubject(t.subject);
     setBody(t.html_content);
+    setBgColor(t.bg_color || "#f4f4f5");
     setSelectedTemplateId(id);
     setTemplateName(t.name);
   };
@@ -216,13 +217,13 @@ function AdminEmailCenterContent() {
       if (selectedTemplateId) {
         const { error } = await supabase
           .from("email_center_templates")
-          .update({ name: templateName, subject, html_content: body })
+          .update({ name: templateName, subject, html_content: body, bg_color: bgColor })
           .eq("id", selectedTemplateId);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("email_center_templates")
-          .insert({ name: templateName, subject, html_content: body, created_by: user?.id });
+          .insert({ name: templateName, subject, html_content: body, bg_color: bgColor, created_by: user?.id });
         if (error) throw error;
       }
     },

@@ -484,7 +484,6 @@ export default function AdminDiscogsMessages() {
                   >
                     <Checkbox
                       checked={selectedOrders.has(order.discogs_order_id)}
-                      disabled={!isActiveOrderStatus(order.status)}
                       onCheckedChange={() => toggleOrder(order.discogs_order_id)}
                       onClick={(e) => e.stopPropagation()}
                     />

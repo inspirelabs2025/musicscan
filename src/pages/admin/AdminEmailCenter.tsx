@@ -263,6 +263,7 @@ function AdminEmailCenterContent() {
         body: {
           subject,
           html_content: body,
+          bg_color: bgColor,
           recipients: recipientsPayload.map(r => ({ email: r.email, name: r.name || null })),
           test_mode: test,
         },

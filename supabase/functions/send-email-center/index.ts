@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY is not configured')
 
     const body: SendRequest = await req.json()
-    const { subject, html_content, recipients, test_mode } = body
+    const { subject, html_content, recipients, test_mode, bg_color } = body
 
     if (!subject || !html_content) {
       return new Response(JSON.stringify({ error: 'subject and html_content are required' }), { status: 400, headers: corsHeaders })

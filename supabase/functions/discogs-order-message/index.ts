@@ -217,7 +217,7 @@ Deno.serve(async (req) => {
     if (message) bodyPayload.message = message
     if (action) bodyPayload.status = action // e.g. "Shipped", "Payment Received"
 
-    const sentAfterMs = Date.now() - 120000 // allow clock skew, but never confirm old duplicate messages
+    
 
     console.log(`[discogs-order-message] Sending to order ${order_id}:`, bodyPayload)
 

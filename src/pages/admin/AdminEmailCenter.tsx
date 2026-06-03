@@ -339,9 +339,29 @@ function AdminEmailCenterContent() {
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <Label>Onderwerp</Label>
-                    <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Email onderwerp" />
+                  <div className="flex gap-3 items-end">
+                    <div className="flex-1">
+                      <Label>Onderwerp</Label>
+                      <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Email onderwerp" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Achtergrond</Label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={bgColor}
+                          onChange={(e) => setBgColor(e.target.value)}
+                          className="w-10 h-9 rounded cursor-pointer border p-0.5"
+                        />
+                        <Input
+                          type="text"
+                          value={bgColor}
+                          onChange={(e) => setBgColor(e.target.value)}
+                          className="w-24 h-9 text-xs font-mono"
+                          placeholder="#f4f4f5"
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">

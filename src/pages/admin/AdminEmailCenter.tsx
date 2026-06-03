@@ -383,8 +383,10 @@ function AdminEmailCenterContent() {
                         <summary className="text-sm font-medium cursor-pointer text-muted-foreground hover:text-foreground">
                           📧 Live preview tonen
                         </summary>
-                        <div className="mt-2 border rounded-md p-4 bg-white max-h-[500px] overflow-auto">
-                          <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: body }} />
+                        <div className="mt-2 border rounded-md p-4 max-h-[500px] overflow-auto" style={{ backgroundColor: bgColor }}>
+                          <div className="max-w-[600px] mx-auto bg-white rounded-xl p-6 shadow-sm">
+                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: body }} />
+                          </div>
                         </div>
                       </details>
                     )}

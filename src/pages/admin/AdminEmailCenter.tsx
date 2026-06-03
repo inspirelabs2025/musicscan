@@ -20,15 +20,51 @@ import "react-quill-new/dist/quill.snow.css";
 type Recipient = { email: string; name?: string | null; source: string; meta?: any };
 
 const quillModules = {
-  toolbar: [
-    [{ header: [1, 2, 3, false] }],
-    ["bold", "italic", "underline", "strike"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    [{ color: [] }, { background: [] }],
-    ["link"],
-    ["clean"],
-  ],
+  toolbar: {
+    container: [
+      [{ font: [] }, { size: ["small", false, "large", "huge"] }],
+      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      ["bold", "italic", "underline", "strike"],
+      [{ color: [] }, { background: [] }],
+      [{ script: "sub" }, { script: "super" }],
+      [{ list: "ordered" }, { list: "bullet" }, { indent: "-1" }, { indent: "+1" }],
+      [{ align: [] }, { direction: "rtl" }],
+      ["blockquote", "code-block"],
+      ["link", "image", "video"],
+      ["clean"],
+    ],
+    handlers: {
+      image: function (this: any) {
+        const input = document.createElement("input");
+        input.setAttribute("type", "file");
+        input.setAttribute("accept", "image/*");
+        input.click();
+        input.onchange = async () => {
+          const file = input.files?.[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const range = this.quill.getSelection(true);
+            this.quill.insertEmbed(range.index, "image", e.target?.result);
+            this.quill.setSelection(range.index + 1, 0);
+          };
+          reader.readAsDataURL(file);
+        };
+      },
+    },
+  },
+  clipboard: { matchVisual: false },
 };
+
+const quillFormats = [
+  "font", "size", "header",
+  "bold", "italic", "underline", "strike",
+  "color", "background", "script",
+  "list", "bullet", "indent",
+  "align", "direction",
+  "blockquote", "code-block",
+  "link", "image", "video",
+];
 
 export default function AdminEmailCenter() {
   return (
@@ -305,10 +341,30 @@ function AdminEmailCenterContent() {
                     <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Email onderwerp" />
                   </div>
                   <div>
-                    <Label>Bericht (HTML)</Label>
-                    <div className="bg-background border rounded-md">
-                      <ReactQuill theme="snow" value={body} onChange={setBody} modules={quillModules} />
+                    <div className="flex items-center justify-between mb-1">
+                      <Label>Bericht (HTML)</Label>
+                      <span className="text-xs text-muted-foreground">Tip: gebruik kop, kleur, afbeelding, links & uitlijning voor een rijke opmaak</span>
                     </div>
+                    <div className="bg-background border rounded-md email-rich-editor">
+                      <ReactQuill
+                        theme="snow"
+                        value={body}
+                        onChange={setBody}
+                        modules={quillModules}
+                        formats={quillFormats}
+                        placeholder="Schrijf hier je email. Voeg koppen, afbeeldingen, kleuren en knoppen toe..."
+                      />
+                    </div>
+                    {body && (
+                      <details className="mt-3">
+                        <summary className="text-sm font-medium cursor-pointer text-muted-foreground hover:text-foreground">
+                          📧 Live preview tonen
+                        </summary>
+                        <div className="mt-2 border rounded-md p-4 bg-white max-h-[500px] overflow-auto">
+                          <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: body }} />
+                        </div>
+                      </details>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2 items-center pt-2 border-t">
                     <Input

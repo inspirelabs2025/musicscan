@@ -118,11 +118,17 @@ async function saveDiscogsMessages(serviceClient: any, userId: string, orderId: 
   }
 }
 
-function findConfirmedSentMessage(messages: any[], ownUsername: string | null, message: string) {
+function isFreshMessage(timestamp: string | null | undefined, sentAfterMs: number): boolean {
+  if (!timestamp) return false
+  const messageMs = Date.parse(timestamp)
+  return Number.isFinite(messageMs) && messageMs >= sentAfterMs
+}
+
+function findConfirmedSentMessage(messages: any[], ownUsername: string | null, message: string, sentAfterMs: number) {
   const expected = normalizeMessage(message)
   return messages.find((m) => {
     const sender = m.from?.username || m.actor?.username || null
-    return sender === ownUsername && normalizeMessage(m.message || '') === expected
+    return sender === ownUsername && normalizeMessage(m.message || '') === expected && isFreshMessage(m.timestamp, sentAfterMs)
   }) || null
 }
 
@@ -211,6 +217,8 @@ Deno.serve(async (req) => {
     if (message) bodyPayload.message = message
     if (action) bodyPayload.status = action // e.g. "Shipped", "Payment Received"
 
+    const sentAfterMs = Date.now() - 120000 // allow clock skew, but never confirm old duplicate messages
+
     console.log(`[discogs-order-message] Sending to order ${order_id}:`, bodyPayload)
 
     const res = await makeAuthenticatedRequest(
@@ -236,30 +244,35 @@ Deno.serve(async (req) => {
 
     let confirmedMessage: any = null
     if (message) {
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      if (data?.message) {
+        await saveDiscogsMessages(serviceClient, user.id, order_id, [data])
+        confirmedMessage = findConfirmedSentMessage([data], tokenData.discogs_username || null, message, sentAfterMs)
+      }
+
+      for (let attempt = 1; attempt <= 5 && !confirmedMessage; attempt++) {
         const verifyRes = await makeAuthenticatedRequest(
-          'GET', apiUrl, consumerKey, consumerSecret, accessToken, accessTokenSecret
+          'GET', `${apiUrl}?per_page=10`, consumerKey, consumerSecret, accessToken, accessTokenSecret
         )
 
         if (verifyRes.ok) {
           const verifyData = await verifyRes.json()
           const messages = verifyData.messages || []
           await saveDiscogsMessages(serviceClient, user.id, order_id, messages)
-          confirmedMessage = findConfirmedSentMessage(messages, tokenData.discogs_username || null, message)
+          confirmedMessage = findConfirmedSentMessage(messages, tokenData.discogs_username || null, message, sentAfterMs)
           if (confirmedMessage) break
         } else {
           const verifyErr = await verifyRes.text()
           console.error(`Discogs messages verification GET error ${verifyRes.status}:`, verifyErr)
         }
 
-        if (attempt < 3) await new Promise((r) => setTimeout(r, 750))
+        if (attempt < 5) await new Promise((r) => setTimeout(r, 1000))
       }
 
       if (!confirmedMessage) {
-        console.error(`[discogs-order-message] POST succeeded but sent message was not found in Discogs for order ${order_id}`)
+        console.error(`[discogs-order-message] POST succeeded but a NEW sent message was not found in Discogs for order ${order_id}`)
         return new Response(JSON.stringify({
-          error: 'Discogs bevestigde de verzending niet',
-          details: 'De POST-call gaf geen fout, maar het bericht staat na controle niet in de Discogs order messages.',
+          error: 'Discogs bevestigde geen nieuw bericht',
+          details: 'De POST-call gaf geen fout, maar er is geen nieuw bericht met huidige timestamp teruggevonden in de Discogs order messages.',
           data,
         }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
       }

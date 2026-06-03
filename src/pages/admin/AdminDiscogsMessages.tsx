@@ -138,6 +138,16 @@ export default function AdminDiscogsMessages() {
     : [];
 
   const toggleOrder = (orderId: string) => {
+    const order = orders?.find((o) => o.discogs_order_id === orderId);
+    if (order && !isActiveOrderStatus(order.status)) {
+      toast({
+        title: "Order niet geselecteerd",
+        description: `Status '${order.status || "Unknown"}' is gesloten/beperkt. Kies actieve orders voor betrouwbare Discogs-verzending.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSelectedOrders((prev) => {
       const next = new Set(prev);
       if (next.has(orderId)) next.delete(orderId);
@@ -450,7 +460,7 @@ export default function AdminDiscogsMessages() {
               </Select>
             </div>
             <Button variant="outline" size="sm" onClick={selectAll}>
-              {selectedOrders.size === (orders?.length || 0) ? "Deselecteer alles" : "Selecteer alles"}
+              {selectedOrders.size === (orders?.filter((o) => isActiveOrderStatus(o.status)).length || 0) ? "Deselecteer alles" : "Selecteer actieve orders"}
             </Button>
           </div>
 
@@ -480,6 +490,7 @@ export default function AdminDiscogsMessages() {
                   >
                     <Checkbox
                       checked={selectedOrders.has(order.discogs_order_id)}
+                      disabled={!isActiveOrderStatus(order.status)}
                       onCheckedChange={() => toggleOrder(order.discogs_order_id)}
                       onClick={(e) => e.stopPropagation()}
                     />

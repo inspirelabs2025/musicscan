@@ -242,39 +242,38 @@ Deno.serve(async (req) => {
       data = { raw: rawBody }
     }
 
+    // POST 2xx = success. Verification is best-effort only — never fail the send because of it.
     let confirmedMessage: any = null
+    const sentAfterMs = Date.now() - 120000
+
     if (message) {
       if (data?.message) {
-        await saveDiscogsMessages(serviceClient, user.id, order_id, [data])
+        try {
+          await saveDiscogsMessages(serviceClient, user.id, order_id, [data])
+        } catch (e) {
+          console.warn('saveDiscogsMessages (POST echo) failed', e)
+        }
         confirmedMessage = findConfirmedSentMessage([data], tokenData.discogs_username || null, message, sentAfterMs)
       }
 
-      for (let attempt = 1; attempt <= 5 && !confirmedMessage; attempt++) {
+      // Best-effort single verification GET — log only, never block success
+      try {
         const verifyRes = await makeAuthenticatedRequest(
           'GET', `${apiUrl}?per_page=10`, consumerKey, consumerSecret, accessToken, accessTokenSecret
         )
-
         if (verifyRes.ok) {
           const verifyData = await verifyRes.json()
           const messages = verifyData.messages || []
           await saveDiscogsMessages(serviceClient, user.id, order_id, messages)
-          confirmedMessage = findConfirmedSentMessage(messages, tokenData.discogs_username || null, message, sentAfterMs)
-          if (confirmedMessage) break
+          if (!confirmedMessage) {
+            confirmedMessage = findConfirmedSentMessage(messages, tokenData.discogs_username || null, message, sentAfterMs)
+          }
         } else {
           const verifyErr = await verifyRes.text()
-          console.error(`Discogs messages verification GET error ${verifyRes.status}:`, verifyErr)
+          console.warn(`[discogs-order-message] Verification GET ${verifyRes.status} (non-fatal):`, verifyErr)
         }
-
-        if (attempt < 5) await new Promise((r) => setTimeout(r, 1000))
-      }
-
-      if (!confirmedMessage) {
-        console.error(`[discogs-order-message] POST succeeded but a NEW sent message was not found in Discogs for order ${order_id}`)
-        return new Response(JSON.stringify({
-          error: 'Discogs bevestigde geen nieuw bericht',
-          details: 'De POST-call gaf geen fout, maar er is geen nieuw bericht met huidige timestamp teruggevonden in de Discogs order messages.',
-          data,
-        }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      } catch (e) {
+        console.warn('[discogs-order-message] Verification GET failed (non-fatal)', e)
       }
     }
 

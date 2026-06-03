@@ -31,6 +31,14 @@ const quillModules = {
 };
 
 export default function AdminEmailCenter() {
+  return (
+    <AdminGuard>
+      <AdminEmailCenterContent />
+    </AdminGuard>
+  );
+}
+
+function AdminEmailCenterContent() {
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -48,7 +56,7 @@ export default function AdminEmailCenter() {
   const [filter, setFilter] = useState("");
 
   // Recipients from edge fn
-  const { data: recipients, isLoading: recipientsLoading, refetch: refetchRecipients } = useQuery({
+  const { data: recipients, isLoading: recipientsLoading, error: recipientsError, refetch: refetchRecipients } = useQuery({
     queryKey: ["email-center-recipients"],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("email-center-recipients", {
@@ -235,8 +243,7 @@ export default function AdminEmailCenter() {
   });
 
   return (
-    <AdminGuard>
-      <div className="w-full min-w-0 p-4 space-y-6">
+    <div className="w-full min-w-0 p-4 space-y-6">
         <div className="flex items-center gap-3">
           <Mail className="h-7 w-7 text-primary" />
           <div>
@@ -341,7 +348,11 @@ export default function AdminEmailCenter() {
                           <Button variant="ghost" size="sm" onClick={clearVisible}>Wissen</Button>
                         </div>
                         <div className="border rounded-md max-h-80 overflow-y-auto divide-y">
-                          {recipientsLoading ? (
+                          {recipientsError ? (
+                            <div className="p-4 text-center text-sm text-destructive">
+                              Ontvangers laden mislukt. Klik op verversen.
+                            </div>
+                          ) : recipientsLoading ? (
                             <div className="p-4 text-center text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" />Laden...</div>
                           ) : activeList.length === 0 ? (
                             <div className="p-4 text-center text-sm text-muted-foreground">Geen resultaten</div>
@@ -499,7 +510,6 @@ export default function AdminEmailCenter() {
             </div>
           </TabsContent>
         </Tabs>
-      </div>
-    </AdminGuard>
+    </div>
   );
 }

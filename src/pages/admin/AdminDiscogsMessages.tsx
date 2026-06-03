@@ -451,7 +451,10 @@ export default function AdminDiscogsMessages() {
               </Select>
             </div>
             <Button variant="outline" size="sm" onClick={selectAll}>
-              {selectedOrders.size === (orders?.filter((o) => isActiveOrderStatus(o.status)).length || 0) ? "Deselecteer alles" : "Selecteer actieve orders"}
+              {selectedOrders.size === (orders?.length || 0) && (orders?.length || 0) > 0 ? "Deselecteer alles" : "Selecteer alles"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={selectActive}>
+              Selecteer actieve orders
             </Button>
           </div>
 

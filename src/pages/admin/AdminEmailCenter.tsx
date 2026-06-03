@@ -20,15 +20,51 @@ import "react-quill-new/dist/quill.snow.css";
 type Recipient = { email: string; name?: string | null; source: string; meta?: any };
 
 const quillModules = {
-  toolbar: [
-    [{ header: [1, 2, 3, false] }],
-    ["bold", "italic", "underline", "strike"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    [{ color: [] }, { background: [] }],
-    ["link"],
-    ["clean"],
-  ],
+  toolbar: {
+    container: [
+      [{ font: [] }, { size: ["small", false, "large", "huge"] }],
+      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      ["bold", "italic", "underline", "strike"],
+      [{ color: [] }, { background: [] }],
+      [{ script: "sub" }, { script: "super" }],
+      [{ list: "ordered" }, { list: "bullet" }, { indent: "-1" }, { indent: "+1" }],
+      [{ align: [] }, { direction: "rtl" }],
+      ["blockquote", "code-block"],
+      ["link", "image", "video"],
+      ["clean"],
+    ],
+    handlers: {
+      image: function (this: any) {
+        const input = document.createElement("input");
+        input.setAttribute("type", "file");
+        input.setAttribute("accept", "image/*");
+        input.click();
+        input.onchange = async () => {
+          const file = input.files?.[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const range = this.quill.getSelection(true);
+            this.quill.insertEmbed(range.index, "image", e.target?.result);
+            this.quill.setSelection(range.index + 1, 0);
+          };
+          reader.readAsDataURL(file);
+        };
+      },
+    },
+  },
+  clipboard: { matchVisual: false },
 };
+
+const quillFormats = [
+  "font", "size", "header",
+  "bold", "italic", "underline", "strike",
+  "color", "background", "script",
+  "list", "bullet", "indent",
+  "align", "direction",
+  "blockquote", "code-block",
+  "link", "image", "video",
+];
 
 export default function AdminEmailCenter() {
   return (

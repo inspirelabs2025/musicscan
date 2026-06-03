@@ -277,6 +277,15 @@ Deno.serve(async (req) => {
         })
       }
 
+      if (order_id) {
+        await saveDiscogsMessages(serviceClient, user.id, order_id, [{
+          from: { username: tokenData.discogs_username || null },
+          message,
+          subject,
+          timestamp: new Date().toISOString(),
+        }])
+      }
+
       return new Response(JSON.stringify({ success: true, confirmed: true, private: true, result: privateResult }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })

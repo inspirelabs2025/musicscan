@@ -337,11 +337,23 @@ function AdminEmailCenterContent() {
 
                     {(["users", "newsletter", "discogs"] as const).map(t => (
                       <TabsContent key={t} value={t} className="space-y-2">
-                        <div className="flex gap-2 items-center">
-                          <Input placeholder="Zoek email of naam..." value={filter} onChange={(e) => setFilter(e.target.value)} />
+                        <div className="flex gap-2 items-center flex-wrap">
+                          <Input placeholder="Zoek email of naam..." value={filter} onChange={(e) => setFilter(e.target.value)} className="flex-1 min-w-[180px]" />
                           <Button variant="outline" size="sm" onClick={() => refetchRecipients()}>
                             <RefreshCw className="h-4 w-4" />
                           </Button>
+                          {t === "discogs" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={syncDiscogs.isPending}
+                              onClick={() => syncDiscogs.mutate()}
+                              title="Haalt ALLE Discogs orders op (alle pagina's) en slaat buyer emails op"
+                            >
+                              {syncDiscogs.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+                              Sync alle Discogs orders
+                            </Button>
+                          )}
                         </div>
                         <div className="flex gap-2 text-xs">
                           <Button variant="ghost" size="sm" onClick={selectAllVisible}>Alles selecteren ({activeList.length})</Button>

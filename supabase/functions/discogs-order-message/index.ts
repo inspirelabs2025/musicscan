@@ -34,6 +34,8 @@ async function makeAuthenticatedRequest(
   accessToken: string,
   accessTokenSecret: string,
   body?: string,
+  contentType = 'application/json',
+  bodyParams?: Record<string, string>,
 ): Promise<Response> {
   const timestamp = Math.floor(Date.now() / 1000).toString()
   const nonce = generateNonce()
@@ -54,6 +56,11 @@ async function makeAuthenticatedRequest(
   urlObj.searchParams.forEach((value, key) => {
     allParams[key] = value
   })
+  if (bodyParams && contentType === 'application/x-www-form-urlencoded') {
+    Object.entries(bodyParams).forEach(([key, value]) => {
+      allParams[key] = value
+    })
+  }
 
   const paramString = Object.keys(allParams).sort()
     .map(k => `${percentEncode(k)}=${percentEncode(allParams[k])}`).join('&')
@@ -71,7 +78,7 @@ async function makeAuthenticatedRequest(
     'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
   }
   if (body) {
-    headers['Content-Type'] = 'application/json'
+    headers['Content-Type'] = contentType
   }
 
   return fetch(url, {

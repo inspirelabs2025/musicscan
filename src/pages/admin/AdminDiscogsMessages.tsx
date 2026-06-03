@@ -39,6 +39,7 @@ const ACTIVE_DISCOGS_STATUSES = new Set([
 export default function AdminDiscogsMessages() {
   const { toast } = useToast();
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
+  const [subject, setSubject] = useState("Musicscan");
   const [message, setMessage] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [countryFilter, setCountryFilter] = useState<string>("all");
@@ -183,8 +184,8 @@ export default function AdminDiscogsMessages() {
   };
 
   const handleBulkSend = async () => {
-    if (!message.trim() || selectedOrders.size === 0) {
-      toast({ title: "Vul een bericht in en selecteer orders", variant: "destructive" });
+    if (!subject.trim() || !message.trim() || selectedOrders.size === 0) {
+      toast({ title: "Vul onderwerp, bericht in en selecteer contacten", variant: "destructive" });
       return;
     }
 
@@ -204,8 +205,17 @@ export default function AdminDiscogsMessages() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("Niet ingelogd");
 
+        const order = ordersByDiscogsId.get(orderIds[i]);
+        if (!order?.buyer_username) throw new Error("Geen Discogs gebruikersnaam gevonden");
+
         const res = await supabase.functions.invoke("discogs-order-message", {
-          body: { order_id: orderIds[i], message: message.trim() },
+          body: {
+            mode: "private",
+            order_id: orderIds[i],
+            buyer_username: order.buyer_username,
+            subject: subject.trim(),
+            message: message.trim(),
+          },
         });
 
         const sendError = await getDiscogsSendError(res);
@@ -214,7 +224,7 @@ export default function AdminDiscogsMessages() {
           throw new Error("Geen success-respons van edge function");
         }
         if (!(res.data as any)?.confirmed) {
-          throw new Error("Discogs heeft het bericht niet zichtbaar bevestigd in de conversatie");
+          throw new Error("Discogs heeft het privébericht niet bevestigd");
         }
         sent++;
         sentOrderIds.push(orderIds[i]);

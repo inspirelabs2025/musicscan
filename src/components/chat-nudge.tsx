@@ -1,55 +1,39 @@
 import React from 'react';
-import { XIcon, MessageCircleIcon } from 'lucide-react';
-import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
+import { X } from 'lucide-react';
 
 interface ChatNudgeProps {
   isVisible: boolean;
-  onDismiss: () => void;
-  onTryChat: () => void;
-  messageCount: number; // Prop to hold the number of messages
+  onClose: () => void;
+  messageCount: number;
 }
 
-export const ChatNudge: React.FC<ChatNudgeProps> = ({
-  isVisible,
-  onDismiss,
-  onTryChat,
-  messageCount
-}) => {
+export const ChatNudge: React.FC<ChatNudgeProps> = ({ isVisible, onClose, messageCount }) => {
   if (!isVisible || messageCount > 0) {
     return null;
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 animate-fade-in">
-      <Card className="w-[350px] shadow-lg border-2 border-primary">
-        <MessageCircleIcon className="h-10 w-10 text-primary absolute top-4 left-4" />
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-2 right-2 text-muted-foreground hover:bg-transparent"
-          onClick={onDismiss}
-          aria-label="Sluiten"
+    <div className="fixed bottom-4 right-4 z-50 p-4 bg-ai-nudge-background text-ai-nudge-foreground border border-ai-nudge-border rounded-lg shadow-lg max-w-sm animate-fade-in">
+      <div className="flex justify-between items-start">
+        <p className="text-sm font-medium">
+          💬 Heb je de chat al geprobeerd?
+          <br/>
+          Er zijn pas {messageCount} chatberichten in je project. Probeer de chatfunctie om sneller antwoorden te krijgen!
+        </p>
+        <button
+          onClick={onClose}
+          className="text-ai-nudge-foreground/70 hover:text-ai-nudge-foreground focus:outline-none focus:ring-2 focus:ring-ai-nudge-foreground/50 rounded-full p-1 transition-colors"
+          aria-label="Sluit melding"
         >
-          <XIcon className="h-5 w-5" />
-        </Button>
-        <CardHeader className="pt-4 pl-16">
-          <CardTitle className="text-lg">Heb je de chat al geprobeerd?</CardTitle>
-          <CardDescription>
-            Er zijn pas {messageCount} chatberichten in je project.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            Probeer de chatfunctie om sneller antwoorden te krijgen en direct feedback te ontvangen op je ideeën!
-          </p>
-        </CardContent>
-        <CardFooter className="flex justify-end">
-          <Button onClick={onTryChat} className="bg-primary text-primary-foreground hover:bg-primary/90">
-            Begin met chatten
-          </Button>
-        </CardFooter>
-      </Card>
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <a
+        href="/chat"
+        className="mt-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
+      >
+        Naar de chat
+      </a>
     </div>
   );
 };

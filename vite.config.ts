@@ -24,6 +24,9 @@ function buildVersionPlugin(): Plugin {
 export default defineConfig(({ mode }) => ({
   define: {
     __BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString()),
+    // Expose AI_NUDGE_VARIANT to the client side. This is used for A/B testing.
+    // In production, this should be set to 'nudge' or 'control' via process.env.VITE_AI_NUDGE_VARIANT
+    'process.env.VITE_AI_NUDGE_VARIANT': JSON.stringify(process.env.VITE_AI_NUDGE_VARIANT || 'control'),
   },
   server: {
     host: "::",

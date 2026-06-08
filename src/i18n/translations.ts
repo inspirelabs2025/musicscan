@@ -5546,7 +5546,7 @@ const translations = {
       micNotAvailableDesc: "Grant permission for the microphone or check your settings.",
 
       // Scanning pipeline
-      patience: "🎯 **Please wait...** I'm now searching thousands of releases to find your exact pressing. Barcode, matrix codes, labels — everything is being checked! 🔎",
+      patience: "🎯 **Please wait...** I'm now searching thousands of releases to find your exact pressing. Barcode, runout codes, labels — everything is being checked! 🔎",
       verified: "Verified",
       likelyCorrect: "Likely correct",
       suggestedMatch: "Suggested match",
@@ -5564,7 +5564,7 @@ const translations = {
       otherPossibleReleases: "Other possible releases",
       noMatchFound: "⚠️ **No match found** in the Discogs database.",
       recognized: "Recognized",
-      uploadMorePhotos: "📸 Upload more photos (matrix number, back, disc label) for better identification.",
+      uploadMorePhotos: "📸 Upload more photos (matrix runout, back, disc label) for better identification.",
       noUniqueMatch: "🔍 **No unique match found.**",
       scannerRecognized: "The scanner recognized **{artist} - {title}**, but cannot confirm the exact pressing.",
       selectCorrectRelease: "Select the correct release below, or upload more photos for a better match:",
@@ -5612,7 +5612,7 @@ const translations = {
       uploading: "Uploading...",
       sendPhotos: "Send {count} photo(s) to Magic Mike",
       photo: "Photo",
-      scanGuideRequest: "Give me a detailed explanation of how to take the best scan photos of my vinyl records and CDs. Explain per media type which photos I should take (front, back, matrix, barcode etc.), with tips for lighting, angle and sharpness. Also indicate which details are most important for a good match.",
+      scanGuideRequest: "Give me a detailed explanation of how to take the best scan photos of my vinyl records and CDs. Explain per media type which photos I should take (front, back, matrix runout, barcode etc.), with tips for lighting, angle and sharpness. Also indicate which details are most important for a good match.",
 
       // Suggestion chips
       saveToCollection: "Save to my collection",
@@ -5628,8 +5628,8 @@ const translations = {
       typeMyself: "I'll type the artist and title myself",
       scanTips: "Tips for the best scan results",
       uploadMorePhotosShort: "I'll upload more photos",
-      lookAtMatrixAgain: "Can you look at the matrix again?",
-      whereIsMatrix: "Where do I find the matrix number?",
+      lookAtMatrixAgain: "Can you look at the matrix runout again?",
+      whereIsMatrix: "Where do I find the matrix runout?",
       whatCanMikeDo: "What can Magic Mike do?",
       howDoesScanner: "How does the scanner work?",
       moreAboutArtist: "More facts about this artist?",
@@ -5648,7 +5648,7 @@ const translations = {
       readArtistStory: "Read the story of {artist}",
       viewArtistProducts: "View {artist} products",
       knowThisAnecdote: "Do you know this anecdote?",
-      uploadedPhotos: "I uploaded {count} photo(s) of my {type}. Analyze these photos. First confirm the artist and title. Then look for barcode, catalog number and matrix number in the photos. Also look for rights organizations (BIEM, STEMRA, JASRAC, etc.). Give your findings.",
+      uploadedPhotos: "I uploaded {count} photo(s) of my {type}. Analyze these photos. First confirm the artist and title. Then look for barcode, catalog number and matrix runout in the photos. Also look for rights organizations (BIEM, STEMRA, JASRAC, etc.). Give your findings.",
       viewAllOffers: "View all offers",
       scanCtaTitle: "Own this record? Discover its value!",
       scanCtaDesc: "Scan your vinyl or CD and instantly discover its market value with Magic Mike",

@@ -455,7 +455,7 @@ export function AIScanV2Results({
               <Tooltip>
                 <TooltipTrigger><Info className="h-4 w-4 text-muted-foreground" /></TooltipTrigger>
                 <TooltipContent className="max-w-xs">
-                  <p>Matrix nummer: gegraveerd in de binnenste ring van de CD. Foto de disc onder een hoek voor beste resultaat.</p>
+                  <p>Matrix runout (cijfers en letters): gegraveerd in de binnenste ring van de CD. Foto de disc onder een hoek voor beste resultaat.</p>
                 </TooltipContent>
               </Tooltip>
             </h3>

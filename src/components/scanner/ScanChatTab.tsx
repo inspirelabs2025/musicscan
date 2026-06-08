@@ -222,7 +222,7 @@ function pickRandom<T>(arr: T[], count: number): T[] {
 // Detect conversation context from last assistant message
 function detectFollowupPool(content: string, pools: ReturnType<typeof buildSuggestionPools>): Array<{ emoji: string; text: string }> {
   const lower = content.toLowerCase();
-  const scanGuideKeywords = ['belichting', 'matrixnummer', 'barcode', 'hoek', 'scherpte', 'scanfoto', 'scantips', 'flash', 'daglicht', 'lighting', 'sharpness'];
+  const scanGuideKeywords = ['belichting', 'matrix runout', 'barcode', 'hoek', 'scherpte', 'scanfoto', 'scantips', 'flash', 'daglicht', 'lighting', 'sharpness'];
   const scanGuideHits = scanGuideKeywords.filter(kw => lower.includes(kw)).length;
   if (scanGuideHits >= 2) return pools.SCAN_GUIDE_FOLLOWUP_SUGGESTIONS;
   if (lower.includes('artiest') || lower.includes('artist') || lower.includes('biografie') || lower.includes('biography') || lower.includes('carrière') || lower.includes('career') || lower.includes('band')) {

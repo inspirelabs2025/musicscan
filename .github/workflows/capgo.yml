@@ -15,4 +15,5 @@ jobs:
           node-version: 22
       - run: npm install
       - run: npm run build
-      - run: npx @capgo/cli@latest bundle upload com.musicscan.app --path dist --channel production --apikey ${{ secrets.CAPGO_TOKEN }}
+      - run: npm install --no-save @capgo/cli typescript
+      - run: npx capgo bundle upload com.musicscan.app --path dist --channel production --apikey ${{ secrets.CAPGO_TOKEN }}

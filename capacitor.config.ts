@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.inspirelabs.musicscan',
+  appId: 'com.musicscan.app',
   appName: 'MusicScan',
   webDir: 'dist',
   // NOTE: server.url is intentionally disabled for Play Store release builds.
@@ -12,6 +12,9 @@ const config: CapacitorConfig = {
   //   cleartext: true,
   // },
   plugins: {
+    CapacitorUpdater: {
+      autoUpdate: true,
+    },
     SplashScreen: {
       launchShowDuration: 2000,
       launchAutoHide: true,

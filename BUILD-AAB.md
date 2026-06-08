@@ -9,9 +9,11 @@ Complete stappenplan om een **release AAB (Android App Bundle)** te bouwen voor 
 | Veld | Waarde |
 |------|--------|
 | App Name | MusicScan |
-| Package / Application ID | `com.inspirelabs.musicscan` |
-| Version Code | 1 |
-| Version Name | 1.0.0 |
+| Package / Application ID | `com.musicscan.app` |
+| Version Code | 12 |
+| Version Name | 1.0.8 |
+
+> Bij elke nieuwe release moet de `versionCode` met 1 worden verhoogd.
 | Min SDK | 23 (Android 6.0) |
 | Target SDK | 34 (Android 14) |
 

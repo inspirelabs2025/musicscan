@@ -1,189 +1,148 @@
-@import "tailwindcss";
-@config "../tailwind.config.ts";
-@source "../src/**/*.{ts,tsx,js,jsx,html}";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --header-background: 0 0% 100%;
+    --header-foreground: 222.2 84% 4.9%;
+
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 221.2 83.2% 53.3%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --card-dark: 220 14.3% 95.9%;
+    --card-dark-foreground: 222.2 84% 4.9%;
+    --card-purple: 250 80% 98%; /* Lighter purple for cards */
+    --card-purple-foreground: 250 60% 40%; /* Darker text for purple cards */
+
+    --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --sidebar-background: 220 14.3% 95.9%;
+    --sidebar-foreground: 222.2 84% 4.9%;
+    --sidebar-primary: 222.2 47.4% 11.2%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
 
-    /* Custom */
-    --header-background: 240 10% 3.9%;
-    --header-foreground: 0 0% 98%;
+    --vinyl-gold: 40 90% 60%;
+    --vinyl-silver: 200 5% 70%;
+    --vinyl-black: 0 0% 10%;
+    --vinyl-purple: 270 50% 50%;
 
-    --card-dark: 20 14.3% 4.1%;
-    --card-dark-foreground: 0 0% 95%;
+    --gradient-vinyl: linear-gradient(-45deg, var(--vinyl-gold), var(--vinyl-silver), var(--vinyl-black), var(--vinyl-purple));
+    --gradient-scan: linear-gradient(90deg, transparent, rgba(var(--primary), 0.2), transparent);
 
-    --card-purple: 262 83% 53%;
-    --card-purple-foreground: 0 0% 98%;
+    --echo-violet: 260 50% 50%;
+    --echo-lavender: 270 60% 70%;
+    --echo-gold: 40 90% 70%;
+    --echo-cream: 40 80% 90%;
 
-    --sidebar-background: 240 10% 3.9%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 221.2 83.2% 53.3%; /* Matches --primary */
-    --sidebar-primary-foreground: 210 40% 98%; /* Matches --primary-foreground */
-    --sidebar-accent: 210 40% 96.1%;
-    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-    --sidebar-border: 240 10% 10%;
-    --sidebar-ring: 221.2 83.2% 53.3%;
-
-    --vinyl-gold: 45 93% 47%;
-    --vinyl-silver: 210 20% 70%;
-    --vinyl-black: 222.2 84% 4.9%; /* Matches --foreground for consistency */
-    --vinyl-purple: 262 83% 53%;
-
-    --echo-violet: 250 80% 65%;
-    --echo-lavender: 270 60% 85%;
-    --echo-gold: 40 100% 60%;
-    --echo-cream: 30 100% 95%;
-
-    --christmas-red: 355 70% 45%;
-    --christmas-green: 140 60% 35%;
-    --christmas-gold: 40 100% 60%;
-    --christmas-cream: 30 100% 95%;
+    --christmas-red: 0 70% 50%;
+    --christmas-green: 120 60% 30%;
+    --christmas-gold: 40 80% 60%;
+    --christmas-cream: 30 70% 90%;
     --christmas-burgundy: 350 70% 30%;
-    --christmas-pine: 160 50% 25%;
+    --christmas-pine: 140 70% 20%;
 
-    --ai-nudge-background: 276 80% 95%;
-    --ai-nudge-foreground: 276 50% 30%;
-    --ai-nudge-border: 276 80% 88%;
+    --ai-nudge-background: 210 40% 96.1%; /* secondary */
+    --ai-nudge-foreground: 222.2 47.4% 11.2%; /* secondary-foreground */
+    --ai-nudge-border: 220 13% 91%; /* border */
+
+    --chat-nudge-background: 250 80% 98%; /* A light, inviting purple */
+    --chat-nudge-foreground: 250 60% 30%; /* Darker purple for text */
+    --chat-nudge-border: 250 70% 88%; /* Medium purple border */
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --header-background: 222.2 84% 4.9%;
+    --header-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 218 5% 64.9%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
 
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217.2 91.2% 59.8%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --card-dark: 217.2 32.6% 17.5%;
+    --card-dark-foreground: 210 40% 98%;
+    --card-purple: 250 50% 12%; /* Darker purple for cards */
+    --card-purple-foreground: 250 60% 80%; /* Lighter text for dark purple cards */
+
+    --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 217.2 32.4% 13.9%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.4% 13.9%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.4% 13.9%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 63.9% 38.3%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.4% 17%;
-    --input: 217.2 32.4% 17%;
-    --ring: 221.2 83.2% 53.3%; /* Kept light for better contrast on dark */
-
-    /* Custom */
-    --header-background: 240 10% 3.9%; /* Same for dark and light */
-    --header-foreground: 0 0% 98%; /* Same for dark and light */
-
-    --card-dark: 20 14.3% 4.1%; /* Same for dark and light */
-    --card-dark-foreground: 0 0% 95%; /* Same for dark and light */
-
-    --card-purple: 262 83% 53%; /* Same for dark and light */
-    --card-purple-foreground: 0 0% 98%; /* Same for dark and light */
-
-    --sidebar-background: 240 10% 3.9%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 217.2 91.2% 59.8%; /* Matches --primary */
-    --sidebar-primary-foreground: 222.2 47.4% 11.2%; /* Matches --primary-foreground */
-    --sidebar-accent: 217.2 32.4% 13.9%;
+    --sidebar-background: 217.2 32.6% 17.5%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 240 10% 10%;
-    --sidebar-ring: 221.2 83.2% 53.3%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 212.7 26.8% 83.9%;
 
-    --vinyl-gold: 45 93% 47%;
-    --vinyl-silver: 210 20% 70%;
-    --vinyl-black: 222.2 84% 4.9%;
-    --vinyl-purple: 262 83% 53%;
+    --ai-nudge-background: 217.2 32.6% 17.5%; /* secondary */
+    --ai-nudge-foreground: 210 40% 98%; /* secondary-foreground */
+    --ai-nudge-border: 217.2 32.6% 17.5%; /* border */
 
-    --echo-violet: 250 80% 65%;
-    --echo-lavender: 270 60% 85%;
-    --echo-gold: 40 100% 60%;
-    --echo-cream: 30 100% 95%;
+    --chat-nudge-background: 250 50% 12%; /* A darker inviting purple for dark mode */
+    --chat-nudge-foreground: 250 60% 80%; /* Lighter purple for text */
+    --chat-nudge-border: 250 40% 30%; /* Medium dark purple border */
 
-    --christmas-red: 355 70% 45%;
-    --christmas-green: 140 60% 35%;
-    --christmas-gold: 40 100% 60%;
-    --christmas-cream: 30 100% 95%;
-    --christmas-burgundy: 350 70% 30%;
-    --christmas-pine: 160 50% 25%;
-
-    --ai-nudge-background: 276 50% 25%;
-    --ai-nudge-foreground: 276 80% 90%;
-    --ai-nudge-border: 276 50% 40%;
   }
 }
 
-@layer utilities {
-  .animate-vinyl-spin {
-    animation: vinyl-spin 4s linear infinite;
+@layer base {
+  * {
+    @apply border-border;
   }
-}
-
-/* Rich email editor */
-.email-rich-editor .ql-container {
-  min-height: 400px;
-  font-size: 15px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  border-bottom-left-radius: 0.375rem;
-  border-bottom-right-radius: 0.375rem;
-}
-.email-rich-editor .ql-editor {
-  min-height: 400px;
-  max-height: 600px;
-  overflow-y: auto;
-  line-height: 1.6;
-}
-.email-rich-editor .ql-toolbar {
-  border-top-left-radius: 0.375rem;
-  border-top-right-radius: 0.375rem;
-  background: hsl(var(--muted) / 0.3);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-.email-rich-editor .ql-editor img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 4px;
-}
-.email-rich-editor .ql-editor h1 { font-size: 2em; margin: 0.5em 0; }
-.email-rich-editor .ql-editor h2 { font-size: 1.5em; margin: 0.5em 0; }
-.email-rich-editor .ql-editor blockquote {
-  border-left: 4px solid hsl(var(--primary));
-  padding-left: 16px;
-  color: hsl(var(--muted-foreground));
-  margin: 1em 0;
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }

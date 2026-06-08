@@ -10,6 +10,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import magicMikeAvatar from '@/assets/magic-mike-avatar.png';
+import matrixExampleVinyl from '@/assets/matrix-example-vinyl.jpeg';
+import matrixExampleCD from '@/assets/matrix-example-cd.png';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { ConditionGradingPanel, calculateAdvicePrice } from '@/components/scanner/ConditionGradingPanel';
 import { ArtistContentCards } from '@/components/scanner/ArtistContentCards';
 import { useArtistContent } from '@/hooks/useArtistContent';
@@ -1463,6 +1466,59 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
                     : 'Inner ring (matrix number) — a sharp photo of this gives the highest reliability'}
                 </li>
               </ul>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="secondary" size="sm" className="w-full mt-2 h-8 text-xs">
+                    {language === 'nl' ? '👁️ Voorbeeld matrixnummer bekijken' : '👁️ View matrix number example'}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {language === 'nl' ? 'Voorbeeld: matrixnummer scannen' : 'Example: scanning the matrix number'}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {language === 'nl'
+                        ? 'Maak een scherpe, ingezoomde foto van het matrixnummer. Dit geeft de hoogste betrouwbaarheid voor herkenning.'
+                        : 'Take a sharp, zoomed-in photo of the matrix number. This gives the highest reliability for recognition.'}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm font-semibold">
+                        <Disc3 className="h-4 w-4 text-primary" />
+                        {language === 'nl' ? 'LP / Vinyl' : 'LP / Vinyl'}
+                      </div>
+                      <img
+                        src={matrixExampleVinyl}
+                        alt={language === 'nl' ? 'Voorbeeld matrixnummer op vinyl' : 'Example vinyl matrix number'}
+                        className="w-full rounded-lg border border-border object-cover aspect-square"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {language === 'nl'
+                          ? 'Gegraveerd in de loop-groove tussen label en groeven (bv. "UAS 29216 B-1").'
+                          : 'Etched in the run-out groove between label and grooves (e.g. "UAS 29216 B-1").'}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm font-semibold">
+                        <Disc className="h-4 w-4 text-primary" />
+                        CD
+                      </div>
+                      <img
+                        src={matrixExampleCD}
+                        alt={language === 'nl' ? 'Voorbeeld matrixnummer op CD' : 'Example CD matrix number'}
+                        className="w-full rounded-lg border border-border object-cover aspect-square"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {language === 'nl'
+                          ? 'Op de binnenring rond het gat (bv. "CD-008 DRAWNED TECNO CD 02").'
+                          : 'On the inner ring around the hole (e.g. "CD-008 DRAWNED TECNO CD 02").'}
+                      </p>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         )}

@@ -1454,67 +1454,49 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
             <div className="max-w-md w-full mx-auto rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-3 text-xs text-white/80 space-y-1.5">
               <p className="font-semibold text-white flex items-center gap-1.5">
                 <span>📸</span>
-                {language === 'nl' ? 'Tips voor een betrouwbare scan' : 'Tips for a reliable scan'}
+                {sc.tipsTitle}
               </p>
               <ul className="space-y-1 pl-1">
-                <li>• {language === 'nl' ? 'Scan de voorkant van de hoes' : 'Scan the front cover'}</li>
-                <li>• {language === 'nl' ? 'Scan de achterkant (tracklist & info)' : 'Scan the back (tracklist & info)'}</li>
-                <li>• {language === 'nl' ? 'Eventueel barcode en catalogusnummers' : 'Optionally barcode and catalog numbers'}</li>
-                <li>
-                  • {language === 'nl'
-                    ? 'Binnenring (matrixnummer) — een scherpe foto hiervan geeft de hoogste betrouwbaarheid'
-                    : 'Inner ring (matrix number) — a sharp photo of this gives the highest reliability'}
-                </li>
+                <li>• {sc.tipScanFront}</li>
+                <li>• {sc.tipScanBack}</li>
+                <li>• {sc.tipBarcode}</li>
+                <li>• {sc.tipMatrix}</li>
               </ul>
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="secondary" size="sm" className="w-full mt-2 h-8 text-xs">
-                    {language === 'nl' ? '👁️ Voorbeeld matrixnummer bekijken' : '👁️ View matrix number example'}
+                    {sc.viewMatrixExample}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
-                    <DialogTitle>
-                      {language === 'nl' ? 'Voorbeeld: matrixnummer scannen' : 'Example: scanning the matrix number'}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {language === 'nl'
-                        ? 'Maak een scherpe, ingezoomde foto van het matrixnummer. Dit geeft de hoogste betrouwbaarheid voor herkenning.'
-                        : 'Take a sharp, zoomed-in photo of the matrix number. This gives the highest reliability for recognition.'}
-                    </DialogDescription>
+                    <DialogTitle>{sc.matrixExampleTitle}</DialogTitle>
+                    <DialogDescription>{sc.matrixExampleDesc}</DialogDescription>
                   </DialogHeader>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm font-semibold">
                         <Disc3 className="h-4 w-4 text-primary" />
-                        {language === 'nl' ? 'LP / Vinyl' : 'LP / Vinyl'}
+                        {sc.matrixVinylLabel}
                       </div>
                       <img
                         src={matrixExampleVinyl}
-                        alt={language === 'nl' ? 'Voorbeeld matrixnummer op vinyl' : 'Example vinyl matrix number'}
+                        alt={sc.matrixVinylAlt}
                         className="w-full rounded-lg border border-border object-cover aspect-square"
                       />
-                      <p className="text-xs text-muted-foreground">
-                        {language === 'nl'
-                          ? 'Gegraveerd in de loop-groove tussen label en groeven (bv. "UAS 29216 B-1").'
-                          : 'Etched in the run-out groove between label and grooves (e.g. "UAS 29216 B-1").'}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{sc.matrixVinylHint}</p>
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm font-semibold">
                         <Disc className="h-4 w-4 text-primary" />
-                        CD
+                        {sc.matrixCdLabel}
                       </div>
                       <img
                         src={matrixExampleCD}
-                        alt={language === 'nl' ? 'Voorbeeld matrixnummer op CD' : 'Example CD matrix number'}
+                        alt={sc.matrixCdAlt}
                         className="w-full rounded-lg border border-border object-cover aspect-square"
                       />
-                      <p className="text-xs text-muted-foreground">
-                        {language === 'nl'
-                          ? 'Op de binnenring rond het gat (bv. "CD-008 DRAWNED TECNO CD 02").'
-                          : 'On the inner ring around the hole (e.g. "CD-008 DRAWNED TECNO CD 02").'}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{sc.matrixCdHint}</p>
                     </div>
                   </div>
                 </DialogContent>

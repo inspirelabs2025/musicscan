@@ -63,7 +63,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-14">
+    <div className="min-h-screen bg-background">
       <JsonLd data={websiteSchema} />
       <JsonLd data={organizationSchema} />
 

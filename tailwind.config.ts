@@ -16,7 +16,7 @@ export default {
 			screens: {
 				'2xl': '1400px'
 			}
-		},c
+		},
 		screens: {
 			'xs': '360px',
 			'sm': '640px',

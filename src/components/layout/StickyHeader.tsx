@@ -7,7 +7,6 @@ import {
   MessageSquare, DollarSign, BarChart3, Headphones, Trophy, Users, Menu as MenuIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -89,7 +88,6 @@ const useMenuLabels = () => {
 };
 
 export function StickyHeader() {
-  const isMobile = useIsMobile();
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { t, language } = useLanguage();
@@ -160,51 +158,50 @@ export function StickyHeader() {
         </Link>
 
         {/* Desktop nav */}
-        {!isMobile && (
-          <nav className="flex items-center gap-1">
-            <Link
-              to="/"
-              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/10"
-            >
-              <Home className="w-4 h-4" />
-              {t('nav.home')}
-            </Link>
+        <nav className="hidden md:flex items-center gap-1">
+          <Link
+            to="/"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/10"
+          >
+            <Home className="w-4 h-4" />
+            {t('nav.home')}
+          </Link>
 
-            <NavDropdown
-              label={t('nav.scanCollection')}
-              icon={ScanLine}
-              items={scanCollectieItems}
-              isLoggedIn={isLoggedIn}
-            />
+          <NavDropdown
+            label={t('nav.scanCollection')}
+            icon={ScanLine}
+            items={scanCollectieItems}
+            isLoggedIn={isLoggedIn}
+          />
 
-            <NavDropdown
-              label={t('nav.smartTools')}
-              icon={Brain}
-              items={slimmeToolsItems}
-              isLoggedIn={isLoggedIn}
-            />
+          <NavDropdown
+            label={t('nav.smartTools')}
+            icon={Brain}
+            items={slimmeToolsItems}
+            isLoggedIn={isLoggedIn}
+          />
 
-            <NavDropdown
-              label={nl ? 'Verhalen' : 'Stories'}
-              icon={Headphones}
-              items={verhalenItems}
-              isLoggedIn={isLoggedIn}
-            />
+          <NavDropdown
+            label={nl ? 'Verhalen' : 'Stories'}
+            icon={Headphones}
+            items={verhalenItems}
+            isLoggedIn={isLoggedIn}
+          />
 
-            <Link
-              to="/quizzen"
-              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/10"
-            >
-              <Trophy className="w-4 h-4" />
-              {t('nav.quiz')}
-            </Link>
-          </nav>
-        )}
+          <Link
+            to="/quizzen"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/10"
+          >
+            <Trophy className="w-4 h-4" />
+            {t('nav.quiz')}
+          </Link>
+        </nav>
 
         {/* Right side */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <LanguageSwitcher />
-          {!isMobile &&
+          <div className="hidden md:block">
+            {
             (user ? (
               <Popover>
                 <PopoverTrigger asChild>
@@ -254,9 +251,10 @@ export function StickyHeader() {
                 </Link>
               </Button>
             ))}
+          </div>
 
           {/* Mobile hamburger */}
-          {isMobile && (
+          <div className="md:hidden">
             <MobileMenu
               isLoggedIn={isLoggedIn}
               user={user}
@@ -270,31 +268,29 @@ export function StickyHeader() {
               verhalenItems={verhalenItems}
               t={t}
             />
-          )}
+          </div>
         </div>
       </div>
 
-      {isMobile && (
-        <nav className="border-t border-white/10 bg-[hsl(240_20%_12%/0.96)]" aria-label="Mobiel snelmenu">
-          <div className="flex h-12 items-center gap-1 overflow-x-auto px-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {mobileQuickLinks.map(({ label, href, icon: Icon, active }) => (
-              <Link
-                key={href}
-                to={href}
-                className={
-                  'flex min-w-[64px] flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-2 py-1.5 text-[11px] font-medium leading-none transition-colors ' +
-                  (active
-                    ? 'bg-vinyl-gold/15 text-vinyl-gold'
-                    : 'text-white/70 hover:bg-white/10 hover:text-white')
-                }
-              >
-                <Icon className="h-4 w-4 flex-shrink-0" />
-                <span className="max-w-full truncate">{label}</span>
-              </Link>
-            ))}
-          </div>
-        </nav>
-      )}
+      <nav className="border-t border-white/10 bg-[hsl(240_20%_12%/0.96)] md:hidden" aria-label="Mobiel snelmenu">
+        <div className="flex h-12 items-center gap-1 overflow-x-auto px-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {mobileQuickLinks.map(({ label, href, icon: Icon, active }) => (
+            <Link
+              key={href}
+              to={href}
+              className={
+                'flex min-w-[64px] flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-2 py-1.5 text-[11px] font-medium leading-none transition-colors ' +
+                (active
+                  ? 'bg-vinyl-gold/15 text-vinyl-gold'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white')
+              }
+            >
+              <Icon className="h-4 w-4 flex-shrink-0" />
+              <span className="max-w-full truncate">{label}</span>
+            </Link>
+          ))}
+        </div>
+      </nav>
     </header>
   );
 }

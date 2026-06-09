@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Disc3, LogIn, User, LayoutDashboard, LogOut, Library,
   ChevronDown, Home, ScanLine, Brain, Music, MessageCircle,
@@ -88,7 +88,6 @@ const useMenuLabels = () => {
 };
 
 export function StickyHeader() {
-  const location = useLocation();
   const { user, signOut } = useAuth();
   const { t, language } = useLanguage();
   const menuLabels = useMenuLabels();

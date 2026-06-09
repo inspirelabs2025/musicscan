@@ -128,16 +128,6 @@ export function StickyHeader() {
     user?.email?.split('@')[0] ||
     'Account';
 
-  const mobileQuickLinks = [
-    { label: t('nav.home'), href: '/', icon: Home, active: location.pathname === '/' },
-    { label: t('nav.smartScan'), href: '/ai-scan-v2', icon: ScanLine, active: location.pathname.startsWith('/ai-scan') },
-    { label: t('nav.quiz'), href: '/quizzen', icon: Trophy, active: location.pathname.startsWith('/quiz') },
-    { label: nl ? 'Verhalen' : 'Stories', href: '/singles', icon: Headphones, active: ['/singles', '/artists', '/podcasts', '/nieuws', '/reviews'].some((path) => location.pathname.startsWith(path)) },
-    isLoggedIn
-      ? { label: menuLabels.myCollection, href: '/my-collection', icon: Library, active: location.pathname.startsWith('/my-collection') }
-      : { label: nl ? 'Inloggen' : 'Login', href: '/auth', icon: LogIn, active: location.pathname.startsWith('/auth') },
-  ];
-
   return (
     <header
       className="fixed top-0 left-0 right-0 z-50 bg-[hsl(240_20%_12%/0.92)] backdrop-blur-md border-b border-white/10"
@@ -272,25 +262,6 @@ export function StickyHeader() {
         </div>
       </div>
 
-      <nav className="border-t border-white/10 bg-[hsl(240_20%_12%/0.96)] md:hidden" aria-label="Mobiel snelmenu">
-        <div className="flex h-12 items-center gap-1 overflow-x-auto px-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {mobileQuickLinks.map(({ label, href, icon: Icon, active }) => (
-            <Link
-              key={href}
-              to={href}
-              className={
-                'flex min-w-[64px] flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-2 py-1.5 text-[11px] font-medium leading-none transition-colors ' +
-                (active
-                  ? 'bg-vinyl-gold/15 text-vinyl-gold'
-                  : 'text-white/70 hover:bg-white/10 hover:text-white')
-              }
-            >
-              <Icon className="h-4 w-4 flex-shrink-0" />
-              <span className="max-w-full truncate">{label}</span>
-            </Link>
-          ))}
-        </div>
-      </nav>
     </header>
   );
 }

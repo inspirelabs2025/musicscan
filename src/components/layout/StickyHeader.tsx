@@ -4,13 +4,14 @@ import { Link } from 'react-router-dom';
 import {
   Disc3, LogIn, User, LayoutDashboard, LogOut, Library,
   ChevronDown, Home, ScanLine, Brain, Music, MessageCircle,
-  MessageSquare, DollarSign, BarChart3, Headphones, Trophy, Users,
+  MessageSquare, DollarSign, BarChart3, Headphones, Trophy, Users, Menu as MenuIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 type DropdownItem = {

@@ -10,7 +10,9 @@ function App() {
   return (
     <Providers>
       {!isAdmin && <StickyHeader />}
-      <Outlet />
+      <div className={!isAdmin ? 'pt-16' : ''}>
+        <Outlet />
+      </div>
       <Toaster />
     </Providers>
   );

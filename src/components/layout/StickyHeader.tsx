@@ -265,3 +265,119 @@ export function StickyHeader() {
     </header>
   );
 }
+
+type MobileMenuProps = {
+  isLoggedIn: boolean;
+  user: any;
+  userInitial: string;
+  displayName: string;
+  signOut: () => void;
+  menuLabels: { myCollection: string; profile: string; logout: string };
+  nl: boolean;
+  scanCollectieItems: DropdownItem[];
+  slimmeToolsItems: DropdownItem[];
+  verhalenItems: DropdownItem[];
+  t: (k: string) => string;
+};
+
+function MobileMenu({
+  isLoggedIn, user, userInitial, displayName, signOut, menuLabels, nl,
+  scanCollectieItems, slimmeToolsItems, verhalenItems, t,
+}: MobileMenuProps) {
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+
+  const Section = ({ label, items }: { label: string; items: DropdownItem[] }) => {
+    const visible = items.filter((i) => !i.requiresAuth || isLoggedIn);
+    if (!visible.length) return null;
+    return (
+      <div className="mb-4">
+        <div className="px-3 mb-1 text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
+        {visible.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              to={item.href}
+              onClick={close}
+              className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-foreground"
+            >
+              <Icon className="w-4 h-4 text-muted-foreground" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    );
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <button
+          type="button"
+          aria-label="Open menu"
+          className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+        >
+          <MenuIcon className="w-6 h-6" />
+        </button>
+      </SheetTrigger>
+      <SheetContent side="right" className="w-[85vw] max-w-sm overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Menu</SheetTitle>
+        </SheetHeader>
+
+        <div className="mt-4">
+          {user ? (
+            <div className="flex items-center gap-3 px-3 py-3 mb-3 rounded-lg bg-muted">
+              <Avatar className="h-9 w-9">
+                <AvatarFallback className="bg-primary text-primary-foreground text-sm font-bold">
+                  {userInitial}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-sm font-medium truncate">{displayName}</div>
+            </div>
+          ) : (
+            <Button asChild className="w-full mb-4" onClick={close}>
+              <Link to="/auth">
+                <LogIn className="w-4 h-4 mr-2" />
+                {nl ? 'Inloggen' : 'Login'}
+              </Link>
+            </Button>
+          )}
+
+          <Link to="/" onClick={close} className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-foreground mb-2">
+            <Home className="w-4 h-4 text-muted-foreground" />
+            <span>{t('nav.home')}</span>
+          </Link>
+          <Link to="/quizzen" onClick={close} className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-foreground mb-4">
+            <Trophy className="w-4 h-4 text-muted-foreground" />
+            <span>{t('nav.quiz')}</span>
+          </Link>
+
+          <Section label={t('nav.scanCollection')} items={scanCollectieItems} />
+          <Section label={t('nav.smartTools')} items={slimmeToolsItems} />
+          <Section label={nl ? 'Verhalen' : 'Stories'} items={verhalenItems} />
+
+          {user && (
+            <div className="mb-4 border-t pt-4">
+              <Link to="/dashboard" onClick={close} className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-foreground">
+                <LayoutDashboard className="w-4 h-4 text-muted-foreground" /> Dashboard
+              </Link>
+              <Link to="/profile" onClick={close} className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-foreground">
+                <User className="w-4 h-4 text-muted-foreground" /> {menuLabels.profile}
+              </Link>
+              <button
+                type="button"
+                onClick={() => { close(); signOut(); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors text-destructive"
+              >
+                <LogOut className="w-4 h-4" /> {menuLabels.logout}
+              </button>
+            </div>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}

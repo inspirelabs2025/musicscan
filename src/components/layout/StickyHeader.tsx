@@ -212,22 +212,13 @@ export function StickyHeader() {
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-48 p-1" align="end">
-                  <Link
-                    to="/dashboard"
-                    className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors"
-                  >
+                  <Link to="/dashboard" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
                     <LayoutDashboard className="w-4 h-4" /> Dashboard
                   </Link>
-                  <Link
-                    to="/mijn-collectie"
-                    className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors"
-                  >
+                  <Link to="/mijn-collectie" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
                     <Library className="w-4 h-4" /> {menuLabels.myCollection}
                   </Link>
-                  <Link
-                    to="/profile"
-                    className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors"
-                  >
+                  <Link to="/profile" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors">
                     <User className="w-4 h-4" /> {menuLabels.profile}
                   </Link>
                   <button
@@ -252,6 +243,23 @@ export function StickyHeader() {
                 </Link>
               </Button>
             ))}
+
+          {/* Mobile hamburger */}
+          {isMobile && (
+            <MobileMenu
+              isLoggedIn={isLoggedIn}
+              user={user}
+              userInitial={userInitial}
+              displayName={displayName}
+              signOut={signOut}
+              menuLabels={menuLabels}
+              nl={nl}
+              scanCollectieItems={scanCollectieItems}
+              slimmeToolsItems={slimmeToolsItems}
+              verhalenItems={verhalenItems}
+              t={t}
+            />
+          )}
         </div>
       </div>
     </header>

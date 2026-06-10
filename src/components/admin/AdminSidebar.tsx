@@ -162,7 +162,7 @@ export function AdminSidebar() {
             className="w-full h-8 pl-8 pr-3 rounded-md border border-border/60 bg-muted/30 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 transition-colors"
           />
         </div>
-        <AdminCreditAlertBanner />
+        {/* <AdminCreditAlertBanner /> */}
       </div>
 
       {/* Navigation */}

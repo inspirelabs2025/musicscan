@@ -95,12 +95,22 @@ serve(async (req) => {
       const searchQuery = url.searchParams.get('search') || '';
       const roleFilter = url.searchParams.get('role') || '';
 
-      // Fetch all users from auth.users via admin API
-      const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
-      
-      if (authError) {
-        throw new Error(`Failed to fetch users: ${authError.message}`);
+      // Fetch ALL users from auth.users via admin API (paginated)
+      const allAuthUsers: any[] = [];
+      let page = 1;
+      const perPage = 1000;
+      while (true) {
+        const { data, error: authError } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+        if (authError) {
+          throw new Error(`Failed to fetch users: ${authError.message}`);
+        }
+        const users = data?.users || [];
+        allAuthUsers.push(...users);
+        if (users.length < perPage) break;
+        page++;
+        if (page > 50) break; // safety
       }
+      const authUsers = { users: allAuthUsers };
 
       // Fetch all profiles
       const { data: profiles, error: profilesError } = await supabaseAdmin

@@ -290,6 +290,7 @@ const RecentScans = () => {
   const [limit, setLimit] = useState(50);
   const [sourceFilter, setSourceFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [detailScan, setDetailScan] = useState<ScanAction | null>(null);
 
   const { data: scans, isLoading } = useRecentScanActions(limit, sourceFilter, searchTerm);
   const { data: stats } = useQuickStats();

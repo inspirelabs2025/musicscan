@@ -538,26 +538,23 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
   const meta = scan.metadata || {};
   const photos: string[] = meta.photo_urls || [];
 
-  // Fetch the full conversation thread (all scan_chat* entries for this user around this time)
+  // Fetch the FULL conversation history for this user (all chat entries, no time limit)
   const { data: thread } = useQuery({
-    queryKey: ["scan-conversation-thread", scan.user_id, scan.created_at],
+    queryKey: ["scan-conversation-thread-full", scan.user_id],
     queryFn: async () => {
       if (!scan.user_id) return [];
-      const t = new Date(scan.created_at).getTime();
-      const from = new Date(t - 60 * 60 * 1000).toISOString();
-      const to = new Date(t + 60 * 60 * 1000).toISOString();
       const { data } = await supabase
         .from("scan_activity_log")
         .select("id, created_at, action_type, status, metadata, function_name, error_message, discogs_id")
         .eq("user_id", scan.user_id)
         .in("action_type", ["scan_chat", "scan_chat_photo"])
-        .gte("created_at", from)
-        .lte("created_at", to)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true })
+        .limit(500);
       return data || [];
     },
     enabled: !!scan.user_id,
   });
+
 
   const discogsIds = (thread || []).map((t: any) => t.discogs_id).filter(Boolean) as number[];
   const primaryDiscogsId = scan.discogs_id || discogsIds[0] || null;

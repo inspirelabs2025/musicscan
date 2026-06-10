@@ -527,51 +527,160 @@ const RecentScans = () => {
               {detailScan ? `${sourceLabel(detailScan.source)} — ${format(new Date(detailScan.created_at), "dd MMM yyyy HH:mm", { locale: nl })}` : ""}
             </DialogTitle>
           </DialogHeader>
-          {detailScan && (() => {
-            const meta = detailScan.metadata || {};
-            const photos: string[] = meta.photo_urls || [];
-            return (
-              <div className="space-y-4 text-sm">
-                {photos.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Foto's ({photos.length})</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {photos.map((url, i) => (
-                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
-                          <img src={url} alt={`Foto ${i + 1}`} className="w-full h-40 object-cover rounded border hover:opacity-80 transition" />
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {meta.user_message && (
-                  <div>
-                    <h4 className="font-semibold mb-1">Vraag van gebruiker</h4>
-                    <div className="bg-muted rounded p-3 whitespace-pre-wrap text-foreground">{meta.user_message}</div>
-                  </div>
-                )}
-                {meta.ai_response && (
-                  <div>
-                    <h4 className="font-semibold mb-1">Antwoord (Magic Mike)</h4>
-                    <div className="bg-primary/5 border border-primary/20 rounded p-3 whitespace-pre-wrap text-foreground">{meta.ai_response}</div>
-                  </div>
-                )}
-                {detailScan.error_message && (
-                  <div>
-                    <h4 className="font-semibold mb-1 text-destructive">Foutmelding</h4>
-                    <div className="bg-destructive/10 text-destructive rounded p-3 text-xs">{detailScan.error_message}</div>
-                  </div>
-                )}
-                {!photos.length && !meta.user_message && !meta.ai_response && (
-                  <p className="text-muted-foreground">Geen extra details opgeslagen voor deze actie.</p>
-                )}
-              </div>
-            );
-          })()}
+          {detailScan && <ScanDetailContent scan={detailScan} />}
         </DialogContent>
       </Dialog>
     </div>
   );
 };
+
+function ScanDetailContent({ scan }: { scan: ScanAction }) {
+  const meta = scan.metadata || {};
+  const photos: string[] = meta.photo_urls || [];
+
+  // Fetch the full conversation thread (all scan_chat* entries for this user around this time)
+  const { data: thread } = useQuery({
+    queryKey: ["scan-conversation-thread", scan.user_id, scan.created_at],
+    queryFn: async () => {
+      if (!scan.user_id) return [];
+      const t = new Date(scan.created_at).getTime();
+      const from = new Date(t - 60 * 60 * 1000).toISOString();
+      const to = new Date(t + 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from("scan_activity_log")
+        .select("id, created_at, action_type, status, metadata, function_name, error_message, discogs_id")
+        .eq("user_id", scan.user_id)
+        .in("action_type", ["scan_chat", "scan_chat_photo"])
+        .gte("created_at", from)
+        .lte("created_at", to)
+        .order("created_at", { ascending: true });
+      return data || [];
+    },
+    enabled: !!scan.user_id,
+  });
+
+  const discogsIds = (thread || []).map((t: any) => t.discogs_id).filter(Boolean) as number[];
+  const primaryDiscogsId = scan.discogs_id || discogsIds[0] || null;
+  const { data: release } = useQuery({
+    queryKey: ["scan-release-info", primaryDiscogsId],
+    queryFn: async () => {
+      if (!primaryDiscogsId) return null;
+      const { data } = await supabase
+        .from("ai_scan_results")
+        .select("artist, title, label, catalog_number, year, country, format, genre, condition_grade, discogs_url")
+        .eq("discogs_id", primaryDiscogsId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!primaryDiscogsId,
+  });
+
+  return (
+    <div className="space-y-4 text-sm">
+      {photos.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-2">Foto's ({photos.length})</h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {photos.map((url, i) => (
+              <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
+                <img src={url} alt={`Foto ${i + 1}`} className="w-full h-40 object-cover rounded border hover:opacity-80 transition" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {thread && thread.length > 0 ? (
+        <div>
+          <h4 className="font-semibold mb-2">Volledige conversatie ({thread.length} berichten)</h4>
+          <div className="space-y-3">
+            {thread.map((entry: any) => {
+              const m = entry.metadata || {};
+              const isCurrent = entry.id === scan.id;
+              return (
+                <div key={entry.id} className={`rounded-lg border p-3 space-y-2 ${isCurrent ? "border-primary/40 bg-primary/5" : "bg-muted/30"}`}>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{format(new Date(entry.created_at), "HH:mm:ss", { locale: nl })} · {entry.action_type}{entry.status ? ` · ${entry.status}` : ""}</span>
+                    {entry.discogs_id && (
+                      <a href={`https://www.discogs.com/release/${entry.discogs_id}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1">
+                        <ExternalLink className="h-3 w-3" /> {entry.discogs_id}
+                      </a>
+                    )}
+                  </div>
+                  {m.user_message && (
+                    <div>
+                      <div className="text-[10px] uppercase text-muted-foreground font-semibold mb-0.5">Gebruiker</div>
+                      <div className="bg-background rounded p-2 whitespace-pre-wrap text-foreground text-xs">{m.user_message}</div>
+                    </div>
+                  )}
+                  {m.ai_response && (
+                    <div>
+                      <div className="text-[10px] uppercase text-muted-foreground font-semibold mb-0.5">Magic Mike</div>
+                      <div className="bg-background rounded p-2 whitespace-pre-wrap text-foreground text-xs">{m.ai_response}</div>
+                    </div>
+                  )}
+                  {entry.error_message && (
+                    <div className="bg-destructive/10 text-destructive rounded p-2 text-xs">{entry.error_message}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <>
+          {meta.user_message && (
+            <div>
+              <h4 className="font-semibold mb-1">Vraag van gebruiker</h4>
+              <div className="bg-muted rounded p-3 whitespace-pre-wrap text-foreground">{meta.user_message}</div>
+            </div>
+          )}
+          {meta.ai_response && (
+            <div>
+              <h4 className="font-semibold mb-1">Antwoord (Magic Mike)</h4>
+              <div className="bg-primary/5 border border-primary/20 rounded p-3 whitespace-pre-wrap text-foreground">{meta.ai_response}</div>
+            </div>
+          )}
+        </>
+      )}
+
+      {release && (
+        <div>
+          <h4 className="font-semibold mb-1">Gevonden release</h4>
+          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded p-3 text-xs space-y-1">
+            <div className="font-medium text-sm">{release.artist} — {release.title}</div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
+              {release.label && <div><span className="font-semibold text-foreground">Label:</span> {release.label}</div>}
+              {release.catalog_number && <div><span className="font-semibold text-foreground">Catnr:</span> {release.catalog_number}</div>}
+              {release.year && <div><span className="font-semibold text-foreground">Jaar:</span> {release.year}</div>}
+              {release.country && <div><span className="font-semibold text-foreground">Land:</span> {release.country}</div>}
+              {release.format && <div><span className="font-semibold text-foreground">Format:</span> {release.format}</div>}
+              {release.genre && <div><span className="font-semibold text-foreground">Genre:</span> {release.genre}</div>}
+              {release.condition_grade && <div><span className="font-semibold text-foreground">Conditie:</span> {release.condition_grade}</div>}
+            </div>
+            {release.discogs_url && (
+              <a href={release.discogs_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline pt-1">
+                <ExternalLink className="h-3 w-3" /> Bekijk op Discogs
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
+      {scan.error_message && (
+        <div>
+          <h4 className="font-semibold mb-1 text-destructive">Foutmelding</h4>
+          <div className="bg-destructive/10 text-destructive rounded p-3 text-xs">{scan.error_message}</div>
+        </div>
+      )}
+
+      {!photos.length && !(thread && thread.length > 0) && !meta.user_message && !meta.ai_response && !release && (
+        <p className="text-muted-foreground">Geen extra details opgeslagen voor deze actie.</p>
+      )}
+    </div>
+  );
+}
 
 export default RecentScans;

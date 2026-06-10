@@ -31,6 +31,7 @@ interface ScanAction {
   error_message?: string | null;
   duration_ms?: number | null;
   ip_address?: string | null;
+  metadata?: any;
 }
 
 interface UserProfile {

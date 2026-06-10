@@ -185,12 +185,24 @@ serve(async (req) => {
       }
     }
 
+    // Capture last user message text for admin review
+    const lastUserMsg = [...(messages || [])].reverse().find((m: any) => m.role === "user");
+    const userMessageText = typeof lastUserMsg?.content === "string"
+      ? lastUserMsg.content
+      : Array.isArray(lastUserMsg?.content)
+        ? lastUserMsg.content.filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n")
+        : "";
+
     // Log scan-chat activity
     const hasPhotos = photoUrls?.length > 0;
     logScanActivity({
       user_id: userId, action_type: hasPhotos ? 'scan_chat_photo' : 'scan_chat',
       function_name: 'scan-chat', status: 'started', media_type: mediaType || null,
       image_count: photoUrls?.length || 0, ip_address: ipAddress,
+      metadata: {
+        photo_urls: photoUrls || [],
+        user_message: (userMessageText || "").slice(0, 4000),
+      },
     });
 
     // Load system prompt from database (with knowledge sources)
@@ -282,12 +294,54 @@ serve(async (req) => {
       );
     }
 
-    // Log completion (non-blocking)
-    logScanActivity({
-      user_id: userId, action_type: hasPhotos ? 'scan_chat_photo' : 'scan_chat',
-      function_name: 'scan-chat', status: 'completed', media_type: mediaType || null,
-      image_count: photoUrls?.length || 0, ip_address: ipAddress, duration_ms: Date.now() - startTime,
-    });
+    // Tee the stream: one branch to client, the other captured for admin logging
+    const [clientStream, captureStream] = response.body!.tee();
+
+    // Capture AI response text in background then log completion with full metadata
+    (async () => {
+      try {
+        const reader = captureStream.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let aiText = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith("data:")) continue;
+            const payload = trimmed.slice(5).trim();
+            if (!payload || payload === "[DONE]") continue;
+            try {
+              const json = JSON.parse(payload);
+              const delta = json.choices?.[0]?.delta?.content;
+              if (typeof delta === "string") aiText += delta;
+            } catch { /* ignore */ }
+          }
+        }
+        await logScanActivity({
+          user_id: userId, action_type: hasPhotos ? 'scan_chat_photo' : 'scan_chat',
+          function_name: 'scan-chat', status: 'completed', media_type: mediaType || null,
+          image_count: photoUrls?.length || 0, ip_address: ipAddress, duration_ms: Date.now() - startTime,
+          metadata: {
+            photo_urls: photoUrls || [],
+            user_message: (userMessageText || "").slice(0, 4000),
+            ai_response: aiText.slice(0, 8000),
+          },
+        });
+      } catch (capErr) {
+        console.error("[scan-chat] capture failed:", capErr);
+        await logScanActivity({
+          user_id: userId, action_type: hasPhotos ? 'scan_chat_photo' : 'scan_chat',
+          function_name: 'scan-chat', status: 'completed', media_type: mediaType || null,
+          image_count: photoUrls?.length || 0, ip_address: ipAddress, duration_ms: Date.now() - startTime,
+          metadata: { photo_urls: photoUrls || [], user_message: (userMessageText || "").slice(0, 4000) },
+        });
+      }
+    })();
 
     // Server-side usage accounting + credit deduct when over plan limit (non-blocking)
     if (verifiedUserId) {
@@ -312,7 +366,7 @@ serve(async (req) => {
       })();
     }
 
-    return new Response(response.body, {
+    return new Response(clientStream, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {

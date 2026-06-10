@@ -2,13 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ExternalLink, Camera, Brain, Disc, Music, Upload, AlertCircle, CheckCircle2, Clock, XCircle, User, MapPin, Globe } from "lucide-react";
+import { Loader2, ExternalLink, Camera, Brain, Disc, Music, Upload, AlertCircle, CheckCircle2, Clock, XCircle, User, MapPin, Globe, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface ScanAction {
   id: string;
@@ -29,6 +31,7 @@ interface ScanAction {
   error_message?: string | null;
   duration_ms?: number | null;
   ip_address?: string | null;
+  metadata?: any;
 }
 
 interface UserProfile {
@@ -103,6 +106,7 @@ function useRecentScanActions(limit: number, sourceFilter: string, searchTerm: s
             error_message: r.error_message,
             duration_ms: r.duration_ms,
             ip_address: r.ip_address,
+            metadata: r.metadata,
           }));
         })());
       }
@@ -286,6 +290,7 @@ const RecentScans = () => {
   const [limit, setLimit] = useState(50);
   const [sourceFilter, setSourceFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [detailScan, setDetailScan] = useState<ScanAction | null>(null);
 
   const { data: scans, isLoading } = useRecentScanActions(limit, sourceFilter, searchTerm);
   const { data: stats } = useQuickStats();
@@ -408,6 +413,7 @@ const RecentScans = () => {
                     <TableHead>Conditie</TableHead>
                     <TableHead>Gebruiker</TableHead>
                     <TableHead>Discogs</TableHead>
+                    <TableHead className="w-[60px]">Bekijk</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -486,11 +492,23 @@ const RecentScans = () => {
                           <span className="text-xs text-muted-foreground">{scan.discogs_id}</span>
                         ) : "—"}
                       </TableCell>
+                      <TableCell>
+                        {(() => {
+                          const meta = scan.metadata || {};
+                          const hasDetails = (meta.photo_urls?.length || 0) > 0 || meta.user_message || meta.ai_response;
+                          if (!hasDetails) return <span className="text-muted-foreground">—</span>;
+                          return (
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDetailScan(scan)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          );
+                        })()}
+                      </TableCell>
                     </TableRow>
                   ))}
                   {scans?.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                         Geen scan-acties gevonden
                       </TableCell>
                     </TableRow>
@@ -501,6 +519,57 @@ const RecentScans = () => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!detailScan} onOpenChange={(o) => !o && setDetailScan(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {detailScan ? `${sourceLabel(detailScan.source)} — ${format(new Date(detailScan.created_at), "dd MMM yyyy HH:mm", { locale: nl })}` : ""}
+            </DialogTitle>
+          </DialogHeader>
+          {detailScan && (() => {
+            const meta = detailScan.metadata || {};
+            const photos: string[] = meta.photo_urls || [];
+            return (
+              <div className="space-y-4 text-sm">
+                {photos.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Foto's ({photos.length})</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {photos.map((url, i) => (
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
+                          <img src={url} alt={`Foto ${i + 1}`} className="w-full h-40 object-cover rounded border hover:opacity-80 transition" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {meta.user_message && (
+                  <div>
+                    <h4 className="font-semibold mb-1">Vraag van gebruiker</h4>
+                    <div className="bg-muted rounded p-3 whitespace-pre-wrap text-foreground">{meta.user_message}</div>
+                  </div>
+                )}
+                {meta.ai_response && (
+                  <div>
+                    <h4 className="font-semibold mb-1">Antwoord (Magic Mike)</h4>
+                    <div className="bg-primary/5 border border-primary/20 rounded p-3 whitespace-pre-wrap text-foreground">{meta.ai_response}</div>
+                  </div>
+                )}
+                {detailScan.error_message && (
+                  <div>
+                    <h4 className="font-semibold mb-1 text-destructive">Foutmelding</h4>
+                    <div className="bg-destructive/10 text-destructive rounded p-3 text-xs">{detailScan.error_message}</div>
+                  </div>
+                )}
+                {!photos.length && !meta.user_message && !meta.ai_response && (
+                  <p className="text-muted-foreground">Geen extra details opgeslagen voor deze actie.</p>
+                )}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

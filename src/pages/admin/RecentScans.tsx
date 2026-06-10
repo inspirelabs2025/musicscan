@@ -519,6 +519,57 @@ const RecentScans = () => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!detailScan} onOpenChange={(o) => !o && setDetailScan(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {detailScan ? `${sourceLabel(detailScan.source)} — ${format(new Date(detailScan.created_at), "dd MMM yyyy HH:mm", { locale: nl })}` : ""}
+            </DialogTitle>
+          </DialogHeader>
+          {detailScan && (() => {
+            const meta = detailScan.metadata || {};
+            const photos: string[] = meta.photo_urls || [];
+            return (
+              <div className="space-y-4 text-sm">
+                {photos.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Foto's ({photos.length})</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {photos.map((url, i) => (
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
+                          <img src={url} alt={`Foto ${i + 1}`} className="w-full h-40 object-cover rounded border hover:opacity-80 transition" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {meta.user_message && (
+                  <div>
+                    <h4 className="font-semibold mb-1">Vraag van gebruiker</h4>
+                    <div className="bg-muted rounded p-3 whitespace-pre-wrap text-foreground">{meta.user_message}</div>
+                  </div>
+                )}
+                {meta.ai_response && (
+                  <div>
+                    <h4 className="font-semibold mb-1">Antwoord (Magic Mike)</h4>
+                    <div className="bg-primary/5 border border-primary/20 rounded p-3 whitespace-pre-wrap text-foreground">{meta.ai_response}</div>
+                  </div>
+                )}
+                {detailScan.error_message && (
+                  <div>
+                    <h4 className="font-semibold mb-1 text-destructive">Foutmelding</h4>
+                    <div className="bg-destructive/10 text-destructive rounded p-3 text-xs">{detailScan.error_message}</div>
+                  </div>
+                )}
+                {!photos.length && !meta.user_message && !meta.ai_response && (
+                  <p className="text-muted-foreground">Geen extra details opgeslagen voor deze actie.</p>
+                )}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

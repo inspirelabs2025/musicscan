@@ -413,6 +413,7 @@ const RecentScans = () => {
                     <TableHead>Conditie</TableHead>
                     <TableHead>Gebruiker</TableHead>
                     <TableHead>Discogs</TableHead>
+                    <TableHead className="w-[60px]">Bekijk</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

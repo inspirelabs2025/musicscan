@@ -492,11 +492,23 @@ const RecentScans = () => {
                           <span className="text-xs text-muted-foreground">{scan.discogs_id}</span>
                         ) : "—"}
                       </TableCell>
+                      <TableCell>
+                        {(() => {
+                          const meta = scan.metadata || {};
+                          const hasDetails = (meta.photo_urls?.length || 0) > 0 || meta.user_message || meta.ai_response;
+                          if (!hasDetails) return <span className="text-muted-foreground">—</span>;
+                          return (
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDetailScan(scan)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          );
+                        })()}
+                      </TableCell>
                     </TableRow>
                   ))}
                   {scans?.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                         Geen scan-acties gevonden
                       </TableCell>
                     </TableRow>

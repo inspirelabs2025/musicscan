@@ -170,6 +170,7 @@ const AdminMainAdmin = lazyWithRetry(() => import('./pages/admin/MainAdmin'));
 const AdminStatusDashboard = lazyWithRetry(() => import('./pages/admin/StatusDashboard'));
 
 const AdminRecentScans = lazyWithRetry(() => import('./pages/admin/RecentScans'));
+const AdminAnalytics = lazyWithRetry(() => import('./pages/admin/Analytics'));
 
 const AdminEmailNotifications = lazyWithRetry(() => import('./pages/admin/EmailNotificationsPage'));
 const AdminUserManagement = lazyWithRetry(() => import('./pages/admin/UserManagement'));

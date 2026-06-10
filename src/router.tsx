@@ -365,6 +365,7 @@ export const router = createBrowserRouter([
           { path: 'status', element: wrap(AdminStatusDashboard) },
           
           { path: 'recent-scans', element: wrap(AdminRecentScans) },
+          { path: 'analytics', element: wrap(AdminAnalytics) },
           
           { path: 'email-notifications', element: wrap(AdminEmailNotifications) },
           { path: 'users', element: wrap(AdminUserManagement) },

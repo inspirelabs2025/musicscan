@@ -153,6 +153,9 @@ serve(async (req) => {
         filteredUsers = filteredUsers.filter(u => u.roles.includes(roleFilter));
       }
 
+      // Sort newest users first
+      filteredUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
       return new Response(
         JSON.stringify({ users: filteredUsers }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

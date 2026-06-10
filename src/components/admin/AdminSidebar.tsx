@@ -28,6 +28,14 @@ interface MenuSection {
 
 const menuItems: MenuSection[] = [
   {
+    title: "Analytics",
+    icon: BarChart3,
+    defaultOpen: true,
+    items: [
+      { title: "Analytics Dashboard", url: "/admin/analytics", icon: BarChart3 },
+    ]
+  },
+  {
     title: "Scans",
     icon: Disc,
     items: [

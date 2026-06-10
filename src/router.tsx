@@ -170,6 +170,7 @@ const AdminMainAdmin = lazyWithRetry(() => import('./pages/admin/MainAdmin'));
 const AdminStatusDashboard = lazyWithRetry(() => import('./pages/admin/StatusDashboard'));
 
 const AdminRecentScans = lazyWithRetry(() => import('./pages/admin/RecentScans'));
+const AdminAnalytics = lazyWithRetry(() => import('./pages/admin/Analytics'));
 
 const AdminEmailNotifications = lazyWithRetry(() => import('./pages/admin/EmailNotificationsPage'));
 const AdminUserManagement = lazyWithRetry(() => import('./pages/admin/UserManagement'));
@@ -364,6 +365,7 @@ export const router = createBrowserRouter([
           { path: 'status', element: wrap(AdminStatusDashboard) },
           
           { path: 'recent-scans', element: wrap(AdminRecentScans) },
+          { path: 'analytics', element: wrap(AdminAnalytics) },
           
           { path: 'email-notifications', element: wrap(AdminEmailNotifications) },
           { path: 'users', element: wrap(AdminUserManagement) },

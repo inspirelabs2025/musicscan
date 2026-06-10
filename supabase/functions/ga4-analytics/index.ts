@@ -121,7 +121,15 @@ Deno.serve(async (req) => {
   try {
     const credsJson = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY');
     if (!credsJson) throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY niet geconfigureerd');
-    const creds: Credentials = JSON.parse(credsJson);
+    let creds: Credentials;
+    try {
+      creds = JSON.parse(credsJson);
+    } catch {
+      throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY is geen geldig JSON service-account. Plak de volledige inhoud van het service-account JSON-bestand (begint met { "type": "service_account", ... }) als secret-waarde.');
+    }
+    if (!creds.client_email || !creds.private_key) {
+      throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY mist client_email of private_key velden.');
+    }
 
     const { range = '28daysAgo' } = await req.json().catch(() => ({}));
 

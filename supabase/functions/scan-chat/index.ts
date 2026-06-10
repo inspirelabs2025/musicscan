@@ -185,12 +185,24 @@ serve(async (req) => {
       }
     }
 
+    // Capture last user message text for admin review
+    const lastUserMsg = [...(messages || [])].reverse().find((m: any) => m.role === "user");
+    const userMessageText = typeof lastUserMsg?.content === "string"
+      ? lastUserMsg.content
+      : Array.isArray(lastUserMsg?.content)
+        ? lastUserMsg.content.filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n")
+        : "";
+
     // Log scan-chat activity
     const hasPhotos = photoUrls?.length > 0;
     logScanActivity({
       user_id: userId, action_type: hasPhotos ? 'scan_chat_photo' : 'scan_chat',
       function_name: 'scan-chat', status: 'started', media_type: mediaType || null,
       image_count: photoUrls?.length || 0, ip_address: ipAddress,
+      metadata: {
+        photo_urls: photoUrls || [],
+        user_message: (userMessageText || "").slice(0, 4000),
+      },
     });
 
     // Load system prompt from database (with knowledge sources)

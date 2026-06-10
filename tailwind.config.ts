@@ -16,7 +16,7 @@ export default {
 			screens: {
 				'2xl': '1400px'
 			}
-		},c
+		},
 		screens: {
 			'xs': '360px',
 			'sm': '640px',
@@ -195,7 +195,7 @@ export default {
 							fontWeight: '600',
 							color: 'inherit',
 						},
-					a: {
+						a: {
 							color: 'hsl(var(--primary))',
 							textDecoration: 'none',
 							'&:hover': {
@@ -203,7 +203,7 @@ export default {
 							},
 						},
 					},
-				},
+				}
 			}
 		}
 	},

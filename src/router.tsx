@@ -401,6 +401,7 @@ export const router = createBrowserRouter([
           { path: 'fix-blog-slugs', element: wrap(AdminFixBlogSlugs) },
           { path: 'bulk-cleanup', element: wrap(AdminBulkCleanup) },
           { path: 'auto-cleanup-today', element: wrap(AdminAutoCleanupToday) },
+          { path: 'blog-writer', element: wrap(AdminBlogWriter) },
           { path: 'backfill-artist-fanwalls', element: wrap(AdminBackfillFanwalls) },
           { path: 'create-artist-fanwall', element: wrap(AdminCreateFanwall) },
           { path: 'generate-seed', element: wrap(AdminGenerateSeed) },

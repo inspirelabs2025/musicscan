@@ -114,6 +114,17 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch anecdotes: ${anecdotesError.message}`);
     }
 
+    // Fetch all published news blog posts
+    const { data: newsBlogPosts, error: newsBlogError } = await supabase
+      .from('news_blog_posts')
+      .select('slug, updated_at, image_url, title')
+      .eq('is_published', true)
+      .order('updated_at', { ascending: false });
+
+    if (newsBlogError) {
+      throw new Error(`Failed to fetch news blog posts: ${newsBlogError.message}`);
+    }
+
     // Fetch all published Time Machine events
     const { data: timeMachineEvents, error: timeMachineError } = await supabase
       .from('time_machine_events')

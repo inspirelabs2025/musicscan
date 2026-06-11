@@ -326,6 +326,19 @@ Deno.serve(async (req) => {
       'featured_photo_url'
     );
     
+    // News image sitemap
+    const newsImageSitemapXml = generateImageSitemapXml(
+      (newsBlogPosts || []).map(n => ({
+        slug: n.slug,
+        updated_at: n.updated_at,
+        image_url: n.image_url,
+        title: n.title,
+        artist: ''
+      })),
+      'https://www.musicscan.app/nieuws',
+      'image_url'
+    );
+
     // Photos image sitemap
     const photosImageSitemapXml = generateImageSitemapXml(
       (photos || []).map(p => ({

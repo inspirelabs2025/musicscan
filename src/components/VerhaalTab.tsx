@@ -614,6 +614,69 @@ export const VerhaalTab: React.FC = () => {
           </Card>
         )}
       </TabsContent>
+
+      <TabsContent value="nieuws" className="space-y-6">
+        <div className="flex items-center justify-between mb-6">
+          <Badge variant="secondary" className="flex items-center gap-2">
+            <Newspaper className="w-4 h-4" />
+            {newsPosts.length} nieuwsberichten
+          </Badge>
+          {isLoadingNews && <Loader2 className="w-4 h-4 animate-spin" />}
+        </div>
+
+        <div className={`grid gap-6 ${
+          filters.viewMode === 'list' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+        }`}>
+          {newsPosts.map((post: any, index: number) => (
+            <Card
+              key={post.id}
+              className="group hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden animate-fade-in"
+              style={{ animationDelay: `${index * 0.05}s` }}
+              onClick={() => navigate(`/nieuws/${post.slug}`)}
+            >
+              <div className="aspect-video bg-gradient-to-br from-muted/30 to-muted/60 overflow-hidden">
+                {post.image_url ? (
+                  <img
+                    src={post.image_url}
+                    alt={post.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Newspaper className="w-16 h-16 text-muted-foreground/60" />
+                  </div>
+                )}
+              </div>
+              <CardContent className="p-6 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">{post.category}</Badge>
+                </div>
+                <h3 className="font-semibold line-clamp-2">{post.title}</h3>
+                {post.summary && (
+                  <p className="text-sm text-muted-foreground line-clamp-2">{post.summary}</p>
+                )}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Calendar className="w-3 h-3" />
+                  {new Date(post.published_at).toLocaleDateString()}
+                  <span>•</span>
+                  <Eye className="w-3 h-3" />
+                  {post.views_count || 0}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {newsPosts.length === 0 && !isLoadingNews && (
+          <Card className="border-2 border-dashed border-border">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <Newspaper className="w-12 h-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">Nog geen nieuwsberichten</h3>
+            </CardContent>
+          </Card>
+        )}
+      </TabsContent>
       </Tabs>
 
     </div>

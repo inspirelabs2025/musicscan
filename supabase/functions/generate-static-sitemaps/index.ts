@@ -432,6 +432,7 @@ Deno.serve(async (req) => {
       { name: 'sitemap-new-releases.xml', data: newReleasesSitemapXml },
       { name: 'sitemap-track-insights.xml', data: trackInsightsSitemapXml },
       { name: 'sitemap-images-blogs.xml', data: blogImageSitemapXml },
+      { name: 'sitemap-images-news.xml', data: newsImageSitemapXml },
       { name: 'sitemap-images-stories.xml', data: storiesImageSitemapXml },
       { name: 'sitemap-images-singles.xml', data: singlesImageSitemapXml },
       { name: 'sitemap-images-artists.xml', data: artistsImageSitemapXml },

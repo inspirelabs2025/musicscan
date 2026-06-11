@@ -41,6 +41,7 @@ const menuItems: MenuSection[] = [
     defaultOpen: true,
     items: [
       { title: "Blog Writer", url: "/admin/blog-writer", icon: PenTool },
+      { title: "Blog Manager", url: "/admin/blogs", icon: PenTool },
     ]
   },
   {

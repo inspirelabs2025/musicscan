@@ -31,7 +31,7 @@ JOUW ROL IN DE CHAT:
 
 Antwoord met platte tekst (geen JSON, geen markdown-codeblokken).`;
 
-const GENERATE_SYSTEM = `Je bent een ervaren Nederlandse muziekjournalist. Op basis van de chat hieronder schrijf je nu het definitieve blog voor MusicScan.
+const GENERATE_SYSTEM_NL = `Je bent een ervaren Nederlandse muziekjournalist. Op basis van de chat hieronder schrijf je nu het definitieve blog voor MusicScan.
 
 ${STYLE_RULES}
 
@@ -47,6 +47,29 @@ OUTPUT: ALLEEN geldig JSON (geen markdown codeblokken):
   "summary": "1-2 zinnen, max 200 chars",
   "category": "Album | Artiest | Single | Geschiedenis | Studio | Verhaal",
   "slug": "kebab-case-zonder-leestekens",
+  "content": "markdown blog"
+}`;
+
+const GENERATE_SYSTEM_EN = `You are an experienced music journalist writing for MusicScan. Based on the chat below, write the final blog post now.
+
+STYLE:
+- English, human voice, dry humor, deep knowledge (think Pitchfork / MOJO / Uncut).
+- ABSOLUTELY NO em-dashes or en-dashes (— or –). Use commas, periods or parentheses.
+- No AI cliches: "not only ... but also", "in a world where", "iconic/legendary" without proof, three-adjective lists ("raw, honest and timeless"), generic recap conclusions.
+- Concrete details: years, producer names, studios, session musicians, chart positions. Never invent facts. If unsure, say so or leave it out.
+
+EXTRA:
+- 600-1000 words.
+- Open with a concrete detail or anecdote, not a general observation.
+- Use ## for subheadings (no H1, the title is separate).
+- No summarizing conclusion paragraph repeating what you just wrote.
+
+OUTPUT: ONLY valid JSON (no markdown code blocks):
+{
+  "title": "max 70 chars, no clickbait",
+  "summary": "1-2 sentences, max 200 chars",
+  "category": "Album | Artist | Single | History | Studio | Story",
+  "slug": "kebab-case-no-punctuation",
   "content": "markdown blog"
 }`;
 
@@ -146,14 +169,17 @@ serve(async (req) => {
       });
     }
 
+    const language: "nl" | "en" = body.language === "en" ? "en" : "nl";
+    const GENERATE_SYSTEM = language === "en" ? GENERATE_SYSTEM_EN : GENERATE_SYSTEM_NL;
     const system = mode === "generate" ? GENERATE_SYSTEM : CHAT_SYSTEM;
     const payloadMessages = [{ role: "system", content: system }, ...messages];
 
     if (mode === "generate") {
       payloadMessages.push({
         role: "user",
-        content:
-          "Schrijf nu het definitieve blog op basis van bovenstaande chat. Alleen JSON volgens schema.",
+        content: language === "en"
+          ? "Write the final blog now based on the chat above. JSON only per schema. Write the entire blog in English."
+          : "Schrijf nu het definitieve blog op basis van bovenstaande chat. Alleen JSON volgens schema.",
       });
     }
 

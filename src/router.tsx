@@ -206,6 +206,7 @@ const AdminFixBlogSlugs = lazyWithRetry(() => import('./pages/admin/FixBlogSlugs
 // Fix product titles verwijderd
 const AdminBulkCleanup = lazyWithRetry(() => import('./pages/admin/BulkProductCleanup'));
 const AdminAutoCleanupToday = lazyWithRetry(() => import('./pages/admin/AutoCleanupToday'));
+const AdminBlogWriter = lazyWithRetry(() => import('./pages/admin/BlogWriter'));
 const AdminBackfillFanwalls = lazyWithRetry(() => import('./pages/admin/BackfillArtistFanwalls'));
 const AdminCreateFanwall = lazyWithRetry(() => import('./pages/admin/CreateArtistFanwall'));
 const AdminGenerateSeed = lazyWithRetry(() => import('./pages/admin/GenerateSeed'));

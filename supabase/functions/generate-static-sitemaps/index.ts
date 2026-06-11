@@ -114,6 +114,17 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch anecdotes: ${anecdotesError.message}`);
     }
 
+    // Fetch all published news blog posts
+    const { data: newsBlogPosts, error: newsBlogError } = await supabase
+      .from('news_blog_posts')
+      .select('slug, updated_at, image_url, title')
+      .eq('is_published', true)
+      .order('updated_at', { ascending: false });
+
+    if (newsBlogError) {
+      throw new Error(`Failed to fetch news blog posts: ${newsBlogError.message}`);
+    }
+
     // Fetch all published Time Machine events
     const { data: timeMachineEvents, error: timeMachineError } = await supabase
       .from('time_machine_events')
@@ -204,11 +215,18 @@ Deno.serve(async (req) => {
       console.error('Failed to fetch track insights:', trackInsightsError.message);
     }
 
-    console.log(`Found ${blogPosts?.length || 0} blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${singles?.length || 0} singles, ${newReleases?.length || 0} new releases, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, ${canvasProducts?.length || 0} canvas doeken, ${timeMachineEvents?.length || 0} time machine events, ${artistFanwalls?.length || 0} fanwall artists, ${photos?.length || 0} photos, ${studioStories?.length || 0} studio stories, ${trackInsights?.length || 0} track insights`);
+    console.log(`Found ${blogPosts?.length || 0} blog posts, ${newsBlogPosts?.length || 0} news blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${singles?.length || 0} singles, ${newReleases?.length || 0} new releases, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, ${canvasProducts?.length || 0} canvas doeken, ${timeMachineEvents?.length || 0} time machine events, ${artistFanwalls?.length || 0} fanwall artists, ${photos?.length || 0} photos, ${studioStories?.length || 0} studio stories, ${trackInsights?.length || 0} track insights`);
 
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
     const blogSitemapXml = generateSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal');
+    const newsSitemapXml = generateSitemapXml(
+      (newsBlogPosts || []).map(n => ({
+        slug: n.slug,
+        updated_at: n.updated_at
+      })),
+      'https://www.musicscan.app/nieuws'
+    );
     const anecdotesSitemapXml = generateSitemapXml(
       (anecdotes || []).map(a => ({
         slug: a.slug,
@@ -308,6 +326,19 @@ Deno.serve(async (req) => {
       'featured_photo_url'
     );
     
+    // News image sitemap
+    const newsImageSitemapXml = generateImageSitemapXml(
+      (newsBlogPosts || []).map(n => ({
+        slug: n.slug,
+        updated_at: n.updated_at,
+        image_url: n.image_url,
+        title: n.title,
+        artist: ''
+      })),
+      'https://www.musicscan.app/nieuws',
+      'image_url'
+    );
+
     // Photos image sitemap
     const photosImageSitemapXml = generateImageSitemapXml(
       (photos || []).map(p => ({
@@ -385,6 +416,7 @@ Deno.serve(async (req) => {
     const uploads = [
       { name: 'sitemap-static.xml', data: staticSitemapXml },
       { name: 'sitemap-blog.xml', data: blogSitemapXml },
+      { name: 'sitemap-news.xml', data: newsSitemapXml },
       { name: 'sitemap-anecdotes.xml', data: anecdotesSitemapXml },
       { name: 'sitemap-music-stories.xml', data: storiesSitemapXml },
       { name: 'sitemap-singles.xml', data: singlesSitemapXml },
@@ -400,6 +432,7 @@ Deno.serve(async (req) => {
       { name: 'sitemap-new-releases.xml', data: newReleasesSitemapXml },
       { name: 'sitemap-track-insights.xml', data: trackInsightsSitemapXml },
       { name: 'sitemap-images-blogs.xml', data: blogImageSitemapXml },
+      { name: 'sitemap-images-news.xml', data: newsImageSitemapXml },
       { name: 'sitemap-images-stories.xml', data: storiesImageSitemapXml },
       { name: 'sitemap-images-singles.xml', data: singlesImageSitemapXml },
       { name: 'sitemap-images-artists.xml', data: artistsImageSitemapXml },
@@ -535,6 +568,7 @@ for (const sitemapName of allSitemaps) {
         gsc_response: gscResponse,
         stats: {
           blogPosts: blogPosts?.length || 0,
+          newsBlogPosts: newsBlogPosts?.length || 0,
           musicStories: musicStories?.length || 0,
           singles: singles?.length || 0,
           posterProducts: posterProducts?.length || 0,

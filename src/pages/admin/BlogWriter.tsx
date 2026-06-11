@@ -33,7 +33,7 @@ interface GeneratedBlog {
 const INTRO: ChatMsg = {
   role: "assistant",
   content:
-    "Waar zullen we het over hebben? Gooi een artiest, album, single of thema. Ik denk mee, stel vragen en help je een hoek vinden die niet voor de hand ligt. Als je klaar bent klik je op 'Schrijf blog'.",
+    "Hé, Mike hier. Waar zullen we het over hebben? Gooi een artiest, album, single of thema voor m'n voeten. Ik stel een paar scherpe vragen, deel wat weetjes en help je een hoek vinden die niet op pagina 1 van Google staat. Klaar? Druk op 'Schrijf blog'.",
 };
 
 export default function AdminBlogWriter() {
@@ -132,11 +132,11 @@ export default function AdminBlogWriter() {
     <div className="w-full min-w-0 p-4 space-y-4 max-w-5xl mx-auto">
       <div>
         <h1 className="text-3xl font-bold mb-1 flex items-center gap-2">
-          <Sparkles className="h-7 w-7 text-primary" />
-          Blog Writer
+          <Bot className="h-7 w-7 text-primary" />
+          Chat met Mike de blogger
         </h1>
         <p className="text-muted-foreground text-sm">
-          Brainstorm met de AI-redacteur. Als het idee scherp is, klik je op "Schrijf blog".
+          Brainstorm met Mike, je vaste redacteur. Als het idee scherp is, klik je op "Schrijf blog".
         </p>
       </div>
 

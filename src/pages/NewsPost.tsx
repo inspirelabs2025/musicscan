@@ -175,66 +175,81 @@ export const NewsPost = () => {
 
   return (
     <article className="min-h-screen bg-background">
-      {post.image_url && (
-        <div className="relative h-[60vh] w-full overflow-hidden">
-          <div className="absolute inset-0">
-            <img src={post.image_url} alt={post.title} className="w-full h-full object-cover" />
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-        </div>
-      )}
+      <section className="relative py-12 bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-orange-500/10 border-b">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <Link to="/nieuws">
+              <Button variant="ghost" size="sm" className="mb-6">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                {dp.backToNews}
+              </Button>
+            </Link>
 
-      <div className="max-w-4xl mx-auto px-4 relative">
-        <div className={post.image_url ? "-mt-20 relative z-10 mb-8" : "py-8"}>
-          <Link to="/nieuws">
-            <Button variant="ghost" size="sm" className="mb-6 backdrop-blur-sm bg-background/80">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {dp.backToNews}
-            </Button>
-          </Link>
-        </div>
-
-        <motion.header
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`mb-12 ${post.image_url ? 'relative z-10 -mt-12' : ''}`}
-        >
-          <div className="flex items-center gap-2 mb-6">
-            {post.category && <Badge variant="secondary">{post.category}</Badge>}
-          </div>
-
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-            {post.title}
-          </h1>
-
-          <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground mb-6">
-            {post.author && (
-              <span className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  {post.author.charAt(0).toUpperCase()}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col md:flex-row gap-8 items-start"
+            >
+              <div className="w-full md:w-1/3">
+                <div className="aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-2xl">
+                  {post.image_url ? (
+                    <img src={post.image_url} alt={post.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Sparkles className="w-24 h-24 text-muted-foreground/20" />
+                    </div>
+                  )}
                 </div>
-                {post.author}
-              </span>
-            )}
-            <span className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" />
-              {new Date(post.published_at).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US', {
-                year: 'numeric', month: 'long', day: 'numeric'
-              })}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Eye className="w-4 h-4" />
-              {post.views_count || 0} {dp.newsViews}
-            </span>
-          </div>
+              </div>
 
-          <div className="flex items-center gap-4">
-            <Button onClick={handleShare} variant="outline" size="sm">
-              <Share2 className="w-4 h-4 mr-2" />
-              {dp.share}
-            </Button>
+              <div className="flex-1">
+                {post.category && (
+                  <Badge className="bg-purple-500/20 text-purple-600 border-0 mb-4">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    {post.category}
+                  </Badge>
+                )}
+
+                <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent leading-tight">
+                  {post.title}
+                </h1>
+
+                {post.summary && (
+                  <p className="text-lg text-muted-foreground mb-6">{post.summary}</p>
+                )}
+
+                <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground mb-6">
+                  {post.author && (
+                    <span className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        {post.author.charAt(0).toUpperCase()}
+                      </div>
+                      {post.author}
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4" />
+                    {new Date(post.published_at).toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US', {
+                      year: 'numeric', month: 'long', day: 'numeric'
+                    })}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Eye className="w-4 h-4" />
+                    {post.views_count || 0} {dp.newsViews}
+                  </span>
+                </div>
+
+                <Button onClick={handleShare} variant="outline" size="sm">
+                  <Share2 className="w-4 h-4 mr-2" />
+                  {dp.share}
+                </Button>
+              </div>
+            </motion.div>
           </div>
-        </motion.header>
+        </div>
+      </section>
+
+      <div className="max-w-4xl mx-auto px-4 py-12 relative">
 
         <motion.div
           initial={{ opacity: 0 }}

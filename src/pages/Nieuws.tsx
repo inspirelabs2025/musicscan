@@ -25,17 +25,22 @@ export default function Nieuws() {
   const { data: musicNews = [], isLoading } = useQuery({
     queryKey: ["news-blog-posts"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('*, yaml_frontmatter')
-        .eq('album_type', 'news')
-        .eq('is_published', true)
-        .order('published_at', { ascending: false })
-        .limit(100);
-      
-      if (error) throw error;
-      
-      return (data || []).map(post => ({
+      const [blogRes, newsRes] = await Promise.all([
+        supabase
+          .from('blog_posts')
+          .select('*, yaml_frontmatter')
+          .eq('album_type', 'news')
+          .eq('is_published', true)
+          .order('published_at', { ascending: false })
+          .limit(100),
+        supabase
+          .from('news_blog_posts')
+          .select('id, slug, title, summary, content, category, image_url, source, published_at')
+          .order('published_at', { ascending: false })
+          .limit(100),
+      ]);
+
+      const fromBlog = (blogRes.data || []).map(post => ({
         id: post.id,
         slug: post.slug,
         title: post.yaml_frontmatter?.title || '',
@@ -46,6 +51,22 @@ export default function Nieuws() {
         source: post.yaml_frontmatter?.source || '',
         published_at: post.published_at || post.created_at,
       }));
+
+      const fromNews = (newsRes.data || []).map(post => ({
+        id: post.id,
+        slug: post.slug,
+        title: post.title || '',
+        summary: post.summary || '',
+        content: post.content,
+        category: post.category || '',
+        image_url: post.image_url,
+        source: post.source || '',
+        published_at: post.published_at,
+      }));
+
+      return [...fromNews, ...fromBlog].sort(
+        (a, b) => new Date(b.published_at || 0).getTime() - new Date(a.published_at || 0).getTime()
+      );
     },
     staleTime: 5 * 60 * 1000,
   });

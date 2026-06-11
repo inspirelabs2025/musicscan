@@ -240,6 +240,22 @@ export default function AdminBlogWriter() {
               )}
               Stuur
             </Button>
+            <div className="flex rounded-md border overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setLanguage("nl")}
+                className={`px-3 text-sm ${language === "nl" ? "bg-primary text-primary-foreground" : "bg-background"}`}
+              >
+                NL
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage("en")}
+                className={`px-3 text-sm ${language === "en" ? "bg-primary text-primary-foreground" : "bg-background"}`}
+              >
+                EN
+              </button>
+            </div>
             <Button
               variant="secondary"
               onClick={generate}
@@ -250,7 +266,7 @@ export default function AdminBlogWriter() {
               ) : (
                 <Wand2 className="h-4 w-4 mr-2" />
               )}
-              Schrijf blog
+              {language === "en" ? "Write blog (EN)" : "Schrijf blog (NL)"}
             </Button>
             <Button variant="ghost" onClick={reset} disabled={chatting || generating}>
               <RefreshCw className="h-4 w-4 mr-2" />

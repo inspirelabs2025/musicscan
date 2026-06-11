@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -14,6 +15,8 @@ import {
   Wand2,
   User,
   Bot,
+  Eye,
+  Calendar,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
@@ -44,6 +47,7 @@ export default function AdminBlogWriter() {
   const [generating, setGenerating] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [blog, setBlog] = useState<GeneratedBlog | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -240,15 +244,22 @@ export default function AdminBlogWriter() {
               <p className="text-muted-foreground">{blog.summary}</p>
               <p className="text-xs text-muted-foreground font-mono">/{blog.slug}</p>
             </div>
-            <Button onClick={publish} disabled={publishing}>
-              {publishing ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              Publiceer in Nieuws
-            </Button>
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" onClick={() => setPreviewOpen(true)}>
+                <Eye className="h-4 w-4 mr-2" />
+                Preview
+              </Button>
+              <Button onClick={publish} disabled={publishing}>
+                {publishing ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Publiceer in Nieuws
+              </Button>
+            </div>
           </div>
+
 
           <div className="prose prose-sm dark:prose-invert max-w-none border-t pt-4">
             <ReactMarkdown>{blog.content}</ReactMarkdown>
@@ -267,6 +278,62 @@ export default function AdminBlogWriter() {
           </details>
         </Card>
       )}
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Preview: zo verschijnt het in Nieuws</DialogTitle>
+          </DialogHeader>
+          {blog && (
+            <article className="bg-background">
+              <div className="bg-gradient-to-b from-muted/40 to-background px-6 md:px-10 pt-10 pb-6 border-b">
+                <div className="mb-4">
+                  <Badge variant="secondary">{blog.category || "Nieuws"}</Badge>
+                </div>
+                <h1 className="text-3xl md:text-5xl font-bold mb-6 leading-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                  {blog.title}
+                </h1>
+                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <span>MusicScan Redactie</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span>
+                      {new Date().toLocaleDateString("nl-NL", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-6 md:px-10 py-8">
+                {blog.summary && (
+                  <div className="border-l-4 border-primary bg-primary/5 rounded-r-lg p-4 mb-8">
+                    <p className="text-lg font-medium text-foreground leading-relaxed italic">
+                      {blog.summary}
+                    </p>
+                  </div>
+                )}
+
+                <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h1:mt-12 prose-h1:mb-6 prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-p:leading-relaxed">
+                  <ReactMarkdown>{blog.content}</ReactMarkdown>
+                </div>
+
+                <div className="mt-10 pt-6 border-t text-xs text-muted-foreground font-mono">
+                  /nieuws/{blog.slug}
+                </div>
+              </div>
+            </article>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

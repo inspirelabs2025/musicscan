@@ -220,6 +220,13 @@ Deno.serve(async (req) => {
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
     const blogSitemapXml = generateSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal');
+    const newsSitemapXml = generateSitemapXml(
+      (newsBlogPosts || []).map(n => ({
+        slug: n.slug,
+        updated_at: n.updated_at
+      })),
+      'https://www.musicscan.app/nieuws'
+    );
     const anecdotesSitemapXml = generateSitemapXml(
       (anecdotes || []).map(a => ({
         slug: a.slug,

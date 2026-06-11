@@ -90,7 +90,7 @@ export default function AdminBlogWriter() {
     setBlog(null);
     try {
       const { data, error } = await supabase.functions.invoke("admin-blog-writer", {
-        body: { mode: "generate", messages },
+        body: { mode: "generate", messages, language },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

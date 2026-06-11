@@ -545,9 +545,8 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
       if (!scan.user_id) return [];
       const { data } = await supabase
         .from("scan_activity_log")
-        .select("id, created_at, action_type, status, metadata, function_name, error_message, discogs_id")
+        .select("id, created_at, action_type, status, metadata, function_name, error_message, discogs_id, artist, title")
         .eq("user_id", scan.user_id)
-        .in("action_type", ["scan_chat", "scan_chat_photo"])
         .order("created_at", { ascending: true })
         .limit(500);
       return data || [];

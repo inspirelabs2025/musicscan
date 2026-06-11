@@ -36,6 +36,14 @@ const menuItems: MenuSection[] = [
     ]
   },
   {
+    title: "Content",
+    icon: PenTool,
+    defaultOpen: true,
+    items: [
+      { title: "Blog Writer", url: "/admin/blog-writer", icon: PenTool },
+    ]
+  },
+  {
     title: "Scans",
     icon: Disc,
     items: [
@@ -71,7 +79,6 @@ const menuItems: MenuSection[] = [
     defaultOpen: false,
     items: [
       { title: "Status Dashboard", url: "/admin/status", icon: BarChart3 },
-      { title: "Blog Writer", url: "/admin/blog-writer", icon: PenTool },
       { title: "Email Notifications", url: "/admin/email-notifications", icon: Mail },
       { title: "Time Machine", url: "/admin/time-machine", icon: Clock },
       { title: "Media Library", url: "/admin/media-library", icon: Image },

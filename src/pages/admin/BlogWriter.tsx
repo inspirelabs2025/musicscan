@@ -269,6 +269,14 @@ export default function AdminBlogWriter() {
               <p className="text-xs text-muted-foreground font-mono">/{blog.slug}</p>
             </div>
             <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" onClick={generateImage} disabled={generatingImage}>
+                {generatingImage ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                )}
+                {blog.image_url ? "Nieuwe afbeelding" : "Genereer afbeelding"}
+              </Button>
               <Button variant="outline" onClick={() => setPreviewOpen(true)}>
                 <Eye className="h-4 w-4 mr-2" />
                 Preview
@@ -283,6 +291,14 @@ export default function AdminBlogWriter() {
               </Button>
             </div>
           </div>
+
+          {blog.image_url && (
+            <img
+              src={blog.image_url}
+              alt={blog.title}
+              className="w-full max-h-72 object-cover rounded-lg border"
+            />
+          )}
 
 
           <div className="prose prose-sm dark:prose-invert max-w-none border-t pt-4">

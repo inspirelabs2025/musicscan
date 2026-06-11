@@ -17,6 +17,7 @@ import {
   Bot,
   Eye,
   Calendar,
+  Image as ImageIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 

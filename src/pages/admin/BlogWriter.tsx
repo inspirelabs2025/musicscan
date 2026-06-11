@@ -101,18 +101,28 @@ export default function AdminBlogWriter() {
     try {
       const { data: userData } = await supabase.auth.getUser();
       const author = userData.user?.email ?? "MusicScan Redactie";
+
+      // Ensure unique slug
+      let slug = blog.slug || blog.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const { data: existing } = await supabase
+        .from("news_blog_posts")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (existing) slug = `${slug}-${Date.now().toString(36)}`;
+
       const { error } = await supabase.from("news_blog_posts").insert({
         title: blog.title,
         summary: blog.summary,
         content: blog.content,
         category: blog.category || "Verhaal",
-        slug: blog.slug,
+        slug,
         author,
         source: "admin-blog-writer",
         published_at: new Date().toISOString(),
       });
       if (error) throw error;
-      toast({ title: "Gepubliceerd in Nieuws" });
+      toast({ title: "Gepubliceerd in Nieuws", description: `/nieuws/${slug}` });
       setBlog(null);
       setMessages([INTRO]);
     } catch (err: any) {
@@ -121,6 +131,7 @@ export default function AdminBlogWriter() {
       setPublishing(false);
     }
   };
+
 
   const reset = () => {
     setMessages([INTRO]);

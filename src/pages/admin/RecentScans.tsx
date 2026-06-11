@@ -545,9 +545,8 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
       if (!scan.user_id) return [];
       const { data } = await supabase
         .from("scan_activity_log")
-        .select("id, created_at, action_type, status, metadata, function_name, error_message, discogs_id")
+        .select("id, created_at, action_type, status, metadata, function_name, error_message, discogs_id, artist, title")
         .eq("user_id", scan.user_id)
-        .in("action_type", ["scan_chat", "scan_chat_photo"])
         .order("created_at", { ascending: true })
         .limit(500);
       return data || [];
@@ -596,16 +595,20 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
             {thread.map((entry: any) => {
               const m = entry.metadata || {};
               const isCurrent = entry.id === scan.id;
+              const knownKeys = new Set(["user_message", "ai_response", "photo_urls"]);
+              const extraEntries = Object.entries(m).filter(([k, v]) => !knownKeys.has(k) && v !== null && v !== undefined && v !== "");
+              const titleLine = [entry.artist, entry.title].filter(Boolean).join(" — ");
               return (
                 <div key={entry.id} className={`rounded-lg border p-3 space-y-2 ${isCurrent ? "border-primary/40 bg-primary/5" : "bg-muted/30"}`}>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{format(new Date(entry.created_at), "HH:mm:ss", { locale: nl })} · {entry.action_type}{entry.status ? ` · ${entry.status}` : ""}</span>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground gap-2">
+                    <span className="truncate">{format(new Date(entry.created_at), "HH:mm:ss", { locale: nl })} · {entry.action_type}{entry.status ? ` · ${entry.status}` : ""}{entry.function_name ? ` · ${entry.function_name}` : ""}</span>
                     {entry.discogs_id && (
-                      <a href={`https://www.discogs.com/release/${entry.discogs_id}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1">
+                      <a href={`https://www.discogs.com/release/${entry.discogs_id}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1 shrink-0">
                         <ExternalLink className="h-3 w-3" /> {entry.discogs_id}
                       </a>
                     )}
                   </div>
+                  {titleLine && <div className="text-xs font-medium">{titleLine}</div>}
                   {m.user_message && (
                     <div>
                       <div className="text-[10px] uppercase text-muted-foreground font-semibold mb-0.5">Gebruiker</div>
@@ -617,6 +620,12 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
                       <div className="text-[10px] uppercase text-muted-foreground font-semibold mb-0.5">Magic Mike</div>
                       <div className="bg-background rounded p-2 whitespace-pre-wrap text-foreground text-xs">{m.ai_response}</div>
                     </div>
+                  )}
+                  {extraEntries.length > 0 && (
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Details ({extraEntries.length})</summary>
+                      <pre className="mt-1 bg-background rounded p-2 overflow-x-auto text-[11px]">{JSON.stringify(Object.fromEntries(extraEntries), null, 2)}</pre>
+                    </details>
                   )}
                   {entry.error_message && (
                     <div className="bg-destructive/10 text-destructive rounded p-2 text-xs">{entry.error_message}</div>

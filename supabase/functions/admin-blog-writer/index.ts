@@ -50,13 +50,92 @@ OUTPUT: ALLEEN geldig JSON (geen markdown codeblokken):
   "content": "markdown blog"
 }`;
 
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+async function generateAndUploadImage(title: string, summary: string): Promise<string | null> {
+  // 1. korte image-prompt via tekst-model
+  const promptRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [{
+        role: "user",
+        content: `Korte image-prompt (max 80 woorden) voor een redactionele muziekfoto bij dit blog.
+Titel: ${title}
+Samenvatting: ${summary}
+Stijl: professionele muziekjournalistiek, sfeervol, geen tekst, geen logo's, geen gezichten van bekende personen.
+Return ALLEEN de prompt.`,
+      }],
+    }),
+  });
+  if (!promptRes.ok) throw new Error(`prompt gen ${promptRes.status}`);
+  const promptJson = await promptRes.json();
+  const imagePrompt = promptJson.choices?.[0]?.message?.content?.trim() || title;
+
+  // 2. image genereren
+  const imgRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash-image-preview",
+      messages: [{
+        role: "user",
+        content: `${imagePrompt}\n\nStyle: editorial music journalism, 16:9, hoge kwaliteit, sfeervol licht.`,
+      }],
+      modalities: ["image", "text"],
+    }),
+  });
+  if (!imgRes.ok) throw new Error(`image gen ${imgRes.status}: ${await imgRes.text()}`);
+  const imgJson = await imgRes.json();
+  const dataUrl: string | undefined = imgJson.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+  if (!dataUrl) throw new Error("geen image in response");
+
+  // 3. upload naar storage
+  const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, "");
+  const binary = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  const safeSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50);
+  const filename = `news/${Date.now()}-${safeSlug || "blog"}.png`;
+
+  const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/news-images/${filename}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      "Content-Type": "image/png",
+      "x-upsert": "true",
+    },
+    body: binary,
+  });
+  if (!uploadRes.ok) throw new Error(`upload ${uploadRes.status}: ${await uploadRes.text()}`);
+
+  return `${SUPABASE_URL}/storage/v1/object/public/news-images/${filename}`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY ontbreekt");
     const body = await req.json();
-    const mode: "chat" | "generate" = body.mode === "generate" ? "generate" : "chat";
+    const mode: "chat" | "generate" | "image" =
+      body.mode === "generate" ? "generate" : body.mode === "image" ? "image" : "chat";
+
+    if (mode === "image") {
+      const title: string = body.title || "";
+      const summary: string = body.summary || "";
+      if (!title) {
+        return new Response(JSON.stringify({ error: "title verplicht" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const imageUrl = await generateAndUploadImage(title, summary);
+      return new Response(JSON.stringify({ image_url: imageUrl }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const messages: Array<{ role: "user" | "assistant"; content: string }> =
       Array.isArray(body.messages) ? body.messages : [];
 

@@ -17,6 +17,7 @@ import {
   Bot,
   Eye,
   Calendar,
+  Image as ImageIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
@@ -31,6 +32,7 @@ interface GeneratedBlog {
   category: string;
   slug: string;
   content: string;
+  image_url?: string;
 }
 
 const INTRO: ChatMsg = {
@@ -48,6 +50,7 @@ export default function AdminBlogWriter() {
   const [publishing, setPublishing] = useState(false);
   const [blog, setBlog] = useState<GeneratedBlog | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -123,6 +126,7 @@ export default function AdminBlogWriter() {
         slug,
         author,
         source: "admin-blog-writer",
+        image_url: blog.image_url ?? null,
         published_at: new Date().toISOString(),
       });
       if (error) throw error;
@@ -135,6 +139,26 @@ export default function AdminBlogWriter() {
       setPublishing(false);
     }
   };
+
+  const generateImage = async () => {
+    if (!blog) return;
+    setGeneratingImage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-blog-writer", {
+        body: { mode: "image", title: blog.title, summary: blog.summary },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (!data?.image_url) throw new Error("Geen afbeelding ontvangen");
+      setBlog({ ...blog, image_url: data.image_url });
+      toast({ title: "Afbeelding gegenereerd" });
+    } catch (err: any) {
+      toast({ title: "Afbeelding mislukt", description: err.message, variant: "destructive" });
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
+
 
 
   const reset = () => {
@@ -245,6 +269,14 @@ export default function AdminBlogWriter() {
               <p className="text-xs text-muted-foreground font-mono">/{blog.slug}</p>
             </div>
             <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" onClick={generateImage} disabled={generatingImage}>
+                {generatingImage ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                )}
+                {blog.image_url ? "Nieuwe afbeelding" : "Genereer afbeelding"}
+              </Button>
               <Button variant="outline" onClick={() => setPreviewOpen(true)}>
                 <Eye className="h-4 w-4 mr-2" />
                 Preview
@@ -259,6 +291,14 @@ export default function AdminBlogWriter() {
               </Button>
             </div>
           </div>
+
+          {blog.image_url && (
+            <img
+              src={blog.image_url}
+              alt={blog.title}
+              className="w-full max-h-72 object-cover rounded-lg border"
+            />
+          )}
 
 
           <div className="prose prose-sm dark:prose-invert max-w-none border-t pt-4">
@@ -290,7 +330,11 @@ export default function AdminBlogWriter() {
                 <div className="flex flex-col md:flex-row gap-6 items-start">
                   <div className="w-full md:w-1/3">
                     <div className="aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-2xl flex items-center justify-center">
-                      <Eye className="w-16 h-16 text-muted-foreground/30" />
+                      {blog.image_url ? (
+                        <img src={blog.image_url} alt={blog.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <ImageIcon className="w-16 h-16 text-muted-foreground/30" />
+                      )}
                     </div>
                   </div>
                   <div className="flex-1">

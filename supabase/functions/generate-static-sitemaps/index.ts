@@ -568,6 +568,7 @@ for (const sitemapName of allSitemaps) {
         gsc_response: gscResponse,
         stats: {
           blogPosts: blogPosts?.length || 0,
+          newsBlogPosts: newsBlogPosts?.length || 0,
           musicStories: musicStories?.length || 0,
           singles: singles?.length || 0,
           posterProducts: posterProducts?.length || 0,

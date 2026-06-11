@@ -39,6 +39,9 @@ import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 import { usePaginatedBlogs } from "@/hooks/usePaginatedBlogs";
 import { useMuziekVerhalen } from "@/hooks/useMuziekVerhalen";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Newspaper } from "lucide-react";
 
 export const VerhaalTab: React.FC = () => {
   const navigate = useNavigate();
@@ -46,7 +49,8 @@ export const VerhaalTab: React.FC = () => {
   const ct = tr.contentUI;
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showSearchSection, setShowSearchSection] = useState(false);
-  const [activeTab, setActiveTab] = useState<'albums' | 'singles'>('albums');
+  const [activeTab, setActiveTab] = useState<'albums' | 'singles' | 'nieuws'>('albums');
+
   const hasAutoSelectedTab = useRef(false);
   
   const {
@@ -91,6 +95,29 @@ export const VerhaalTab: React.FC = () => {
     refetch: refetchStories 
   } = useMuziekVerhalen({ search: debouncedSearch, country: filters.country });
 
+  // News posts
+  const {
+    data: newsPosts = [],
+    isLoading: isLoadingNews,
+    refetch: refetchNews,
+  } = useQuery({
+    queryKey: ['verhalen-news', debouncedSearch],
+    queryFn: async () => {
+      let q = supabase
+        .from('news_blog_posts')
+        .select('id,slug,title,summary,category,author,published_at,image_url,views_count')
+        .order('published_at', { ascending: false })
+        .limit(60);
+      if (debouncedSearch?.trim()) {
+        q = q.or(`title.ilike.%${debouncedSearch}%,summary.ilike.%${debouncedSearch}%,author.ilike.%${debouncedSearch}%`);
+      }
+      const { data, error } = await q;
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+
   useEffect(() => {
     hasAutoSelectedTab.current = false;
   }, [language]);
@@ -112,12 +139,11 @@ export const VerhaalTab: React.FC = () => {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleRefresh = useCallback(() => {
-    if (activeTab === 'albums') {
-      refetchBlogs();
-    } else {
-      refetchStories();
-    }
-  }, [activeTab, refetchBlogs, refetchStories]);
+    if (activeTab === 'albums') refetchBlogs();
+    else if (activeTab === 'singles') refetchStories();
+    else refetchNews();
+  }, [activeTab, refetchBlogs, refetchStories, refetchNews]);
+
 
   const handleReset = useCallback(() => {
     setSearchInput('');
@@ -172,8 +198,9 @@ export const VerhaalTab: React.FC = () => {
     </div>
   );
 
-  const isLoading = activeTab === 'albums' ? isLoadingBlogs : isLoadingStories;
+  const isLoading = activeTab === 'albums' ? isLoadingBlogs : activeTab === 'singles' ? isLoadingStories : isLoadingNews;
   const isFetching = activeTab === 'albums' ? isFetchingBlogs : false;
+
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -231,8 +258,8 @@ export const VerhaalTab: React.FC = () => {
       </div>
 
       {/* Tabs for Albums vs Singles */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'albums' | 'singles')}>
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'albums' | 'singles' | 'nieuws')}>
+        <TabsList className="grid w-full grid-cols-3 max-w-xl">
           <TabsTrigger value="albums" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
             Albums
@@ -241,7 +268,12 @@ export const VerhaalTab: React.FC = () => {
             <FileText className="w-4 h-4" />
             Singles
           </TabsTrigger>
+          <TabsTrigger value="nieuws" className="flex items-center gap-2">
+            <Newspaper className="w-4 h-4" />
+            Nieuws
+          </TabsTrigger>
         </TabsList>
+
 
       {/* Search and Filter Controls */}
       <Collapsible open={showSearchSection} onOpenChange={setShowSearchSection}>

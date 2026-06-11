@@ -50,6 +50,7 @@ export default function AdminBlogWriter() {
   const [publishing, setPublishing] = useState(false);
   const [blog, setBlog] = useState<GeneratedBlog | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

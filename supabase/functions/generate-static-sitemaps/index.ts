@@ -215,7 +215,7 @@ Deno.serve(async (req) => {
       console.error('Failed to fetch track insights:', trackInsightsError.message);
     }
 
-    console.log(`Found ${blogPosts?.length || 0} blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${singles?.length || 0} singles, ${newReleases?.length || 0} new releases, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, ${canvasProducts?.length || 0} canvas doeken, ${timeMachineEvents?.length || 0} time machine events, ${artistFanwalls?.length || 0} fanwall artists, ${photos?.length || 0} photos, ${studioStories?.length || 0} studio stories, ${trackInsights?.length || 0} track insights`);
+    console.log(`Found ${blogPosts?.length || 0} blog posts, ${newsBlogPosts?.length || 0} news blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${singles?.length || 0} singles, ${newReleases?.length || 0} new releases, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, ${canvasProducts?.length || 0} canvas doeken, ${timeMachineEvents?.length || 0} time machine events, ${artistFanwalls?.length || 0} fanwall artists, ${photos?.length || 0} photos, ${studioStories?.length || 0} studio stories, ${trackInsights?.length || 0} track insights`);
 
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();

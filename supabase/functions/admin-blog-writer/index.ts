@@ -56,7 +56,24 @@ serve(async (req) => {
   try {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY ontbreekt");
     const body = await req.json();
-    const mode: "chat" | "generate" = body.mode === "generate" ? "generate" : "chat";
+    const mode: "chat" | "generate" | "image" =
+      body.mode === "generate" ? "generate" : body.mode === "image" ? "image" : "chat";
+
+    if (mode === "image") {
+      const title: string = body.title || "";
+      const summary: string = body.summary || "";
+      if (!title) {
+        return new Response(JSON.stringify({ error: "title verplicht" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const imageUrl = await generateAndUploadImage(title, summary);
+      return new Response(JSON.stringify({ image_url: imageUrl }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const messages: Array<{ role: "user" | "assistant"; content: string }> =
       Array.isArray(body.messages) ? body.messages : [];
 

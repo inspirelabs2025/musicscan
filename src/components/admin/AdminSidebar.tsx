@@ -36,6 +36,14 @@ const menuItems: MenuSection[] = [
     ]
   },
   {
+    title: "Content",
+    icon: PenTool,
+    defaultOpen: true,
+    items: [
+      { title: "Blog Writer", url: "/admin/blog-writer", icon: PenTool },
+    ]
+  },
+  {
     title: "Scans",
     icon: Disc,
     items: [

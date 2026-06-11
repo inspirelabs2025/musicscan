@@ -113,6 +113,7 @@ export function StickyHeader() {
   ];
 
   const verhalenItems: DropdownItem[] = [
+    { label: nl ? 'Nieuws' : 'News', href: '/nieuws', icon: Newspaper },
     { label: t('nav.singles'), href: '/singles', icon: Music },
     { label: t('nav.artists'), href: '/artists', icon: Users },
     { label: t('nav.podcasts'), href: '/podcasts', icon: Headphones },

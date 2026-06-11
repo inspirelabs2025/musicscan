@@ -126,6 +126,7 @@ export default function AdminBlogWriter() {
         slug,
         author,
         source: "admin-blog-writer",
+        image_url: blog.image_url ?? null,
         published_at: new Date().toISOString(),
       });
       if (error) throw error;

@@ -8,39 +8,41 @@ const corsHeaders = {
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-const SYSTEM_PROMPT = `Je bent een ervaren Nederlandse muziekjournalist die voor MusicScan schrijft. Stijl: Volkskrant/OOR/Lust for Life - kennis van zaken, droge humor, zonder pretenties.
+const STYLE_RULES = `STIJL (geldt altijd):
+- Nederlands, menselijk, droge humor, kennis van zaken (Volkskrant/OOR/Lust for Life).
+- ABSOLUUT GEEN em-dashes of en-dashes (— of –). Gebruik komma's, punten of haakjes.
+- Geen AI-clichés: "niet alleen ... maar ook", "in een wereld waar", "duik mee", "iconisch/legendarisch" zonder bewijs, drie-bijvoeglijke opsommingen ("rauw, eerlijk en tijdloos"), generieke samenvatting-conclusies.
+- Concrete details: jaartallen, namen van producers, studio's, sessiemuzikanten, chart-posities. Verzin nooit feiten. Onzeker? Zeg dat of laat het weg.`;
 
-ABSOLUUT VERBODEN (dit verraadt AI-schrijfstijl):
-- Em-dashes of en-dashes (— of –). Gebruik gewoon komma's, punten of haakjes.
-- Zinnen als "Niet alleen ... maar ook", "In een wereld waar...", "Het is meer dan..."
-- Opsommingen met drie bijvoeglijke naamwoorden ("rauw, eerlijk en tijdloos")
-- Frases als "een ware revolutie", "iconisch", "legendarisch" zonder onderbouwing
-- "Laten we duiken in", "ontdek", "in dit artikel"
-- Generieke openingen over "muziek raakt ons allemaal"
-- Overdreven enthousiasme of marketing-taal
-- Bullshit conclusieparagrafen die samenvatten wat je net schreef
+const CHAT_SYSTEM = `Je bent een ervaren Nederlandse muziekjournalist die met de redacteur brainstormt over een nieuw blog voor MusicScan.
 
-WEL DOEN:
-- Begin met een concreet detail, anekdote of feit. Niet met een algemene observatie.
-- Gebruik exacte cijfers, jaartallen, namen van producers/studios/sessiemuzikanten
-- Schrijf zoals een vriend die toevallig veel weet: informeel, met grapjes, met meningen
-- Korte en lange zinnen door elkaar. Soms een fragment. Voor ritme.
-- Citeer als het kan (artiest in interview, recensent, etc) maar verzin NIETS
-- Als je iets niet zeker weet: zeg dat, of laat het weg
+${STYLE_RULES}
 
-ONDERZOEK:
-- Graaf naar weetjes die niet op de eerste pagina van Google staan
-- Sessiemuzikanten, B-kant verhalen, opname-incidenten, label-ruzies, hoesfotograaf, mixing engineer
-- Chart-posities, verkoopcijfers, samples die later gebruikt zijn, covers door anderen
-- Persoonlijke context van de artiest in die periode
+JOUW ROL IN DE CHAT:
+- Stel scherpe vragen om de invalshoek aan te scherpen (welke periode, welk album, welke hoek: technisch/persoonlijk/zakelijk/cultureel).
+- Deel weetjes en suggesties. Graaf naar dingen die niet op pagina 1 van Google staan.
+- Wees kort en concreet (max 4-6 zinnen per beurt). Geen bullshit-inleidingen.
+- Als de redacteur zegt "schrijf het" / "genereer" / "maak het blog" / iets vergelijkbaars, hoeft jij nog niets te doen. De redacteur drukt dan op een knop.
 
-OUTPUT: Geef ALLEEN geldig JSON terug (geen markdown codeblokken), schema:
+Antwoord met platte tekst (geen JSON, geen markdown-codeblokken).`;
+
+const GENERATE_SYSTEM = `Je bent een ervaren Nederlandse muziekjournalist. Op basis van de chat hieronder schrijf je nu het definitieve blog voor MusicScan.
+
+${STYLE_RULES}
+
+EXTRA:
+- 600-1000 woorden.
+- Begin met een concreet detail of anekdote, niet met een algemene observatie.
+- Gebruik ## voor tussenkopjes (geen H1, titel staat apart).
+- Geen samenvattende conclusieparagraaf die herhaalt wat je net schreef.
+
+OUTPUT: ALLEEN geldig JSON (geen markdown codeblokken):
 {
-  "title": "Pakkende titel max 70 chars, geen clickbait",
-  "summary": "1-2 zinnen, max 200 chars, geeft de hook weg",
-  "category": "een van: Album, Artiest, Single, Geschiedenis, Studio, Verhaal",
-  "slug": "kebab-case-slug-zonder-leestekens",
-  "content": "Markdown blog 600-1000 woorden. Gebruik ## voor tussenkopjes. Geen H1 (titel staat al apart)."
+  "title": "max 70 chars, geen clickbait",
+  "summary": "1-2 zinnen, max 200 chars",
+  "category": "Album | Artiest | Single | Geschiedenis | Studio | Verhaal",
+  "slug": "kebab-case-zonder-leestekens",
+  "content": "markdown blog"
 }`;
 
 serve(async (req) => {
@@ -48,17 +50,28 @@ serve(async (req) => {
 
   try {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY ontbreekt");
-    const { topic, extraContext } = await req.json();
-    if (!topic || typeof topic !== "string") {
-      return new Response(JSON.stringify({ error: "topic verplicht" }), {
+    const body = await req.json();
+    const mode: "chat" | "generate" = body.mode === "generate" ? "generate" : "chat";
+    const messages: Array<{ role: "user" | "assistant"; content: string }> =
+      Array.isArray(body.messages) ? body.messages : [];
+
+    if (messages.length === 0) {
+      return new Response(JSON.stringify({ error: "messages verplicht" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userPrompt = `Schrijf een blog over: ${topic}${
-      extraContext ? `\n\nExtra context van de redacteur: ${extraContext}` : ""
-    }\n\nDoe je onderzoek en kom met inhoud die niet voor de hand ligt. Schrijf menselijk.`;
+    const system = mode === "generate" ? GENERATE_SYSTEM : CHAT_SYSTEM;
+    const payloadMessages = [{ role: "system", content: system }, ...messages];
+
+    if (mode === "generate") {
+      payloadMessages.push({
+        role: "user",
+        content:
+          "Schrijf nu het definitieve blog op basis van bovenstaande chat. Alleen JSON volgens schema.",
+      });
+    }
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -68,11 +81,8 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: { type: "json_object" },
+        messages: payloadMessages,
+        ...(mode === "generate" ? { response_format: { type: "json_object" } } : {}),
       }),
     });
 
@@ -94,21 +104,24 @@ serve(async (req) => {
     }
 
     const aiJson = await aiRes.json();
-    let raw = aiJson.choices?.[0]?.message?.content ?? "";
-    // strip eventuele code fences als het model ze toch toevoegt
-    raw = raw.replace(/^```json\s*/i, "").replace(/```$/g, "").trim();
+    let raw: string = aiJson.choices?.[0]?.message?.content ?? "";
 
+    if (mode === "chat") {
+      const reply = raw.replace(/[—–]/g, "-");
+      return new Response(JSON.stringify({ reply }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // generate
+    raw = raw.replace(/^```json\s*/i, "").replace(/```$/g, "").trim();
     let blog;
     try {
       blog = JSON.parse(raw);
     } catch {
       throw new Error("AI gaf geen geldig JSON terug");
     }
-
-    // Post-clean: vervang AI em/en-dashes
-    if (blog.content) {
-      blog.content = blog.content.replace(/—/g, ",").replace(/–/g, "-");
-    }
+    if (blog.content) blog.content = blog.content.replace(/—/g, ",").replace(/–/g, "-");
     if (blog.title) blog.title = blog.title.replace(/[—–]/g, "-");
 
     return new Response(JSON.stringify({ blog }), {

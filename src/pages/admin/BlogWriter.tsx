@@ -1,13 +1,26 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Sparkles, Send, Save, RefreshCw } from "lucide-react";
+import {
+  Loader2,
+  Sparkles,
+  Send,
+  Save,
+  RefreshCw,
+  Wand2,
+  User,
+  Bot,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
+
+interface ChatMsg {
+  role: "user" | "assistant";
+  content: string;
+}
 
 interface GeneratedBlog {
   title: string;
@@ -17,37 +30,68 @@ interface GeneratedBlog {
   content: string;
 }
 
+const INTRO: ChatMsg = {
+  role: "assistant",
+  content:
+    "Waar zullen we het over hebben? Gooi een artiest, album, single of thema. Ik denk mee, stel vragen en help je een hoek vinden die niet voor de hand ligt. Als je klaar bent klik je op 'Schrijf blog'.",
+};
+
 export default function AdminBlogWriter() {
   const { toast } = useToast();
-  const [topic, setTopic] = useState("");
-  const [extraContext, setExtraContext] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState<ChatMsg[]>([INTRO]);
+  const [input, setInput] = useState("");
+  const [chatting, setChatting] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [blog, setBlog] = useState<GeneratedBlog | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, chatting]);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text || chatting) return;
+    const next = [...messages, { role: "user" as const, content: text }];
+    setMessages(next);
+    setInput("");
+    setChatting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-blog-writer", {
+        body: { mode: "chat", messages: next.filter((m) => m !== INTRO || next.indexOf(m) > 0) },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setMessages((m) => [...m, { role: "assistant", content: data.reply }]);
+    } catch (err: any) {
+      toast({ title: "Chat fout", description: err.message, variant: "destructive" });
+      setMessages((m) => m.slice(0, -1));
+      setInput(text);
+    } finally {
+      setChatting(false);
+    }
+  };
 
   const generate = async () => {
-    if (!topic.trim()) {
-      toast({ title: "Geef een onderwerp op", variant: "destructive" });
+    if (messages.filter((m) => m.role === "user").length === 0) {
+      toast({ title: "Begin eerst een gesprek", variant: "destructive" });
       return;
     }
-    setLoading(true);
+    setGenerating(true);
     setBlog(null);
     try {
       const { data, error } = await supabase.functions.invoke("admin-blog-writer", {
-        body: { topic: topic.trim(), extraContext: extraContext.trim() || undefined },
+        body: { mode: "generate", messages },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setBlog(data.blog);
       toast({ title: "Blog gegenereerd" });
     } catch (err: any) {
-      toast({
-        title: "Generatie mislukt",
-        description: err.message,
-        variant: "destructive",
-      });
+      toast({ title: "Generatie mislukt", description: err.message, variant: "destructive" });
     } finally {
-      setLoading(false);
+      setGenerating(false);
     }
   };
 
@@ -57,7 +101,6 @@ export default function AdminBlogWriter() {
     try {
       const { data: userData } = await supabase.auth.getUser();
       const author = userData.user?.email ?? "MusicScan Redactie";
-
       const { error } = await supabase.from("news_blog_posts").insert({
         title: blog.title,
         summary: blog.summary,
@@ -71,77 +114,109 @@ export default function AdminBlogWriter() {
       if (error) throw error;
       toast({ title: "Gepubliceerd in Nieuws" });
       setBlog(null);
-      setTopic("");
-      setExtraContext("");
+      setMessages([INTRO]);
     } catch (err: any) {
-      toast({
-        title: "Publiceren mislukt",
-        description: err.message,
-        variant: "destructive",
-      });
+      toast({ title: "Publiceren mislukt", description: err.message, variant: "destructive" });
     } finally {
       setPublishing(false);
     }
   };
 
+  const reset = () => {
+    setMessages([INTRO]);
+    setBlog(null);
+    setInput("");
+  };
+
   return (
-    <div className="w-full min-w-0 p-4 space-y-6 max-w-5xl mx-auto">
+    <div className="w-full min-w-0 p-4 space-y-4 max-w-5xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+        <h1 className="text-3xl font-bold mb-1 flex items-center gap-2">
           <Sparkles className="h-7 w-7 text-primary" />
           Blog Writer
         </h1>
-        <p className="text-muted-foreground">
-          Geef een onderwerp, album, artiest of vraag. De AI doet onderzoek en schrijft een
-          menselijk blog (geen typische AI-stijl, geen em-dashes).
+        <p className="text-muted-foreground text-sm">
+          Brainstorm met de AI-redacteur. Als het idee scherp is, klik je op "Schrijf blog".
         </p>
       </div>
 
-      <Card className="p-4 space-y-3">
-        <div>
-          <label className="text-sm font-medium mb-1 block">Onderwerp</label>
-          <Input
-            placeholder='Bijv. "Het verhaal achter Pink Floyd - The Wall" of "Nederlandse hits van 1985"'
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) generate();
-            }}
-            disabled={loading}
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium mb-1 block">
-            Extra richtlijnen <span className="text-muted-foreground">(optioneel)</span>
-          </label>
-          <Textarea
-            placeholder="Bijv. focus op de opnamesessies in Abbey Road, of 'maak het luchtig en grappig'"
-            value={extraContext}
-            onChange={(e) => setExtraContext(e.target.value)}
-            rows={2}
-            disabled={loading}
-          />
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={generate} disabled={loading || !topic.trim()}>
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Onderzoek + schrijven...
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4 mr-2" />
-                Genereer blog
-              </>
-            )}
-          </Button>
-          {blog && (
-            <Button variant="outline" onClick={generate} disabled={loading}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Opnieuw
-            </Button>
+      <Card className="flex flex-col h-[60vh] min-h-[400px]">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.map((m, i) => (
+            <div
+              key={i}
+              className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}
+            >
+              <div
+                className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
+                  m.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {m.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+              </div>
+              <div
+                className={`rounded-2xl px-4 py-2 max-w-[80%] text-sm whitespace-pre-wrap ${
+                  m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                }`}
+              >
+                {m.content}
+              </div>
+            </div>
+          ))}
+          {chatting && (
+            <div className="flex gap-3">
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                <Bot className="h-4 w-4" />
+              </div>
+              <div className="rounded-2xl px-4 py-2 bg-muted text-sm">
+                <Loader2 className="h-4 w-4 animate-spin" />
+              </div>
+            </div>
           )}
+        </div>
+
+        <div className="border-t p-3 space-y-2">
+          <Textarea
+            placeholder="Typ je idee of vraag... (Cmd/Ctrl+Enter om te sturen)"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            rows={2}
+            disabled={chatting || generating}
+          />
+          <div className="flex gap-2 flex-wrap">
+            <Button onClick={send} disabled={chatting || generating || !input.trim()}>
+              {chatting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              Stuur
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={generate}
+              disabled={chatting || generating || messages.filter((m) => m.role === "user").length === 0}
+            >
+              {generating ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Wand2 className="h-4 w-4 mr-2" />
+              )}
+              Schrijf blog
+            </Button>
+            <Button variant="ghost" onClick={reset} disabled={chatting || generating}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Nieuw gesprek
+            </Button>
+          </div>
         </div>
       </Card>
 

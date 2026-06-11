@@ -416,6 +416,7 @@ Deno.serve(async (req) => {
     const uploads = [
       { name: 'sitemap-static.xml', data: staticSitemapXml },
       { name: 'sitemap-blog.xml', data: blogSitemapXml },
+      { name: 'sitemap-news.xml', data: newsSitemapXml },
       { name: 'sitemap-anecdotes.xml', data: anecdotesSitemapXml },
       { name: 'sitemap-music-stories.xml', data: storiesSitemapXml },
       { name: 'sitemap-singles.xml', data: singlesSitemapXml },

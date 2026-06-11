@@ -169,14 +169,17 @@ serve(async (req) => {
       });
     }
 
+    const language: "nl" | "en" = body.language === "en" ? "en" : "nl";
+    const GENERATE_SYSTEM = language === "en" ? GENERATE_SYSTEM_EN : GENERATE_SYSTEM_NL;
     const system = mode === "generate" ? GENERATE_SYSTEM : CHAT_SYSTEM;
     const payloadMessages = [{ role: "system", content: system }, ...messages];
 
     if (mode === "generate") {
       payloadMessages.push({
         role: "user",
-        content:
-          "Schrijf nu het definitieve blog op basis van bovenstaande chat. Alleen JSON volgens schema.",
+        content: language === "en"
+          ? "Write the final blog now based on the chat above. JSON only per schema. Write the entire blog in English."
+          : "Schrijf nu het definitieve blog op basis van bovenstaande chat. Alleen JSON volgens schema.",
       });
     }
 

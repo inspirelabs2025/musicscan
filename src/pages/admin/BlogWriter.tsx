@@ -105,8 +105,15 @@ export default function AdminBlogWriter() {
 
   const publish = async () => {
     if (!blog) return;
+    console.log("[publish] start", { title: blog.title, slug: blog.slug });
     setPublishing(true);
+    const { toast: sonnerToast } = await import("sonner");
+    const tid = sonnerToast.loading("Publiceren in Nieuws...");
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("Je bent niet ingelogd. Log in als admin om te publiceren.");
+      }
       const { data: userData } = await supabase.auth.getUser();
       const author = userData.user?.email ?? "MusicScan Redactie";
 
@@ -119,7 +126,7 @@ export default function AdminBlogWriter() {
         .maybeSingle();
       if (existing) slug = `${slug}-${Date.now().toString(36)}`;
 
-      const { error } = await supabase.from("news_blog_posts").insert({
+      const payload = {
         title: blog.title,
         summary: blog.summary,
         content: blog.content,
@@ -129,17 +136,41 @@ export default function AdminBlogWriter() {
         source: "admin-blog-writer",
         image_url: blog.image_url ?? null,
         published_at: new Date().toISOString(),
+      };
+      console.log("[publish] inserting", payload);
+      const { data: inserted, error } = await supabase
+        .from("news_blog_posts")
+        .insert(payload)
+        .select("id, slug")
+        .single();
+      if (error) {
+        console.error("[publish] insert error", error);
+        throw error;
+      }
+      console.log("[publish] success", inserted);
+      sonnerToast.success("Gepubliceerd in Nieuws ✅", {
+        id: tid,
+        description: `/nieuws/${inserted.slug}`,
+        action: {
+          label: "Bekijk",
+          onClick: () => window.open(`/nieuws/${inserted.slug}`, "_blank"),
+        },
+        duration: 10000,
       });
-      if (error) throw error;
-      toast({ title: "Gepubliceerd in Nieuws", description: `/nieuws/${slug}` });
       setBlog(null);
       setMessages([INTRO]);
     } catch (err: any) {
-      toast({ title: "Publiceren mislukt", description: err.message, variant: "destructive" });
+      console.error("[publish] failed", err);
+      sonnerToast.error("Publiceren mislukt", {
+        id: tid,
+        description: err?.message ?? "Onbekende fout",
+        duration: 10000,
+      });
     } finally {
       setPublishing(false);
     }
   };
+
 
   const generateImage = async () => {
     if (!blog) return;

@@ -330,7 +330,11 @@ export default function AdminBlogWriter() {
                 <div className="flex flex-col md:flex-row gap-6 items-start">
                   <div className="w-full md:w-1/3">
                     <div className="aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-2xl flex items-center justify-center">
-                      <Eye className="w-16 h-16 text-muted-foreground/30" />
+                      {blog.image_url ? (
+                        <img src={blog.image_url} alt={blog.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <ImageIcon className="w-16 h-16 text-muted-foreground/30" />
+                      )}
                     </div>
                   </div>
                   <div className="flex-1">

@@ -39,6 +39,9 @@ import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 import { usePaginatedBlogs } from "@/hooks/usePaginatedBlogs";
 import { useMuziekVerhalen } from "@/hooks/useMuziekVerhalen";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Newspaper } from "lucide-react";
 
 export const VerhaalTab: React.FC = () => {
   const navigate = useNavigate();
@@ -46,7 +49,8 @@ export const VerhaalTab: React.FC = () => {
   const ct = tr.contentUI;
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showSearchSection, setShowSearchSection] = useState(false);
-  const [activeTab, setActiveTab] = useState<'albums' | 'singles'>('albums');
+  const [activeTab, setActiveTab] = useState<'albums' | 'singles' | 'nieuws'>('albums');
+
   const hasAutoSelectedTab = useRef(false);
   
   const {
@@ -91,6 +95,29 @@ export const VerhaalTab: React.FC = () => {
     refetch: refetchStories 
   } = useMuziekVerhalen({ search: debouncedSearch, country: filters.country });
 
+  // News posts
+  const {
+    data: newsPosts = [],
+    isLoading: isLoadingNews,
+    refetch: refetchNews,
+  } = useQuery({
+    queryKey: ['verhalen-news', debouncedSearch],
+    queryFn: async () => {
+      let q = supabase
+        .from('news_blog_posts')
+        .select('id,slug,title,summary,category,author,published_at,image_url,views_count')
+        .order('published_at', { ascending: false })
+        .limit(60);
+      if (debouncedSearch?.trim()) {
+        q = q.or(`title.ilike.%${debouncedSearch}%,summary.ilike.%${debouncedSearch}%,author.ilike.%${debouncedSearch}%`);
+      }
+      const { data, error } = await q;
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+
   useEffect(() => {
     hasAutoSelectedTab.current = false;
   }, [language]);
@@ -112,12 +139,11 @@ export const VerhaalTab: React.FC = () => {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleRefresh = useCallback(() => {
-    if (activeTab === 'albums') {
-      refetchBlogs();
-    } else {
-      refetchStories();
-    }
-  }, [activeTab, refetchBlogs, refetchStories]);
+    if (activeTab === 'albums') refetchBlogs();
+    else if (activeTab === 'singles') refetchStories();
+    else refetchNews();
+  }, [activeTab, refetchBlogs, refetchStories, refetchNews]);
+
 
   const handleReset = useCallback(() => {
     setSearchInput('');
@@ -172,8 +198,9 @@ export const VerhaalTab: React.FC = () => {
     </div>
   );
 
-  const isLoading = activeTab === 'albums' ? isLoadingBlogs : isLoadingStories;
+  const isLoading = activeTab === 'albums' ? isLoadingBlogs : activeTab === 'singles' ? isLoadingStories : isLoadingNews;
   const isFetching = activeTab === 'albums' ? isFetchingBlogs : false;
+
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -231,8 +258,8 @@ export const VerhaalTab: React.FC = () => {
       </div>
 
       {/* Tabs for Albums vs Singles */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'albums' | 'singles')}>
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'albums' | 'singles' | 'nieuws')}>
+        <TabsList className="grid w-full grid-cols-3 max-w-xl">
           <TabsTrigger value="albums" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
             Albums
@@ -241,7 +268,12 @@ export const VerhaalTab: React.FC = () => {
             <FileText className="w-4 h-4" />
             Singles
           </TabsTrigger>
+          <TabsTrigger value="nieuws" className="flex items-center gap-2">
+            <Newspaper className="w-4 h-4" />
+            Nieuws
+          </TabsTrigger>
         </TabsList>
+
 
       {/* Search and Filter Controls */}
       <Collapsible open={showSearchSection} onOpenChange={setShowSearchSection}>
@@ -578,6 +610,69 @@ export const VerhaalTab: React.FC = () => {
               <p className="text-muted-foreground mb-6 max-w-md">
                 {ct.noSingleStoriesDesc}
               </p>
+            </CardContent>
+          </Card>
+        )}
+      </TabsContent>
+
+      <TabsContent value="nieuws" className="space-y-6">
+        <div className="flex items-center justify-between mb-6">
+          <Badge variant="secondary" className="flex items-center gap-2">
+            <Newspaper className="w-4 h-4" />
+            {newsPosts.length} nieuwsberichten
+          </Badge>
+          {isLoadingNews && <Loader2 className="w-4 h-4 animate-spin" />}
+        </div>
+
+        <div className={`grid gap-6 ${
+          filters.viewMode === 'list' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+        }`}>
+          {newsPosts.map((post: any, index: number) => (
+            <Card
+              key={post.id}
+              className="group hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden animate-fade-in"
+              style={{ animationDelay: `${index * 0.05}s` }}
+              onClick={() => navigate(`/nieuws/${post.slug}`)}
+            >
+              <div className="aspect-video bg-gradient-to-br from-muted/30 to-muted/60 overflow-hidden">
+                {post.image_url ? (
+                  <img
+                    src={post.image_url}
+                    alt={post.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Newspaper className="w-16 h-16 text-muted-foreground/60" />
+                  </div>
+                )}
+              </div>
+              <CardContent className="p-6 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">{post.category}</Badge>
+                </div>
+                <h3 className="font-semibold line-clamp-2">{post.title}</h3>
+                {post.summary && (
+                  <p className="text-sm text-muted-foreground line-clamp-2">{post.summary}</p>
+                )}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Calendar className="w-3 h-3" />
+                  {new Date(post.published_at).toLocaleDateString()}
+                  <span>•</span>
+                  <Eye className="w-3 h-3" />
+                  {post.views_count || 0}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {newsPosts.length === 0 && !isLoadingNews && (
+          <Card className="border-2 border-dashed border-border">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <Newspaper className="w-12 h-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">Nog geen nieuwsberichten</h3>
             </CardContent>
           </Card>
         )}

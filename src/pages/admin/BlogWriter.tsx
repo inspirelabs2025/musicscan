@@ -32,6 +32,7 @@ interface GeneratedBlog {
   category: string;
   slug: string;
   content: string;
+  image_url?: string;
 }
 
 const INTRO: ChatMsg = {

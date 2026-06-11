@@ -334,8 +334,29 @@ export default function AdminBlogWriter() {
                   </div>
                 )}
 
-                <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h1:mt-12 prose-h1:mb-6 prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-p:leading-relaxed">
-                  <ReactMarkdown>{blog.content}</ReactMarkdown>
+                <div className="max-w-none">
+                  <ReactMarkdown
+                    components={{
+                      h1: ({ children }) => <h1 className="text-3xl font-bold mt-12 mb-6 first:mt-0 text-foreground">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-2xl font-semibold mt-10 mb-4 text-foreground">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-xl font-medium mt-8 mb-3 text-foreground">{children}</h3>,
+                      p: ({ children }) => <p className="mb-6 leading-relaxed text-foreground/90 text-lg">{children}</p>,
+                      ul: ({ children }) => <ul className="mb-6 ml-6 space-y-2 list-disc marker:text-primary">{children}</ul>,
+                      ol: ({ children }) => <ol className="mb-6 ml-6 space-y-2 list-decimal marker:text-primary">{children}</ol>,
+                      li: ({ children }) => <li className="leading-relaxed text-foreground/90">{children}</li>,
+                      strong: ({ children }) => <strong className="font-bold text-foreground">{children}</strong>,
+                      em: ({ children }) => <em className="italic">{children}</em>,
+                      blockquote: ({ children }) => (
+                        <blockquote className="border-l-4 border-primary bg-primary/5 pl-6 py-4 my-8 italic rounded-r-lg">{children}</blockquote>
+                      ),
+                      a: ({ children, href }) => (
+                        <a href={href} className="text-primary hover:underline font-medium" target="_blank" rel="noopener noreferrer">{children}</a>
+                      ),
+                      hr: () => <hr className="my-8 border-border" />,
+                    }}
+                  >
+                    {blog.content}
+                  </ReactMarkdown>
                 </div>
 
                 <div className="mt-10 pt-6 border-t text-xs text-muted-foreground font-mono">

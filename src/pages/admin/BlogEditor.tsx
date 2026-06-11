@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, Save, ExternalLink, Eye, Image as ImageIcon } from "lucide-react";
+import { Loader2, ArrowLeft, Save, ExternalLink, Eye, Image as ImageIcon, Upload } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 interface BlogPost {

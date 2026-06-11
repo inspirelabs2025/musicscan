@@ -132,11 +132,11 @@ export default function AdminBlogWriter() {
     <div className="w-full min-w-0 p-4 space-y-4 max-w-5xl mx-auto">
       <div>
         <h1 className="text-3xl font-bold mb-1 flex items-center gap-2">
-          <Sparkles className="h-7 w-7 text-primary" />
-          Blog Writer
+          <Bot className="h-7 w-7 text-primary" />
+          Chat met Mike de blogger
         </h1>
         <p className="text-muted-foreground text-sm">
-          Brainstorm met de AI-redacteur. Als het idee scherp is, klik je op "Schrijf blog".
+          Brainstorm met Mike, je vaste redacteur. Als het idee scherp is, klik je op "Schrijf blog".
         </p>
       </div>
 

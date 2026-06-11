@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import {
   Disc3, LogIn, User, LayoutDashboard, LogOut, Library,
   ChevronDown, Home, ScanLine, Brain, Music, MessageCircle,
-  MessageSquare, DollarSign, BarChart3, Headphones, Trophy, Users, Menu as MenuIcon,
+  MessageSquare, DollarSign, BarChart3, Headphones, Trophy, Users, Menu as MenuIcon, Newspaper,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -113,6 +113,7 @@ export function StickyHeader() {
   ];
 
   const verhalenItems: DropdownItem[] = [
+    { label: nl ? 'Nieuws' : 'News', href: '/nieuws', icon: Newspaper },
     { label: t('nav.singles'), href: '/singles', icon: Music },
     { label: t('nav.artists'), href: '/artists', icon: Users },
     { label: t('nav.podcasts'), href: '/podcasts', icon: Headphones },

@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, Save, ExternalLink, Eye, Image as ImageIcon } from "lucide-react";
+import { Loader2, ArrowLeft, Save, ExternalLink, Eye, Image as ImageIcon, Upload } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 interface BlogPost {
@@ -31,6 +31,27 @@ export default function AdminBlogEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const uploadImage = async (file: File) => {
+    if (!post) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `editor/${post.id}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("news-images")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("news-images").getPublicUrl(path);
+      setPost((p) => (p ? { ...p, image_url: data.publicUrl } : p));
+      toast({ title: "Afbeelding geüpload ✅" });
+    } catch (err: any) {
+      toast({ title: "Upload mislukt", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -139,13 +160,53 @@ export default function AdminBlogEditor() {
             <Input value={post.author ?? ""} onChange={(e) => set("author", e.target.value)} />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label>Afbeelding URL</Label>
-            <div className="flex gap-2">
-              <Input value={post.image_url ?? ""} onChange={(e) => set("image_url", e.target.value)} />
+            <Label>Afbeelding</Label>
+            <div className="flex gap-2 flex-wrap">
+              <Input
+                placeholder="https://... of upload hieronder"
+                value={post.image_url ?? ""}
+                onChange={(e) => set("image_url", e.target.value)}
+                className="flex-1 min-w-[200px]"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                disabled={uploading}
+                onClick={() => document.getElementById("blog-image-upload")?.click()}
+              >
+                {uploading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4 mr-2" />
+                )}
+                Upload
+              </Button>
+              <input
+                id="blog-image-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadImage(f);
+                  e.target.value = "";
+                }}
+              />
               {post.image_url && (
                 <a href={post.image_url} target="_blank" rel="noreferrer">
-                  <Button variant="outline" size="icon"><ImageIcon className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="icon" type="button">
+                    <ImageIcon className="h-4 w-4" />
+                  </Button>
                 </a>
+              )}
+              {post.image_url && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => set("image_url", null)}
+                >
+                  Verwijder
+                </Button>
               )}
             </div>
             {post.image_url && (

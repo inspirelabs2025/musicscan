@@ -67,7 +67,7 @@ const ProjectView: React.FC = () => {
 
       {showChatNudge && (
         <div className="mb-6">
-          <AiNudge variant="nudge" />
+          <AiNudge />
         </div>
       )}
 

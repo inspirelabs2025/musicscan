@@ -140,6 +140,26 @@ export default function AdminBlogWriter() {
     }
   };
 
+  const generateImage = async () => {
+    if (!blog) return;
+    setGeneratingImage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-blog-writer", {
+        body: { mode: "image", title: blog.title, summary: blog.summary },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (!data?.image_url) throw new Error("Geen afbeelding ontvangen");
+      setBlog({ ...blog, image_url: data.image_url });
+      toast({ title: "Afbeelding gegenereerd" });
+    } catch (err: any) {
+      toast({ title: "Afbeelding mislukt", description: err.message, variant: "destructive" });
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
+
+
 
   const reset = () => {
     setMessages([INTRO]);

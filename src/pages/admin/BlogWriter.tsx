@@ -33,7 +33,7 @@ interface GeneratedBlog {
 const INTRO: ChatMsg = {
   role: "assistant",
   content:
-    "Waar zullen we het over hebben? Gooi een artiest, album, single of thema. Ik denk mee, stel vragen en help je een hoek vinden die niet voor de hand ligt. Als je klaar bent klik je op 'Schrijf blog'.",
+    "Hé, Mike hier. Waar zullen we het over hebben? Gooi een artiest, album, single of thema voor m'n voeten. Ik stel een paar scherpe vragen, deel wat weetjes en help je een hoek vinden die niet op pagina 1 van Google staat. Klaar? Druk op 'Schrijf blog'.",
 };
 
 export default function AdminBlogWriter() {

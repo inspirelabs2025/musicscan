@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { AiNudge } from '@/components/ui/ai-nudge'; // Import the new AI Nudge component
+import { AINudge as AiNudge } from '@/components/ui/ai-nudge'; // Import the new AI Nudge component
 
 interface Project {
   id: string;

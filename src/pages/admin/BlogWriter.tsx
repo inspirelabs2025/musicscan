@@ -286,32 +286,44 @@ export default function AdminBlogWriter() {
           </DialogHeader>
           {blog && (
             <article className="bg-background">
-              <div className="bg-gradient-to-b from-muted/40 to-background px-6 md:px-10 pt-10 pb-6 border-b">
-                <div className="mb-4">
-                  <Badge variant="secondary">{blog.category || "Nieuws"}</Badge>
-                </div>
-                <h1 className="text-3xl md:text-5xl font-bold mb-6 leading-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-                  {blog.title}
-                </h1>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-3.5 w-3.5 text-primary" />
+              <section className="relative py-10 px-6 md:px-10 bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-orange-500/10 border-b">
+                <div className="flex flex-col md:flex-row gap-6 items-start">
+                  <div className="w-full md:w-1/3">
+                    <div className="aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-2xl flex items-center justify-center">
+                      <Eye className="w-16 h-16 text-muted-foreground/30" />
                     </div>
-                    <span>MusicScan Redactie</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5" />
-                    <span>
-                      {new Date().toLocaleDateString("nl-NL", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </span>
+                  <div className="flex-1">
+                    <Badge className="bg-purple-500/20 text-purple-600 border-0 mb-4">
+                      {blog.category || "Nieuws"}
+                    </Badge>
+                    <h1 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent leading-tight">
+                      {blog.title}
+                    </h1>
+                    {blog.summary && (
+                      <p className="text-base text-muted-foreground mb-4">{blog.summary}</p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
+                          <User className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <span>MusicScan Redactie</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>
+                          {new Date().toLocaleDateString("nl-NL", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </section>
 
               <div className="px-6 md:px-10 py-8">
                 {blog.summary && (

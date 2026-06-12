@@ -1,63 +1,51 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import MainLayout from '@/layouts/MainLayout';
-import HomePage from '@/pages/HomePage';
-import ProfilePage from '@/pages/ProfilePage';
-import StudioPage from '@/pages/StudioPage';
-import ProjectPage from '@/pages/ProjectPage';
-import ScanPage from '@/pages/ScanPage';
-import LoginPage from '@/pages/LoginPage';
-import RegisterPage from '@/pages/RegisterPage';
-import ConfirmEmailPage from '@/pages/ConfirmEmailPage';
-import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
-import ResetPasswordPage from '@/pages/ResetPasswordPage';
-import AuthWatcher from '@/components/AuthWatcher';
-// Ensure analytics is initialized very early.
-import { initializeAnalytics, trackPageView } from '@/lib/analytics';
+import { useContext, useEffect, useState } from 'react';
+import { supabase } from '@supabase/supabase-js';
+import { AuthSession } from '@supabase/supabase-js';
 
-// Initialize GA as early as possible
-initializeAnalytics(import.meta.env.VITE_GA_MEASUREMENT_ID);
+import { Toaster } from 'sonner';
+import useSupabase from '@/hooks/useSupabase';
+import AuthContext from './contexts/AuthContext';
+import { PageLoader } from './components/app/page-loader';
+import AppRoutes from './AppRoutes';
+import { AiNudge } from './components/ui/ai-nudge';
 
-const AppRoutes: React.FC = () => {
-  const location = useLocation();
+function App() {
+  const { sessionFetched } = useContext(AuthContext);
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const { supabase } = useSupabase();
+
+  const aiNudgeVariant = import.meta.env.VITE_AI_NUDGE_VARIANT || 'default';
 
   useEffect(() => {
-    // Dynamically set page title (can be enhanced with route-specific titles)
-    const defaultTitle = "MusicScan";
-    document.title = defaultTitle;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
 
-    // Track page view on route change
-    trackPageView(location.pathname + location.search, document.title);
-  }, [location]);
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+  }, [supabase]);
+
+  if (!sessionFetched) {
+    return <PageLoader />;
+  }
 
   return (
-    <Routes>
-      <Route element={<AuthWatcher />}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/confirm-email" element={<ConfirmEmailPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/ai-features" element={<div>AI Features Page Placeholder</div>} /> {/* Placeholder for AI Features Page */}
-
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/studio" element={<StudioPage />} />
-          <Route path="/project/:id" element={<ProjectPage />} />
-          <Route path="/scan" element={<ScanPage />} />
-        </Route>
-      </Route>
-    </Routes>
+    <div className="h-full w-full">
+      {
+        // Conditionally render the AI Nudge based on experiment variant
+        // 'ai-nudge' and 'chat-nudge' are example variants.
+        // 'default' implies no specific nudge or a fallback.
+        aiNudgeVariant === 'ai-nudge' && (
+          <div className="fixed bottom-4 right-4 z-[9999] w-80">
+            <AiNudge variant="ai-nudge" />
+          </div>
+        )
+      }
+      <AppRoutes session={session} />
+      <Toaster />
+    </div>
   );
-};
-
-const App: React.FC = () => {
-  return (
-    <Router>
-      <AppRoutes />
-    </Router>
-  );
-};
+}
 
 export default App;

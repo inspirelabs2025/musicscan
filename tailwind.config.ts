@@ -78,7 +78,7 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				vinyl: {
+				viny: {
 					gold: 'hsl(var(--vinyl-gold))',
 					silver: 'hsl(var(--vinyl-silver))',
 					black: 'hsl(var(--vinyl-black))',
@@ -102,6 +102,11 @@ export default {
 					background: 'hsl(var(--ai-nudge-background))',
 					foreground: 'hsl(var(--ai-nudge-foreground))',
 					border: 'hsl(var(--ai-nudge-border))'
+				},
+				'chat-nudge': {
+					background: 'hsl(var(--chat-nudge-background))',
+					foreground: 'hsl(var(--chat-nudge-foreground))',
+					border: 'hsl(var(--chat-nudge-border))'
 				}
 			},
 			backgroundImage: {
@@ -198,7 +203,7 @@ export default {
 							},
 						},
 					},
-				},
+				}
 			}
 		}
 	},

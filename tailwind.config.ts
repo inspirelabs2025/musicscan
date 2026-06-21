@@ -102,6 +102,11 @@ export default {
 					background: 'hsl(var(--ai-nudge-background))',
 					foreground: 'hsl(var(--ai-nudge-foreground))',
 					border: 'hsl(var(--ai-nudge-border))'
+				},
+				'chat-nudge': {
+					background: 'hsl(var(--chat-nudge-background))',
+					foreground: 'hsl(var(--chat-nudge-foreground))',
+					border: 'hsl(var(--chat-nudge-border))'
 				}
 			},
 			backgroundImage: {
@@ -190,7 +195,7 @@ export default {
 							fontWeight: '600',
 							color: 'inherit',
 						},
-					a: {
+						a: {
 							color: 'hsl(var(--primary))',
 							textDecoration: 'none',
 							'&:hover': {
@@ -198,7 +203,7 @@ export default {
 							},
 						},
 					},
-				},
+				}
 			}
 		}
 	},

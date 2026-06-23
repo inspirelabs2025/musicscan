@@ -38,7 +38,7 @@ export default {
 				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground)'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -48,7 +48,7 @@ export default {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
 				},
-				muted: {
+				muxed: {
 					DEFAULT: 'hsl(var(--muted))',
 					foreground: 'hsl(var(--muted-foreground))'
 				},
@@ -102,6 +102,11 @@ export default {
 					background: 'hsl(var(--ai-nudge-background))',
 					foreground: 'hsl(var(--ai-nudge-foreground))',
 					border: 'hsl(var(--ai-nudge-border))'
+				},
+				'chat-nudge': {
+					background: 'hsl(var(--chat-nudge-background))',
+					foreground: 'hsl(var(--chat-nudge-foreground))',
+					border: 'hsl(var(--chat-nudge-border))'
 				}
 			},
 			backgroundImage: {
@@ -190,7 +195,7 @@ export default {
 							fontWeight: '600',
 							color: 'inherit',
 						},
-						a: {
+					a: {
 							color: 'hsl(var(--primary))',
 							textDecoration: 'none',
 							'&:hover': {
@@ -198,8 +203,8 @@ export default {
 							},
 						},
 					},
-				},
-			},
+				}
+			}
 		}
 	},
 	plugins: [],

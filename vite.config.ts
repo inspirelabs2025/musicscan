@@ -24,6 +24,7 @@ function buildVersionPlugin(): Plugin {
 export default defineConfig(({ mode }) => ({
   define: {
     __BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString()),
+    'process.env.VITE_AI_NUDGE_VARIANT': JSON.stringify(process.env.AI_NUDGE_VARIANT)
   },
   server: {
     host: "::",

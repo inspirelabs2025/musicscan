@@ -1723,7 +1723,11 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
           console.log('⚠️ No Statistics pricing found in scraped HTML');
         }
       } catch (scrapeError) {
-        console.error('❌ Scraping failed:', scrapeError);
+        if (scrapeError.name === 'AbortError') {
+          console.log('⚠️ Pricing scraping timed out (8s), falling back to Discogs API');
+        } else {
+          console.error('❌ Scraping failed:', scrapeError);
+        }
       }
     }
     

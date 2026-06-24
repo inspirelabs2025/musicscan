@@ -225,11 +225,14 @@ serve(async (req) => {
     }
 
     try {
-      // Multi-pass analysis
+      // Multi-pass analysis (general + details run in parallel to save time)
       console.log('🔍 Starting multi-pass analysis...')
 
-      // Pass 1: General release identification
-      const generalAnalysis = await analyzePhotosWithOpenAI(photoUrls, mediaType, 'general')
+      // Pass 1 & 2: General release identification + detail extraction in parallel
+      const [generalAnalysis, detailAnalysis] = await Promise.all([
+        analyzePhotosWithOpenAI(photoUrls, mediaType, 'general'),
+        analyzePhotosWithOpenAI(photoUrls, mediaType, 'details')
+      ])
 
       if (!generalAnalysis.success) {
         if (!skipSave && scanId) {
@@ -251,9 +254,6 @@ serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
-
-      // Pass 2: Detail extraction
-      const detailAnalysis = await analyzePhotosWithOpenAI(photoUrls, mediaType, 'details')
 
       // Pass 3: Dedicated matrix/SID extraction with preprocessing
       // For BOTH CD and LP, we now preprocess the matrix photo for better OCR

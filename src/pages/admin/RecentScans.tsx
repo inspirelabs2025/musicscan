@@ -648,7 +648,7 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
         </div>
       )}
 
-      {!isChat && thread && thread.length > 0 ? (
+      {thread && thread.length > 0 ? (
         <div>
           <h4 className="font-semibold mb-2">Volledige conversatie ({thread.length} berichten)</h4>
           <div className="space-y-3">

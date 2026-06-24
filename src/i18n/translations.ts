@@ -2718,7 +2718,7 @@ const translations = {
       notSupportedDesc: "Audio opname wordt niet ondersteund op dit apparaat. Gebruik iOS 16.4+ of een moderne browser.",
       micNotAvailable: "Microfoon niet beschikbaar",
       micNotAvailableDesc: "Geef toestemming voor de microfoon of controleer je instellingen.",
-      patience: "🎯 **Even geduld...** Ik doorzoek nu duizenden releases om jouw exacte pressing te vinden. Barcode, runout-codes, labels — alles wordt gecheckt! 🔎",
+      patience: "🎯 **Even geduld...** Ik check de foto's en zoek de exacte release. Dit duurt meestal 10-20 seconden. 🔎",
       verified: "Geverifieerd",
       likelyCorrect: "Waarschijnlijk correct",
       suggestedMatch: "Voorgestelde match",

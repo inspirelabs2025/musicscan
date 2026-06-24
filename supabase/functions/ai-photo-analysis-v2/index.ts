@@ -225,11 +225,14 @@ serve(async (req) => {
     }
 
     try {
-      // Multi-pass analysis
+      // Multi-pass analysis (general + details run in parallel to save time)
       console.log('🔍 Starting multi-pass analysis...')
 
-      // Pass 1: General release identification
-      const generalAnalysis = await analyzePhotosWithOpenAI(photoUrls, mediaType, 'general')
+      // Pass 1 & 2: General release identification + detail extraction in parallel
+      const [generalAnalysis, detailAnalysis] = await Promise.all([
+        analyzePhotosWithOpenAI(photoUrls, mediaType, 'general'),
+        analyzePhotosWithOpenAI(photoUrls, mediaType, 'details')
+      ])
 
       if (!generalAnalysis.success) {
         if (!skipSave && scanId) {
@@ -252,9 +255,6 @@ serve(async (req) => {
         )
       }
 
-      // Pass 2: Detail extraction
-      const detailAnalysis = await analyzePhotosWithOpenAI(photoUrls, mediaType, 'details')
-
       // Pass 3: Dedicated matrix/SID extraction with preprocessing
       // For BOTH CD and LP, we now preprocess the matrix photo for better OCR
       let matrixPhotoUrls = photoUrls;
@@ -267,6 +267,9 @@ serve(async (req) => {
         try {
           console.log(`🔧 Preprocessing ${mediaType} matrix photo (index ${matrixPhotoIndex})...`);
           
+          const preprocessController = new AbortController();
+          const preprocessTimeout = setTimeout(() => preprocessController.abort(), 6000);
+          
           const preprocessResponse = await fetch(
             `${supabaseUrl}/functions/v1/preprocess-matrix-photo`,
             {
@@ -278,9 +281,11 @@ serve(async (req) => {
               body: JSON.stringify({
                 imageUrl: matrixPhotoUrl,
                 mediaType: mediaType
-              })
+              }),
+              signal: preprocessController.signal
             }
           );
+          clearTimeout(preprocessTimeout);
           
           if (preprocessResponse.ok) {
             const preprocessResult = await preprocessResponse.json();
@@ -298,7 +303,11 @@ serve(async (req) => {
             console.log(`⚠️ Preprocessing failed (${preprocessResponse.status}), using original photo`);
           }
         } catch (preprocessError) {
-          console.log('⚠️ Preprocessing error (continuing with original):', preprocessError.message);
+          if (preprocessError.name === 'AbortError') {
+            console.log('⚠️ Matrix preprocessing timed out (6s), using original photo');
+          } else {
+            console.log('⚠️ Preprocessing error (continuing with original):', preprocessError.message);
+          }
         }
       }
 
@@ -790,7 +799,8 @@ serve(async (req) => {
       }
 
       let pricingStats = null;
-      if (discogsResult?.discogsId) {
+      // Skip expensive pricing fetch in chat/quick contexts (skipSave) to keep response fast
+      if (discogsResult?.discogsId && !skipSave) {
         try {
           console.log('💰 Starting pricing fetch for Discogs ID:', discogsResult.discogsId);
           pricingStats = await fetchDiscogsPricing(discogsResult.discogsId);
@@ -803,6 +813,8 @@ serve(async (req) => {
         } catch (error) {
           console.log('❌ Pricing fetch failed but scan succeeded:', error);
         }
+      } else if (skipSave) {
+        console.log('⏭️ skipSave=true — skipping pricing fetch for fast chat response');
       }
 
       // Build missing fields for photo guidance
@@ -1645,13 +1657,18 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
       console.log(`🌐 Scraping pricing from release page: ${releasePageUrl}`);
       
       try {
+        const pricingController = new AbortController();
+        const pricingTimeout = setTimeout(() => pricingController.abort(), 8000);
+        
         const response = await fetch(scraperUrl, {
+          signal: pricingController.signal,
           headers: {
             'Accept-Language': 'nl-NL,nl;q=0.9,en;q=0.8',
             'Cookie': 'currency=EUR',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
           }
         });
+        clearTimeout(pricingTimeout);
         
         if (response.ok) {
           const html = await response.text();
@@ -1706,7 +1723,11 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
           console.log('⚠️ No Statistics pricing found in scraped HTML');
         }
       } catch (scrapeError) {
-        console.error('❌ Scraping failed:', scrapeError);
+        if (scrapeError.name === 'AbortError') {
+          console.log('⚠️ Pricing scraping timed out (8s), falling back to Discogs API');
+        } else {
+          console.error('❌ Scraping failed:', scrapeError);
+        }
       }
     }
     

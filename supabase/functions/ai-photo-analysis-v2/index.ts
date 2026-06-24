@@ -799,7 +799,8 @@ serve(async (req) => {
       }
 
       let pricingStats = null;
-      if (discogsResult?.discogsId) {
+      // Skip expensive pricing fetch in chat/quick contexts (skipSave) to keep response fast
+      if (discogsResult?.discogsId && !skipSave) {
         try {
           console.log('💰 Starting pricing fetch for Discogs ID:', discogsResult.discogsId);
           pricingStats = await fetchDiscogsPricing(discogsResult.discogsId);
@@ -812,6 +813,8 @@ serve(async (req) => {
         } catch (error) {
           console.log('❌ Pricing fetch failed but scan succeeded:', error);
         }
+      } else if (skipSave) {
+        console.log('⏭️ skipSave=true — skipping pricing fetch for fast chat response');
       }
 
       // Build missing fields for photo guidance

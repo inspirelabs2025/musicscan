@@ -98,6 +98,7 @@ export default function AIScanV2() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [showGuestSignup, setShowGuestSignup] = useState(false);
   const {
     checkUsageLimit,
     incrementUsage

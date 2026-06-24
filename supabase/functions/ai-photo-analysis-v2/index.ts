@@ -267,6 +267,9 @@ serve(async (req) => {
         try {
           console.log(`🔧 Preprocessing ${mediaType} matrix photo (index ${matrixPhotoIndex})...`);
           
+          const preprocessController = new AbortController();
+          const preprocessTimeout = setTimeout(() => preprocessController.abort(), 6000);
+          
           const preprocessResponse = await fetch(
             `${supabaseUrl}/functions/v1/preprocess-matrix-photo`,
             {
@@ -278,9 +281,11 @@ serve(async (req) => {
               body: JSON.stringify({
                 imageUrl: matrixPhotoUrl,
                 mediaType: mediaType
-              })
+              }),
+              signal: preprocessController.signal
             }
           );
+          clearTimeout(preprocessTimeout);
           
           if (preprocessResponse.ok) {
             const preprocessResult = await preprocessResponse.json();
@@ -298,7 +303,11 @@ serve(async (req) => {
             console.log(`⚠️ Preprocessing failed (${preprocessResponse.status}), using original photo`);
           }
         } catch (preprocessError) {
-          console.log('⚠️ Preprocessing error (continuing with original):', preprocessError.message);
+          if (preprocessError.name === 'AbortError') {
+            console.log('⚠️ Matrix preprocessing timed out (6s), using original photo');
+          } else {
+            console.log('⚠️ Preprocessing error (continuing with original):', preprocessError.message);
+          }
         }
       }
 

@@ -132,6 +132,13 @@ export default function AIScanV2() {
       }
     }
   }, [analysisResult?.result?.discogs_id, searchByDiscogsId]);
+   // Show signup popup for guest users once they have a scan result
+   useEffect(() => {
+     if (analysisResult && !user && !loading) {
+       const t = setTimeout(() => setShowGuestSignup(true), 1500);
+       return () => clearTimeout(t);
+     }
+   }, [analysisResult, user, loading]);
 
    // No longer redirecting — guests can try scanning without login
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {

@@ -1657,13 +1657,18 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
       console.log(`🌐 Scraping pricing from release page: ${releasePageUrl}`);
       
       try {
+        const pricingController = new AbortController();
+        const pricingTimeout = setTimeout(() => pricingController.abort(), 8000);
+        
         const response = await fetch(scraperUrl, {
+          signal: pricingController.signal,
           headers: {
             'Accept-Language': 'nl-NL,nl;q=0.9,en;q=0.8',
             'Cookie': 'currency=EUR',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
           }
         });
+        clearTimeout(pricingTimeout);
         
         if (response.ok) {
           const html = await response.text();

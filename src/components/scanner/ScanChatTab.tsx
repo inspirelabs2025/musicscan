@@ -1589,21 +1589,21 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
                     className="h-20 w-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 transition-colors"
                     title={sc.takePhoto}
                   >
-                    <Camera className="h-5 w-5 text-muted-foreground" />
+                    <Camera className="h-5 w-5 text-[hsl(var(--vinyl-gold))]" />
                   </button>
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     className="h-20 w-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 transition-colors"
                     title={sc.chooseFromGallery}
                   >
-                    <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                    <ImagePlus className="h-5 w-5 text-[hsl(var(--vinyl-gold))]" />
                   </button>
                 </div>
                 <Button onClick={uploadAndSend} disabled={isUploading} className="w-full" size="sm">
                   {isUploading ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{sc.uploading}</>
                   ) : (
-                    <><Send className="mr-2 h-4 w-4" />{sc.sendPhotos.replace('{count}', String(pendingFiles.length))}</>
+                    <><Send className="mr-2 h-4 w-4 text-[hsl(var(--vinyl-gold))]" />{sc.sendPhotos.replace('{count}', String(pendingFiles.length))}</>
                   )}
                 </Button>
               </CardContent>
@@ -1651,7 +1651,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
               className="h-8 w-8 rounded-full hover:bg-primary/10"
               title={sc.takePhoto}
             >
-              <Camera className="h-3.5 w-3.5 text-muted-foreground" />
+              <Camera className="h-3.5 w-3.5 text-[hsl(var(--vinyl-gold))]" />
             </Button>
             <Button
               variant="ghost"
@@ -1661,7 +1661,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
               className="h-8 w-8 rounded-full hover:bg-primary/10"
               title={sc.chooseFromGallery}
             >
-              <ImagePlus className="h-3.5 w-3.5 text-muted-foreground" />
+              <ImagePlus className="h-3.5 w-3.5 text-[hsl(var(--vinyl-gold))]" />
             </Button>
           </div>
           <Textarea
@@ -1674,7 +1674,7 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
             disabled={isStreaming || isRunningV2 || guestLimitReached}
           />
           <Button onClick={handleSend} disabled={!input.trim() || isStreaming || isRunningV2 || guestLimitReached} size="icon" className="shrink-0 h-8 w-8 rounded-full shadow-sm">
-            {(isStreaming || isRunningV2) ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+            {(isStreaming || isRunningV2) ? <Loader2 className="h-3.5 w-3.5 animate-spin text-[hsl(var(--vinyl-gold))]" /> : <Send className="h-3.5 w-3.5 text-[hsl(var(--vinyl-gold))]" />}
           </Button>
         </div>
         </div>

@@ -140,6 +140,16 @@ export default function AIScanV2() {
      }
    }, [analysisResult, user, loading]);
 
+   // Also listen for chat-based scan completions (ScanChatTab dispatches this)
+   useEffect(() => {
+     const handler = () => {
+       if (!user && !loading) setShowGuestSignup(true);
+     };
+     window.addEventListener('guest-scan-completed', handler);
+     return () => window.removeEventListener('guest-scan-completed', handler);
+   }, [user, loading]);
+
+
    // No longer redirecting — guests can try scanning without login
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);

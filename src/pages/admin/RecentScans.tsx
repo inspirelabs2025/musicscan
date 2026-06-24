@@ -495,7 +495,7 @@ const RecentScans = () => {
                       <TableCell>
                         {(() => {
                           const meta = scan.metadata || {};
-                          const hasDetails = (meta.photo_urls?.length || 0) > 0 || meta.user_message || meta.ai_response;
+                          const hasDetails = (meta.photo_urls?.length || 0) > 0 || meta.user_message || meta.ai_response || scan.source === "scan_chat" || scan.source === "scan_chat_photo";
                           if (!hasDetails) return <span className="text-muted-foreground">—</span>;
                           return (
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDetailScan(scan)}>
@@ -537,6 +537,45 @@ const RecentScans = () => {
 function ScanDetailContent({ scan }: { scan: ScanAction }) {
   const meta = scan.metadata || {};
   const photos: string[] = meta.photo_urls || [];
+  const isChat = scan.source === "scan_chat" || scan.source === "scan_chat_photo";
+
+  // For chat: find the companion entry (started <-> completed pair) so we always
+  // show both the user_message and the ai_response together.
+  const { data: companion } = useQuery({
+    queryKey: ["scan-chat-companion", scan.id, scan.user_id, scan.source, scan.status],
+    queryFn: async () => {
+      if (!isChat) return null;
+      const wantStatus = scan.status === "completed" ? "started" : "completed";
+      const baseTime = new Date(scan.created_at).getTime();
+      const windowMs = 5 * 60 * 1000;
+      const lo = new Date(baseTime - windowMs).toISOString();
+      const hi = new Date(baseTime + windowMs).toISOString();
+      let q = supabase
+        .from("scan_activity_log")
+        .select("id, created_at, status, metadata")
+        .eq("action_type", scan.source)
+        .eq("status", wantStatus)
+        .gte("created_at", lo)
+        .lte("created_at", hi)
+        .neq("id", scan.id)
+        .order("created_at", { ascending: true })
+        .limit(5);
+      q = scan.user_id ? q.eq("user_id", scan.user_id) : q.is("user_id", null);
+      const { data } = await q;
+      if (!data?.length) return null;
+      // closest in time
+      return data.sort((a, b) =>
+        Math.abs(new Date(a.created_at).getTime() - baseTime) -
+        Math.abs(new Date(b.created_at).getTime() - baseTime)
+      )[0];
+    },
+    enabled: isChat,
+  });
+
+  const companionMeta: any = companion?.metadata || {};
+  const mergedUserMessage = meta.user_message || companionMeta.user_message;
+  const mergedAiResponse = meta.ai_response || companionMeta.ai_response;
+  const mergedPhotos: string[] = photos.length ? photos : (companionMeta.photo_urls || []);
 
   // Fetch the FULL conversation history for this user (all chat entries, no time limit)
   const { data: thread } = useQuery({
@@ -573,13 +612,14 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
     enabled: !!primaryDiscogsId,
   });
 
+
   return (
     <div className="space-y-4 text-sm">
-      {photos.length > 0 && (
+      {mergedPhotos.length > 0 && (
         <div>
-          <h4 className="font-semibold mb-2">Foto's ({photos.length})</h4>
+          <h4 className="font-semibold mb-2">Foto's ({mergedPhotos.length})</h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {photos.map((url, i) => (
+            {mergedPhotos.map((url, i) => (
               <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
                 <img src={url} alt={`Foto ${i + 1}`} className="w-full h-40 object-cover rounded border hover:opacity-80 transition" />
               </a>
@@ -588,7 +628,27 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
         </div>
       )}
 
-      {thread && thread.length > 0 ? (
+      {isChat && (mergedUserMessage || mergedAiResponse) && (
+        <div className="space-y-3">
+          <h4 className="font-semibold">Chat{scan.status === "started" && !mergedAiResponse ? " (nog niet afgerond)" : ""}</h4>
+          {mergedUserMessage && (
+            <div>
+              <div className="text-[10px] uppercase text-muted-foreground font-semibold mb-1">Gebruiker</div>
+              <div className="bg-muted rounded p-3 whitespace-pre-wrap text-foreground text-xs">{mergedUserMessage}</div>
+            </div>
+          )}
+          {mergedAiResponse ? (
+            <div>
+              <div className="text-[10px] uppercase text-muted-foreground font-semibold mb-1">Magic Mike</div>
+              <div className="bg-primary/5 border border-primary/20 rounded p-3 whitespace-pre-wrap text-foreground text-xs">{mergedAiResponse}</div>
+            </div>
+          ) : (
+            <div className="text-xs text-muted-foreground italic">Geen antwoord gevonden (chat nog niet afgerond of fout).</div>
+          )}
+        </div>
+      )}
+
+      {!isChat && thread && thread.length > 0 ? (
         <div>
           <h4 className="font-semibold mb-2">Volledige conversatie ({thread.length} berichten)</h4>
           <div className="space-y-3">
@@ -635,7 +695,7 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
             })}
           </div>
         </div>
-      ) : (
+      ) : !isChat ? (
         <>
           {meta.user_message && (
             <div>
@@ -650,7 +710,8 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
             </div>
           )}
         </>
-      )}
+      ) : null}
+
 
       {release && (
         <div>

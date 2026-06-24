@@ -615,11 +615,11 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
 
   return (
     <div className="space-y-4 text-sm">
-      {photos.length > 0 && (
+      {mergedPhotos.length > 0 && (
         <div>
-          <h4 className="font-semibold mb-2">Foto's ({photos.length})</h4>
+          <h4 className="font-semibold mb-2">Foto's ({mergedPhotos.length})</h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {photos.map((url, i) => (
+            {mergedPhotos.map((url, i) => (
               <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
                 <img src={url} alt={`Foto ${i + 1}`} className="w-full h-40 object-cover rounded border hover:opacity-80 transition" />
               </a>
@@ -628,7 +628,27 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
         </div>
       )}
 
-      {thread && thread.length > 0 ? (
+      {isChat && (mergedUserMessage || mergedAiResponse) && (
+        <div className="space-y-3">
+          <h4 className="font-semibold">Chat{scan.status === "started" && !mergedAiResponse ? " (nog niet afgerond)" : ""}</h4>
+          {mergedUserMessage && (
+            <div>
+              <div className="text-[10px] uppercase text-muted-foreground font-semibold mb-1">Gebruiker</div>
+              <div className="bg-muted rounded p-3 whitespace-pre-wrap text-foreground text-xs">{mergedUserMessage}</div>
+            </div>
+          )}
+          {mergedAiResponse ? (
+            <div>
+              <div className="text-[10px] uppercase text-muted-foreground font-semibold mb-1">Magic Mike</div>
+              <div className="bg-primary/5 border border-primary/20 rounded p-3 whitespace-pre-wrap text-foreground text-xs">{mergedAiResponse}</div>
+            </div>
+          ) : (
+            <div className="text-xs text-muted-foreground italic">Geen antwoord gevonden (chat nog niet afgerond of fout).</div>
+          )}
+        </div>
+      )}
+
+      {!isChat && thread && thread.length > 0 ? (
         <div>
           <h4 className="font-semibold mb-2">Volledige conversatie ({thread.length} berichten)</h4>
           <div className="space-y-3">
@@ -675,7 +695,7 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
             })}
           </div>
         </div>
-      ) : (
+      ) : !isChat ? (
         <>
           {meta.user_message && (
             <div>
@@ -690,7 +710,8 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
             </div>
           )}
         </>
-      )}
+      ) : null}
+
 
       {release && (
         <div>

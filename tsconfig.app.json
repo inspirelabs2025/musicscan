@@ -8,8 +8,7 @@
       "DOM",
       "DOM.Iterable",
       "WebWorker",
-      "ScriptHost",
-      "ESNext.ImportMeta"
+      "ScriptHost"
     ],
     "module": "ESNext",
     "moduleDetection": "force",

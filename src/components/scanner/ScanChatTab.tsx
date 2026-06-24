@@ -371,6 +371,19 @@ export const ScanChatTab = React.forwardRef<ScanChatTabHandle, ScanChatTabProps>
   ]);
   const [showWelcomeActions, setShowWelcomeActions] = useState(true);
 
+  // Notify parent when a guest visitor receives a scan result, so we can show
+  // the "Create account + 10 credits / Download the app" popup.
+  const guestPromptFiredRef = useRef(false);
+  useEffect(() => {
+    if (user || guestPromptFiredRef.current) return;
+    const hasUserMsg = messages.some(m => m.role === 'user');
+    const assistantBeyondWelcome = messages.filter(m => m.role === 'assistant').length > 1;
+    if (hasUserMsg && assistantBeyondWelcome) {
+      guestPromptFiredRef.current = true;
+      window.dispatchEvent(new CustomEvent('guest-scan-completed'));
+    }
+  }, [messages, user]);
+
   // Update welcome message when language changes
   useEffect(() => {
     setMessages(prev => {

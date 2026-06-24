@@ -20,6 +20,7 @@ import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
 import testCdMatrix from '@/assets/test-cd-matrix.jpg';
 import { EnhancedScanPreview } from '@/components/scanner/EnhancedScanPreview';
 import { AIScanV2Results } from '@/components/scanner/AIScanV2Results';
+import { GuestScanSignupDialog } from '@/components/scanner/GuestScanSignupDialog';
 import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
 import { ScanChatTab, ScanChatTabHandle } from '@/components/scanner/ScanChatTab';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -97,6 +98,7 @@ export default function AIScanV2() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [showGuestSignup, setShowGuestSignup] = useState(false);
   const {
     checkUsageLimit,
     incrementUsage
@@ -130,6 +132,23 @@ export default function AIScanV2() {
       }
     }
   }, [analysisResult?.result?.discogs_id, searchByDiscogsId]);
+   // Show signup popup for guest users once they have a scan result
+   useEffect(() => {
+     if (analysisResult && !user && !loading) {
+       const t = setTimeout(() => setShowGuestSignup(true), 1500);
+       return () => clearTimeout(t);
+     }
+   }, [analysisResult, user, loading]);
+
+   // Also listen for chat-based scan completions (ScanChatTab dispatches this)
+   useEffect(() => {
+     const handler = () => {
+       if (!user && !loading) setShowGuestSignup(true);
+     };
+     window.addEventListener('guest-scan-completed', handler);
+     return () => window.removeEventListener('guest-scan-completed', handler);
+   }, [user, loading]);
+
 
    // No longer redirecting — guests can try scanning without login
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -376,7 +395,11 @@ export default function AIScanV2() {
       </div>
 
       {/* Upgrade Prompt Modal */}
+      {/* Upgrade Prompt Modal */}
       <UpgradePrompt isOpen={showUpgradePrompt} onClose={() => setShowUpgradePrompt(false)} reason="usage_limit" currentPlan={subscription?.plan_slug || 'free'} />
+
+      {/* Guest signup popup after a scan by an unregistered visitor */}
+      <GuestScanSignupDialog open={showGuestSignup} onClose={() => setShowGuestSignup(false)} />
 
     </>;
 }

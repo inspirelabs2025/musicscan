@@ -685,7 +685,7 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
         </div>
       )}
 
-      {!photos.length && !(thread && thread.length > 0) && !meta.user_message && !meta.ai_response && !release && (
+      {!allPhotos.length && !userMessage && !aiResponse && !meta.user_message && !meta.ai_response && !release && (
         <p className="text-muted-foreground">Geen extra details opgeslagen voor deze actie.</p>
       )}
     </div>

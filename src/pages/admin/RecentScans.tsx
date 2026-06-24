@@ -537,6 +537,45 @@ const RecentScans = () => {
 function ScanDetailContent({ scan }: { scan: ScanAction }) {
   const meta = scan.metadata || {};
   const photos: string[] = meta.photo_urls || [];
+  const isChat = scan.source === "scan_chat" || scan.source === "scan_chat_photo";
+
+  // For chat: find the companion entry (started <-> completed pair) so we always
+  // show both the user_message and the ai_response together.
+  const { data: companion } = useQuery({
+    queryKey: ["scan-chat-companion", scan.id, scan.user_id, scan.source, scan.status],
+    queryFn: async () => {
+      if (!isChat) return null;
+      const wantStatus = scan.status === "completed" ? "started" : "completed";
+      const baseTime = new Date(scan.created_at).getTime();
+      const windowMs = 5 * 60 * 1000;
+      const lo = new Date(baseTime - windowMs).toISOString();
+      const hi = new Date(baseTime + windowMs).toISOString();
+      let q = supabase
+        .from("scan_activity_log")
+        .select("id, created_at, status, metadata")
+        .eq("action_type", scan.source)
+        .eq("status", wantStatus)
+        .gte("created_at", lo)
+        .lte("created_at", hi)
+        .neq("id", scan.id)
+        .order("created_at", { ascending: true })
+        .limit(5);
+      q = scan.user_id ? q.eq("user_id", scan.user_id) : q.is("user_id", null);
+      const { data } = await q;
+      if (!data?.length) return null;
+      // closest in time
+      return data.sort((a, b) =>
+        Math.abs(new Date(a.created_at).getTime() - baseTime) -
+        Math.abs(new Date(b.created_at).getTime() - baseTime)
+      )[0];
+    },
+    enabled: isChat,
+  });
+
+  const companionMeta: any = companion?.metadata || {};
+  const mergedUserMessage = meta.user_message || companionMeta.user_message;
+  const mergedAiResponse = meta.ai_response || companionMeta.ai_response;
+  const mergedPhotos: string[] = photos.length ? photos : (companionMeta.photo_urls || []);
 
   // Fetch the FULL conversation history for this user (all chat entries, no time limit)
   const { data: thread } = useQuery({
@@ -572,6 +611,7 @@ function ScanDetailContent({ scan }: { scan: ScanAction }) {
     },
     enabled: !!primaryDiscogsId,
   });
+
 
   return (
     <div className="space-y-4 text-sm">

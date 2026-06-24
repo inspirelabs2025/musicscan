@@ -2692,7 +2692,7 @@ const translations = {
     },
 
     scanChatUI: {
-      welcomeMessage: "🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets **scannen** of iets **vragen** over een artiest of album?",
+      welcomeMessage: "🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je een **LP of CD**&nbsp;&nbsp;scannen of iets **vragen** over een artiest of album?",
       scanAction: "🔍 Scannen",
       askAction: "💬 Stel een vraag",
       scanButton: "Scannen",
@@ -5514,7 +5514,7 @@ const translations = {
 
     scanChatUI: {
       // Welcome & actions
-      welcomeMessage: "🎩 **Hey, I'm Magic Mike!** Your personal music detective.\n\nWant to **scan** something or **ask** a question about an artist or album?",
+      welcomeMessage: "🎩 **Hey, I'm Magic Mike!** Your personal music detective.\n\nWant to scan an **LP or CD** or **ask** a question about an artist or album?",
       scanAction: "🔍 Scan",
       askAction: "💬 Ask a question",
       scanButton: "Scan",

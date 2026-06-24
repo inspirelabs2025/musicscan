@@ -356,10 +356,12 @@ export default function AIScanV2() {
           {/* Header - compact on mobile */}
           <div className="text-center space-y-1 md:space-y-2">
             <div className="flex items-center justify-center gap-2 md:gap-4 flex-wrap">
-              <h1 className="text-xl md:text-3xl font-bold text-white flex items-center gap-1.5">
-                <Brain className="h-5 w-5 md:h-8 md:w-8 text-primary" />
-                Smart Scan
-                <Badge variant="secondary" className="ml-1 text-[10px] md:text-xs">BETA</Badge>
+              <h1 className="text-xl md:text-3xl font-bold text-white flex flex-col items-center leading-tight">
+                <div className="flex items-center gap-1.5">
+                  <Brain className="h-5 w-5 md:h-8 md:w-8 text-primary" />
+                  CD of LP Scan
+                </div>
+                <Badge variant="secondary" className="mt-1 text-[10px] md:text-xs">BETA</Badge>
               </h1>
               <LanguageSwitcher />
               {user && (

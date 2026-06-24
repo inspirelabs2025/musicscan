@@ -5514,7 +5514,7 @@ const translations = {
 
     scanChatUI: {
       // Welcome & actions
-      welcomeMessage: "🎩 **Hey, I'm Magic Mike!** Your personal music detective.\n\nWant to **scan** something or **ask** a question about an artist or album?",
+      welcomeMessage: "🎩 **Hey, I'm Magic Mike!** Your personal music detective.\n\nWant to scan an **LP or CD** or **ask** a question about an artist or album?",
       scanAction: "🔍 Scan",
       askAction: "💬 Ask a question",
       scanButton: "Scan",

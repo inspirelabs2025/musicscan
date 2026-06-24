@@ -495,7 +495,7 @@ const RecentScans = () => {
                       <TableCell>
                         {(() => {
                           const meta = scan.metadata || {};
-                          const hasDetails = (meta.photo_urls?.length || 0) > 0 || meta.user_message || meta.ai_response;
+                          const hasDetails = (meta.photo_urls?.length || 0) > 0 || meta.user_message || meta.ai_response || scan.source === "scan_chat" || scan.source === "scan_chat_photo";
                           if (!hasDetails) return <span className="text-muted-foreground">—</span>;
                           return (
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDetailScan(scan)}>

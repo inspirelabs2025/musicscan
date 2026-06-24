@@ -225,14 +225,61 @@ serve(async (req) => {
     }
 
     try {
-      // Multi-pass analysis (general + details run in parallel to save time)
-      console.log('🔍 Starting multi-pass analysis...')
+      // Multi-pass analysis — run ALL 3 OpenAI passes in PARALLEL for speed.
+      // Previously sequential = ~25-30s; parallel = max(pass) ≈ 8-12s.
+      console.log('🔍 Starting multi-pass analysis (parallel)...')
 
-      // Pass 1 & 2: General release identification + detail extraction in parallel
-      const [generalAnalysis, detailAnalysis] = await Promise.all([
+      // Matrix photo selection (last for vinyl, photo 3 for CD)
+      const matrixPhotoIndex = mediaType === 'vinyl' ? photoUrls.length - 1 : Math.min(2, photoUrls.length - 1);
+      const matrixPhotoUrl = photoUrls[matrixPhotoIndex];
+
+      // Preprocessing runs in parallel with general+details passes.
+      // We start matrix pass with original photo; if preprocessing finishes in time we'd ideally
+      // use it, but to keep things simple+fast we just use original photo for matrix in skipSave (chat).
+      // For non-skipSave (full scan), we still attempt preprocessing but in parallel.
+      let matrixPhotoUrls = photoUrls;
+
+      const preprocessPromise = (!skipSave && matrixPhotoUrl)
+        ? (async () => {
+            try {
+              console.log(`🔧 Preprocessing ${mediaType} matrix photo (parallel)...`);
+              const ctl = new AbortController();
+              const to = setTimeout(() => ctl.abort(), 6000);
+              const res = await fetch(
+                `${supabaseUrl}/functions/v1/preprocess-matrix-photo`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${supabaseServiceKey}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ imageUrl: matrixPhotoUrl, mediaType }),
+                  signal: ctl.signal,
+                }
+              );
+              clearTimeout(to);
+              if (res.ok) {
+                const r = await res.json();
+                if (r?.success && r.enhancedImageBase64) {
+                  const arr = [...photoUrls];
+                  arr[matrixPhotoIndex] = r.enhancedImageBase64;
+                  return arr;
+                }
+              }
+            } catch (e) {
+              console.log('⚠️ Preprocessing skipped:', e?.message || e);
+            }
+            return null;
+          })()
+        : Promise.resolve(null);
+
+      // Run all 3 OpenAI passes + preprocessing in parallel
+      const [generalAnalysis, detailAnalysis, matrixAnalysisInitial, preprocessed] = await Promise.all([
         analyzePhotosWithOpenAI(photoUrls, mediaType, 'general'),
-        analyzePhotosWithOpenAI(photoUrls, mediaType, 'details')
-      ])
+        analyzePhotosWithOpenAI(photoUrls, mediaType, 'details'),
+        analyzePhotosWithOpenAI(photoUrls, mediaType, 'matrix'),
+        preprocessPromise,
+      ]);
 
       if (!generalAnalysis.success) {
         if (!skipSave && scanId) {
@@ -255,68 +302,19 @@ serve(async (req) => {
         )
       }
 
-      // Pass 3: Dedicated matrix/SID extraction with preprocessing
-      // For BOTH CD and LP, we now preprocess the matrix photo for better OCR
-      let matrixPhotoUrls = photoUrls;
-      
-      // Try to preprocess the matrix photo (last photo for vinyl, photo 3 for CD)
-      const matrixPhotoIndex = mediaType === 'vinyl' ? photoUrls.length - 1 : Math.min(2, photoUrls.length - 1);
-      const matrixPhotoUrl = photoUrls[matrixPhotoIndex];
-      
-      if (matrixPhotoUrl) {
-        try {
-          console.log(`🔧 Preprocessing ${mediaType} matrix photo (index ${matrixPhotoIndex})...`);
-          
-          const preprocessController = new AbortController();
-          const preprocessTimeout = setTimeout(() => preprocessController.abort(), 6000);
-          
-          const preprocessResponse = await fetch(
-            `${supabaseUrl}/functions/v1/preprocess-matrix-photo`,
-            {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${supabaseServiceKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                imageUrl: matrixPhotoUrl,
-                mediaType: mediaType
-              }),
-              signal: preprocessController.signal
-            }
-          );
-          clearTimeout(preprocessTimeout);
-          
-          if (preprocessResponse.ok) {
-            const preprocessResult = await preprocessResponse.json();
-            if (preprocessResult.success && preprocessResult.enhancedImageBase64) {
-              console.log(`✅ Matrix photo preprocessed in ${preprocessResult.processingTime}ms`);
-              console.log(`📊 Pipeline steps: ${preprocessResult.pipeline?.join(' → ')}`);
-              
-              // Replace the matrix photo URL with the enhanced base64 for the matrix pass
-              matrixPhotoUrls = [...photoUrls];
-              matrixPhotoUrls[matrixPhotoIndex] = preprocessResult.enhancedImageBase64;
-            } else {
-              console.log('⚠️ Preprocessing returned no enhanced image, using original');
-            }
-          } else {
-            console.log(`⚠️ Preprocessing failed (${preprocessResponse.status}), using original photo`);
-          }
-        } catch (preprocessError) {
-          if (preprocessError.name === 'AbortError') {
-            console.log('⚠️ Matrix preprocessing timed out (6s), using original photo');
-          } else {
-            console.log('⚠️ Preprocessing error (continuing with original):', preprocessError.message);
-          }
-        }
+      // For full scans: if preprocessing succeeded AND initial matrix pass found no matrix,
+      // re-run matrix pass with enhanced image for better OCR.
+      let matrixAnalysis = matrixAnalysisInitial;
+      if (preprocessed && (!matrixAnalysisInitial?.success || !matrixAnalysisInitial?.data?.matrixNumberFull)) {
+        console.log('🔁 Re-running matrix pass with preprocessed image...');
+        matrixPhotoUrls = preprocessed;
+        matrixAnalysis = await analyzePhotosWithOpenAI(matrixPhotoUrls, mediaType, 'matrix');
       }
-
-      // Run matrix analysis with potentially preprocessed image
-      const matrixAnalysis = await analyzePhotosWithOpenAI(matrixPhotoUrls, mediaType, 'matrix')
 
       if (matrixAnalysis && !matrixAnalysis.success) {
         console.log('⚠️ Matrix pass failed (continuing):', matrixAnalysis.error)
       }
+
 
       // Merge analysis results
       const combinedData = mergeAnalysisResults(

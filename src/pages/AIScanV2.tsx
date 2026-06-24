@@ -385,7 +385,11 @@ export default function AIScanV2() {
       </div>
 
       {/* Upgrade Prompt Modal */}
+      {/* Upgrade Prompt Modal */}
       <UpgradePrompt isOpen={showUpgradePrompt} onClose={() => setShowUpgradePrompt(false)} reason="usage_limit" currentPlan={subscription?.plan_slug || 'free'} />
+
+      {/* Guest signup popup after a scan by an unregistered visitor */}
+      <GuestScanSignupDialog open={showGuestSignup} onClose={() => setShowGuestSignup(false)} />
 
     </>;
 }

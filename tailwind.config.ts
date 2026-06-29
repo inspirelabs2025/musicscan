@@ -56,7 +56,7 @@ export default {
 					DEFAULT: 'hsl(var(--accent))',
 					foreground: 'hsl(var(--accent-foreground))'
 				},
-				opover: {
+				popover: {
 					DEFAULT: 'hsl(var(--popover))',
 					foreground: 'hsl(var(--popover-foreground))'
 				},
@@ -177,7 +177,7 @@ export default {
 						color: 'inherit',
 						h2: {
 							fontWeight: '700',
-							letterSpacing: '-0.025em',
+\t						letterSpacing: '-0.025em',
 							marginTop: '3rem',
 							marginBottom: '1.5rem',
 						},

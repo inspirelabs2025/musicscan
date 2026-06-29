@@ -1,44 +1,40 @@
-import { BellRing, Bot } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useAICounters } from '@/lib/ai-nudge-utils';
-import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
+import { Brain } from 'lucide-react';
+import React from 'react';
 
-export function AINudge() {
-  const { getAICount, setAICount } = useAICounters();
-  const [aiUsageCount, setAiUsageCount] = useState<number>(0);
-  const threshold = 1; // Show nudge if AI features used 0 or 1 times
+interface AINudgeProps extends React.HTMLAttributes<HTMLDivElement> {
+  usedCount: number; // Number of times AI features have been used
+}
 
-  useEffect(() => {
-    setAiUsageCount(getAICount());
-  }, [getAICount]);
+export const AINudge: React.FC<AINudgeProps> = ({ usedCount, className, ...props }) => {
+  // Only show the nudge if AI features haven't been used yet
+  if (usedCount > 0) {
+    return null;
+  }
 
-  if (aiUsageCount > threshold) {
+  // Check if the nudge is enabled via environment variable
+  const aiNudgeVariant = import.meta.env.VITE_AI_NUDGE_VARIANT;
+  if (aiNudgeVariant !== 'nudge') {
     return null;
   }
 
   return (
-    <Card className="w-full max-w-sm border-2 border-primary animate-fade-in">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-semibold">AI Features</CardTitle>
-        <Bot className="h-6 w-6 text-primary" />
-      </CardHeader>
-      <CardContent className="py-2">
-        <CardDescription className="text-muted-foreground">
-          Je hebt de AI features nog maar {aiUsageCount}x gebruikt. Ontdek wat AI voor je project kan doen!
-        </CardDescription>
-      </CardContent>
-      <CardFooter className="px-6 py-4 flex justify-between">
-        <Link to="/ai-features" onClick={() => setAICount(aiUsageCount + 1)}>
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Bot className="mr-2 h-4 w-4" /> Ontdek AI
-          </Button>
-        </Link>
-        <Button variant="ghost" onClick={() => setAICount(threshold + 1)} className="text-muted-foreground hover:text-foreground">
-          Later
-        </Button>
-      </CardFooter>
-    </Card>
+    <div
+      className={cn(
+        'fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm p-4 rounded-lg shadow-xl outline outline-1 outline-ai-nudge-border bg-ai-nudge-background text-ai-nudge-foreground text-center flex items-center justify-center gap-3 z-50 animate-fade-in',
+        className
+      )}
+      {...props}
+    >
+      {' '}
+      <Brain className="h-6 w-6 text-ai-nudge-foreground" />
+      <p className="text-sm font-medium">
+        Je hebt de AI features nog maar <span className="font-bold">0x</span> gebruikt.
+        <br />
+        <a href="/ai-features" className="underline hover:no-underline text-ai-nudge-foreground font-bold">
+          Ontdek wat AI voor je project kan doen!
+        </a>
+      </p>
+    </div>
   );
-}
+};

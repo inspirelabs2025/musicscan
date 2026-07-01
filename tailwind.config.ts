@@ -103,7 +103,7 @@ export default {
 					foreground: 'hsl(var(--ai-nudge-foreground))',
 					border: 'hsl(var(--ai-nudge-border))'
 				},
-				'chat-nudge': {
+				'chat-nudge': { // Added chat-nudge colors
 					background: 'hsl(var(--chat-nudge-background))',
 					foreground: 'hsl(var(--chat-nudge-foreground))',
 					border: 'hsl(var(--chat-nudge-border))'

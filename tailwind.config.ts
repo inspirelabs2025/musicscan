@@ -38,7 +38,7 @@ export default {
 				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground)'
+					foreground: 'hsl(var(--primary-foreground))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -103,7 +103,7 @@ export default {
 					foreground: 'hsl(var(--ai-nudge-foreground))',
 					border: 'hsl(var(--ai-nudge-border))'
 				},
-				'chat-nudge': {
+				'chat-nudge': { // Added chat-nudge colors
 					background: 'hsl(var(--chat-nudge-background))',
 					foreground: 'hsl(var(--chat-nudge-foreground))',
 					border: 'hsl(var(--chat-nudge-border))'
@@ -195,7 +195,7 @@ export default {
 							fontWeight: '600',
 							color: 'inherit',
 						},
-					a: {
+						a: {
 							color: 'hsl(var(--primary))',
 							textDecoration: 'none',
 							'&:hover': {

@@ -1,70 +1,73 @@
-import { useContext, useEffect, useState } from "react";
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
+import { useEffect } from "react";
+import { matchPath, useLocation, useRoutes } from "react-router-dom";
+import {
+  IonApp,
+  IonRouterOutlet,
+  setupIonicReact,
+} from "@ionic/react";
+import { IonReactRouter } from "@ionic/react-router";
+import { routes } from "./routes";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
+/* Core CSS required for Ionic components to work properly */
+import "@ionic/react/css/core.css";
 
-import { ThemeProvider } from "./components/theme-provider";
-import router from "./router";
+/* Basic CSS for apps built with Ionic */
+import "@ionic/react/css/normalize.css";
+import "@ionic/react/css/structure.css";
+import "@ionic/react/css/typography.css";
 
-import { LovableProvider } from "lovable-tagger";
-import { lovConfig } from "./lovable.config";
-import { AudioProvider } from "./components/audio-provider";
-import { ModalsProvider } from "./components/modals-provider";
-import { SettingsProvider } from "./components/settings-provider";
-import { CurrentProjectContext } from "./contexts/current-project-context";
-import { ChatNudge } from "./components/common/chat-nudge.tsx";
+/* Optional CSS utils that can be commented out */
+import "@ionic/react/css/padding.css";
+import "@ionic/react/css/float-elements.css";
+import "@ionic/react/css/text-alignment.css";
+import "@ionic/react/css/text-transformation.css";
+import "@ionic/react/css/flex-utils.css";
+import "@ionic/react/css/display.css";
 
-const queryClient = new QueryClient();
+/* Theme variables */
+import "./theme/variables.css";
+import "./index.css";
+import "./tailwind.css";
+
+import { Loader } from "./components/Loader";
+import { Toaster } from "./components/ui/sonner";
+import { ChatNudge } from './components/chat-nudge'; // Import ChatNudge
+
+setupIonicReact();
 
 function App() {
-  const { currentProject } = useContext(CurrentProjectContext);
-  const [showChatNudge, setShowChatNudge] = useState(false);
+  const location = useLocation();
+  const element = useRoutes(routes);
+
+  const currentPath = location.pathname;
 
   useEffect(() => {
-    if (currentProject?.id && currentProject.chatMessagesCount === 0) {
-      const hasDismissedNudge = localStorage.getItem(`chatNudgeDismissed-${currentProject.id}`);
-      if (!hasDismissedNudge) {
-        setShowChatNudge(true);
-      }
-    } else {
-      setShowChatNudge(false);
+    // Google Analytics page view tracking
+    if (typeof (window as any).gtag === "function") {
+      (window as any).gtag("event", "page_view", {
+        page_title: document.title,
+        page_path: currentPath,
+        page_location: window.location.href,
+      });
     }
-  }, [currentProject]);
+  }, [currentPath]);
 
-  const handleDismissChatNudge = () => {
-    if (currentProject?.id) {
-      localStorage.setItem(`chatNudgeDismissed-${currentProject.id}`, 'true');
-    }
-    setShowChatNudge(false);
-  };
+  const isAuthRoute = matchPath("/auth/*", currentPath);
+
+  if (!element) {
+    return <Loader />;
+  }
 
   return (
-    <LovableProvider config={lovConfig}>
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-        <QueryClientProvider client={queryClient}>
-          <SettingsProvider>
-            <AudioProvider>
-              <ModalsProvider>
-                <RouterProvider router={router} />
-                <Toaster richColors />
-
-                {showChatNudge && (
-                  <div className="fixed bottom-4 right-4 z-50 animate-fade-in">
-                    <ChatNudge isVisible={showChatNudge} onClose={handleDismissChatNudge} />
-                  </div>
-                )}
-
-              </ModalsProvider>
-            </AudioProvider>
-          </SettingsProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
-      <Analytics />
-      <SpeedInsights />
-    </LovableProvider>
+    <IonApp>
+      <IonReactRouter>
+        <IonRouterOutlet id="main">
+          {element}
+        </IonRouterOutlet>
+      </IonReactRouter>
+      <Toaster richColors />
+      {!isAuthRoute && <ChatNudge chatMessagesCount={0} />} {/* Conditionally render ChatNudge */}
+    </IonApp>
   );
 }
 

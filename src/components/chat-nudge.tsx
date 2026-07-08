@@ -1,52 +1,52 @@
-import { MessageSquareTextIcon, X } from 'lucide-react';
-import { useState } from 'react';
+import React from 'react';
+import { MessageSquare } from 'lucide-react';
+import { Button } from './ui/button';
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 
 interface ChatNudgeProps {
-  chatMessagesCount: number;
+  messageCount: number;
+  onChatClick: () => void;
 }
 
-export function ChatNudge({ chatMessagesCount }: ChatNudgeProps) {
-  const [isVisible, setIsVisible] = useState(true);
-
-  if (!isVisible || chatMessagesCount > 0) {
-    return null;
+export const ChatNudge: React.FC<ChatNudgeProps> = ({ messageCount, onChatClick }) => {
+  if (messageCount > 0) {
+    return null; // Don't show nudge if there are already chat messages
   }
 
-  // TODO: Add actual link to chat functionality
-  const handleChatClick = () => {
-    console.log('Navigating to chat...');
-    setIsVisible(false); // Hide nudge after user interacts or navigates
-  };
-
   return (
-    <div className="fixed bottom-4 right-4 z-50 animate-fade-in">
-      <div
-        className="relative flex items-center gap-3 rounded-lg border border-chat-nudge-border bg-chat-nudge-background p-4 shadow-lg"
-        role="alert"
-      >
-        <MessageSquareTextIcon className="size-6 text-chat-nudge-foreground" />
-        <div className="flex-grow">
-          <p className="text-sm font-medium text-chat-nudge-foreground">
-            Nog geen chatberichten?
-          </p>
-          <p className="text-xs text-chat-nudge-foreground opacity-90">
-            Probeer de chatfunctie om sneller antwoorden te krijgen!
+    <Sheet>
+      <SheetTrigger asChild>
+        <div className="fixed bottom-4 right-4 z-50 animate-fade-in">
+          <Button
+            variant="default"
+            className="flex items-center space-x-2 p-4 rounded-full shadow-lg bg-chat-nudge-background text-chat-nudge-foreground hover:bg-chat-nudge-background/90 focus:ring-2 focus:ring-chat-nudge-border focus:ring-offset-2"
+          >
+            <MessageSquare className="h-6 w-6" />
+            <span className="font-semibold">Chatfunctie</span>
+          </Button>
+        </div>
+      </SheetTrigger>
+      <SheetContent side="right" className="w-full sm:max-w-md bg-background text-foreground">
+        <SheetHeader>
+          <SheetTitle className="text-2xl font-bold">💬 Heb je de chat al geprobeerd?</SheetTitle>
+          <SheetDescription className="text-lg mt-2">
+            Er {messageCount === 0 ? 'zijn pas 0' : `zijn ${messageCount}`} chatberichten in je project. Probeer de chatfunctie om sneller antwoorden te krijgen van ons team!
+          </SheetDescription>
+        </SheetHeader>
+        <div className="py-6">
+          <p className="text-muted-foreground">
+            Onze chat is de snelste manier om hulp te krijgen en vragen te stellen over je project of het platform.
+            We staan voor je klaar om je te helpen bij elke stap!
           </p>
         </div>
-        <button
-          onClick={handleChatClick}
-          className="inline-flex h-8 items-center justify-center whitespace-nowrap rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-        >
-          Probeer chat
-        </button>
-        <button
-          onClick={() => setIsVisible(false)}
-          className="absolute -top-2 -right-2 rounded-full bg-chat-nudge-background p-1 text-chat-nudge-foreground/70 hover:text-chat-nudge-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Sluit melding"
-        >
-          <X className="size-4" />
-        </button>
-      </div>
-    </div>
+        <SheetFooter>
+          <SheetClose asChild>
+            <Button type="button" onClick={onChatClick} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+              Start een chat
+            </Button>
+          </SheetClose>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
-}
+};

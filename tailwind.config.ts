@@ -103,7 +103,7 @@ export default {
 					foreground: 'hsl(var(--ai-nudge-foreground))',
 					border: 'hsl(var(--ai-nudge-border))'
 				},
-				'chat-nudge': {
+				'chat-nudge': { // Added chat-nudge colors
 					background: 'hsl(var(--chat-nudge-background))',
 					foreground: 'hsl(var(--chat-nudge-foreground))',
 					border: 'hsl(var(--chat-nudge-border))'
@@ -177,7 +177,7 @@ export default {
 						color: 'inherit',
 						h2: {
 							fontWeight: '700',
-\t						letterSpacing: '-0.025em',
+							letterSpacing: '-0.025em',
 							marginTop: '3rem',
 							marginBottom: '1.5rem',
 						},

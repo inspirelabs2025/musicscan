@@ -6,7 +6,9 @@
     "lib": [
       "ES2020",
       "DOM",
-      "DOM.Iterable"
+      "DOM.Iterable",
+      "WebWorker",
+      "ScriptHost"
     ],
     "module": "ESNext",
     "moduleDetection": "force",
@@ -27,6 +29,7 @@
     "useDefineForClassFields": true
   },
   "include": [
-    "src"
+    "src",
+    "env.d.ts"
   ]
 }

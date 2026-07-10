@@ -17,7 +17,7 @@
     {
       "path": "./tsconfig.app.json"
     },
-    {
+    {f
       "path": "./tsconfig.node.json"
     }
   ]

@@ -159,7 +159,7 @@ export const SEO_CONFIGS = {
   },
   '/ai-scan-v2': {
     title: 'Vinyl Scanner — Scan je LP & CD met AI Herkenning | MusicScan',
-    description: 'Maak een foto van je vinyl, LP of CD en ontdek direct de artiest, het album en de marktwaarde. Gratis AI-scanner voor muziekcollecties. 10 gratis scans bij registratie.',
+    description: 'Maak een foto van je vinyl, LP of CD en ontdek direct de artiest, het album en de marktwaarde. Gratis AI-scanner voor muziekcollecties. Start met 3 gratis credits, meld je aan voor 10 credits.',
     keywords: 'vinyl scanner, LP scannen, CD scannen, plaat herkennen, vinyl waarde app'
   },
   '/scanner': {

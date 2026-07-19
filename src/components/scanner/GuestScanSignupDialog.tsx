@@ -28,7 +28,7 @@ export function GuestScanSignupDialog({ open, onClose }: Props) {
             Maak je account aan
           </DialogTitle>
           <DialogDescription className="text-base pt-1">
-            Krijg <span className="font-bold text-foreground">10 credits cadeau</span> bij registratie en bewaar al je scans.
+            Krijg <span className="font-bold text-foreground">3 credits cadeau</span> bij registratie en bewaar al je scans.
           </DialogDescription>
         </DialogHeader>
 
@@ -38,11 +38,11 @@ export function GuestScanSignupDialog({ open, onClose }: Props) {
             className="w-full gap-2"
             onClick={() => {
               onClose();
-              navigate("/auth?signup=1&bonus=10");
+              navigate("/auth?signup=1&bonus=3");
             }}
           >
             <UserPlus className="h-4 w-4" />
-            Maak nu je account (+10 credits)
+            Maak nu je account (+3 credits)
           </Button>
 
           <div className="relative">

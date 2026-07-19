@@ -117,7 +117,7 @@ serve(async (req) => {
     await checkScanRate(req, undefined, "chat");
 
     // Guest quota: max 3 chats per device fingerprint
-    const GUEST_CHAT_LIMIT = 3;
+    const GUEST_CHAT_LIMIT = 1;
     if (!userId) {
       const fingerprint = req.headers.get("x-device-fingerprint") || ipAddress || "unknown";
       try {

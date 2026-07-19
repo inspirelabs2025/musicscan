@@ -130,7 +130,7 @@ const Scan = () => {
 
           {/* SEO Content Block */}
           <section className="text-muted-foreground text-sm opacity-70 max-w-3xl mx-auto text-center py-8">
-            <p>De MusicScan Vinyl Scanner herkent je platen via AI-beeldherkenning. Maak een foto van je LP, CD of single en krijg direct informatie over artiest, album, release-jaar en marktwaarde. Ideaal voor verzamelaars die willen weten wat hun platen waard zijn. Start met 3 gratis credits. Meld je aan en ontvang 10 credits.</p>
+            <p>De MusicScan Vinyl Scanner herkent je platen via AI-beeldherkenning. Maak een foto van je LP, CD of single en krijg direct informatie over artiest, album, release-jaar en marktwaarde. Ideaal voor verzamelaars die willen weten wat hun platen waard zijn. Probeer gratis met 1 credit. Meld je aan en ontvang 3 credits. Koop 10 credits en krijg 5 extra gratis.</p>
           </section>
         </div>
       </div>

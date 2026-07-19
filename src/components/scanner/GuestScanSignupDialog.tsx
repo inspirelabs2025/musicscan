@@ -28,7 +28,7 @@ export function GuestScanSignupDialog({ open, onClose }: Props) {
             Maak je account aan
           </DialogTitle>
           <DialogDescription className="text-base pt-1">
-            Krijg <span className="font-bold text-foreground">10 credits cadeau</span> bij registratie en bewaar al je scans.
+            Krijg <span className="font-bold text-foreground">3 credits cadeau</span> bij registratie en bewaar al je scans.
           </DialogDescription>
         </DialogHeader>
 

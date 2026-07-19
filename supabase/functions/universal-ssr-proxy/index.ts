@@ -6,7 +6,8 @@ const corsHeaders = {
 };
 
 const BASE_URL = 'https://www.musicscan.app';
-const LOGO_URL = `${BASE_URL}/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png`;
+const LOGO_URL = `${BASE_URL}/favicon.png`;
+const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.jpg`;
 
 // Cache index.html in memory for the lifetime of the edge function instance
 let cachedIndexHtml: string | null = null;

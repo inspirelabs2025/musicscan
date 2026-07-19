@@ -2047,7 +2047,7 @@ const translations = {
       superFast: "Supersnel",
       useId: "Gebruik ID",
       scanTip: "Voor de beste resultaten, zorg voor goede verlichting en scherpe foto's",
-      avgScanTime: "Gemiddelde scantijd: 30-60 seconden • Ondersteund: Nederlands, Engels, Duits, Frans",
+      avgScanTime: "Gemiddelde scantijd: 3-6 seconden • Ondersteund: Nederlands, Engels, Duits, Frans",
       ocrResults: "OCR Scan Resultaten",
       ocrDesc: "Geëxtraheerde informatie uit de foto's",
       artist: "Artiest",
@@ -2718,7 +2718,7 @@ const translations = {
       notSupportedDesc: "Audio opname wordt niet ondersteund op dit apparaat. Gebruik iOS 16.4+ of een moderne browser.",
       micNotAvailable: "Microfoon niet beschikbaar",
       micNotAvailableDesc: "Geef toestemming voor de microfoon of controleer je instellingen.",
-      patience: "🎯 **Even geduld...** Ik check de foto's en zoek de exacte release. Dit duurt meestal 10-20 seconden. 🔎",
+      patience: "🎯 **Even geduld...** Ik check de foto's en zoek de exacte release. Dit duurt meestal 3-6 seconden. 🔎",
       verified: "Geverifieerd",
       likelyCorrect: "Waarschijnlijk correct",
       suggestedMatch: "Voorgestelde match",
@@ -4864,7 +4864,7 @@ const translations = {
       superFast: "Super fast",
       useId: "Use ID",
       scanTip: "For best results, ensure good lighting and sharp photos",
-      avgScanTime: "Average scan time: 30-60 seconds • Supported: Dutch, English, German, French",
+      avgScanTime: "Average scan time: 3-6 seconds • Supported: Dutch, English, German, French",
       // ScanResults
       ocrResults: "OCR Scan Results",
       ocrDesc: "Extracted information from photos",
@@ -5546,7 +5546,7 @@ const translations = {
       micNotAvailableDesc: "Grant permission for the microphone or check your settings.",
 
       // Scanning pipeline
-      patience: "🎯 **Please wait...** I'm now searching thousands of releases to find your exact pressing. Barcode, runout codes, labels — everything is being checked! 🔎",
+      patience: "🎯 **Please wait...** I'm checking the photos and searching for the exact release. This usually takes 3-6 seconds. 🔎",
       verified: "Verified",
       likelyCorrect: "Likely correct",
       suggestedMatch: "Suggested match",

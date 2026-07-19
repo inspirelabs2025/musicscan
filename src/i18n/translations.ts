@@ -2952,8 +2952,8 @@ const translations = {
       title: "Scan Your Collection",
       subtitle: "Chat with Magic Mike 🎩 — take a photo and instantly discover artist, album & market value",
       cta: "Start Scanning",
-      promoCredits: "🎁 Start with 3 free credits",
-      promoSub: "Sign up and get 10 credits • Instant results",
+      promoCredits: "🎁 Try free with 1 credit",
+      promoSub: "Sign up and get 3 credits • Buy 10, get 5 extra free",
       divider: "OR DISCOVER",
     },
     quickLinks: {

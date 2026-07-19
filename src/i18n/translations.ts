@@ -5653,7 +5653,7 @@ const translations = {
       scanCtaTitle: "Own this record? Discover its value!",
       scanCtaDesc: "Scan your vinyl or CD and instantly discover its market value with Magic Mike",
       startScanning: "📸 Start Scanning",
-      scanCtaFree: "Free - 3 credits without account",
+      scanCtaFree: "Free - 1 credit without account",
       moreStories: "More Stories",
       allSingles: "All singles",
       // Tips card + matrix example dialog

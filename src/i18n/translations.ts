@@ -5582,11 +5582,11 @@ const translations = {
       cannotSave: "Cannot save",
       cannotSaveDesc: "You must be logged in and have a verified release.",
       saveFailed: "Save failed",
-      guestLimitTitle: "Free credits used up",
-      guestLimitMessage: "You've used your 3 free credits. Create a free account to keep chatting and to save your scans.",
-      guestLimitCta: "Create free account",
+      guestLimitTitle: "Free credit used up",
+      guestLimitMessage: "You've used your free credit. Create a free account and get 3 credits as a welcome gift.",
+      guestLimitCta: "Free account (+3 credits)",
       guestLimitLogin: "Log in",
-      guestRemainingChats: "{remaining} of 3 free credits left",
+      guestRemainingChats: "{remaining} of 1 free credit left",
 
       // Manual search
       manualSearch: "🔍 Manual search: {desc}",

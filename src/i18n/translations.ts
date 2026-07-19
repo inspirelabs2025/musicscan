@@ -70,8 +70,8 @@ const translations = {
       title: "Scan Je Collectie",
       subtitle: "Chat met Magic Mike 🎩 — maak een foto en ontdek direct artiest, album én marktwaarde",
       cta: "Start Scannen",
-      promoCredits: "🎁 Start met 3 gratis credits",
-      promoSub: "Meld je aan en krijg 10 credits • Direct resultaat",
+      promoCredits: "🎁 Probeer gratis met 1 credit",
+      promoSub: "Meld je aan en krijg 3 credits • Koop 10, krijg 5 extra gratis",
       divider: "OF ONTDEK",
     },
     quickLinks: {

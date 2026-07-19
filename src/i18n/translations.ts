@@ -2816,7 +2816,7 @@ const translations = {
       scanCtaTitle: "Heb je deze plaat? Ontdek de waarde!",
       scanCtaDesc: "Scan je vinyl of CD en ontdek direct de marktwaarde met Magic Mike",
       startScanning: "📸 Start Scannen",
-      scanCtaFree: "Gratis - 3 credits zonder account",
+      scanCtaFree: "Gratis - 1 credit zonder account",
       moreStories: "Meer Verhalen",
       allSingles: "Alle singles",
       // Tips card + matrix example dialog

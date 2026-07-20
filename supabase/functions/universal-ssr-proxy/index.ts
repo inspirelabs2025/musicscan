@@ -210,14 +210,28 @@ const getMetaForContent = async (sb: any, contentType: string, slug: string): Pr
     }
 
     case 'singles': {
-      const { data: single } = await sb.from('music_stories').select('slug, title, single_name, artist, story_content, artwork_url, meta_description, meta_title, year, genre, created_at').eq('slug', slug).eq('is_published', true).not('single_name', 'is', null).maybeSingle();
+      const { data: single } = await sb.from('music_stories').select('id, slug, title, single_name, artist, story_content, artwork_url, meta_description, meta_title, year, genre, created_at').eq('slug', slug).eq('is_published', true).not('single_name', 'is', null).maybeSingle();
       if (!single) return null;
       const singleTitle = `${single.artist || ''} - ${single.single_name || single.title}`;
       const desc = single.meta_description || (single.story_content ? makeDescription(single.story_content) : '');
       const image = single.artwork_url || LOGO_URL;
+
+      // Thin-single noindex: variant/live/tour/dated slugs OR non-canonical duplicate of (artist, single_name)
+      let noindex = isVariantSingle(single.slug, single.single_name);
+      if (!noindex && single.artist && single.single_name) {
+        const { data: siblings } = await sb.from('music_stories')
+          .select('id, story_content, created_at')
+          .eq('is_published', true)
+          .not('single_name', 'is', null)
+          .eq('artist', single.artist)
+          .eq('single_name', single.single_name);
+        noindex = isDuplicateNonCanonical(single, siblings || []);
+      }
+
       return {
         title: `${singleTitle} | Het verhaal achter de hit | MusicScan`, description: desc, image,
         url: `${BASE_URL}/singles/${slug}`, type: 'music.song',
+        noindex,
         jsonLd: JSON.stringify({
           "@context": "https://schema.org", "@type": "MusicRecording",
           "name": singleTitle, "description": desc, "image": image,

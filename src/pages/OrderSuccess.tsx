@@ -46,6 +46,10 @@ export const OrderSuccess = () => {
         order.total_amount,
         order.shipping_cost || 0
       );
+      if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+        const eventID = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+        window.fbq('track', 'Purchase', { value: Number(order.total_amount) || 0, currency: 'EUR' }, { eventID });
+      }
     }
   }, [order, orderId]);
 

@@ -51,6 +51,7 @@ export default function SingleDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [single, setSingle] = useState<Single | null>(null);
+  const [singleNoindex, setSingleNoindex] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [hasIncrementedView, setHasIncrementedView] = useState(false);

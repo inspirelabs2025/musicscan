@@ -334,7 +334,7 @@ Deno.serve(async (req) => {
     
     // News image sitemap
     const newsImageSitemapXml = generateImageSitemapXml(
-      (newsBlogPosts || []).map(n => ({
+      filteredNewsBlogPosts.map(n => ({
         slug: n.slug,
         updated_at: n.updated_at,
         image_url: n.image_url,

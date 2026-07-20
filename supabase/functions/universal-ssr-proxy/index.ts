@@ -462,6 +462,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Flag thin/auto-generated pages (nieuws-<timestamp>-...) as noindex
+    if ((contentType === 'plaat-verhaal' || contentType === 'nieuws') && /^nieuws-\d{6,}/.test(slug)) {
+      meta.noindex = true;
+    }
+
     // Fetch index.html and inject dynamic meta tags
     const indexHtml = await fetchIndexHtml();
     const injectedHtml = injectMetaTags(indexHtml, meta);

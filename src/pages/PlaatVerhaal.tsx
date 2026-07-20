@@ -119,7 +119,8 @@ export const PlaatVerhaal: React.FC = () => {
     keywords: seoKeywords,
     image: blogImage,
     type: 'article',
-    canonicalUrl: currentUrl
+    canonicalUrl: currentUrl,
+    noindex: !!slug && /^nieuws-\d{6,}/.test(slug),
   });
 
   useEffect(() => {

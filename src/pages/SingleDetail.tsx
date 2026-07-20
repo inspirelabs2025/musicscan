@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Clock, Eye, Music, BookOpen, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useSEO } from '@/hooks/useSEO';
+import { isVariantSingle, isDuplicateNonCanonical } from '@/lib/thinSingles';
 import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
 import { ReviewSchema, FAQSchema } from '@/components/SEO/ReviewSchema';
 import { MusicRecordingStructuredData } from '@/components/SEO/MusicRecordingStructuredData';

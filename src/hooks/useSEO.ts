@@ -12,6 +12,7 @@ interface SEOData {
   siteName?: string;
   locale?: string;
   canonicalUrl?: string;
+  noindex?: boolean;
 }
 
 const DEFAULT_SEO: SEOData = {

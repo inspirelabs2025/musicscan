@@ -92,7 +92,8 @@ export default function SingleDetail() {
     keywords: seoKeywords,
     image: singleImage,
     type: 'music.song',
-    canonicalUrl: currentUrl
+    canonicalUrl: currentUrl,
+    noindex: singleNoindex,
   });
 
   useEffect(() => {

@@ -135,6 +135,14 @@ const injectMetaTags = (html: string, meta: MetaData): string => {
     result = result.replace('</head>', `<script type="application/ld+json">${meta.jsonLd}</script>\n</head>`);
   }
 
+  // Robots meta: noindex,follow for thin/auto-generated pages (e.g. nieuws-<timestamp> slugs)
+  const robotsContent = meta.noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large';
+  if (/<meta\s+name="robots"[^>]*>/i.test(result)) {
+    result = result.replace(/<meta\s+name="robots"[^>]*>/i, `<meta name="robots" content="${robotsContent}">`);
+  } else {
+    result = result.replace('</head>', `<meta name="robots" content="${robotsContent}">\n</head>`);
+  }
+
   return result;
 };
 

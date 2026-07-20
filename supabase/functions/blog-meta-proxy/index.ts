@@ -105,8 +105,8 @@ function generateBlogHTML(blog: any): string {
   <title>${title}</title>
   <meta name="description" content="${description}">
   <meta name="keywords" content="${structuredData.keywords}">
-  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
-  <meta name="googlebot" content="index, follow">
+  <meta name="robots" content="${/^nieuws-\d{6,}/.test(blog.slug || '') ? 'noindex, follow' : 'index, follow, max-snippet:-1, max-image-preview:large'}">
+  <meta name="googlebot" content="${/^nieuws-\d{6,}/.test(blog.slug || '') ? 'noindex, follow' : 'index, follow'}">
   
   <!-- Open Graph -->
   <meta property="fb:app_id" content="1234567890">

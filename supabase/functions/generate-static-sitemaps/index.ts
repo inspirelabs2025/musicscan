@@ -309,7 +309,7 @@ Deno.serve(async (req) => {
     // Image sitemaps
     const blogImageSitemapXml = generateImageSitemapXml(filteredBlogPosts, 'https://www.musicscan.app/plaat-verhaal', 'album_cover_url');
     const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal', 'artwork_url');
-    const singlesImageSitemapXml = generateImageSitemapXml(singles || [], 'https://www.musicscan.app/singles', 'artwork_url');
+    const singlesImageSitemapXml = generateImageSitemapXml(filteredSingles, 'https://www.musicscan.app/singles', 'artwork_url');
     const artistsSitemapXml = generateSitemapXml(artistStories || [], 'https://www.musicscan.app/artists');
     const artistsImageSitemapXml = generateImageSitemapXml(artistStories || [], 'https://www.musicscan.app/artists', 'artwork_url');
     const metalPrintsImageSitemapXml = generateImageSitemapXml(metalPrintProducts || [], 'https://www.musicscan.app/product', 'primary_image');

@@ -110,7 +110,25 @@ export default function SingleDetail() {
           .single();
         if (error) throw error;
         if (!data) { setNotFound(true); return; }
-        setSingle(data as Single);
+        const row = data as Single;
+        setSingle(row);
+
+        // Thin-single noindex detection (variant/live/dated OR non-canonical duplicate)
+        let noindex = isVariantSingle(row.slug, row.single_name);
+        if (!noindex && row.artist && row.single_name) {
+          const { data: siblings } = await supabase
+            .from('music_stories')
+            .select('id, story_content, created_at')
+            .eq('is_published', true)
+            .not('single_name', 'is', null)
+            .eq('artist', row.artist)
+            .eq('single_name', row.single_name);
+          noindex = isDuplicateNonCanonical(
+            { id: row.id, story_content: row.story_content, created_at: row.created_at },
+            (siblings || []) as any
+          );
+        }
+        setSingleNoindex(noindex);
       } catch {
         setNotFound(true);
       } finally {

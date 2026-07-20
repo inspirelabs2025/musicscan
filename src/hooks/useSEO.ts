@@ -115,7 +115,8 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     seoData?.canonicalUrl,
     seoData?.type,
     seoData?.siteName,
-    seoData?.locale
+    seoData?.locale,
+    seoData?.noindex
   ]);
 };
 

@@ -63,13 +63,14 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch music stories: ${storiesError.message}`);
     }
 
-  // Fetch all published singles
+  // Fetch all published singles (include id/story_content/created_at for thin-singles detection)
   const { data: singles, error: singlesError } = await supabase
     .from('music_stories')
-    .select('slug, updated_at, artwork_url, artist, single_name, title')
+    .select('id, slug, updated_at, artwork_url, artist, single_name, title, story_content, created_at')
     .eq('is_published', true)
     .not('single_name', 'is', null)
     .order('updated_at', { ascending: false });
+  
   
   // Fetch all published artist stories
   const { data: artistStories, error: artistStoriesError } = await supabase

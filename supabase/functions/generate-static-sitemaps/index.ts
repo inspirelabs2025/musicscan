@@ -225,6 +225,15 @@ Deno.serve(async (req) => {
     const filteredNewsBlogPosts = (newsBlogPosts || []).filter(n => !NIEUWS_TIMESTAMP_RE.test(n.slug || ''));
     console.log(`[sitemap] Excluded ${(blogPosts?.length || 0) - filteredBlogPosts.length} nieuws-<timestamp> blog_posts and ${(newsBlogPosts?.length || 0) - filteredNewsBlogPosts.length} news_blog_posts from sitemaps`);
 
+    // Filter out thin/variant/duplicate singles (noindex targets)
+    const singlesArr = singles || [];
+    const dupIds = computeDuplicateNoindexIds(singlesArr as any);
+    const filteredSingles = singlesArr.filter((s: any) =>
+      !isVariantSingle(s.slug, s.single_name) && !dupIds.has(s.id)
+    );
+    const variantCount = singlesArr.filter((s: any) => isVariantSingle(s.slug, s.single_name)).length;
+    console.log(`[sitemap] Excluded ${singlesArr.length - filteredSingles.length} thin singles from sitemap-singles.xml (variant: ${variantCount}, duplicate: ${dupIds.size}, total unique: ${singlesArr.length - filteredSingles.length})`);
+
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
     const blogSitemapXml = generateSitemapXml(filteredBlogPosts, 'https://www.musicscan.app/plaat-verhaal');

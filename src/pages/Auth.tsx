@@ -139,8 +139,9 @@ const Auth = () => {
             if (data?.success) toast.success(`${data.credits} ${t.freeCreditsReceived}`);
           } catch (e) { console.warn('Promo code redemption after signup:', e); }
         }
-        if (typeof window !== 'undefined' && (window as any).fbq) {
-          (window as any).fbq('track', 'CompleteRegistration');
+        if (typeof window !== 'undefined' && typeof (window as any).fbq === 'function') {
+          const eventID = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+          (window as any).fbq('track', 'CompleteRegistration', {}, { eventID });
         }
 
         // GA4: log sign_up event for volume comparison

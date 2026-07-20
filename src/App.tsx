@@ -3,10 +3,12 @@ import { Toaster } from 'sonner';
 import { Providers } from './providers';
 import { StickyHeader } from './components/layout/StickyHeader';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { useMetaPixelPageviews } from './hooks/useMetaPixelPageviews';
 
 function App() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
+  useMetaPixelPageviews();
 
   return (
     <Providers>

@@ -38,15 +38,30 @@ export function setCookie(name: string, value: string, days: number) {
 }
 
 export function normalizeFullUrl(pathOrUrl?: string) {
-  const fallbackOrigin = 'https://musicscan.app';
-  const origin = typeof window !== 'undefined' && window.location.origin
+  // Canonical production origin — always the www-variant to keep canonical,
+  // og:url, twitter:image and sitemap URLs consistent with Search Console.
+  const canonicalOrigin = 'https://www.musicscan.app';
+  const runtimeOrigin = typeof window !== 'undefined' && window.location.origin
     ? window.location.origin
-    : fallbackOrigin;
+    : canonicalOrigin;
+
+  // Force the canonical origin for any musicscan.app host (with or without www)
+  // and for the Lovable preview/published subdomains — so SEO output never
+  // varies by where the app happens to be served from.
+  const isMusicScanHost = /(^|\.)musicscan\.app$/i.test(new URL(runtimeOrigin).hostname)
+    || /lovable\.app$/i.test(new URL(runtimeOrigin).hostname);
+  const origin = isMusicScanHost ? canonicalOrigin : runtimeOrigin;
 
   if (!pathOrUrl) return origin;
 
   try {
-    return new URL(pathOrUrl, origin).toString();
+    const resolved = new URL(pathOrUrl, origin);
+    // If the input was an absolute URL on a musicscan.app host, rewrite to www.
+    if (/(^|\.)musicscan\.app$/i.test(resolved.hostname)) {
+      resolved.protocol = 'https:';
+      resolved.hostname = 'www.musicscan.app';
+    }
+    return resolved.toString();
   } catch {
     return origin;
   }

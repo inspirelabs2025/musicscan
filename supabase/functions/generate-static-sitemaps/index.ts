@@ -217,11 +217,17 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${blogPosts?.length || 0} blog posts, ${newsBlogPosts?.length || 0} news blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${singles?.length || 0} singles, ${newReleases?.length || 0} new releases, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, ${canvasProducts?.length || 0} canvas doeken, ${timeMachineEvents?.length || 0} time machine events, ${artistFanwalls?.length || 0} fanwall artists, ${photos?.length || 0} photos, ${studioStories?.length || 0} studio stories, ${trackInsights?.length || 0} track insights`);
 
+    // Filter out thin/auto-generated nieuws-<timestamp> slugs (noindex targets)
+    const NIEUWS_TIMESTAMP_RE = /^nieuws-\d{6,}/;
+    const filteredBlogPosts = (blogPosts || []).filter(b => !NIEUWS_TIMESTAMP_RE.test(b.slug || ''));
+    const filteredNewsBlogPosts = (newsBlogPosts || []).filter(n => !NIEUWS_TIMESTAMP_RE.test(n.slug || ''));
+    console.log(`[sitemap] Excluded ${(blogPosts?.length || 0) - filteredBlogPosts.length} nieuws-<timestamp> blog_posts and ${(newsBlogPosts?.length || 0) - filteredNewsBlogPosts.length} news_blog_posts from sitemaps`);
+
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
-    const blogSitemapXml = generateSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal');
+    const blogSitemapXml = generateSitemapXml(filteredBlogPosts, 'https://www.musicscan.app/plaat-verhaal');
     const newsSitemapXml = generateSitemapXml(
-      (newsBlogPosts || []).map(n => ({
+      filteredNewsBlogPosts.map(n => ({
         slug: n.slug,
         updated_at: n.updated_at
       })),
@@ -290,7 +296,7 @@ Deno.serve(async (req) => {
     );
 
     // Image sitemaps
-    const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal', 'album_cover_url');
+    const blogImageSitemapXml = generateImageSitemapXml(filteredBlogPosts, 'https://www.musicscan.app/plaat-verhaal', 'album_cover_url');
     const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal', 'artwork_url');
     const singlesImageSitemapXml = generateImageSitemapXml(singles || [], 'https://www.musicscan.app/singles', 'artwork_url');
     const artistsSitemapXml = generateSitemapXml(artistStories || [], 'https://www.musicscan.app/artists');
@@ -328,7 +334,7 @@ Deno.serve(async (req) => {
     
     // News image sitemap
     const newsImageSitemapXml = generateImageSitemapXml(
-      (newsBlogPosts || []).map(n => ({
+      filteredNewsBlogPosts.map(n => ({
         slug: n.slug,
         updated_at: n.updated_at,
         image_url: n.image_url,

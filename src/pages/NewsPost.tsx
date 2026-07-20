@@ -143,6 +143,7 @@ export const NewsPost = () => {
     title: post ? `${post.title} | Muzieknieuws | MusicScan` : 'Muzieknieuws | MusicScan',
     description: newsDescription,
     keywords: post ? `${post.category?.toLowerCase() || 'muzieknieuws'}, ${post.title}, muzieknieuws` : '',
+    noindex: !!slug && /^nieuws-\d{6,}/.test(slug),
   });
 
   if (isLoading) {

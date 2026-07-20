@@ -12,6 +12,7 @@ interface SEOData {
   siteName?: string;
   locale?: string;
   canonicalUrl?: string;
+  noindex?: boolean;
 }
 
 const DEFAULT_SEO: SEOData = {
@@ -72,6 +73,9 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     // Additional SEO meta tags
     updateMetaTag('author', 'MusicScan');
     updateMetaTag('application-name', 'MusicScan');
+
+    // Robots (noindex for thin/auto-generated pages)
+    updateMetaTag('robots', finalSEO.noindex ? 'noindex, follow' : 'index, follow');
     
     // Canonical URL
     let canonicalLink = document.querySelector('link[rel="canonical"]');
@@ -111,7 +115,8 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     seoData?.canonicalUrl,
     seoData?.type,
     seoData?.siteName,
-    seoData?.locale
+    seoData?.locale,
+    seoData?.noindex
   ]);
 };
 

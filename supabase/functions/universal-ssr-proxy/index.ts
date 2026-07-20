@@ -86,6 +86,7 @@ interface MetaData {
   url: string;
   type: string;
   jsonLd?: string;
+  noindex?: boolean;
 }
 
 const injectMetaTags = (html: string, meta: MetaData): string => {
@@ -132,6 +133,14 @@ const injectMetaTags = (html: string, meta: MetaData): string => {
   // Inject page-specific JSON-LD before closing </head> (keep the existing Organization schema)
   if (meta.jsonLd) {
     result = result.replace('</head>', `<script type="application/ld+json">${meta.jsonLd}</script>\n</head>`);
+  }
+
+  // Robots meta: noindex,follow for thin/auto-generated pages (e.g. nieuws-<timestamp> slugs)
+  const robotsContent = meta.noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large';
+  if (/<meta\s+name="robots"[^>]*>/i.test(result)) {
+    result = result.replace(/<meta\s+name="robots"[^>]*>/i, `<meta name="robots" content="${robotsContent}">`);
+  } else {
+    result = result.replace('</head>', `<meta name="robots" content="${robotsContent}">\n</head>`);
   }
 
   return result;
@@ -451,6 +460,11 @@ Deno.serve(async (req) => {
       return new Response(indexHtml, {
         headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60' }
       });
+    }
+
+    // Flag thin/auto-generated pages (nieuws-<timestamp>-...) as noindex
+    if ((contentType === 'plaat-verhaal' || contentType === 'nieuws') && /^nieuws-\d{6,}/.test(slug)) {
+      meta.noindex = true;
     }
 
     // Fetch index.html and inject dynamic meta tags

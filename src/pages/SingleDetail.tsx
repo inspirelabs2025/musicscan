@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Clock, Eye, Music, BookOpen, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useSEO } from '@/hooks/useSEO';
+import { isVariantSingle, isDuplicateNonCanonical } from '@/lib/thinSingles';
 import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
 import { ReviewSchema, FAQSchema } from '@/components/SEO/ReviewSchema';
 import { MusicRecordingStructuredData } from '@/components/SEO/MusicRecordingStructuredData';
@@ -50,6 +51,7 @@ export default function SingleDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [single, setSingle] = useState<Single | null>(null);
+  const [singleNoindex, setSingleNoindex] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [hasIncrementedView, setHasIncrementedView] = useState(false);
@@ -90,7 +92,8 @@ export default function SingleDetail() {
     keywords: seoKeywords,
     image: singleImage,
     type: 'music.song',
-    canonicalUrl: currentUrl
+    canonicalUrl: currentUrl,
+    noindex: singleNoindex,
   });
 
   useEffect(() => {
@@ -107,7 +110,25 @@ export default function SingleDetail() {
           .single();
         if (error) throw error;
         if (!data) { setNotFound(true); return; }
-        setSingle(data as Single);
+        const row = data as Single;
+        setSingle(row);
+
+        // Thin-single noindex detection (variant/live/dated OR non-canonical duplicate)
+        let noindex = isVariantSingle(row.slug, row.single_name);
+        if (!noindex && row.artist && row.single_name) {
+          const { data: siblings } = await supabase
+            .from('music_stories')
+            .select('id, story_content, created_at')
+            .eq('is_published', true)
+            .not('single_name', 'is', null)
+            .eq('artist', row.artist)
+            .eq('single_name', row.single_name);
+          noindex = isDuplicateNonCanonical(
+            { id: row.id, story_content: row.story_content, created_at: row.created_at },
+            (siblings || []) as any
+          );
+        }
+        setSingleNoindex(noindex);
       } catch {
         setNotFound(true);
       } finally {

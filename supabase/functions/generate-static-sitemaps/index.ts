@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { isVariantSingle, computeDuplicateNoindexIds } from '../_shared/thin-singles.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -62,13 +63,14 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch music stories: ${storiesError.message}`);
     }
 
-  // Fetch all published singles
+  // Fetch all published singles (include id/story_content/created_at for thin-singles detection)
   const { data: singles, error: singlesError } = await supabase
     .from('music_stories')
-    .select('slug, updated_at, artwork_url, artist, single_name, title')
+    .select('id, slug, updated_at, artwork_url, artist, single_name, title, story_content, created_at')
     .eq('is_published', true)
     .not('single_name', 'is', null)
     .order('updated_at', { ascending: false });
+  
   
   // Fetch all published artist stories
   const { data: artistStories, error: artistStoriesError } = await supabase
@@ -223,6 +225,15 @@ Deno.serve(async (req) => {
     const filteredNewsBlogPosts = (newsBlogPosts || []).filter(n => !NIEUWS_TIMESTAMP_RE.test(n.slug || ''));
     console.log(`[sitemap] Excluded ${(blogPosts?.length || 0) - filteredBlogPosts.length} nieuws-<timestamp> blog_posts and ${(newsBlogPosts?.length || 0) - filteredNewsBlogPosts.length} news_blog_posts from sitemaps`);
 
+    // Filter out thin/variant/duplicate singles (noindex targets)
+    const singlesArr = singles || [];
+    const dupIds = computeDuplicateNoindexIds(singlesArr as any);
+    const filteredSingles = singlesArr.filter((s: any) =>
+      !isVariantSingle(s.slug, s.single_name) && !dupIds.has(s.id)
+    );
+    const variantCount = singlesArr.filter((s: any) => isVariantSingle(s.slug, s.single_name)).length;
+    console.log(`[sitemap] Excluded ${singlesArr.length - filteredSingles.length} thin singles from sitemap-singles.xml (variant: ${variantCount}, duplicate: ${dupIds.size}, total unique: ${singlesArr.length - filteredSingles.length})`);
+
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
     const blogSitemapXml = generateSitemapXml(filteredBlogPosts, 'https://www.musicscan.app/plaat-verhaal');
@@ -241,7 +252,7 @@ Deno.serve(async (req) => {
       'https://www.musicscan.app/anekdotes'
     );
     const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal');
-    const singlesSitemapXml = generateSitemapXml(singles || [], 'https://www.musicscan.app/singles');
+    const singlesSitemapXml = generateSitemapXml(filteredSingles, 'https://www.musicscan.app/singles');
     const metalPrintsSitemapXml = generateSitemapXml(metalPrintProducts || [], 'https://www.musicscan.app/product');
     const postersSitemapXml = generatePosterSitemapXml(posterProducts || []);
     const tshirtsSitemapXml = generateSitemapXml(tshirtProducts || [], 'https://www.musicscan.app/product');
@@ -298,7 +309,7 @@ Deno.serve(async (req) => {
     // Image sitemaps
     const blogImageSitemapXml = generateImageSitemapXml(filteredBlogPosts, 'https://www.musicscan.app/plaat-verhaal', 'album_cover_url');
     const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal', 'artwork_url');
-    const singlesImageSitemapXml = generateImageSitemapXml(singles || [], 'https://www.musicscan.app/singles', 'artwork_url');
+    const singlesImageSitemapXml = generateImageSitemapXml(filteredSingles, 'https://www.musicscan.app/singles', 'artwork_url');
     const artistsSitemapXml = generateSitemapXml(artistStories || [], 'https://www.musicscan.app/artists');
     const artistsImageSitemapXml = generateImageSitemapXml(artistStories || [], 'https://www.musicscan.app/artists', 'artwork_url');
     const metalPrintsImageSitemapXml = generateImageSitemapXml(metalPrintProducts || [], 'https://www.musicscan.app/product', 'primary_image');

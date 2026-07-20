@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { isVariantSingle, isDuplicateNonCanonical } from '../_shared/thin-singles.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

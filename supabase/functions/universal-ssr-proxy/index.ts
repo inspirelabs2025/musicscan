@@ -86,6 +86,7 @@ interface MetaData {
   url: string;
   type: string;
   jsonLd?: string;
+  noindex?: boolean;
 }
 
 const injectMetaTags = (html: string, meta: MetaData): string => {

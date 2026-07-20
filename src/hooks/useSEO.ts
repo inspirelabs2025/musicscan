@@ -73,6 +73,9 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     // Additional SEO meta tags
     updateMetaTag('author', 'MusicScan');
     updateMetaTag('application-name', 'MusicScan');
+
+    // Robots (noindex for thin/auto-generated pages)
+    updateMetaTag('robots', finalSEO.noindex ? 'noindex, follow' : 'index, follow');
     
     // Canonical URL
     let canonicalLink = document.querySelector('link[rel="canonical"]');

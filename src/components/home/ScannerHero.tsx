@@ -44,6 +44,11 @@ export const ScannerHero = () => {
             asChild
             size="lg"
             className="w-full max-w-[480px] mx-auto bg-vinyl-gold hover:bg-vinyl-gold/90 text-vinyl-black hover:text-vinyl-black font-bold text-xl md:text-2xl px-10 md:px-14 py-8 md:py-10 rounded-2xl shadow-2xl shadow-vinyl-gold/40 hover:shadow-vinyl-gold/60 transition-all duration-300 hover:scale-105 group border border-vinyl-gold"
+            style={{
+              backgroundColor: 'hsl(var(--vinyl-gold))',
+              color: 'hsl(var(--vinyl-black))',
+              borderColor: 'hsl(var(--vinyl-gold))',
+            }}
           >
             <Link to="/ai-scan-v2">
               <Camera className="w-7 h-7 md:w-8 md:h-8 mr-3" />

@@ -7,6 +7,7 @@ import {
   MessageSquare, DollarSign, BarChart3, Headphones, Trophy, Users, Menu as MenuIcon, Newspaper,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import musicscanLogo from '@/assets/musicscan-logo.png';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -141,10 +142,14 @@ export function StickyHeader() {
         {/* Logo */}
         <Link
           to="/"
-          className="flex items-center gap-2 text-white font-bold text-lg min-w-0 flex-shrink"
+          className="flex items-center min-w-0 flex-shrink"
+          aria-label="MusicScan home"
         >
-          <Disc3 className="w-6 h-6 text-vinyl-gold flex-shrink-0" />
-          <span className="truncate">MusicScan</span>
+          <img
+            src={musicscanLogo}
+            alt="MusicScan logo"
+            className="h-12 w-auto object-contain"
+          />
         </Link>
 
         {/* Desktop nav */}

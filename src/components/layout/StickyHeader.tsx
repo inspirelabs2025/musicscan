@@ -7,6 +7,7 @@ import {
   MessageSquare, DollarSign, BarChart3, Headphones, Trophy, Users, Menu as MenuIcon, Newspaper,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import musicscanLogo from '@/assets/musicscan-logo.png';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

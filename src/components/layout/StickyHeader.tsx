@@ -142,7 +142,7 @@ export function StickyHeader() {
         {/* Logo */}
         <Link
           to="/"
-          className="flex items-center min-w-0 flex-shrink"
+          className="flex items-center gap-2 min-w-0 flex-shrink"
           aria-label="MusicScan home"
         >
           <img
@@ -150,6 +150,9 @@ export function StickyHeader() {
             alt="MusicScan logo"
             className="h-12 w-auto object-contain"
           />
+          <span className="text-lg font-bold text-white tracking-tight hidden sm:inline">
+            MusicScan
+          </span>
         </Link>
 
         {/* Desktop nav */}

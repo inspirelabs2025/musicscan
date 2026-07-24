@@ -148,7 +148,7 @@ export function StickyHeader() {
           <img
             src={musicscanLogo}
             alt="MusicScan logo"
-            className="h-11 w-auto object-contain"
+            className="h-12 w-auto object-contain"
           />
         </Link>
 

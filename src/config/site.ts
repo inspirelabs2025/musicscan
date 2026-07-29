@@ -85,8 +85,8 @@ export function isIndexablePath(pathname: string): boolean {
 export function hreflangAlternates(pathname: string): Array<{ hreflang: string; href: string }> {
   const match = matchCorePath(pathname);
   if (!match) return [];
-  const alternates = LOCALES.map((locale) => ({
-    hreflang: locale,
+  const alternates: Array<{ hreflang: string; href: string }> = LOCALES.map((locale) => ({
+    hreflang: locale as string,
     href: `${SITE_URL}${corePath(match.key, locale)}`.replace(/\/$/, '') || SITE_URL,
   }));
   alternates.push({

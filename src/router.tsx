@@ -377,6 +377,9 @@ export const router = createBrowserRouter([
       { path: 'account-verwijderen', element: wrap(AccountVerwijderen) },
       { path: 'delete-account', element: <Navigate to="/account-verwijderen" replace /> },
       { path: 'voorwaarden', element: wrap(Voorwaarden) },
+      // Indexable aliases (allowlist: /, /scanner, /privacy, /terms)
+      { path: 'terms', element: wrap(Voorwaarden) },
+      { path: 'scanner', element: wrap(ScanLanding) },
       { path: 'retourbeleid', element: wrap(ReturnPolicy) },
       { path: 'over-ons', element: wrap(About) },
       { path: 'pricing', element: wrap(Pricing) },

@@ -6,6 +6,8 @@
  * Change the domain here and everywhere in the frontend follows.
  */
 
+import { isIndexablePath as isAllowlistedPath } from '@/lib/indexable';
+
 export const SITE_URL = 'https://musicscans.com';
 export const SITE_NAME = 'MusicScan';
 
@@ -74,12 +76,14 @@ export function localeFromPath(pathname: string): Locale {
   return (LOCALES as readonly string[]).includes(first) ? (first as Locale) : DEFAULT_LOCALE;
 }
 
-/** True when the page belongs to the indexable "scan + value" set. */
+/**
+ * True when the page is on the indexation allowlist.
+ * The allowlist itself lives in src/lib/indexable.ts (single source of truth).
+ */
 export function isIndexablePath(pathname: string): boolean {
-  const path = normalizePath(pathname);
-  if (TRUST_PATHS.includes(path)) return true;
-  return matchCorePath(path) !== null;
+  return isAllowlistedPath(normalizePath(pathname));
 }
+
 
 /** hreflang alternates for a core page; empty for everything else. */
 export function hreflangAlternates(pathname: string): Array<{ hreflang: string; href: string }> {

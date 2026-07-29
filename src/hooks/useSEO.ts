@@ -139,9 +139,9 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
 // Route-specific SEO configurations
 export const SEO_CONFIGS = {
   '/': {
-    title: 'Vinyl Scanner & Muziekplatform | Scan je LP Collectie | MusicScan',
-    description: 'Scan je vinyl en CD collectie, ontdek de waarde van je platen, lees verhalen achter iconische albums en test je muziekkennis. Gratis vinyl scanner met AI herkenning.',
-    keywords: 'vinyl scanner, vinyl waarde bepalen, LP collectie scannen, muziekplatform'
+    title: 'Scan je platen en ontdek de waarde | MusicScan',
+    description: 'Maak een foto van je LP, vinyl of CD en zie binnen 3-6 seconden welke plaat het is en wat hij waard is. Gratis proberen op web en in de app.',
+    keywords: 'platen scannen, vinyl waarde bepalen, lp waarde, cd scannen, plaat taxeren'
   },
   '/verhalen': {
     title: 'Muziekverhalen — Het Verhaal Achter Iconische Albums & Singles | MusicScan',

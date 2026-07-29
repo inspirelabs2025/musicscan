@@ -12,7 +12,7 @@ export default function ValueLanding() {
   const locale = matchCorePath(pathname)?.locale ?? localeFromPath(pathname);
   const copy = VALUE_COPY[locale];
   const seo = CORE_SEO.value[locale];
-  useSEO({ noindex: false });
+  useSEO({ title: seo.title, description: seo.description });
 
   const faqSchema = {
     '@context': 'https://schema.org',

@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
 
     const invalidIds = allUrls
       ?.filter(item => 
-        !item.url.startsWith('https://www.musicscan.app/') ||
+        !item.url.startsWith('https://musicscans.com/') ||
         item.url.includes('vinylvault.app')
       )
       .map(item => item.id) || [];
@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
 
     // Step 4: Add them to queue (on conflict do nothing)
     const urlsToAdd = blogPosts?.map(post => ({
-      url: `https://www.musicscan.app/plaat-verhaal/${post.slug}`,
+      url: `https://musicscans.com/plaat-verhaal/${post.slug}`,
       content_type: 'blog_post',
       processed: false,
     })) || [];

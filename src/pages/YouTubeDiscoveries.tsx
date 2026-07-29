@@ -33,7 +33,7 @@ const contentTypeConfig = {
   other: { label: "Overig", icon: Youtube, color: "bg-gray-500" },
 };
 
-const CANONICAL_URL = "https://www.musicscan.app/youtube-discoveries";
+const CANONICAL_URL = "https://musicscans.com/youtube-discoveries";
 
 export default function YouTubeDiscoveries() {
   const { user } = useAuth();
@@ -134,7 +134,7 @@ export default function YouTubeDiscoveries() {
     publisher: {
       "@type": "Organization",
       name: "MusicScan",
-      url: "https://www.musicscan.app"
+      url: "https://musicscans.com"
     },
     numberOfItems: discoveries.length,
     mainEntity: {

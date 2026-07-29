@@ -44,7 +44,7 @@ const generateBlogMarkdown = (blog: any): string => {
   }
   
   markdown += `\n\n---\n\n`;
-  markdown += `*Bron: MusicScan - https://www.musicscan.app/plaat-verhaal/${blog.slug}*\n`;
+  markdown += `*Bron: MusicScan - https://musicscans.com/plaat-verhaal/${blog.slug}*\n`;
   
   return markdown;
 };
@@ -76,7 +76,7 @@ const generateStoryMarkdown = (story: any): string => {
   }
   
   markdown += `\n\n---\n\n`;
-  markdown += `*Bron: MusicScan - https://www.musicscan.app/muziek-verhaal/${story.slug}*\n`;
+  markdown += `*Bron: MusicScan - https://musicscans.com/muziek-verhaal/${story.slug}*\n`;
   
   return markdown;
 };
@@ -110,7 +110,7 @@ const generateArtistMarkdown = (artist: any): string => {
   }
   
   markdown += `---\n\n`;
-  markdown += `*Bron: MusicScan - https://www.musicscan.app/artist/${artist.slug}*\n`;
+  markdown += `*Bron: MusicScan - https://musicscans.com/artist/${artist.slug}*\n`;
   
   return markdown;
 };
@@ -138,7 +138,7 @@ const generateAnecdoteMarkdown = (anecdote: any): string => {
   }
   
   markdown += `\n\n---\n\n`;
-  markdown += `*Bron: MusicScan - https://www.musicscan.app/anekdotes/${anecdote.slug}*\n`;
+  markdown += `*Bron: MusicScan - https://musicscans.com/anekdotes/${anecdote.slug}*\n`;
   
   return markdown;
 };

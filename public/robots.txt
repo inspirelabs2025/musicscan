@@ -4,11 +4,11 @@ Allow: /
 Crawl-delay: 1
 
 # Sitemaps
-Sitemap: https://www.musicscan.app/sitemap.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-artists.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-singles.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-music-stories.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-blog.xml
+Sitemap: https://musicscans.com/sitemap.xml
+Sitemap: https://musicscans.com/sm/sitemap-artists.xml
+Sitemap: https://musicscans.com/sm/sitemap-singles.xml
+Sitemap: https://musicscans.com/sm/sitemap-music-stories.xml
+Sitemap: https://musicscans.com/sm/sitemap-blog.xml
 
 # Disallow private paths
 Disallow: /admin/

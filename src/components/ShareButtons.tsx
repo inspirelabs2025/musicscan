@@ -19,7 +19,7 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
-  const fullUrl = url.startsWith('http') ? url : `https://www.musicscan.app${url}`;
+  const fullUrl = url.startsWith('http') ? url : `https://musicscans.com${url}`;
   const shareText = description ? `${title} - ${description}` : title;
 
   const handleCopy = async () => {

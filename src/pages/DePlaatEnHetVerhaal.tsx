@@ -69,7 +69,7 @@ export default function DePlaatEnHetVerhaal() {
   const totalDuration = episodes?.reduce((sum, ep) => sum + (ep.audio_duration_seconds || 0), 0) || 0;
   const totalViews = episodes?.reduce((sum, ep) => sum + (ep.views_count || 0), 0) || 0;
 
-  const rssUrl = `https://www.musicscan.app/feeds/podcast/${PODCAST_SLUG}.xml`;
+  const rssUrl = `https://musicscans.com/feeds/podcast/${PODCAST_SLUG}.xml`;
 
   // Schema.org structured data
   const structuredData = {
@@ -77,7 +77,7 @@ export default function DePlaatEnHetVerhaal() {
     "@type": "PodcastSeries",
     "name": "De Plaat en het Verhaal",
     "description": podcast?.description || "Een podcast over iconische albums en de verhalen erachter.",
-    "url": "https://www.musicscan.app/de-plaat-en-het-verhaal",
+    "url": "https://musicscans.com/de-plaat-en-het-verhaal",
     "webFeed": rssUrl,
     "author": [
       { "@type": "Person", "name": "Rogier Visser" },
@@ -86,7 +86,7 @@ export default function DePlaatEnHetVerhaal() {
     "publisher": {
       "@type": "Organization",
       "name": "MusicScan",
-      "url": "https://www.musicscan.app"
+      "url": "https://musicscans.com"
     },
     "numberOfEpisodes": totalEpisodes,
     "inLanguage": "nl"

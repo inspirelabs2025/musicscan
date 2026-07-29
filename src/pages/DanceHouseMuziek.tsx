@@ -12,10 +12,10 @@ import { DualViewDHTijdlijn } from '@/components/dance-house/DualViewDHTijdlijn'
 import { DanceHouseSubgenres } from '@/components/dance-house/DanceHouseSubgenres';
 
 const DanceHouseMuziek = () => {
-  const pageUrl = 'https://www.musicscan.app/dance-house';
+  const pageUrl = 'https://musicscans.com/dance-house';
   const pageTitle = 'Dance & House Muziek — Artiesten, Albums & Verhalen | MusicScan';
   const pageDescription = 'Ontdek de rijke geschiedenis van dance en house muziek. Van Chicago House tot moderne EDM, van Daft Punk tot Martin Garrix. Verhalen, tijdlijn en 100+ artiesten.';
-  const ogImage = 'https://www.musicscan.app/og-dance-house.jpg';
+  const ogImage = 'https://musicscans.com/og-dance-house.jpg';
 
   // Structured data
   const structuredData = {
@@ -42,7 +42,7 @@ const DanceHouseMuziek = () => {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app" },
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://musicscans.com" },
       { "@type": "ListItem", "position": 2, "name": "Dance & House", "item": pageUrl }
     ]
   };

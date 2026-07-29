@@ -41,7 +41,7 @@ export const AppStructuredData = () => (
       author: {
         '@type': 'Organization',
         name: 'MusicScan',
-        url: 'https://www.musicscan.app'
+        url: 'https://musicscans.com'
       },
       aggregateRating: {
         '@type': 'AggregateRating',
@@ -64,8 +64,8 @@ export const OrganizationStructuredData = () => (
     type="Organization"
     data={{
       name: 'MusicScan',
-      url: 'https://www.musicscan.app',
-      logo: 'https://www.musicscan.app/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png',
+      url: 'https://musicscans.com',
+      logo: 'https://musicscans.com/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png',
       description: 'MusicScan helps music collectors identify, value, and manage their vinyl and CD collections using smart technology.',
       foundingDate: '2024',
       contactPoint: {
@@ -127,7 +127,7 @@ export const BreadcrumbStructuredData = ({ items }: { items: Array<{ name: strin
         '@type': 'ListItem',
         position: index + 1,
         name: item.name,
-        item: `https://www.musicscan.app${item.url}`
+        item: `https://musicscans.com${item.url}`
       }))
     }}
   />
@@ -160,7 +160,7 @@ export const ArticleStructuredData = ({ title, description, publishDate, author,
         name: 'MusicScan',
         logo: {
           '@type': 'ImageObject',
-          url: 'https://www.musicscan.app/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png'
+          url: 'https://musicscans.com/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png'
         }
       },
       image: image || '/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png',

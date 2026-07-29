@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles, Zap, Crown } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const PRICING_URL = 'https://musicscan.app/pricing';
+const PRICING_URL = 'https://musicscans.com/pricing';
 
 const tiers = [
   { credits: 10, price: '€2,95', perCredit: '€0,30', icon: Sparkles, badge: null },

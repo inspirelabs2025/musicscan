@@ -40,7 +40,7 @@ export function setCookie(name: string, value: string, days: number) {
 export function normalizeFullUrl(pathOrUrl?: string) {
   // Canonical production origin — always the www-variant to keep canonical,
   // og:url, twitter:image and sitemap URLs consistent with Search Console.
-  const canonicalOrigin = 'https://www.musicscan.app';
+  const canonicalOrigin = 'https://musicscans.com';
   const runtimeOrigin = typeof window !== 'undefined' && window.location.origin
     ? window.location.origin
     : canonicalOrigin;

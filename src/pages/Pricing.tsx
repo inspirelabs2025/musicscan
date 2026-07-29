@@ -100,7 +100,7 @@ const Pricing = () => {
       // On Capacitor native (Android/iOS) window.location.origin is "https://localhost",
       // which Stripe cannot redirect back to. Force the public web origin instead.
       const isNative = !!(window as any).Capacitor?.isNativePlatform?.();
-      const origin = isNative ? 'https://musicscan.app' : window.location.origin;
+      const origin = isNative ? 'https://musicscans.com' : window.location.origin;
       const { data, error } = await supabase.functions.invoke('create-credit-checkout', {
         body: { priceId, origin },
       });

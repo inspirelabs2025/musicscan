@@ -69,7 +69,7 @@ const handler = async (req: Request): Promise<Response> => {
           <!-- CTA -->
           <tr>
             <td align="center" style="padding: 0 30px 30px;">
-              <a href="https://www.musicscan.app/quizzen" 
+              <a href="https://musicscans.com/quizzen" 
                  style="background-color:#1DB954; color:#ffffff; text-decoration:none; padding:15px 30px; border-radius:30px; font-size:16px; display:inline-block;">
                 Start een Quiz 🎮
               </a>
@@ -81,8 +81,8 @@ const handler = async (req: Request): Promise<Response> => {
             <td align="center" style="background-color:#f9f9f9; padding:20px; border-radius: 0 0 8px 8px;">
               <p style="font-size:12px; color:#aaaaaa; margin:0;">
                 Je ontvangt deze email omdat je je hebt ingeschreven via ${source || 'onze website'}.<br>
-                <a href="https://www.musicscan.app/uitschrijven" style="color:#1DB954;">Uitschrijven</a> | 
-                <a href="https://www.musicscan.app" style="color:#1DB954;">MusicScan.app</a>
+                <a href="https://musicscans.com/uitschrijven" style="color:#1DB954;">Uitschrijven</a> | 
+                <a href="https://musicscans.com" style="color:#1DB954;">MusicScan.app</a>
               </p>
             </td>
           </tr>

@@ -393,7 +393,7 @@ serve(async (req) => {
 
           // Auto-post to Facebook
           try {
-            const newsUrl = `https://www.musicscan.app/blog/${newPost.slug}`;
+            const newsUrl = `https://musicscans.com/blog/${newPost.slug}`;
             const fbResponse = await fetch(`${supabaseUrl}/functions/v1/post-to-facebook`, {
               method: 'POST',
               headers: {

@@ -14,12 +14,12 @@ export const BreadcrumbSchema = ({ items }: BreadcrumbSchemaProps) => {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.musicscan.app" },
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://musicscans.com" },
       ...items.map((item, i) => ({
         "@type": "ListItem",
         position: i + 2,
         name: item.name,
-        item: `https://www.musicscan.app${item.url}`,
+        item: `https://musicscans.com${item.url}`,
       })),
     ],
   };

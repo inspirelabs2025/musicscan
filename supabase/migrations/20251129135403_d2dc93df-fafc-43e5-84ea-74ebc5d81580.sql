@@ -22,7 +22,7 @@ BEGIN
       NEW.yaml_frontmatter->>'summary',
       LEFT(NEW.markdown_content, 200) || '...'
     );
-    blog_url := 'https://www.musicscan.app/blog/' || NEW.slug;
+    blog_url := 'https://musicscans.com/blog/' || NEW.slug;
     blog_image := COALESCE(NEW.album_cover_url, NEW.yaml_frontmatter->>'cover_image');
     
     -- Call the post-to-facebook edge function

@@ -60,7 +60,7 @@ export const useSpotifyAuth = () => {
 
       // Redirect URL (must match Spotify app settings exactly)
       // Use musicscan.app without www to match Spotify Dashboard config
-      const redirectUri = 'https://musicscan.app/auth/spotify/callback';
+      const redirectUri = 'https://musicscans.com/auth/spotify/callback';
       console.log('🔗 Using redirect URI:', redirectUri);
       
       const params = new URLSearchParams({
@@ -100,7 +100,7 @@ export const useSpotifyAuth = () => {
       return;
     }
 
-    const redirectUri = 'https://musicscan.app/auth/spotify/callback';
+    const redirectUri = 'https://musicscans.com/auth/spotify/callback';
     console.log('🔄 Starting token exchange with Edge Function...');
 
     try {

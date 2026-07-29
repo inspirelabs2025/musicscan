@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
     
     const response = await fetch(releaseUrl, {
       headers: {
-        'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+        'User-Agent': 'MusicScan/1.0 +https://musicscans.com',
         'Authorization': `Discogs token=${discogsToken}`
       }
     });

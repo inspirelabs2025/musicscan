@@ -114,7 +114,7 @@ serve(async (req) => {
               <p style="color:#1DB954;font-size:28px;font-weight:bold;margin:0;letter-spacing:3px;">${discount_code}</p>
             </div>
             <div style="text-align:center;margin:35px 0;">
-              <a href="https://www.musicscan.app/shop"
+              <a href="https://musicscans.com/shop"
                  style="background:#1DB954;color:#fff;text-decoration:none;padding:15px 30px;border-radius:25px;font-size:16px;font-weight:bold;display:inline-block;box-shadow:0 4px 15px rgba(29,185,84,0.3);">
                 🛍️ Shop nu met korting
               </a>
@@ -127,8 +127,8 @@ serve(async (req) => {
         <tr>
           <td style="background:#f8f9fa;padding:20px;border-radius:0 0 8px 8px;border-top:1px solid #eee;">
             <p style="color:#888;font-size:12px;text-align:center;margin:0;">
-              <a href="https://www.musicscan.app/shop" style="color:#1DB954;text-decoration:none;">Shop</a> •
-              <a href="https://www.musicscan.app" style="color:#1DB954;text-decoration:none;">MusicScan.app</a>
+              <a href="https://musicscans.com/shop" style="color:#1DB954;text-decoration:none;">Shop</a> •
+              <a href="https://musicscans.com" style="color:#1DB954;text-decoration:none;">MusicScan.app</a>
             </p>
           </td>
         </tr>

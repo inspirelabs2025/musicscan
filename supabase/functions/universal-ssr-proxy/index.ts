@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const BASE_URL = 'https://www.musicscan.app';
+const BASE_URL = 'https://musicscans.com';
 const LOGO_URL = `${BASE_URL}/favicon.png`;
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.jpg`;
 
@@ -390,8 +390,8 @@ const LLMS_TXT_CONTENT = `# MusicScan - Het Complete Muziekplatform
 - /shop - Muziekproducten
 
 ## Sitemaps
-- https://www.musicscan.app/sitemap.xml
-- https://www.musicscan.app/sitemap-llm.xml
+- https://musicscans.com/sitemap.xml
+- https://musicscans.com/sitemap-llm.xml
 
 Last updated: 2026-03
 `;

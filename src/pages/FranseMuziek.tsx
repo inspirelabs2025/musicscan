@@ -17,7 +17,7 @@ const FranseMuziek = () => {
     "@type": "CollectionPage",
     "name": "Franse Muziek - MusicScan",
     "description": "Ontdek de rijke Franse muziekgeschiedenis: van Édith Piaf tot Daft Punk, van chanson tot French house.",
-    "url": "https://www.musicscan.app/frankrijk",
+    "url": "https://musicscans.com/frankrijk",
     "mainEntity": {
       "@type": "ItemList",
       "name": "Franse Muziek Collectie",

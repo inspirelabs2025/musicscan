@@ -119,7 +119,7 @@ Return JSON with this exact structure:
     enrichedData.slug_suggestion = `${enrichedData.slug_suggestion}-${timestamp}`;
 
     // Construct canonical URL
-    enrichedData.canonical_url = `https://www.musicscan.app/photo/${enrichedData.slug_suggestion}`;
+    enrichedData.canonical_url = `https://musicscans.com/photo/${enrichedData.slug_suggestion}`;
 
     console.log('✅ Enrichment complete:', enrichedData);
 

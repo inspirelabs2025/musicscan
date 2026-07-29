@@ -140,7 +140,7 @@ const Shop = () => {
     "@type": "CollectionPage",
     name: sh.metaTitle,
     description: sh.metaDescription,
-    url: "https://www.musicscan.app/shop",
+    url: "https://musicscans.com/shop",
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: totalProducts,

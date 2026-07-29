@@ -19,7 +19,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
-const CANONICAL_URL = "https://www.musicscan.app/time-machine";
+const CANONICAL_URL = "https://musicscans.com/time-machine";
 
 export default function TimeMachine() {
   const navigate = useNavigate();
@@ -107,7 +107,7 @@ export default function TimeMachine() {
     publisher: {
       "@type": "Organization",
       name: "MusicScan",
-      url: "https://www.musicscan.app"
+      url: "https://musicscans.com"
     },
     numberOfItems: totalEvents,
     mainEntity: {
@@ -132,7 +132,7 @@ export default function TimeMachine() {
             }
           },
           startDate: event.concert_date,
-          url: `https://www.musicscan.app/time-machine/${event.slug}`
+          url: `https://musicscans.com/time-machine/${event.slug}`
         }
       })) || []
     }

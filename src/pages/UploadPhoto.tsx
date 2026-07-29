@@ -159,7 +159,7 @@ export default function UploadPhoto() {
         seo_title: seoTitle,
         seo_description: seoDescription,
         tags: tags,
-        canonical_url: enrichedData?.canonical_url || `https://www.musicscan.app/photo/${slug}`,
+        canonical_url: enrichedData?.canonical_url || `https://musicscans.com/photo/${slug}`,
         status: "published",
         published_at: new Date().toISOString(),
       });

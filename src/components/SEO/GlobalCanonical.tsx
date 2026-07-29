@@ -9,7 +9,7 @@ import { useEffect } from "react";
 export const GlobalCanonical = () => {
   const { pathname, search } = useLocation();
   const cleanPath = pathname.replace(/\/+$/, '') || '/';
-  const canonicalUrl = `https://www.musicscan.app${cleanPath}`;
+  const canonicalUrl = `https://musicscans.com${cleanPath}`;
   const hasSearchParam = search.includes('search=');
 
   useEffect(() => {

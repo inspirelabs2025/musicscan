@@ -60,8 +60,8 @@ export default function SingleDetail() {
   const dp = tr.detailPageUI;
   const dateFnsLocale = language === 'nl' ? nl : enUS;
 
-  const currentUrl = `https://www.musicscan.app/singles/${slug}`;
-  const singleImage = single?.artwork_url || 'https://www.musicscan.app/placeholder.svg';
+  const currentUrl = `https://musicscans.com/singles/${slug}`;
+  const singleImage = single?.artwork_url || 'https://musicscans.com/placeholder.svg';
   
   // CTR-optimized description with year and genre hooks
   const singleDescription = single?.meta_description || (() => {

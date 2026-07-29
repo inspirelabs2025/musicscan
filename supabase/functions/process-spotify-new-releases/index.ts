@@ -358,7 +358,7 @@ serve(async (req) => {
         
         // Auto-post to Facebook
         if (productId) {
-          const productUrl = `https://www.musicscan.app/product/${productId}`;
+          const productUrl = `https://musicscans.com/product/${productId}`;
           const postTitle = `🆕 Nieuw: ${artistName} - ${albumName}`;
           const postContent = `Nieuwe release! ${artistName} heeft "${albumName}" uitgebracht. Ontdek dit album op MusicScan.`;
           

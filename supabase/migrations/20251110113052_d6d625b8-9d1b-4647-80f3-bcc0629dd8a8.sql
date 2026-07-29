@@ -103,7 +103,7 @@ BEGIN
       artist_slug,
       artist_name_input || ' FanWall - Fan Photos & Memories | MusicScan',
       'Ontdek ' || artist_name_input || ' fan foto''s: live concerten, vinyl collecties, en meer. Deel jouw ' || artist_name_input || ' herinneringen!',
-      'https://www.musicscan.app/fanwall/' || artist_slug
+      'https://musicscans.com/fanwall/' || artist_slug
     )
     RETURNING id INTO artist_id;
   END IF;

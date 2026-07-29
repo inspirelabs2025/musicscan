@@ -17,7 +17,7 @@ const AccountVerwijderen: React.FC = () => {
       canonical.rel = 'canonical';
       document.head.appendChild(canonical);
     }
-    canonical.href = 'https://musicscan.app/account-verwijderen';
+    canonical.href = 'https://musicscans.com/account-verwijderen';
   }, []);
 
   return (

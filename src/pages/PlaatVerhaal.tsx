@@ -45,7 +45,7 @@ export const PlaatVerhaal: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const { toast } = useToast();
-  const currentUrl = `https://www.musicscan.app/plaat-verhaal/${slug}`;
+  const currentUrl = `https://musicscans.com/plaat-verhaal/${slug}`;
 
   const frontmatter = blog?.yaml_frontmatter || {};
   const title = frontmatter.title || 'Plaat & Verhaal';
@@ -111,7 +111,7 @@ export const PlaatVerhaal: React.FC = () => {
     ? blog!.album_cover_url
     : isAbsoluteUrl(frontmatter.og_image)
     ? frontmatter.og_image
-    : 'https://www.musicscan.app/images/default-product-og.jpg';
+    : 'https://musicscans.com/images/default-product-og.jpg';
 
   useSEO({
     title: frontmatter.meta_title || `${artist} - ${album} | Plaat & Verhaal`,
@@ -360,7 +360,7 @@ export const PlaatVerhaal: React.FC = () => {
         reviewBody={cleanedMarkdown}
         rating={4.5}
         datePublished={blog.published_at || blog.created_at}
-        reviewUrl={`https://www.musicscan.app/plaat-verhaal/${blog.slug}`}
+        reviewUrl={`https://musicscans.com/plaat-verhaal/${blog.slug}`}
         imageUrl={blog?.album_cover_url}
       />
 

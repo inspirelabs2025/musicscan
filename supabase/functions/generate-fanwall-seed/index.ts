@@ -213,7 +213,7 @@ serve(async (req) => {
             seo_slug: slug,
             seo_title: seoTitle,
             seo_description: seoDescription,
-            canonical_url: `https://www.musicscan.app/photo/${slug}`,
+            canonical_url: `https://musicscans.com/photo/${slug}`,
             status: 'published',
             published_at: new Date().toISOString(),
             user_id: '00000000-0000-0000-0000-000000000000' // System user

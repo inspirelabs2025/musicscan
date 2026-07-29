@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const sitemapUrl = 'https://www.musicscan.app/sitemap.xml';
+    const sitemapUrl = 'https://musicscans.com/sitemap.xml';
     const pingUrl = `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`;
 
     console.log('Pinging Google with sitemap:', sitemapUrl);

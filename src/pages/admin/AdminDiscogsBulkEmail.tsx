@@ -31,8 +31,8 @@ const DEFAULT_TEMPLATES: EmailTemplate[] = [
     name: "Promotie / Nieuwe Producten",
     subject_nl: "Nieuwe items beschikbaar bij MusicScan!",
     subject_en: "New items available at MusicScan!",
-    body_nl: `<h1>Hallo {{username}},</h1><p>Bedankt voor je eerdere aankoop bij ons op Discogs!</p><p>We hebben weer nieuwe items toegevoegd aan onze collectie. Bekijk ons volledige aanbod op:</p><p><a href="https://musicscan.app/shop"><strong>Bekijk Shop</strong></a></p><p>Met vriendelijke groet,<br/>MusicScan Team</p>`,
-    body_en: `<h1>Hi {{username}},</h1><p>Thank you for your previous purchase from us on Discogs!</p><p>We've added new items to our collection. Check out our full catalog at:</p><p><a href="https://musicscan.app/shop"><strong>Visit Shop</strong></a></p><p>Best regards,<br/>MusicScan Team</p>`,
+    body_nl: `<h1>Hallo {{username}},</h1><p>Bedankt voor je eerdere aankoop bij ons op Discogs!</p><p>We hebben weer nieuwe items toegevoegd aan onze collectie. Bekijk ons volledige aanbod op:</p><p><a href="https://musicscans.com/shop"><strong>Bekijk Shop</strong></a></p><p>Met vriendelijke groet,<br/>MusicScan Team</p>`,
+    body_en: `<h1>Hi {{username}},</h1><p>Thank you for your previous purchase from us on Discogs!</p><p>We've added new items to our collection. Check out our full catalog at:</p><p><a href="https://musicscans.com/shop"><strong>Visit Shop</strong></a></p><p>Best regards,<br/>MusicScan Team</p>`,
   },
   {
     id: "review",

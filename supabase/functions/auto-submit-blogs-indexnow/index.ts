@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
 
     // Add URLs to IndexNow queue
     const urlsToQueue = blogsToSubmit.map((blog) => ({
-      url: `https://www.musicscan.app/plaat-verhaal/${blog.slug}`,
+      url: `https://musicscans.com/plaat-verhaal/${blog.slug}`,
       content_type: 'blog_post',
     }));
 

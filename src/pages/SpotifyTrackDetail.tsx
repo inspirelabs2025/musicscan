@@ -126,7 +126,7 @@ export default function SpotifyTrackDetail() {
 
   const pageTitle = title && artist ? `${title} - ${artist} | MusicScan` : 'Track Analyse | MusicScan';
   const pageDescription = insights?.summary || `Ontdek het verhaal achter ${title || 'dit nummer'} van ${artist || 'de artiest'}. Achtergrond, muzikale analyse en weetjes.`;
-  const canonicalUrl = `https://www.musicscan.app/nummer/${slug}`;
+  const canonicalUrl = `https://musicscans.com/nummer/${slug}`;
 
   // JSON-LD Structured Data
   const structuredData = {

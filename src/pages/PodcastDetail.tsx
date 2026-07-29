@@ -23,7 +23,7 @@ export default function PodcastDetail() {
   const { data: podcast, isLoading: podcastLoading } = usePodcastBySlug(podcastSlug);
   const { data: episodes, isLoading: episodesLoading } = usePodcastEpisodes(podcast?.id);
 
-  const baseUrl = 'https://www.musicscan.app';
+  const baseUrl = 'https://musicscans.com';
   const podcastUrl = `${baseUrl}/podcast/${podcastSlug}`;
 
   if (podcastLoading) {

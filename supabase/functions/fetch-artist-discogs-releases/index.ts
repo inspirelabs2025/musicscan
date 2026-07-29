@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     // Fetch artist releases from Discogs
     const headers: Record<string, string> = {
-      'User-Agent': 'MusicScanApp/1.0 (+https://www.musicscan.app)',
+      'User-Agent': 'MusicScanApp/1.0 (+https://musicscans.com)',
       'Accept': 'application/json'
     };
 

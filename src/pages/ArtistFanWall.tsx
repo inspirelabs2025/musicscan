@@ -62,10 +62,10 @@ export default function ArtistFanWall() {
     );
   }
 
-  const canonicalUrl = artist.canonical_url || `https://www.musicscan.app/fanwall/${artist.slug}`;
+  const canonicalUrl = artist.canonical_url || `https://musicscans.com/fanwall/${artist.slug}`;
   const pageTitle = artist.seo_title || `${artist.artist_name} FanWall | MusicScan`;
   const pageDescription = artist.seo_description || `Ontdek ${artist.photo_count} ${artist.artist_name} fan foto's: live concerten, vinyl collecties, en meer.`;
-  const pageImage = artist.featured_photo_url || "https://www.musicscan.app/og-fanwall.jpg";
+  const pageImage = artist.featured_photo_url || "https://musicscans.com/og-fanwall.jpg";
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -76,7 +76,7 @@ export default function ArtistFanWall() {
     publisher: {
       "@type": "Organization",
       name: "MusicScan",
-      url: "https://www.musicscan.app"
+      url: "https://musicscans.com"
     },
     about: {
       "@type": "MusicGroup",

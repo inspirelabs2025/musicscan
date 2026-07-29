@@ -153,7 +153,7 @@ serve(async (req) => {
 
         console.log(`🌐 Scraping sell page...`);
         const resp = await fetch(scraperUrl, {
-          headers: { "User-Agent": "MusicScan/1.0 +https://musicscan.app" },
+          headers: { "User-Agent": "MusicScan/1.0 +https://musicscans.com" },
         });
 
         if (resp.ok) {
@@ -184,7 +184,7 @@ serve(async (req) => {
         const apiResp = await fetch(`https://api.discogs.com/marketplace/stats/${discogs_id}?curr_abbr=EUR`, {
           headers: {
             Authorization: `Discogs token=${discogsToken}`,
-            "User-Agent": "MusicScan/1.0 +https://musicscan.app",
+            "User-Agent": "MusicScan/1.0 +https://musicscans.com",
           },
         });
 

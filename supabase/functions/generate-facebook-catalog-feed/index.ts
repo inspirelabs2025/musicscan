@@ -99,7 +99,7 @@ function generateFacebookCSV(products: Product[]): string {
   const rows = products.map(product => {
     const category = getGoogleProductCategory(product);
     const productType = getProductType(product);
-    const baseUrl = 'https://www.musicscan.app';
+    const baseUrl = 'https://musicscans.com';
     
     return [
       escapeCSV(product.id),

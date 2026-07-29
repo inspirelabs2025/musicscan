@@ -90,14 +90,14 @@ Deno.serve(async (req) => {
     
     // Submit alle sitemaps
     const sitemapsToSubmit = [
-      'https://www.musicscan.app/sitemap.xml',
-      'https://www.musicscan.app/sitemaps/sitemap-static.xml',
-      'https://www.musicscan.app/sitemaps/sitemap-blog.xml',
-      'https://www.musicscan.app/sitemaps/sitemap-music-stories.xml',
-      'https://www.musicscan.app/sitemaps/sitemap-products.xml',
-      'https://www.musicscan.app/sitemaps/sitemap-images-blogs.xml',
-      'https://www.musicscan.app/sitemaps/sitemap-images-stories.xml',
-      'https://www.musicscan.app/sitemaps/sitemap-images-products.xml',
+      'https://musicscans.com/sitemap.xml',
+      'https://musicscans.com/sitemaps/sitemap-static.xml',
+      'https://musicscans.com/sitemaps/sitemap-blog.xml',
+      'https://musicscans.com/sitemaps/sitemap-music-stories.xml',
+      'https://musicscans.com/sitemaps/sitemap-products.xml',
+      'https://musicscans.com/sitemaps/sitemap-images-blogs.xml',
+      'https://musicscans.com/sitemaps/sitemap-images-stories.xml',
+      'https://musicscans.com/sitemaps/sitemap-images-products.xml',
     ];
     
     const results = [];

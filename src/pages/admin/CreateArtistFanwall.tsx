@@ -163,7 +163,7 @@ export default function CreateArtistFanwall() {
             seo_title: `${artistName} - Fan Foto ${i + 1}`,
             seo_slug: `${createdSlug}-fan-photo-${Date.now()}-${i}`,
             seo_description: `Een ${artistName} fan foto gedeeld op MusicScan FanWall`,
-            canonical_url: `https://www.musicscan.app/photo/${createdSlug}-fan-photo-${Date.now()}-${i}`,
+            canonical_url: `https://musicscans.com/photo/${createdSlug}-fan-photo-${Date.now()}-${i}`,
           });
 
         if (insertError) throw insertError;

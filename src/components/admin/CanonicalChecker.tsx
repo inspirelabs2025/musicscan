@@ -36,11 +36,11 @@ export interface CanonicalCheckResult {
 }
 
 const DEFAULT_SITEMAPS = [
-  'https://www.musicscan.app/sitemap.xml',
-  'https://www.musicscan.app/sm/sitemap-blog.xml',
-  'https://www.musicscan.app/sm/sitemap-metal-prints.xml',
-  'https://www.musicscan.app/sm/sitemap-images-posters.xml',
-  'https://www.musicscan.app/sm/sitemap-images-stories.xml'
+  'https://musicscans.com/sitemap.xml',
+  'https://musicscans.com/sm/sitemap-blog.xml',
+  'https://musicscans.com/sm/sitemap-metal-prints.xml',
+  'https://musicscans.com/sm/sitemap-images-posters.xml',
+  'https://musicscans.com/sm/sitemap-images-stories.xml'
 ];
 
 export function CanonicalChecker() {

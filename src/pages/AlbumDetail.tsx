@@ -117,7 +117,7 @@ export default function AlbumDetail() {
         reviewBody={album.shop_description || `${album.artist} - ${album.title}`}
         rating={4.5}
         datePublished={album.created_at}
-        reviewUrl={`https://www.musicscan.app/album/${albumId}`}
+        reviewUrl={`https://musicscans.com/album/${albumId}`}
         imageUrl={displayImage}
         itemType="MusicAlbum"
       />

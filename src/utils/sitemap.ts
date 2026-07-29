@@ -22,7 +22,7 @@ ${entries.map(entry => `  <url>
 
 // Static routes for sitemap
 export const getStaticRoutes = (): SitemapEntry[] => {
-  const baseUrl = 'https://www.musicscan.app';
+  const baseUrl = 'https://musicscans.com';
   const currentDate = new Date().toISOString().split('T')[0];
   
   const staticRoutes: SitemapEntry[] = [
@@ -113,7 +113,7 @@ export const getBlogPostRoutes = async (): Promise<SitemapEntry[]> => {
       return [];
     }
 
-    const baseUrl = 'https://www.musicscan.app';
+    const baseUrl = 'https://musicscans.com';
     
     return blogPosts.map((post) => ({
       url: `${baseUrl}/plaat-verhaal/${post.slug}`,
@@ -143,7 +143,7 @@ export const getMusicAnecdoteRoutes = async (): Promise<SitemapEntry[]> => {
       return [];
     }
 
-    const baseUrl = 'https://www.musicscan.app';
+    const baseUrl = 'https://musicscans.com';
     
     return anecdotes.map((anecdote) => ({
       url: `${baseUrl}/anekdotes/${anecdote.slug}`,
@@ -173,7 +173,7 @@ export const getMusicStoryRoutes = async (): Promise<SitemapEntry[]> => {
       return [];
     }
 
-    const baseUrl = 'https://www.musicscan.app';
+    const baseUrl = 'https://musicscans.com';
     
     return musicStories.map((story) => ({
       url: `${baseUrl}/muziek-verhaal/${story.slug}`,
@@ -208,10 +208,10 @@ Allow: /
 Crawl-delay: 2
 
 # Sitemaps
-Sitemap: https://www.musicscan.app/sitemap.xml
-Sitemap: https://www.musicscan.app/sitemap-blog.xml
-Sitemap: https://www.musicscan.app/sitemap-anecdotes.xml
-Sitemap: https://www.musicscan.app/sitemap-music-stories.xml
+Sitemap: https://musicscans.com/sitemap.xml
+Sitemap: https://musicscans.com/sitemap-blog.xml
+Sitemap: https://musicscans.com/sitemap-anecdotes.xml
+Sitemap: https://musicscans.com/sitemap-music-stories.xml
 
 # Disallow admin and internal paths
 Disallow: /admin/
@@ -277,7 +277,7 @@ export const getArtProductRoutes = async (): Promise<SitemapEntry[]> => {
       return [];
     }
 
-    const baseUrl = 'https://www.musicscan.app';
+    const baseUrl = 'https://musicscans.com';
     
     return products.map((product) => ({
       url: `${baseUrl}/product/${product.slug}`,
@@ -295,7 +295,7 @@ export const getArtProductRoutes = async (): Promise<SitemapEntry[]> => {
 export const getNLMuziekFeitenRoutes = async (): Promise<SitemapEntry[]> => {
   const { NL_MUZIEK_FEITEN } = await import('@/data/nederlandseMuziekFeiten');
   
-  const baseUrl = 'https://www.musicscan.app';
+  const baseUrl = 'https://musicscans.com';
   const currentDate = new Date().toISOString().split('T')[0];
   
   return NL_MUZIEK_FEITEN.map((feit) => ({
@@ -311,7 +311,7 @@ export const getPodcastRoutes = async (): Promise<SitemapEntry[]> => {
   const { supabase } = await import('@/integrations/supabase/client');
   
   try {
-    const baseUrl = 'https://www.musicscan.app';
+    const baseUrl = 'https://musicscans.com';
     const entries: SitemapEntry[] = [];
     
     // Get published podcasts

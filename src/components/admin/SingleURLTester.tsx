@@ -9,7 +9,7 @@ import { Loader2, TestTube, ExternalLink } from "lucide-react";
 import { CanonicalCheckResult } from "./CanonicalChecker";
 
 export function SingleURLTester() {
-  const [url, setUrl] = useState('https://www.musicscan.app/product/heart-heart-brigade-album-cover-metaalprint');
+  const [url, setUrl] = useState('https://musicscans.com/product/heart-heart-brigade-album-cover-metaalprint');
   const [isChecking, setIsChecking] = useState(false);
   const [result, setResult] = useState<CanonicalCheckResult | null>(null);
   const { toast } = useToast();
@@ -74,7 +74,7 @@ export function SingleURLTester() {
       <CardContent className="space-y-4">
         <div className="flex gap-2">
           <Input
-            placeholder="https://www.musicscan.app/..."
+            placeholder="https://musicscans.com/..."
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && testURL()}

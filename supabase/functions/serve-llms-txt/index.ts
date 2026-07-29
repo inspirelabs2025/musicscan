@@ -90,9 +90,9 @@ MusicScan helpt muziekliefhebbers en verzamelaars om:
 
 ## Contact & Links
 
-- Website: https://www.musicscan.app
+- Website: https://musicscans.com
 - Support: info@musicscan.app
-- Sitemaps: https://www.musicscan.app/sitemap.xml
+- Sitemaps: https://musicscans.com/sitemap.xml
 
 ## Technologie
 

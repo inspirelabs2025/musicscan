@@ -178,7 +178,7 @@ const MediaLibrary = () => {
               is_active: true,
               seo_title: `${options.artistName} FanWall - Fan Photos & Memories | MusicScan`,
               seo_description: `Ontdek ${options.artistName} fan foto's: live concerten, vinyl collecties, en meer. Deel jouw ${options.artistName} herinneringen!`,
-              canonical_url: `https://www.musicscan.app/fanwall/${slug}`
+              canonical_url: `https://musicscans.com/fanwall/${slug}`
             })
             .select()
             .single();

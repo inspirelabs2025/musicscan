@@ -81,7 +81,7 @@ serve(async (req) => {
     // Use artwork from music_stories (primary) or queue (fallback)
     const artworkUrl = story?.artwork_url || queueItem.artwork_url;
     const summary = storyContent.substring(0, 280).replace(/\n/g, ' ').trim() + '...';
-    const singleUrl = `https://www.musicscan.app/singles/${queueItem.slug}`;
+    const singleUrl = `https://musicscans.com/singles/${queueItem.slug}`;
 
     console.log(`🖼️ Artwork URL: ${artworkUrl ? 'found' : 'missing'}`);
     console.log(`📝 Summary length: ${summary.length} chars`);

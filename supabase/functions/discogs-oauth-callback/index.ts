@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
       method: 'POST',
       headers: {
         'Authorization': authHeaderValue,
-        'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+        'User-Agent': 'MusicScan/1.0 +https://musicscans.com',
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     })
@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
     const identityRes = await fetch(identityUrl, {
       headers: {
         'Authorization': identityAuthHeader,
-        'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+        'User-Agent': 'MusicScan/1.0 +https://musicscans.com',
       },
     })
 

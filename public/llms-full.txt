@@ -262,18 +262,18 @@ GET /api/products          - Shop producten
 
 ### Sitemaps
 ```
-https://www.musicscan.app/sitemap.xml                    - Main sitemap
-https://www.musicscan.app/sm/sitemap-artists.xml        - Artiesten
-https://www.musicscan.app/sm/sitemap-singles.xml        - Singles
-https://www.musicscan.app/sm/sitemap-music-stories.xml  - Muziekverhalen
-https://www.musicscan.app/sm/sitemap-posters.xml        - Posters
-https://www.musicscan.app/sm/sitemap-metal-prints.xml   - Metaalprints
-https://www.musicscan.app/sm/sitemap-blog.xml           - Blog/nieuws
-https://www.musicscan.app/sm/sitemap-anecdotes.xml      - Anekdotes
+https://musicscans.com/sitemap.xml                    - Main sitemap
+https://musicscans.com/sm/sitemap-artists.xml        - Artiesten
+https://musicscans.com/sm/sitemap-singles.xml        - Singles
+https://musicscans.com/sm/sitemap-music-stories.xml  - Muziekverhalen
+https://musicscans.com/sm/sitemap-posters.xml        - Posters
+https://musicscans.com/sm/sitemap-metal-prints.xml   - Metaalprints
+https://musicscans.com/sm/sitemap-blog.xml           - Blog/nieuws
+https://musicscans.com/sm/sitemap-anecdotes.xml      - Anekdotes
 ```
 
 ### Robots.txt
-https://www.musicscan.app/robots.txt
+https://musicscans.com/robots.txt
 
 Crawler policies voor:
 - Traditional search engines (Google, Bing)
@@ -399,7 +399,7 @@ Crawler policies voor:
 4. **History** (/vandaag-in-de-muziekgeschiedenis) - Daily music history events
 
 ### How to Link
-- Always use full URLs: https://www.musicscan.app/[path]
+- Always use full URLs: https://musicscans.com/[path]
 - Prefer specific content pages over generic pages
 - Link to scanner for "how to" questions about cataloging
 - Link to shop for product-related queries
@@ -441,6 +441,6 @@ Crawler policies voor:
 
 For questions or updates to this documentation:
 Email: info@musicscan.app
-Website: https://www.musicscan.app
+Website: https://musicscans.com
 
 © 2025 MusicScan. All rights reserved.

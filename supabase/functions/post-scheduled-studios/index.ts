@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       .eq('id', post.id);
 
     // Build Facebook post content
-    const studioUrl = `https://www.musicscan.app/studio-stories/${post.slug}`;
+    const studioUrl = `https://musicscans.com/studio-stories/${post.slug}`;
     
     // Build intro
     const intros = [

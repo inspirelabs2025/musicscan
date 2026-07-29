@@ -10,7 +10,7 @@ DECLARE
   hashtags_array TEXT[];
 BEGIN
   -- Build the news URL
-  news_url := 'https://www.musicscan.app/nieuws/' || NEW.slug;
+  news_url := 'https://musicscans.com/nieuws/' || NEW.slug;
   
   -- Build hashtags based on category
   hashtags_array := ARRAY['MusicScan', 'MuziekNieuws', 'Muziek'];

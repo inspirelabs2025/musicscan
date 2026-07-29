@@ -135,7 +135,7 @@ const handler = async (req: Request): Promise<Response> => {
 
               <!-- CTA Button -->
               <div style="text-align:center; margin:35px 0;">
-                <a href="https://www.musicscan.app/forum/topic/${topicId}" 
+                <a href="https://musicscans.com/forum/topic/${topicId}" 
                    style="background:#1DB954; color:#ffffff; text-decoration:none; padding:15px 30px; border-radius:25px; font-size:16px; font-weight:bold; display:inline-block; box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);">
                   💬 Doe mee met de discussie
                 </a>
@@ -153,8 +153,8 @@ const handler = async (req: Request): Promise<Response> => {
             <td style="background:#f8f9fa; padding:20px; border-radius: 0 0 8px 8px; border-top:1px solid #eee;">
               <p style="color:#888888; font-size:12px; text-align:center; margin:0;">
                 Je ontvangt deze email omdat je lid bent van de MusicScan community.<br>
-                <a href="https://www.musicscan.app/forum" style="color:#1DB954; text-decoration:none;">Bezoek het forum</a> • 
-                <a href="https://www.musicscan.app" style="color:#1DB954; text-decoration:none;">MusicScan.app</a>
+                <a href="https://musicscans.com/forum" style="color:#1DB954; text-decoration:none;">Bezoek het forum</a> • 
+                <a href="https://musicscans.com" style="color:#1DB954; text-decoration:none;">MusicScan.app</a>
               </p>
             </td>
           </tr>

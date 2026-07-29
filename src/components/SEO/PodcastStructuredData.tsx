@@ -34,7 +34,7 @@ export function PodcastSeriesStructuredData({
       name: 'MusicScan',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://www.musicscan.app/logo.png',
+        url: 'https://musicscans.com/logo.png',
       },
     },
   };

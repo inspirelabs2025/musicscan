@@ -240,6 +240,25 @@ const wrap = (Component: React.LazyExoticComponent<any>) => (
   </RouteErrorBoundary>
 );
 
+// Localized routes for the indexable core pages. NL lives on the root,
+// the other locales get a /{locale}/ prefix.
+const CORE_PAGE_COMPONENTS = {
+  home: Home,
+  scan: ScanLanding,
+  value: ValueLanding,
+  app: AppDownload,
+  pricing: Pricing,
+} as const;
+
+const CORE_ROUTES = LOCALES.flatMap((locale) =>
+  (Object.keys(CORE_PAGE_COMPONENTS) as CorePageKey[])
+    .map((key) => ({ key, path: corePath(key, locale).replace(/^\//, '') }))
+    // The NL home ('' ) and NL pricing are already registered above.
+    .filter(({ path }) => path !== '' && path !== 'pricing')
+    .map(({ key, path }) => ({ path, element: wrap(CORE_PAGE_COMPONENTS[key]) })),
+);
+
+
 export const router = createBrowserRouter([
   {
     path: '/',

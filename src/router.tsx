@@ -360,6 +360,10 @@ export const router = createBrowserRouter([
       { path: 'retourbeleid', element: wrap(ReturnPolicy) },
       { path: 'over-ons', element: wrap(About) },
       { path: 'pricing', element: wrap(Pricing) },
+
+      // Core indexable pages (scan + value), localized in nl/en/de/fr.
+      ...CORE_ROUTES,
+
       
       // Admin — noindex layout prevents search engines from indexing admin pages
       {

@@ -4,6 +4,7 @@ import { normalizeFullUrl } from '@/lib/utils';
 import {
   OG_LOCALE,
   SITE_NAME,
+  canonicalPathFor,
   hreflangAlternates,
   isIndexablePath,
   localeFromPath,
@@ -38,8 +39,9 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
   const location = useLocation();
   
   useEffect(() => {
-    const core = matchCorePath(location.pathname);
-    const pageLocale = core?.locale ?? localeFromPath(location.pathname);
+    const canonicalPath = canonicalPathFor(location.pathname);
+    const core = matchCorePath(canonicalPath);
+    const pageLocale = core?.locale ?? localeFromPath(canonicalPath);
     const coreSeo = core ? CORE_SEO[core.key][core.locale] : undefined;
 
     const finalSEO: SEOData = {
@@ -49,7 +51,7 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     };
     // Default indexing rule: only the scan + value pages stay indexable.
     finalSEO.noindex = seoData?.noindex ?? !isIndexablePath(location.pathname);
-    const currentUrl = normalizeFullUrl(location.pathname);
+    const currentUrl = normalizeFullUrl(canonicalPath);
     
     
     // Update document title

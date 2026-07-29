@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { SITE_URL, isIndexablePath, matchCorePath, normalizePath } from "@/config/site";
+import { SITE_URL, canonicalPathFor, isIndexablePath, matchCorePath, normalizePath } from "@/config/site";
 
 /**
  * Global canonical + robots fallback for every route.
@@ -11,11 +11,11 @@ import { SITE_URL, isIndexablePath, matchCorePath, normalizePath } from "@/confi
  */
 export const GlobalCanonical = () => {
   const { pathname, search } = useLocation();
-  const cleanPath = normalizePath(pathname);
+  const cleanPath = canonicalPathFor(normalizePath(pathname));
   const canonicalUrl = cleanPath === '/' ? `${SITE_URL}/` : `${SITE_URL}${cleanPath}`;
   const hasSearchParam = search.includes('search=');
   const isCore = matchCorePath(cleanPath) !== null;
-  const shouldNoindex = hasSearchParam || !isIndexablePath(cleanPath);
+  const shouldNoindex = hasSearchParam || !isIndexablePath(normalizePath(pathname));
 
   useEffect(() => {
     let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;

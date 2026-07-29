@@ -1,6 +1,15 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { normalizeFullUrl } from '@/lib/utils';
+import {
+  OG_LOCALE,
+  SITE_NAME,
+  hreflangAlternates,
+  isIndexablePath,
+  localeFromPath,
+  matchCorePath,
+} from '@/config/site';
+import { CORE_SEO } from '@/i18n/coreSeo';
 
 interface SEOData {
   title?: string;
@@ -16,12 +25,12 @@ interface SEOData {
 }
 
 const DEFAULT_SEO: SEOData = {
-  title: 'Vinyl Scanner & Muziekplatform | Scan je LP Collectie | MusicScan',
-  description: 'Scan je vinyl en CD collectie, ontdek de waarde van je platen, lees verhalen achter iconische albums en test je muziekkennis. Gratis vinyl scanner met AI herkenning.',
-  keywords: 'vinyl scanner, vinyl waarde bepalen, LP collectie scannen, muziekplatform, muzieknieuws, album verhalen, muziek quiz, vinyl waarde app',
+  title: 'Scan je platen en ontdek de waarde | MusicScan',
+  description: 'Maak een foto van je LP, vinyl of CD en weet binnen 3-6 seconden wat je plaat is en wat hij waard is. Gratis proberen in de app of op het web.',
+  keywords: 'platen scannen, vinyl waarde, lp waarde bepalen, cd scannen, platen taxeren',
   image: '/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png',
   type: 'website',
-  siteName: 'MusicScan',
+  siteName: SITE_NAME,
   locale: 'nl_NL',
 };
 
@@ -29,8 +38,19 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
   const location = useLocation();
   
   useEffect(() => {
-    const finalSEO = { ...DEFAULT_SEO, ...seoData };
+    const core = matchCorePath(location.pathname);
+    const pageLocale = core?.locale ?? localeFromPath(location.pathname);
+    const coreSeo = core ? CORE_SEO[core.key][core.locale] : undefined;
+
+    const finalSEO: SEOData = {
+      ...DEFAULT_SEO,
+      ...(coreSeo ? { ...coreSeo, locale: OG_LOCALE[pageLocale] } : {}),
+      ...seoData,
+    };
+    // Default indexing rule: only the scan + value pages stay indexable.
+    finalSEO.noindex = seoData?.noindex ?? !isIndexablePath(location.pathname);
     const currentUrl = normalizeFullUrl(location.pathname);
+    
     
     // Update document title
     document.title = finalSEO.title || DEFAULT_SEO.title!;

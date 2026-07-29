@@ -1,12 +1,6 @@
 /**
  * Deno twin of src/lib/indexable.ts — keep both in sync.
- */
- * languages) plus the legal trust pages are indexable. Everything else
- * (stories, singles, news, catalog, shop, hubs, admin, ...) gets
- * `noindex, follow`.
- *
- * URL scheme: Dutch (default locale) lives on the root with localized slugs,
- * the other languages live under a locale prefix: /en/..., /de/..., /fr/...
+ * URL scheme: NL on root with localized slugs, other locales under /en, /de, /fr.
  */
 
 /** Core pages, localized. These are the URLs that go into the sitemap. */

@@ -1,16 +1,19 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { SITE_URL, isIndexablePath, normalizePath } from "@/config/site";
 
 /**
  * Global canonical URL component that sets a self-referencing canonical tag
  * on every page. Strips trailing slashes for consistency.
- * Also adds noindex for search parameter URLs to prevent thin content indexing.
+ * Adds noindex for search-parameter URLs and for everything outside the
+ * indexable "scan + value" set.
  */
 export const GlobalCanonical = () => {
   const { pathname, search } = useLocation();
-  const cleanPath = pathname.replace(/\/+$/, '') || '/';
-  const canonicalUrl = `https://musicscans.com${cleanPath}`;
+  const cleanPath = normalizePath(pathname);
+  const canonicalUrl = cleanPath === '/' ? `${SITE_URL}/` : `${SITE_URL}${cleanPath}`;
   const hasSearchParam = search.includes('search=');
+  const shouldNoindex = hasSearchParam || !isIndexablePath(cleanPath);
 
   useEffect(() => {
     let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
@@ -22,7 +25,7 @@ export const GlobalCanonical = () => {
     canonicalLink.href = canonicalUrl;
 
     let robotsMeta = document.querySelector('meta[name="robots"][data-global-canonical]') as HTMLMetaElement;
-    if (hasSearchParam) {
+    if (shouldNoindex) {
       if (!robotsMeta) {
         robotsMeta = document.createElement('meta');
         robotsMeta.setAttribute('name', 'robots');
@@ -37,7 +40,7 @@ export const GlobalCanonical = () => {
     return () => {
       if (robotsMeta && robotsMeta.parentNode) robotsMeta.remove();
     };
-  }, [canonicalUrl, hasSearchParam]);
+  }, [canonicalUrl, shouldNoindex]);
 
   return null;
 };

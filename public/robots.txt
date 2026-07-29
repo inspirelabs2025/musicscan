@@ -1,29 +1,42 @@
 # MusicScan robots.txt
+# Focus: scan your records + discover their value.
 User-agent: *
 Allow: /
 Crawl-delay: 1
 
-# Sitemaps
+# Sitemap (core pages only)
 Sitemap: https://musicscans.com/sitemap.xml
-Sitemap: https://musicscans.com/sm/sitemap-artists.xml
-Sitemap: https://musicscans.com/sm/sitemap-singles.xml
-Sitemap: https://musicscans.com/sm/sitemap-music-stories.xml
-Sitemap: https://musicscans.com/sm/sitemap-blog.xml
 
-# Disallow private paths
+# Private paths
 Disallow: /admin/
 Disallow: /auth
 Disallow: /private/
 Disallow: /profiel
 Disallow: /my-collection
-Disallow: /scan
 Disallow: /slimme-tools
 Disallow: /universal-ssr-proxy/
 Disallow: /functions/v1/universal-ssr-proxy/
 
-# Soft 404 prevention
-Disallow: /art-shop?search
+# Content archive — kept online for users, out of the index
+Disallow: /plaat-verhaal/
+Disallow: /muziek-verhaal/
+Disallow: /singles/
+Disallow: /artists/
+Disallow: /artist-spotlight/
+Disallow: /anekdotes/
+Disallow: /nieuws/
+Disallow: /new-release/
+Disallow: /nummer/
+Disallow: /verhalen
+Disallow: /reviews/
+Disallow: /quiz
+Disallow: /quizzen
+Disallow: /shop
+Disallow: /art-shop
+Disallow: /marketplace
+Disallow: /catalogus
+Disallow: /podcasts
+Disallow: /vandaag-in-de-muziekgeschiedenis
 
-# Block all search parameter URLs (thin content)
+# Thin parameter URLs
 Disallow: /*?search=
-Disallow: /artists?search

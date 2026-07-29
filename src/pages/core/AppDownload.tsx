@@ -17,7 +17,7 @@ export default function AppDownload() {
   const locale = matchCorePath(pathname)?.locale ?? localeFromPath(pathname);
   const copy = APP_COPY[locale];
   const seo = CORE_SEO.app[locale];
-  useSEO({ noindex: false });
+  useSEO({ title: seo.title, description: seo.description });
 
   const appSchema = {
     '@context': 'https://schema.org',

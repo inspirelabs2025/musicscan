@@ -38,31 +38,32 @@ export function setCookie(name: string, value: string, days: number) {
 }
 
 export function normalizeFullUrl(pathOrUrl?: string) {
-  // Canonical production origin — always the www-variant to keep canonical,
-  // og:url, twitter:image and sitemap URLs consistent with Search Console.
-  const canonicalOrigin = 'https://musicscans.com';
+  // Canonical production origin — single source of truth lives in src/config/site.ts.
+  const canonicalOrigin = SITE_URL;
   const runtimeOrigin = typeof window !== 'undefined' && window.location.origin
     ? window.location.origin
     : canonicalOrigin;
 
-  // Force the canonical origin for any musicscan.app host (with or without www)
-  // and for the Lovable preview/published subdomains — so SEO output never
-  // varies by where the app happens to be served from.
-  const isMusicScanHost = /(^|\.)musicscan\.app$/i.test(new URL(runtimeOrigin).hostname)
-    || /lovable\.app$/i.test(new URL(runtimeOrigin).hostname);
-  const origin = isMusicScanHost ? canonicalOrigin : runtimeOrigin;
+  // Force the canonical origin for every host we own (old domain, new domain and
+  // the Lovable preview/published subdomains) so SEO output never varies by host.
+  const runtimeHost = new URL(runtimeOrigin).hostname;
+  const isOwnHost = /(^|\.)musicscans\.com$/i.test(runtimeHost)
+    || /(^|\.)musicscan\.app$/i.test(runtimeHost)
+    || /lovable\.app$/i.test(runtimeHost);
+  const origin = isOwnHost ? canonicalOrigin : runtimeOrigin;
 
   if (!pathOrUrl) return origin;
 
   try {
     const resolved = new URL(pathOrUrl, origin);
-    // If the input was an absolute URL on a musicscan.app host, rewrite to www.
-    if (/(^|\.)musicscan\.app$/i.test(resolved.hostname)) {
+    // Rewrite absolute URLs on any host we own to the canonical domain.
+    if (/(^|\.)musicscans\.com$/i.test(resolved.hostname) || /(^|\.)musicscan\.app$/i.test(resolved.hostname)) {
       resolved.protocol = 'https:';
-      resolved.hostname = 'www.musicscan.app';
+      resolved.hostname = new URL(canonicalOrigin).hostname;
     }
     return resolved.toString();
   } catch {
     return origin;
   }
 }
+

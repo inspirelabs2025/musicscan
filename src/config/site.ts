@@ -84,10 +84,23 @@ export function isIndexablePath(pathname: string): boolean {
   return isAllowlistedPath(normalizePath(pathname));
 }
 
+/**
+ * Crawlable aliases that must not compete with the real localized URL.
+ * They stay reachable and index,follow, but canonicalize to their target.
+ */
+const PATH_ALIASES: Record<string, string> = {
+  '/scanner': corePath('scan', DEFAULT_LOCALE),
+};
+
+/** The URL a path should canonicalize to (itself, unless it is an alias). */
+export function canonicalPathFor(pathname: string): string {
+  const path = normalizePath(pathname);
+  return PATH_ALIASES[path] ?? path;
+}
 
 /** hreflang alternates for a core page; empty for everything else. */
 export function hreflangAlternates(pathname: string): Array<{ hreflang: string; href: string }> {
-  const match = matchCorePath(pathname);
+  const match = matchCorePath(canonicalPathFor(pathname));
   if (!match) return [];
   const alternates: Array<{ hreflang: string; href: string }> = LOCALES.map((locale) => ({
     hreflang: locale as string,
@@ -99,6 +112,7 @@ export function hreflangAlternates(pathname: string): Array<{ hreflang: string; 
   });
   return alternates;
 }
+
 
 /** App + web links. iOS is not live yet — keep it disabled until it is. */
 export const PLAY_STORE_URL =

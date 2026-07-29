@@ -12,7 +12,7 @@ export default function ScanLanding() {
   const locale = matchCorePath(pathname)?.locale ?? localeFromPath(pathname);
   const copy = SCAN_COPY[locale];
   const seo = CORE_SEO.scan[locale];
-  useSEO({ noindex: false });
+  useSEO({ title: seo.title, description: seo.description });
 
   const faqSchema = {
     '@context': 'https://schema.org',

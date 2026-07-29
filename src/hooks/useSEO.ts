@@ -106,25 +106,21 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     }
     canonicalLink.setAttribute('href', finalSEO.canonicalUrl || currentUrl);
     
-    // Language alternate (only nl for now, remove en variant until implemented)
-    let hreflangNL = document.querySelector('link[hreflang="nl"]');
-    if (!hreflangNL) {
-      hreflangNL = document.createElement('link');
-      hreflangNL.setAttribute('rel', 'alternate');
-      hreflangNL.setAttribute('hreflang', 'nl');
-      document.head.appendChild(hreflangNL);
+    // hreflang alternates — only the core scan + value pages are localized.
+    document
+      .querySelectorAll('link[rel="alternate"][hreflang]')
+      .forEach((el) => el.remove());
+    for (const alt of hreflangAlternates(location.pathname)) {
+      const link = document.createElement('link');
+      link.setAttribute('rel', 'alternate');
+      link.setAttribute('hreflang', alt.hreflang);
+      link.setAttribute('href', alt.href);
+      document.head.appendChild(link);
     }
-    hreflangNL.setAttribute('href', currentUrl);
+
+    // Document language follows the page locale.
+    document.documentElement.setAttribute('lang', pageLocale);
     
-    // x-default hreflang for international targeting
-    let hreflangDefault = document.querySelector('link[hreflang="x-default"]');
-    if (!hreflangDefault) {
-      hreflangDefault = document.createElement('link');
-      hreflangDefault.setAttribute('rel', 'alternate');
-      hreflangDefault.setAttribute('hreflang', 'x-default');
-      document.head.appendChild(hreflangDefault);
-    }
-    hreflangDefault.setAttribute('href', currentUrl);
     
   }, [
     location.pathname,

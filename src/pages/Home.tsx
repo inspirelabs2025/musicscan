@@ -12,6 +12,7 @@ import { SeoContentBlock } from '@/components/SEO/SeoContentBlock';
 import { ConditionalFooter } from '@/components/ConditionalFooter';
 import { AppLinks } from '@/components/core/AppLinks';
 import type { Locale } from '@/config/site';
+import { CORE_SEO } from '@/i18n/coreSeo';
 
 // Lazy load sections
 // ArtistsSection, StoriesSection, GenresSection, MagicMikePodcastSection
@@ -29,9 +30,12 @@ const Home = () => {
   const { tr, language } = useLanguage();
   const { user, signOut } = useAuth();
 
+  // Homepage meta comes from the localized core SEO copy (scan + value).
+  const homeSeo = CORE_SEO.home[(language as Locale)] ?? CORE_SEO.home.nl;
   useSEO({
-    title: tr.home.metaTitle,
-    description: tr.home.metaDesc,
+    title: homeSeo.title,
+    description: homeSeo.description,
+    keywords: homeSeo.keywords,
   });
 
   const websiteSchema = {

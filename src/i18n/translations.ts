@@ -833,8 +833,8 @@ const translations = {
       freeCreditsReceived: "gratis credits ontvangen!",
     },
     home: {
-      metaTitle: "Vinyl Scanner & Muziekplatform | Scan je LP Collectie | MusicScan",
-      metaDesc: "Scan je vinyl en CD collectie, ontdek de waarde van je platen, lees verhalen achter iconische albums en test je muziekkennis. Gratis vinyl scanner met AI herkenning.",
+      metaTitle: "Scan je platen en ontdek de waarde | MusicScan",
+      metaDesc: "Maak een foto van je LP, vinyl of CD en zie binnen 3-6 seconden welke plaat het is en wat hij waard is. Gratis proberen op web en in de app.",
     },
     marketplace: {
       title: "Marktplaats",

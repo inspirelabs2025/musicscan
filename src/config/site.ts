@@ -6,6 +6,8 @@
  * Change the domain here and everywhere in the frontend follows.
  */
 
+import { isIndexablePath as isAllowlistedPath } from '@/lib/indexable';
+
 export const SITE_URL = 'https://musicscans.com';
 export const SITE_NAME = 'MusicScan';
 

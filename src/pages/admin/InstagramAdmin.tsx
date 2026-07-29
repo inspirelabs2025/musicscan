@@ -85,7 +85,7 @@ export default function InstagramAdmin() {
             title: (item.yaml_frontmatter as any)?.title || item.slug,
             content_preview: (item.yaml_frontmatter as any)?.description,
             image_url: item.album_cover_url,
-            url: `https://www.musicscan.app/plaat-verhaal/${item.slug}`,
+            url: `https://musicscans.com/plaat-verhaal/${item.slug}`,
             created_at: item.created_at,
             is_published: item.is_published,
             type: 'blog_posts'
@@ -106,7 +106,7 @@ export default function InstagramAdmin() {
             title: item.title,
             content_preview: item.description?.substring(0, 150),
             image_url: item.primary_image,
-            url: `https://www.musicscan.app/product/${item.slug}`,
+            url: `https://musicscans.com/product/${item.slug}`,
             created_at: item.created_at,
             is_published: item.status === 'active',
             type: 'platform_products'
@@ -127,7 +127,7 @@ export default function InstagramAdmin() {
             title: item.artist_name,
             content_preview: item.story_content?.substring(0, 150),
             image_url: item.artwork_url,
-            url: `https://www.musicscan.app/artist/${item.slug}`,
+            url: `https://musicscans.com/artist/${item.slug}`,
             created_at: item.created_at,
             is_published: item.is_published,
             type: 'artist_stories'
@@ -148,7 +148,7 @@ export default function InstagramAdmin() {
             title: item.title,
             content_preview: item.summary?.substring(0, 150),
             image_url: item.cover_image_url,
-            url: `https://www.musicscan.app/review/${item.slug}`,
+            url: `https://musicscans.com/review/${item.slug}`,
             created_at: item.created_at,
             is_published: item.is_published,
             type: 'admin_album_reviews'

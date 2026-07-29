@@ -73,7 +73,7 @@ serve(async (req) => {
         const apiResp = await fetch(`https://api.discogs.com/releases/${discogs_id}`, {
           headers: {
             Authorization: `Discogs token=${discogsToken}`,
-            "User-Agent": "MusicScan/1.0 +https://musicscan.app",
+            "User-Agent": "MusicScan/1.0 +https://musicscans.com",
           },
         });
 

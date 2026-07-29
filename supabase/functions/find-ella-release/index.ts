@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     
     const search1Response = await fetch(search1Url, {
       headers: {
-        'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+        'User-Agent': 'MusicScan/1.0 +https://musicscans.com',
         'Authorization': `Discogs token=${discogsToken}`
       }
     });
@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
     
     const search2Response = await fetch(search2Url, {
       headers: {
-        'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+        'User-Agent': 'MusicScan/1.0 +https://musicscans.com',
         'Authorization': `Discogs token=${discogsToken}`
       }
     });
@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
     
     const search3Response = await fetch(search3Url, {
       headers: {
-        'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+        'User-Agent': 'MusicScan/1.0 +https://musicscans.com',
         'Authorization': `Discogs token=${discogsToken}`
       }
     });

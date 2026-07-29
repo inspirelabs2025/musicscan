@@ -5724,5 +5724,5 @@ const translations = {
 } as const;
 
 export type TranslationKeys = typeof translations.nl;
-export type Language = 'nl' | 'en';
+export type Language = 'nl' | 'en' | 'de' | 'fr';
 export default translations;

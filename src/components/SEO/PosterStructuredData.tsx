@@ -37,11 +37,11 @@ export const PosterStructuredData = ({ product, slug }: PosterStructuredDataProp
     "creator": {
       "@type": "Organization",
       "name": "MusicScan Studio",
-      "url": "https://www.musicscan.app"
+      "url": "https://musicscans.com"
     },
     "offers": {
       "@type": "Offer",
-      "url": `https://www.musicscan.app/product/${slug}`,
+      "url": `https://musicscans.com/product/${slug}`,
       "priceCurrency": product.currency || "EUR",
       "price": product.price,
       "priceValidUntil": new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -52,7 +52,7 @@ export const PosterStructuredData = ({ product, slug }: PosterStructuredDataProp
       "seller": {
         "@type": "Organization",
         "name": "MusicScan",
-        "url": "https://www.musicscan.app"
+        "url": "https://musicscans.com"
       },
       "shippingDetails": {
         "@type": "OfferShippingDetails",
@@ -94,9 +94,9 @@ export const PosterStructuredData = ({ product, slug }: PosterStructuredDataProp
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app/" },
-      { "@type": "ListItem", "position": 2, "name": "Posters", "item": "https://www.musicscan.app/posters" },
-      { "@type": "ListItem", "position": 3, "name": `${product.artist} - ${product.title}`, "item": `https://www.musicscan.app/product/${slug}` }
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://musicscans.com/" },
+      { "@type": "ListItem", "position": 2, "name": "Posters", "item": "https://musicscans.com/posters" },
+      { "@type": "ListItem", "position": 3, "name": `${product.artist} - ${product.title}`, "item": `https://musicscans.com/product/${slug}` }
     ]
   };
 

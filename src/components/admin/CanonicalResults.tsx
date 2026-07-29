@@ -31,7 +31,7 @@ import {
 const FIX_HINTS = {
   MISSING: "Voeg <link rel='canonical' href='{SELF_URL}'> toe in de <head> van deze template.",
   HOMEPAGE_CANONICAL: "Canonical verwijst naar home. Zet canonical naar de eigen URL: {EXPECTED_URL}",
-  DIFFERENT_DOMAIN: "Gebruik consequent https://www.musicscan.app of pas canonical + redirects aan.",
+  DIFFERENT_DOMAIN: "Gebruik consequent https://musicscans.com of pas canonical + redirects aan.",
   DIFFERENT_PATH: "Canonical wijst naar een andere pagina. Check of dit intentioneel is. Anders: gebruik self-canonical.",
   MULTIPLE_CANONICALS: "Verwijder dubbele <link rel='canonical'> tags; slechts één canonical toegestaan.",
   OK_SELF: "✅ Canonical is correct geconfigureerd!"

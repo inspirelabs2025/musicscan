@@ -21,7 +21,7 @@ const getDiscogsApiFallback = async (discogsId: string) => {
       ? { 'Authorization': `Discogs token=${discogsToken}` }
       : { 'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}` };
     
-    const userAgent = 'MusicScan/1.0 +https://musicscan.app';
+    const userAgent = 'MusicScan/1.0 +https://musicscans.com';
     
     // Use marketplace/stats endpoint with curr=EUR for exact EUR prices
     const statsUrl = `https://api.discogs.com/marketplace/stats/${discogsId}?curr=EUR`;

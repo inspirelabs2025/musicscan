@@ -70,7 +70,7 @@ export default function NewReleaseDetail() {
     "byArtist": { "@type": "MusicGroup", "name": release.artist },
     "datePublished": release.release_date,
     "image": release.image_url,
-    "url": `https://www.musicscan.app/new-release/${release.slug}`
+    "url": `https://musicscans.com/new-release/${release.slug}`
   };
 
   return (

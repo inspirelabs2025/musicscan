@@ -29,7 +29,7 @@ const FilmmuziekFeitDetail = () => {
     );
   }
 
-  const pageUrl = `https://www.musicscan.app/filmmuziek/feit/${feit.slug}`;
+  const pageUrl = `https://musicscans.com/filmmuziek/feit/${feit.slug}`;
   const pageTitle = `${feit.title} (${feit.year}) - Filmmuziek Geschiedenis | MusicScan`;
   
   // Get related facts (same decade or subgenre)

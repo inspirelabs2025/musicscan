@@ -29,7 +29,7 @@ const DanceHouseFeitDetail = () => {
     );
   }
 
-  const pageUrl = `https://www.musicscan.app/dh-muziekfeit/${feit.slug}`;
+  const pageUrl = `https://musicscans.com/dh-muziekfeit/${feit.slug}`;
   const pageTitle = `${feit.title} (${feit.year}) - Dance Muziek Geschiedenis | MusicScan`;
   
   // Get related facts (same decade or subgenre)

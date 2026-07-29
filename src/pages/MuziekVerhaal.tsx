@@ -56,8 +56,8 @@ export const MuziekVerhaal: React.FC = () => {
   const { toast } = useToast();
 
   // Define URLs and images for SEO and sharing
-  const currentUrl = `https://www.musicscan.app/muziek-verhaal/${slug}`;
-  const storyImage = story?.artwork_url || 'https://www.musicscan.app/images/default-product-og.jpg';
+  const currentUrl = `https://musicscans.com/muziek-verhaal/${slug}`;
+  const storyImage = story?.artwork_url || 'https://musicscans.com/images/default-product-og.jpg';
   const storyDescription = story?.meta_description || story?.story_content?.slice(0, 160).replace(/[#*]/g, '') || 'Ontdek het verhaal achter de muziek';
 
   // Enhanced SEO setup
@@ -257,7 +257,7 @@ export const MuziekVerhaal: React.FC = () => {
         reviewBody={story.story_content}
         rating={4.3}
         datePublished={story.created_at}
-        reviewUrl={`https://www.musicscan.app/muziek-verhaal/${story.slug}`}
+        reviewUrl={`https://musicscans.com/muziek-verhaal/${story.slug}`}
         imageUrl={story.artwork_url}
         itemType="MusicRecording"
       />

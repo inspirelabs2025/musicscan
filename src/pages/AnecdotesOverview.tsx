@@ -14,7 +14,7 @@ import { format } from 'date-fns';
 import { nl, enUS } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const CANONICAL_URL = "https://www.musicscan.app/anekdotes";
+const CANONICAL_URL = "https://musicscans.com/anekdotes";
 
 export default function AnecdotesOverview() {
   const navigate = useNavigate();
@@ -59,7 +59,7 @@ export default function AnecdotesOverview() {
     publisher: {
       "@type": "Organization",
       name: "MusicScan",
-      url: "https://www.musicscan.app"
+      url: "https://musicscans.com"
     },
     numberOfItems: totalAnecdotes,
     mainEntity: {
@@ -73,7 +73,7 @@ export default function AnecdotesOverview() {
           headline: anecdote.anecdote_title,
           description: anecdote.anecdote_content.substring(0, 160),
           datePublished: anecdote.anecdote_date,
-          url: `https://www.musicscan.app/anekdotes/${anecdote.slug}`,
+          url: `https://musicscans.com/anekdotes/${anecdote.slug}`,
           author: { "@type": "Organization", name: "MusicScan" }
         }
       })) || []

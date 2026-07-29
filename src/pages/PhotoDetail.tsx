@@ -178,7 +178,7 @@ export default function PhotoDetail() {
     );
   }
 
-  const canonicalUrl = photo.canonical_url || `https://www.musicscan.app/photo/${photo.seo_slug}`;
+  const canonicalUrl = photo.canonical_url || `https://musicscans.com/photo/${photo.seo_slug}`;
 
   return (
     <>

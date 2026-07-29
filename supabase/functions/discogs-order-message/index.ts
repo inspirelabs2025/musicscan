@@ -75,7 +75,7 @@ async function makeAuthenticatedRequest(
 
   const headers: Record<string, string> = {
     'Authorization': authHeader,
-    'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+    'User-Agent': 'MusicScan/1.0 +https://musicscans.com',
   }
   if (body) {
     headers['Content-Type'] = contentType

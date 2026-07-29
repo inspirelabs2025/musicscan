@@ -69,8 +69,8 @@ function resolveFilename(req: Request): string | null {
 
   // Direct path parsing (when function is routed with original path)
   // Examples:
-  //   https://musicscan.app/sitemaps/sitemap-blog-v3-part1.xml  -> filename = "sitemap-blog-v3-part1.xml"
-  //   https://musicscan.app/sitemap.xml                         -> filename = "sitemap-index.xml"
+  //   https://musicscans.com/sitemaps/sitemap-blog-v3-part1.xml  -> filename = "sitemap-blog-v3-part1.xml"
+  //   https://musicscans.com/sitemap.xml                         -> filename = "sitemap-index.xml"
   const path = url.pathname;
 
   if (path === "/sitemap.xml" || path.endsWith("/sitemap.xml")) return "sitemap-index.xml";

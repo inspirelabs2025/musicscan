@@ -11,8 +11,8 @@ export default function Verhalen() {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.musicscan.app" },
-      { "@type": "ListItem", "position": 2, "name": "Verhalen", "item": "https://www.musicscan.app/verhalen" }
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://musicscans.com" },
+      { "@type": "ListItem", "position": 2, "name": "Verhalen", "item": "https://musicscans.com/verhalen" }
     ]
   };
 

@@ -35,7 +35,7 @@ export default function PodcastEpisodeDetail() {
   const { data, isLoading } = usePodcastEpisodeBySlug(podcastSlug, episodeSlug);
   const { data: relatedEpisodes } = useRelatedEpisodes(data?.podcast.id, data?.episode.id);
 
-  const baseUrl = 'https://www.musicscan.app';
+  const baseUrl = 'https://musicscans.com';
   const podcastUrl = `${baseUrl}/podcast/${podcastSlug}`;
   const episodeUrl = `${baseUrl}/podcast/${podcastSlug}/${episodeSlug}`;
 

@@ -1732,7 +1732,7 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
     // Fallback: Use Discogs API with curr=EUR for exact EUR prices
     if (discogsToken) {
       console.log('🔄 Falling back to Discogs API (EUR) for pricing...');
-      const userAgent = 'MusicScan/1.0 +https://musicscan.app';
+      const userAgent = 'MusicScan/1.0 +https://musicscans.com';
       
       // Try marketplace/stats endpoint first (gives exact EUR prices)
       try {
@@ -2046,7 +2046,7 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
       try {
         const response = await fetch(searchUrl, {
           headers: {
-            'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+            'User-Agent': 'MusicScan/1.0 +https://musicscans.com',
             'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
           }
         });
@@ -2133,7 +2133,7 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
       try {
         const response = await fetch(searchUrl, {
           headers: {
-            'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+            'User-Agent': 'MusicScan/1.0 +https://musicscans.com',
             'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
           }
         });
@@ -2215,7 +2215,7 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
       try {
         const response = await fetch(searchUrl, {
           headers: {
-            'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+            'User-Agent': 'MusicScan/1.0 +https://musicscans.com',
             'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
           }
         });
@@ -2671,7 +2671,7 @@ async function verifyCandidate(
     // Fetch full release details
     const releaseResponse = await fetch(`https://api.discogs.com/releases/${candidate.id}`, {
       headers: {
-        'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+        'User-Agent': 'MusicScan/1.0 +https://musicscans.com',
         'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
       }
     });

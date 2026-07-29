@@ -107,7 +107,7 @@ async function makeAuthenticatedRequest(
     method,
     headers: {
       'Authorization': authHeader,
-      'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+      'User-Agent': 'MusicScan/1.0 +https://musicscans.com',
     },
   })
 }

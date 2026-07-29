@@ -47,7 +47,7 @@ const ArtistSpotlight = () => {
     );
   }
 
-  const canonicalUrl = `https://www.musicscan.app/artist-spotlight/${spotlight.slug}`;
+  const canonicalUrl = `https://musicscans.com/artist-spotlight/${spotlight.slug}`;
   
   // Hero image: artwork_url of eerste spotlight_image als fallback
   const heroImage = spotlight.artwork_url || (spotlight.spotlight_images as any[])?.[0]?.url;

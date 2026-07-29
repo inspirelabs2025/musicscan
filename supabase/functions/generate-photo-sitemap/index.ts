@@ -35,7 +35,7 @@ serve(async (req) => {
     console.log(`📸 Found ${photos?.length || 0} published photos`);
 
     // Generate XML
-    const baseUrl = 'https://www.musicscan.app';
+    const baseUrl = 'https://musicscans.com';
     const urlEntries = photos?.map(photo => {
       const lastmod = photo.updated_at || photo.published_at;
       return `  <url>

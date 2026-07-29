@@ -35,8 +35,8 @@ function generateBlogHTML(blog: any): string {
   // Prefer album cover, but ensure it's a valid URL, otherwise use fallback
   const image = blog.album_cover_url && blog.album_cover_url.startsWith('http') 
     ? blog.album_cover_url 
-    : (frontmatter.image || 'https://www.musicscan.app/images/default-product-og.jpg');
-  const url = `https://www.musicscan.app/plaat-verhaal/${blog.slug}`;
+    : (frontmatter.image || 'https://musicscans.com/images/default-product-og.jpg');
+  const url = `https://musicscans.com/plaat-verhaal/${blog.slug}`;
   const publishDate = blog.published_at || blog.created_at;
   const price = frontmatter.estimated_price || frontmatter.price;
 
@@ -57,7 +57,7 @@ function generateBlogHTML(blog: any): string {
       "name": "MusicScan",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://www.musicscan.app/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png"
+        "url": "https://musicscans.com/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png"
       }
     },
     "image": image,
@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
         status: 302,
         headers: {
           ...corsHeaders,
-          'Location': `https://www.musicscan.app/plaat-verhaal/${slug}`,
+          'Location': `https://musicscans.com/plaat-verhaal/${slug}`,
         },
       });
     }

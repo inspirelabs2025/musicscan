@@ -59,14 +59,14 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseUrl = 'https://ssxbpyqnjfiyubsuonar.supabase.co';
     
     // For password recovery, redirect to set-password page; otherwise use provided redirect or dashboard
-    let redirectUrl = redirect_to || 'https://www.musicscan.app/dashboard';
+    let redirectUrl = redirect_to || 'https://musicscans.com/dashboard';
     if (email_action_type === 'recovery') {
-      redirectUrl = 'https://www.musicscan.app/auth/set-password';
+      redirectUrl = 'https://musicscans.com/auth/set-password';
     }
     
     const confirmationUrl = `${supabaseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(redirectUrl)}`;
     
-    console.log('🔗 Generated confirmation URL for action:', email_action_type, '→', redirectUrl.replace('https://www.musicscan.app', ''));
+    console.log('🔗 Generated confirmation URL for action:', email_action_type, '→', redirectUrl.replace('https://musicscans.com', ''));
     
     // Create the HTML email using your template
     const emailHtml = `

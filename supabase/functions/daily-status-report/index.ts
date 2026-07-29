@@ -560,7 +560,7 @@ serve(async (req) => {
           ${cronLogsHtml}
           
           <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #999; font-size: 13px;">
-            <a href="https://www.musicscan.app/admin/status" style="color: #667eea; text-decoration: none;">
+            <a href="https://musicscans.com/admin/status" style="color: #667eea; text-decoration: none;">
               Bekijk live dashboard →
             </a>
           </div>

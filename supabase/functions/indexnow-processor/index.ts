@@ -7,7 +7,7 @@ const corsHeaders = {
 
 const INDEXNOW_KEY = '8f9a2b7e4c1d6e3a5f0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7';
 const INDEXNOW_API = 'https://api.indexnow.org/indexnow';
-const BASE_URL = 'https://www.musicscan.app';
+const BASE_URL = 'https://musicscans.com';
 
 interface IndexNowRequest {
   host: string;

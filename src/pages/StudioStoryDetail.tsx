@@ -105,7 +105,7 @@ export default function StudioStoryDetail() {
         name={story.studio_name}
         description={story.meta_description || `Ontdek het verhaal van ${story.studio_name}`}
         image={story.artwork_url || undefined}
-        url={`https://www.musicscan.app/studio-stories/${story.slug}`}
+        url={`https://musicscans.com/studio-stories/${story.slug}`}
         location={story.location || undefined}
         foundingDate={story.founded_year?.toString()}
         notableArtists={story.notable_artists || undefined}

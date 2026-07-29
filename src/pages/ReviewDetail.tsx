@@ -40,7 +40,7 @@ export default function ReviewDetail() {
     );
   }
 
-  const canonicalUrl = `https://www.musicscan.app/reviews/${slug}/`;
+  const canonicalUrl = `https://musicscans.com/reviews/${slug}/`;
 
   return (
     <>

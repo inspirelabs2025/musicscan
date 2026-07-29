@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const USER_AGENT = "MusicScan/1.0 (https://musicscan.app; info@musicscan.app)";
+const USER_AGENT = "MusicScan/1.0 (https://musicscans.com; info@musicscan.app)";
 const PLACEHOLDER_URL = "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1280&q=80";
 
 async function isReachableImage(url: string): Promise<boolean> {

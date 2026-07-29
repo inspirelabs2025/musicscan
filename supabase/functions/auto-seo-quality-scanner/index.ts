@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const BASE_URL = 'https://www.musicscan.app';
+const BASE_URL = 'https://musicscans.com';
 const MIN_CONTENT_LENGTH = 500;
 const BATCH_SIZE = 50;
 

@@ -89,8 +89,8 @@ const ArtistDetail = () => {
     );
   }
 
-  const currentUrl = `https://www.musicscan.app/artists/${story.slug}`;
-  const storyImage = story.artwork_url || 'https://www.musicscan.app/placeholder.svg';
+  const currentUrl = `https://musicscans.com/artists/${story.slug}`;
+  const storyImage = story.artwork_url || 'https://musicscans.com/placeholder.svg';
   
   // CTR-optimized description with genre and notable albums
   const storyDescription = story.meta_description || (() => {

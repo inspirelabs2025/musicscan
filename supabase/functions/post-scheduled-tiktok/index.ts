@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
         caption: post.caption,
         media_url: post.media_url,
         video_url: post.video_url,
-        url: `https://www.musicscan.app/${post.content_type === 'single' ? 'singles' : post.content_type === 'music_history' ? 'vandaag-in-de-muziekgeschiedenis' : ''}`,
+        url: `https://musicscans.com/${post.content_type === 'single' ? 'singles' : post.content_type === 'music_history' ? 'vandaag-in-de-muziekgeschiedenis' : ''}`,
       }
     });
 

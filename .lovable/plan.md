@@ -1,81 +1,99 @@
-# /singles/ SEO-analyse (alleen bevindingen, geen wijzigingen)
+# Strategiewijziging MusicScan → musicscans.com
 
-## 1. Databron
-- Route `/singles/:slug` en overzicht `/singles` worden gevoed door één tabel: **`music_stories`** met filter `is_published = true AND single_name IS NOT NULL`.
-- Volume:
-  - Totaal rijen in `music_stories`: **1.780**
-  - Gepubliceerd: **1.780** (100%)
-  - Met `single_name`: **1.780** → alle rijen zijn "singles"
-- Sitemap-generator (`supabase/functions/generate-static-sitemaps/index.ts`) publiceert deze **allemaal** in `sitemap-singles.xml` (+ image-sitemap), en de overzichtspagina `/singles` staat als daily changefreq in `sitemap-static`.
+Analyse op basis van `src/router.tsx`, `supabase/functions/generate-static-sitemaps/index.ts`, `src/hooks/useSEO.ts`, `public/sitemap.xml`, `public/robots.txt` en live tellingen uit de database.
 
-## 2. Content-lengte
-- Gemiddelde `story_content`: **~6.085 tekens** (~900-1.000 woorden).
-- Gemiddelde `meta_description`: 140 tekens.
-- Rijen met `< 500` of `< 1500` tekens body: **0**.
-- Conclusie: de pagina's zijn niet "leeg" of formeel dun in bytes. Het dun/duplicaat-signaal van Google zit dus niet in ontbrekende tekst maar in **redundantie tussen pagina's** (zelfde artiest/song, near-duplicate verhalen) en in **onderwerpen die geen zoekwaarde hebben** (release-varianten, tour-datums, interviews).
+## 1. Route-inventaris (nu indexeerbaar)
 
-## 3. Duplicaat- / varianten-patronen
-Duidelijke clustering rond een handvol artiesten:
+Statische sitemap (`sitemap-static.xml`) bevat nu 34 URL's; daarnaast 34 dynamische sitemapbestanden. Gemeten aantallen:
 
-| Artiest | Aantal /singles/ pagina's |
-|---|---|
-| AC/DC | 106 |
-| Metallica | 55 |
-| Coldplay | 27 |
-| Queen | 23 |
-| Adele | 20 |
-| Ed Sheeran | 18 |
-| Taylor Swift | 17 |
-| Michael Jackson | 16 |
-| Pink Floyd | 15 |
-| André Hazes | 15 |
-| Art Tatum | 15 |
+| Type | Route | Aantal URLs |
+|---|---|---|
+| Blog/plaat-verhalen | `/plaat-verhaal/:slug`, `/muziek-verhaal/:slug` | 8.060 gepubliceerd |
+| Singles | `/singles/:slug` | 1.780 (86 al noindex) |
+| Artiestverhalen | `/artists/:slug` | 239 |
+| Nieuws | `/nieuws/:slug` | 212 (timestamp-slugs al noindex) |
+| Producten (posters/canvas/shirts/metal) | `/product/:slug` + shopoverzichten | 11.042 (detailpagina's 301 naar /art-shop via `_redirects`) |
+| New releases | `/new-release/:slug` | 108 |
+| Anekdotes | `/anekdotes/:slug` | 32 |
+| Muziekgeschiedenis | `/vandaag-in-de-muziekgeschiedenis` + events | 30 events |
+| Overige hubs | `/nederland`, `/frankrijk`, `/dance-house`, `/filmmuziek`, `/kerst`, `/top-2000-analyse`, `/podcasts*`, `/tijdmachine*`, `/studio-stories*`, `/artist-spotlight*`, `/fan-wall*`, `/photo/:id`, `/reviews*`, `/quizzen` | enkele honderden + fanwall/foto-sitemaps |
+| Statisch/functioneel | `/`, `/scanner`, `/pricing`, `/over-ons`, `/privacy`, `/voorwaarden`, `/auth`, `/retourbeleid` | 8 |
 
-- **60 artiesten hebben > 5 singles-pagina's, samen goed voor 739 URLs (~42% van alle /singles/).**
-- Binnen die clusters staan opvallend veel "geen-echte-single" items — herkomst is duidelijk Discogs release-listings, niet redactionele songverhalen:
-  - Metallica live-shows: `metallica-m72-atlanta-ga-june-3-2025`, `metallica-charlotte-north-carolina-may-31-2025`, `metallica-helsinki-finland-june-7-2024`, `metallica-m72-toronto-ontario-april-24-2025` én `-april-26-2025`, enz. → per stad/datum een eigen pagina met bijna identiek verhaal.
-  - AC/DC release-varianten: `ac-dc-bbc-rock-hour-446-version-b`, `ac-dc-coffret-3-disques`, `ac-dc-box-set`, `ac-dc-12-of-the-best`, `ac-dc-a-gold-record-presentation`, `ac-dc-interview`, `ac-dc-alles-oder-light`, plus dubbele releases van dezelfde song (`ac-dc-thunderstruck` × 2, `ac-dc-highway-to-hell` × 2).
-- Exacte artist+single_name duplicaten: ~20 paren (Thunderstruck, Highway To Hell, Master Of Puppets, Wish You Were Here, Yellow, Here Comes The Sun, Shallow, Beggin', …). Klein in absolute aantallen, maar 100% duplicaat-signaal.
-- Slug-patronen die live/tour/variant-content aanduiden (`-m72-`, `-worldwired-`, `-tour-`, `-live-in-`, `-concert-`): **23 rijen**.
-- Titel-woordenlijst (`interview|bbc|box set|coffret|greatest hits|in concert|live|tour|m72|version|special|inédit|promo|edit|remix|acoustic|demo|sampler|compilation|anthology|collection|fan can`): **88 rijen**.
+Totaal indexeerbaar nu: grofweg 22.000+ URL's, waarvan <10 aansluiten op de nieuwe propositie.
 
-## 4. Sitemaps
-Ja, alle 1.780 URLs staan momenteel in:
-- `sitemap-singles.xml` (loc's)
-- `sitemap-images-singles.xml` (met `artwork_url`)
-- Overzicht `/singles` in `sitemap-static.xml`, priority 0.8, `changefreq=daily`.
+Let op: `/scanner` staat wel in de statische sitemap maar bestaat **niet** als route in `src/router.tsx` (de scanroutes zijn `/scan`, `/unified-scanner`, `/quick-price-check`) — dat is nu een dode sitemap-URL.
 
-De sitemap-generator kent geen enkele filter op single-type/kwaliteit — alles wat `is_published AND single_name IS NOT NULL` is, gaat mee.
+## 2. Behouden vs noindex
 
----
+### Blijft indexeerbaar (kern scan + waarde), per taal
+- `/` homepage — scan + waarde propositie
+- Scanpagina (nieuwe SEO-landingspagina, bv. `/scan-je-platen`) — "scan je LP/CD/vinyl"
+- Waardepagina (nieuw, bv. `/waarde-van-je-platen`) — "ontdek de waarde", gekoppeld aan `/quick-price-check`
+- How-it-works / uitleg (kan sectie of eigen pagina zijn)
+- `/pricing` (credits/prijzen)
+- App-downloadpagina (nieuw, bv. `/app`)
+- `/over-ons`, `/privacy`, `/voorwaarden` (index, lage prioriteit — vertrouwenssignalen)
 
-## Opties (nog niet uitvoeren)
+Dat is ca. 8 pagina's × 4 talen = ~32 indexeerbare URL's.
 
-### Optie A — Chirurgisch: variant/live/duplicaat op noindex + uit sitemap
-Wat: filter in `useSEO` (NewsPost-achtige aanpak) + in `generate-static-sitemaps`:
-- slug/single_name matcht live/tour/variant regex (`m72|worldwired|tour|live in|in concert|bbc rock hour|box set|coffret|interview|fan can|greatest hits|compilation|anthology|version|special|promo|sampler`)
-- én exacte `(artist, single_name)` duplicaten: houd de langste/oudste, rest op noindex.
+### Naar noindex + uit alle sitemaps
+Alles wat content/catalogus is: plaat-verhaal + muziek-verhaal (8.060), singles (1.780), artists (239), nieuws (212), producten en shopoverzichten (11.042), new releases (108), anekdotes (32), muziekgeschiedenis (30), plus quizzen, podcasts, tijdmachine, studio-stories, artist-spotlights, fan-wall, foto's, land-/genrehubs, top-2000, kerst, reviews, forum/social.
 
-Impact: **~100-130 URLs** op noindex, rest blijft indexeerbaar.
-Risico: laag. Raakt alleen zichtbare rommel. Lost het volume-probleem maar deels op — de "grote bron" in GSC is waarschijnlijk breder dan alleen deze 100.
+Pagina's blijven gewoon bereikbaar voor gebruikers; alleen `robots: noindex, follow` + weg uit sitemaps.
 
-### Optie B — Structureel: alleen "sterke" singles indexeerbaar, rest canonicaliseren naar artiest-pagina
-Wat:
-- Definieer "sterk" = single_name zonder variant-keywords, unieke `(artist, single_name)`-combinatie, en minimaal een drempel qua unieke inhoud (bv. views > 0 óf artiest heeft `artist_stories` pagina → dan is de artiest-URL een echte alternatief).
-- "Zwak" (alle rest, geschat **300-500 URLs** — vooral de 739 in de grote clusters minus de canonieke hits per artiest) krijgt `<link rel="canonical">` naar `/artists/<slug>` als die bestaat, anders noindex.
-- Sitemap bevat alleen "sterke" singles.
+### Twijfelgevallen (expliciet)
+- `/quizzen`: kan verkeer + engagement geven, maar past niet bij scan+waarde. Voorstel: noindex.
+- `/nederland`, `/frankrijk`, `/dance-house`: hebben potentieel autoriteit; voorstel noindex, later heroverwegen.
+- `/artists` overzicht: kan later dienen als "waarde per artiest"-hub; nu noindex.
+- `/auth` staat nu in de sitemap terwijl robots.txt hem blokkeert — tegenstrijdig, weghalen.
 
-Impact: ~300-500 URLs verdwijnen effectief uit de index, ~1.300-1.500 blijven over.
-Risico: middel. Canonical naar een niet-identieke pagina is een hint, niet gegarandeerd. Vereist dat `artist_stories` bestaat voor die artiest (op te lossen via join, geen technische blocker).
+## 3. Meertalige SEO (NL/EN/DE/FR)
 
-### Optie C — Bron aanpakken: cluster per artiest tot 1 "singles van X"-pagina
-Wat: vervang losse /singles/-pagina's van grote artiesten door één overzicht `/artists/<slug>/singles` (of sectie op de bestaande artiest-pagina) met alle single_name's als lijst. Individuele /singles/ URLs blijven als "detail" bestaan maar krijgen noindex tenzij ze een unieke chart-hit zijn (bv. staat in `top2000_songs` of heeft eigen wiki-vermelding).
-Impact: ruimste opschoning — potentieel **~1.000+ URLs** de-indexed, ~500-700 sterke hits blijven.
-Risico: hoog-middel. Meest werk (nieuwe route + UI), en je verliest long-tail zoekverkeer op onbekende titels waar je nu misschien wel op scoort. Wel het meest overtuigende signaal richting Google dat /singles/ kwaliteit heeft.
+Bestaande situatie:
+- i18n bestaat, maar alleen NL/EN: `src/i18n/translations.ts` (5.728 regels), `type Language = 'nl' | 'en'`, `LanguageContext` met localStorage + browserdetectie. Er is **geen** taal in de URL.
+- hreflang is nu kapot: `src/hooks/useSEO.ts` en `universal-ssr-proxy` schrijven `<link rel="alternate" n="nl">` in plaats van `hreflang="nl"`. Zoekmachines zien dus geen hreflang.
 
----
+Voorstel:
+- URL-prefix per taal voor uitsluitend de kernpagina's: `/nl/...`, `/en/...`, `/de/...`, `/fr/...`, met `/` → NL (of x-default). Prefix alleen invoeren voor de kernset, niet voor de hele (nu noindex) contentberg.
+- `Language` uitbreiden naar `'nl' | 'en' | 'de' | 'fr'`; alleen de kernpagina-keys vertalen naar DE/FR (niet de 5.700 regels).
+- hreflang-bug fixen (`n=` → `hreflang=`) en per kernpagina 4 alternates + `x-default` uitschrijven, zelfrefererende canonical per taalvariant.
+- Vertaalde title/description/OG per taal per kernpagina, via `useSEO` met taalbewuste defaults.
 
-## Advies voor keuze
-Ik zou beginnen met **A** deze week (snel, laag risico, wint ~130 URLs terug) en daarna meten in GSC. Als "crawled – not indexed" op /singles/ maar beperkt daalt, doorschakelen naar **B**. **C** alleen als A+B onvoldoende blijken, want het is een structurele UX-ingreep.
+Geraakte bestanden: `src/i18n/translations.ts`, `src/contexts/LanguageContext.tsx`, `src/router.tsx`, `src/hooks/useSEO.ts`, `src/components/SEO/GlobalCanonical.tsx`, `index.html`, `supabase/functions/generate-static-sitemaps/index.ts`, `supabase/functions/universal-ssr-proxy/index.ts`, `public/robots.txt`, `public/sitemap.xml`.
 
-Zeg welke optie (of combinatie) je wilt, dan werk ik die uit als concreet plan.
+Belangrijke beperking: dit is een client-side SPA. Google verwerkt de door JS gezette hreflang/canonical wel, maar voor zekerheid horen de kernpagina's ook in de SSR-proxy (`universal-ssr-proxy`) te zitten, die nu alleen contentroutes afhandelt.
+
+## 4. App- en weblinks
+
+Huidige links zijn inconsistent: `AppInstallBanner.tsx` wijst naar package `com.musicscan.app`, terwijl de echte Android-package `com.inspirelabs.musicscan` is (zie `GuestScanSignupDialog.tsx` en `android/app/build.gradle`).
+
+Voorstel:
+- Eén constantenbestand met `PLAY_STORE_URL` (live), `APP_STORE_URL` (placeholder/verborgen tot live) en de webversie-URL.
+- Plaatsing: header-CTA, homepage-hero, nieuwe `/app`-pagina, footer, scan- en waardepagina, plus `GuestScanSignupDialog`.
+- SoftwareApplication JSON-LD op de app-pagina met Play Store-link, later uitgebreid met iOS.
+
+## 5. Domeinomslag naar musicscans.com
+
+Kernbestanden die de hardcoded `www.musicscan.app` bevatten (het patroon komt in ~160 bestanden voor; deze zijn SEO-kritisch):
+- `index.html` — canonical, og:url, og:image, twitter:image
+- `src/lib/utils.ts` — `normalizeFullUrl()` met `canonicalOrigin` en host-regex (centrale plek)
+- `src/components/SEO/GlobalCanonical.tsx` — hardcoded canonical-origin
+- `src/components/SEO/*` — StructuredData, BreadcrumbSchema, PodcastStructuredData, PosterStructuredData
+- `public/robots.txt`, `public/sitemap.xml`, `public/manifest.json`, `public/llms-full.txt`
+- `src/utils/sitemap.ts`, `src/components/Footer.tsx`, `src/components/ShareButtons.tsx`
+- Edge functions: `generate-static-sitemaps`, `universal-ssr-proxy`, `sitemap-proxy`, `generate-llm-sitemap`, `generate-photo-sitemap`, `generate-podcast-sitemap`, `llm-content`, `serve-llms-txt`, `indexnow-*`, `gsc-sitemap-submit`, `google-sitemap-ping`, `canonical-checker`, `blog-meta-proxy`, plus e-mail/social-functies met linkopbouw
+- `public/_redirects` — proxy-rewrites blijven functioneel, maar de content-routes kunnen grotendeels vervallen als die noindex worden
+- `capacitor.config.ts`, `android/app/build.gradle` — app-server/deeplinkhost
+
+Aanpak: één gedeelde `SITE_URL`-constante frontend + één `_shared/site.ts` voor edge functions, zodat er nog maar twee plekken zijn om te wisselen. Geen redirects vanaf musicscan.app, conform je keuze (dat betekent: bestaande rankings verdwijnen — bewust geaccepteerd).
+
+## Uitvoeringsvolgorde
+
+1. Domeinconstante centraliseren (frontend + edge shared) en alles op `https://musicscans.com` zetten.
+2. hreflang-bug fixen (`n=` → `hreflang=`) in `useSEO` en SSR-proxy.
+3. Kernpagina's bouwen/aanscherpen: home, scanpagina, waardepagina, app-pagina, pricing.
+4. Sitemaps herbouwen: statische sitemap terugbrengen tot alleen de kernset (× 4 talen), alle content-sitemaps uit `sitemap-index.xml` en `public/sitemap.xml`.
+5. Noindex globaal: alle niet-kernroutes `noindex, follow` via een centrale routelijst in `useSEO` + SSR-proxy.
+6. i18n uitbreiden naar DE/FR voor de kernset, taalprefix-routes en hreflang-set van 4 + x-default.
+7. App-links consolideren (juiste Play Store-package, iOS placeholder) en overal plaatsen.
+8. robots.txt herschrijven, sitemap opnieuw indienen in Search Console op het nieuwe domein, IndexNow-queue leegmaken/opnieuw richten.

@@ -57,7 +57,7 @@ export default function Privacy() {
               <p><strong>Contactgegevens:</strong></p>
               <p>MusicScan</p>
               <p>E-mail: <a href="mailto:info@musicscan.app" className="text-primary hover:underline">info@musicscan.app</a></p>
-              <p>Website: <a href="https://www.musicscan.app" className="text-primary hover:underline">www.musicscan.app</a></p>
+              <p>Website: <a href="https://musicscans.com" className="text-primary hover:underline">www.musicscan.app</a></p>
             </div>
           </CardContent>
         </Card>

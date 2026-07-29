@@ -55,7 +55,7 @@ serve(async (req) => {
     }
 
     // Generate RSS XML
-    const siteUrl = "https://www.musicscan.app";
+    const siteUrl = "https://musicscans.com";
     const feedUrl = `${siteUrl}/feeds/podcast/${podcastSlug}.xml`;
 
     const rssXml = `<?xml version="1.0" encoding="UTF-8"?>

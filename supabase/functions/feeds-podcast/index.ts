@@ -76,7 +76,7 @@ serve(async (req) => {
     }
 
     // Generate RSS XML with MusicScan branding
-    const siteUrl = "https://www.musicscan.app";
+    const siteUrl = "https://musicscans.com";
     const feedUrl = `${siteUrl}/feeds/podcast/${podcastSlug}.xml`;
 
     // Ensure artwork URL uses JPG/PNG format (convert .webp references)

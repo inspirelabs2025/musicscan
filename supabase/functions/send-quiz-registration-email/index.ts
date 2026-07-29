@@ -42,7 +42,7 @@ const handler = async (req: Request): Promise<Response> => {
     } = body;
 
     const greeting = firstName ? `Hoi ${firstName}!` : "Hoi!";
-    const siteUrl = "https://www.musicscan.app";
+    const siteUrl = "https://musicscans.com";
 
     const emailHtml = `
 <!DOCTYPE html>

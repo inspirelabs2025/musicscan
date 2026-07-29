@@ -91,7 +91,7 @@ function ArtistLink({ name, slug }: { name: string; slug?: string }) {
   return <span className="font-semibold text-card-dark-foreground">{name}</span>;
 }
 
-const PAGE_URL = 'https://www.musicscan.app/podcasts/het-verhaal-achter-de-podcast';
+const PAGE_URL = 'https://musicscans.com/podcasts/het-verhaal-achter-de-podcast';
 const PAGE_TITLE = 'Het Verhaal Achter Winter in Hamburg - Frank Boeijen | De Plaat en het Verhaal Podcast | MusicScan';
 const PAGE_DESC = 'Ontdek de muzikale reis achter de podcast aflevering over Winter in Hamburg van Frank Boeijen. Van Nijmegen naar Hamburg, via Rob de Nijs, Liesbeth List, The Beatles, The Animals, The Doors en Elton John. Beluister S1E6 van De Plaat en het Verhaal.';
 const OG_IMAGE = ARTWORK.frankBoeijenZeg.url;
@@ -107,12 +107,12 @@ const structuredData = [
     url: PAGE_URL,
     datePublished: '2025-06-01',
     dateModified: '2025-06-15',
-    author: { '@type': 'Organization', name: 'MusicScan', url: 'https://www.musicscan.app' },
+    author: { '@type': 'Organization', name: 'MusicScan', url: 'https://musicscans.com' },
     publisher: {
       '@type': 'Organization',
       name: 'MusicScan',
-      url: 'https://www.musicscan.app',
-      logo: { '@type': 'ImageObject', url: 'https://www.musicscan.app/og-image.png' },
+      url: 'https://musicscans.com',
+      logo: { '@type': 'ImageObject', url: 'https://musicscans.com/og-image.png' },
     },
     mainEntityOfPage: PAGE_URL,
     articleSection: 'Muziek',
@@ -123,8 +123,8 @@ const structuredData = [
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.musicscan.app' },
-      { '@type': 'ListItem', position: 2, name: 'Podcasts', item: 'https://www.musicscan.app/podcasts' },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://musicscans.com' },
+      { '@type': 'ListItem', position: 2, name: 'Podcasts', item: 'https://musicscans.com/podcasts' },
       { '@type': 'ListItem', position: 3, name: 'Het Verhaal Achter de Podcast', item: PAGE_URL },
     ],
   },

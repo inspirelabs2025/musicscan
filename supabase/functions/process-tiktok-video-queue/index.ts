@@ -139,7 +139,7 @@ serve(async (req) => {
                 .trim()
                 .substring(0, 280);
               
-              const blogUrl = `https://www.musicscan.app/plaat-verhaal/${blogData.slug}`;
+              const blogUrl = `https://musicscans.com/plaat-verhaal/${blogData.slug}`;
               
               const mediaType = videoUrl ? 'GIF' : 'static image';
               console.log(`📱 Posting ALBUM to Facebook with ${mediaType}: ${title}`);
@@ -191,7 +191,7 @@ serve(async (req) => {
                 .trim()
                 .substring(0, 280);
               
-              const singleUrl = `https://www.musicscan.app/singles/${storyData.slug}`;
+              const singleUrl = `https://musicscans.com/singles/${storyData.slug}`;
               
               const mediaType = videoUrl ? 'GIF' : 'static image';
               console.log(`📱 Posting SINGLE to Facebook with ${mediaType}: ${artistName} - ${singleTitle}`);

@@ -111,7 +111,7 @@ function compareCanonical(url: string, canonical: string | undefined, allCanonic
   const normalizedCanonical = normalizeForCompare(canonical);
   
   // Check if canonical points to homepage (with or without www)
-  if (normalizedCanonical === 'https://www.musicscan.app/' || normalizedCanonical === 'https://www.musicscan.app') {
+  if (normalizedCanonical === 'https://musicscans.com/' || normalizedCanonical === 'https://musicscans.com') {
     return 'HOMEPAGE_CANONICAL';
   }
   

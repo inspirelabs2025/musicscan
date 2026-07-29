@@ -191,7 +191,7 @@ export default function LyricPosterGenerator() {
                     type="url"
                     value={qrLink}
                     onChange={(e) => setQrLink(e.target.value)}
-                    placeholder="https://www.musicscan.app/plaat-verhaal/..."
+                    placeholder="https://musicscans.com/plaat-verhaal/..."
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Link naar verhaal-pagina voor QR code op poster

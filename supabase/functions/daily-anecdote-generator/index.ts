@@ -301,11 +301,11 @@ Maak het uitgebreider en diepgaander!`
     console.log('Successfully generated and saved anecdote:', newAnecdote.id);
 
     // Auto-post to Facebook and Instagram
-    const anecdoteUrl = `https://www.musicscan.app/anekdotes/${newAnecdote.slug}`;
+    const anecdoteUrl = `https://musicscans.com/anekdotes/${newAnecdote.slug}`;
     const postContent = newAnecdote.anecdote_content.substring(0, 400) + '...';
     
     // Default image for social posts (can be replaced with generated image later)
-    const defaultImageUrl = 'https://www.musicscan.app/og-image.png';
+    const defaultImageUrl = 'https://musicscans.com/og-image.png';
     
     // Post to Facebook
     try {

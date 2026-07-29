@@ -10,7 +10,7 @@ import { Search, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ArtistCard } from "@/components/ArtistCard";
 
-const CANONICAL_URL = "https://www.musicscan.app/fanwall";
+const CANONICAL_URL = "https://musicscans.com/fanwall";
 
 export default function ArtistFanWallOverview() {
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ export default function ArtistFanWallOverview() {
     publisher: {
       "@type": "Organization",
       name: "MusicScan",
-      url: "https://www.musicscan.app"
+      url: "https://musicscans.com"
     },
     numberOfItems: totalArtists,
     mainEntity: {
@@ -47,7 +47,7 @@ export default function ArtistFanWallOverview() {
         item: {
           "@type": "MusicGroup",
           name: artist.artist_name,
-          url: `https://www.musicscan.app/fanwall/${artist.slug}`,
+          url: `https://musicscans.com/fanwall/${artist.slug}`,
           image: artist.featured_photo_url
         }
       })) || []

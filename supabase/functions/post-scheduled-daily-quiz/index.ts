@@ -38,7 +38,7 @@ function buildQuizMessage(): string {
 Elke dag een nieuwe muziekquiz met 10 vragen over artiesten, albums en muziekgeschiedenis.
 
 ${cta}
-https://www.musicscan.app/quizzen
+https://musicscans.com/quizzen
 
 #MusicScan #MuziekQuiz #DagelijksChallenge #MuziekTrivia`;
 
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
         content_type: 'daily_quiz',
         title: 'Dagelijkse Muziek Quiz',
         content: message,
-        url: 'https://www.musicscan.app/quizzen'
+        url: 'https://musicscans.com/quizzen'
       }
     });
 

@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     
     const barcodeResponse = await fetch(barcodeUrl, {
       headers: {
-        'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+        'User-Agent': 'MusicScan/1.0 +https://musicscans.com',
         'Authorization': `Discogs token=${discogsToken}`
       }
     });
@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
     
     const catnoResponse = await fetch(catnoUrl, {
       headers: {
-        'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+        'User-Agent': 'MusicScan/1.0 +https://musicscans.com',
         'Authorization': `Discogs token=${discogsToken}`
       }
     });

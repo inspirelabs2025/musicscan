@@ -21,7 +21,7 @@ async function fetchDiscogsViaApi(url: string): Promise<string | null> {
 
   const headers: Record<string, string> = {
     "Authorization": `Discogs token=${discogsToken}`,
-    "User-Agent": "MusicScan/1.0 +https://musicscan.app",
+    "User-Agent": "MusicScan/1.0 +https://musicscans.com",
     "Accept": "application/json",
   };
 

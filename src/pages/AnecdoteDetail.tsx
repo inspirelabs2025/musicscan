@@ -53,7 +53,7 @@ export default function AnecdoteDetail() {
     );
   }
 
-  const pageUrl = `https://www.musicscan.app/anekdotes/${slug}`;
+  const pageUrl = `https://musicscans.com/anekdotes/${slug}`;
 
   return (
     <>

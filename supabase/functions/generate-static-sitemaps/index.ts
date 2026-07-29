@@ -236,27 +236,27 @@ Deno.serve(async (req) => {
 
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
-    const blogSitemapXml = generateSitemapXml(filteredBlogPosts, 'https://www.musicscan.app/plaat-verhaal');
+    const blogSitemapXml = generateSitemapXml(filteredBlogPosts, 'https://musicscans.com/plaat-verhaal');
     const newsSitemapXml = generateSitemapXml(
       filteredNewsBlogPosts.map(n => ({
         slug: n.slug,
         updated_at: n.updated_at
       })),
-      'https://www.musicscan.app/nieuws'
+      'https://musicscans.com/nieuws'
     );
     const anecdotesSitemapXml = generateSitemapXml(
       (anecdotes || []).map(a => ({
         slug: a.slug,
         updated_at: a.created_at
       })),
-      'https://www.musicscan.app/anekdotes'
+      'https://musicscans.com/anekdotes'
     );
-    const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal');
-    const singlesSitemapXml = generateSitemapXml(filteredSingles, 'https://www.musicscan.app/singles');
-    const metalPrintsSitemapXml = generateSitemapXml(metalPrintProducts || [], 'https://www.musicscan.app/product');
+    const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://musicscans.com/muziek-verhaal');
+    const singlesSitemapXml = generateSitemapXml(filteredSingles, 'https://musicscans.com/singles');
+    const metalPrintsSitemapXml = generateSitemapXml(metalPrintProducts || [], 'https://musicscans.com/product');
     const postersSitemapXml = generatePosterSitemapXml(posterProducts || []);
-    const tshirtsSitemapXml = generateSitemapXml(tshirtProducts || [], 'https://www.musicscan.app/product');
-    const canvasSitemapXml = generateSitemapXml(canvasProducts || [], 'https://www.musicscan.app/product');
+    const tshirtsSitemapXml = generateSitemapXml(tshirtProducts || [], 'https://musicscans.com/product');
+    const canvasSitemapXml = generateSitemapXml(canvasProducts || [], 'https://musicscans.com/product');
     
     // Time Machine events sitemap
     const timeMachineSitemapXml = generateSitemapXml(
@@ -264,7 +264,7 @@ Deno.serve(async (req) => {
         slug: e.slug,
         updated_at: e.updated_at
       })),
-      'https://www.musicscan.app/time-machine'
+      'https://musicscans.com/time-machine'
     );
     
     // FanWall sitemaps
@@ -273,7 +273,7 @@ Deno.serve(async (req) => {
         slug: f.slug,
         updated_at: f.updated_at
       })),
-      'https://www.musicscan.app/fanwall'
+      'https://musicscans.com/fanwall'
     );
     
     // Photos sitemap
@@ -282,7 +282,7 @@ Deno.serve(async (req) => {
         slug: p.seo_slug,
         updated_at: p.published_at
       })),
-      'https://www.musicscan.app/photo'
+      'https://musicscans.com/photo'
     );
     
     // Studio Stories sitemaps
@@ -291,7 +291,7 @@ Deno.serve(async (req) => {
         slug: s.slug,
         updated_at: s.updated_at
       })),
-      'https://www.musicscan.app/studio-stories'
+      'https://musicscans.com/studio-stories'
     );
     
     const studiosImageSitemapXml = generateImageSitemapXml(
@@ -302,20 +302,20 @@ Deno.serve(async (req) => {
         title: s.studio_name,
         artist: s.location || 'Recording Studio'
       })),
-      'https://www.musicscan.app/studio-stories',
+      'https://musicscans.com/studio-stories',
       'artwork_url'
     );
 
     // Image sitemaps
-    const blogImageSitemapXml = generateImageSitemapXml(filteredBlogPosts, 'https://www.musicscan.app/plaat-verhaal', 'album_cover_url');
-    const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal', 'artwork_url');
-    const singlesImageSitemapXml = generateImageSitemapXml(filteredSingles, 'https://www.musicscan.app/singles', 'artwork_url');
-    const artistsSitemapXml = generateSitemapXml(artistStories || [], 'https://www.musicscan.app/artists');
-    const artistsImageSitemapXml = generateImageSitemapXml(artistStories || [], 'https://www.musicscan.app/artists', 'artwork_url');
-    const metalPrintsImageSitemapXml = generateImageSitemapXml(metalPrintProducts || [], 'https://www.musicscan.app/product', 'primary_image');
+    const blogImageSitemapXml = generateImageSitemapXml(filteredBlogPosts, 'https://musicscans.com/plaat-verhaal', 'album_cover_url');
+    const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://musicscans.com/muziek-verhaal', 'artwork_url');
+    const singlesImageSitemapXml = generateImageSitemapXml(filteredSingles, 'https://musicscans.com/singles', 'artwork_url');
+    const artistsSitemapXml = generateSitemapXml(artistStories || [], 'https://musicscans.com/artists');
+    const artistsImageSitemapXml = generateImageSitemapXml(artistStories || [], 'https://musicscans.com/artists', 'artwork_url');
+    const metalPrintsImageSitemapXml = generateImageSitemapXml(metalPrintProducts || [], 'https://musicscans.com/product', 'primary_image');
     const postersImageSitemapXml = generatePosterImageSitemapXml(posterProducts || []);
-    const tshirtsImageSitemapXml = generateImageSitemapXml(tshirtProducts || [], 'https://www.musicscan.app/product', 'primary_image');
-    const canvasImageSitemapXml = generateImageSitemapXml(canvasProducts || [], 'https://www.musicscan.app/product', 'primary_image');
+    const tshirtsImageSitemapXml = generateImageSitemapXml(tshirtProducts || [], 'https://musicscans.com/product', 'primary_image');
+    const canvasImageSitemapXml = generateImageSitemapXml(canvasProducts || [], 'https://musicscans.com/product', 'primary_image');
     
     // Time Machine image sitemap
     const timeMachineImageSitemapXml = generateImageSitemapXml(
@@ -326,7 +326,7 @@ Deno.serve(async (req) => {
         title: e.event_title,
         artist: e.artist_name
       })),
-      'https://www.musicscan.app/time-machine',
+      'https://musicscans.com/time-machine',
       'poster_image_url'
     );
     
@@ -339,7 +339,7 @@ Deno.serve(async (req) => {
         title: f.artist_name,
         artist: f.artist_name
       })),
-      'https://www.musicscan.app/fanwall',
+      'https://musicscans.com/fanwall',
       'featured_photo_url'
     );
     
@@ -352,7 +352,7 @@ Deno.serve(async (req) => {
         title: n.title,
         artist: ''
       })),
-      'https://www.musicscan.app/nieuws',
+      'https://musicscans.com/nieuws',
       'image_url'
     );
 
@@ -365,7 +365,7 @@ Deno.serve(async (req) => {
         title: p.seo_title || 'Fan Photo',
         artist: p.artist
       })),
-      'https://www.musicscan.app/photo',
+      'https://musicscans.com/photo',
       'display_url'
     );
 
@@ -393,7 +393,7 @@ Deno.serve(async (req) => {
     
     const nlMuziekFeitenSitemapXml = generateSitemapXml(
       nlMuziekFeitenSlugs.map(slug => ({ slug, updated_at: new Date().toISOString() })),
-      'https://www.musicscan.app/nl-muziekfeit'
+      'https://musicscans.com/nl-muziekfeit'
     );
 
     // New Releases sitemap
@@ -402,7 +402,7 @@ Deno.serve(async (req) => {
         slug: r.slug,
         updated_at: r.created_at
       })),
-      'https://www.musicscan.app/new-release'
+      'https://musicscans.com/new-release'
     );
 
     // New Releases image sitemap
@@ -414,7 +414,7 @@ Deno.serve(async (req) => {
         title: r.album_name,
         artist: r.artist
       })),
-      'https://www.musicscan.app/new-release',
+      'https://musicscans.com/new-release',
       'image_url'
     );
 
@@ -426,7 +426,7 @@ Deno.serve(async (req) => {
         slug: t.slug,
         updated_at: t.updated_at
       })),
-      'https://www.musicscan.app/nummer'
+      'https://musicscans.com/nummer'
     );
 
     // Build uploads list
@@ -522,13 +522,13 @@ Deno.serve(async (req) => {
 
     // Perform health checks on all sitemaps
     const healthChecks: Record<string, any> = {};
-const sitemapBaseUrl = 'https://www.musicscan.app/sm';
+const sitemapBaseUrl = 'https://musicscans.com/sm';
 const allSitemaps = [...uploads.map(u => u.name), 'sitemap-index.xml'];
 
 for (const sitemapName of allSitemaps) {
   try {
     const checkUrl = sitemapName === 'sitemap-index.xml'
-      ? 'https://www.musicscan.app/sitemap.xml'
+      ? 'https://musicscans.com/sitemap.xml'
       : `${sitemapBaseUrl}/${sitemapName}`;
         
         const response = await fetch(checkUrl, { method: 'HEAD' });
@@ -672,7 +672,7 @@ ${urls}
 
 function generateSitemapIndex(uploads: Array<{ name: string }>): string {
   // Temporarily point to /sm alias to bypass any stale cache on /sitemaps
-  const baseUrl = 'https://www.musicscan.app/sm';
+  const baseUrl = 'https://musicscans.com/sm';
   const now = new Date().toISOString();
   
   const sitemaps = uploads.map(u => 
@@ -697,7 +697,7 @@ function generatePosterSitemapXml(items: Array<any>): string {
       ) || 'AI-generated';
       
       return `  <url>
-    <loc>https://www.musicscan.app/product/${item.slug}</loc>
+    <loc>https://musicscans.com/product/${item.slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -726,12 +726,12 @@ function generatePosterImageSitemapXml(items: Array<any>): string {
       ) || 'AI-generated';
       
       return `  <url>
-    <loc>https://www.musicscan.app/product/${item.slug}</loc>
+    <loc>https://musicscans.com/product/${item.slug}</loc>
     <image:image>
       <image:loc>${item.primary_image}</image:loc>
       <image:caption>${item.artist} - ${item.title} | ${style} poster | MusicScan Art</image:caption>
       <image:title>${item.artist} - ${item.title} Poster</image:title>
-      <image:license>https://www.musicscan.app/terms</image:license>
+      <image:license>https://musicscans.com/terms</image:license>
     </image:image>
   </url>`;
     })
@@ -745,7 +745,7 @@ ${urls}
 }
 
 function generateStaticSitemapXml(): string {
-  const baseUrl = 'https://www.musicscan.app';
+  const baseUrl = 'https://musicscans.com';
   const currentDate = new Date().toISOString().split('T')[0];
   
   const staticPages = [

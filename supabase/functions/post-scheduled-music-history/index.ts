@@ -238,7 +238,7 @@ Deno.serve(async (req) => {
       const threadsResult = await postToThreads({
         title: eventData.title,
         content: eventData.description,
-        url: 'https://www.musicscan.app/vandaag-in-de-muziekgeschiedenis',
+        url: 'https://musicscans.com/vandaag-in-de-muziekgeschiedenis',
         image_url: eventData.image_url,
         artist: eventData.artist,
         content_type: 'music_history'
@@ -274,7 +274,7 @@ Deno.serve(async (req) => {
       title: eventData.title,
       content: postContent.substring(0, 500),
       image_url: eventData.image_url,
-      url: 'https://www.musicscan.app/vandaag-in-de-muziekgeschiedenis',
+      url: 'https://musicscans.com/vandaag-in-de-muziekgeschiedenis',
       status: facebookPostId ? 'posted' : 'failed',
       facebook_post_id: facebookPostId,
       error_message: postError,

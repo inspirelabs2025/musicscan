@@ -300,7 +300,7 @@ function generateDeliveredEmail(order: any, items: OrderItem[]): string {
 
           <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 24px; text-align: center;">
             <p style="margin: 0 0 12px 0; color: #374151;">Tevreden met je aankoop?</p>
-            <a href="https://www.musicscan.app/shop" style="display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500;">
+            <a href="https://musicscans.com/shop" style="display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500;">
               Bekijk meer in onze shop
             </a>
           </div>

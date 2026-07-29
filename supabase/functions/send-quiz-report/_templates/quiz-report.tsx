@@ -115,7 +115,7 @@ export const QuizReportEmail = ({
         {/* Footer */}
         <Section style={footer}>
           <Text style={footerText}>Dit rapport is verzonden door MusicScan</Text>
-          <Link href="https://www.musicscan.app/quizzen" style={footerLink}>
+          <Link href="https://musicscans.com/quizzen" style={footerLink}>
             Speel meer quizzen op musicscan.app
           </Link>
         </Section>

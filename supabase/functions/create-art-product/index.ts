@@ -515,7 +515,7 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
                 ? socialContent.substring(0, socialContent.lastIndexOf(' ', 280)) + '...'
                 : socialContent;
               
-              const blogUrl = `https://www.musicscan.app/plaat-verhaal/${blogData.blog.slug}`;
+              const blogUrl = `https://musicscans.com/plaat-verhaal/${blogData.blog.slug}`;
               
               // Use album_cover_url from blog (fetched via fetch-album-artwork) instead of initial artworkUrl
               const fbImageUrl = blogData.blog.album_cover_url || artworkUrl;

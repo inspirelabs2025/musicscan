@@ -39,7 +39,7 @@ export default function PlatformProductDetail() {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   
-  const currentUrl = `https://www.musicscan.app/product/${slug}`;
+  const currentUrl = `https://musicscans.com/product/${slug}`;
   
   // Find related blog post
   const { data: blogPost } = useBlogPostByProduct(
@@ -101,7 +101,7 @@ export default function PlatformProductDetail() {
       : `${product.title}${product.artist ? ` van ${product.artist}` : ''} - ${product.description || 'Bekijk details en bestel eenvoudig.'} Prijs: €${product.price}`
   ) : 'Bekijk productdetails in onze shop';
   
-  const productImage = product?.primary_image || 'https://www.musicscan.app/images/default-product-og.jpg';
+  const productImage = product?.primary_image || 'https://musicscans.com/images/default-product-og.jpg';
 
   // Extract variant identifier from slug for unique titles (e.g., "metaalprint-3" → "Variant 3")
   const slugVariant = slug?.match(/-(\d+)$/)?.[1];
@@ -247,7 +247,7 @@ export default function PlatformProductDetail() {
     },
     "offers": {
       "@type": "Offer",
-      "url": `https://www.musicscan.app/product/${slug}`,
+      "url": `https://musicscans.com/product/${slug}`,
       "priceCurrency": "EUR",
       "price": product.price,
       "availability": product.stock_quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
@@ -289,7 +289,7 @@ export default function PlatformProductDetail() {
         reviewBody={product.description || `${product.title} beschikbaar in onze shop. Hoge kwaliteit en snelle verzending gegarandeerd.`}
         rating={4.5}
         datePublished={product.published_at || product.created_at}
-        reviewUrl={`https://www.musicscan.app/product/${slug}`}
+        reviewUrl={`https://musicscans.com/product/${slug}`}
         imageUrl={product.primary_image || undefined}
         itemType="MusicAlbum"
       />

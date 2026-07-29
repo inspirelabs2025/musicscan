@@ -92,7 +92,7 @@ serve(async (req) => {
       .trim();
     
     const summary = cleanContent.substring(0, 280).trim() + '...';
-    const albumUrl = `https://www.musicscan.app/plaat-verhaal/${queueItem.slug}`;
+    const albumUrl = `https://musicscans.com/plaat-verhaal/${queueItem.slug}`;
 
     console.log(`🖼️ Artwork URL: ${artworkUrl ? 'found' : 'missing'}`);
     console.log(`📝 Summary length: ${summary.length} chars`);

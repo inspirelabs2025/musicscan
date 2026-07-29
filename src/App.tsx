@@ -3,6 +3,7 @@ import { Toaster } from 'sonner';
 import { Providers } from './providers';
 import { StickyHeader } from './components/layout/StickyHeader';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { GlobalCanonical } from './components/SEO/GlobalCanonical';
 import { useMetaPixelPageviews } from './hooks/useMetaPixelPageviews';
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
 
   return (
     <Providers>
+      <GlobalCanonical />
       {!isAdmin && <StickyHeader />}
       <div className={!isAdmin ? 'pt-16 pb-20 md:pb-0' : ''}>
         <Outlet />

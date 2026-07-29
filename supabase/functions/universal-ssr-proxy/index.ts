@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const BASE_URL = 'https://www.musicscan.app';
+const BASE_URL = 'https://musicscans.com';
 const LOGO_URL = `${BASE_URL}/favicon.png`;
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.jpg`;
 
@@ -136,8 +136,9 @@ const injectMetaTags = (html: string, meta: MetaData): string => {
     result = result.replace('</head>', `<script type="application/ld+json">${meta.jsonLd}</script>\n</head>`);
   }
 
-  // Robots meta: noindex,follow for thin/auto-generated pages (e.g. nieuws-<timestamp> slugs)
-  const robotsContent = meta.noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large';
+  // Robots meta: the proxy only serves the story/catalog archive, which is
+  // intentionally kept out of the index (focus = scan + value pages).
+  const robotsContent = 'noindex, follow';
   if (/<meta\s+name="robots"[^>]*>/i.test(result)) {
     result = result.replace(/<meta\s+name="robots"[^>]*>/i, `<meta name="robots" content="${robotsContent}">`);
   } else {
@@ -390,8 +391,8 @@ const LLMS_TXT_CONTENT = `# MusicScan - Het Complete Muziekplatform
 - /shop - Muziekproducten
 
 ## Sitemaps
-- https://www.musicscan.app/sitemap.xml
-- https://www.musicscan.app/sitemap-llm.xml
+- https://musicscans.com/sitemap.xml
+- https://musicscans.com/sitemap-llm.xml
 
 Last updated: 2026-03
 `;

@@ -62,7 +62,7 @@ serve(async (req) => {
     const headerOrigin = req.headers.get("origin") ?? "";
     const candidate = (bodyOrigin && /^https?:\/\//.test(bodyOrigin)) ? bodyOrigin : headerOrigin;
     const isUsable = candidate && !/localhost|127\.0\.0\.1|capacitor:\/\//i.test(candidate);
-    const redirectOrigin = isUsable ? candidate : "https://musicscan.app";
+    const redirectOrigin = isUsable ? candidate : "https://musicscans.com";
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

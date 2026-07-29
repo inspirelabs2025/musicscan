@@ -76,7 +76,7 @@ export const useDiscogsConnection = () => {
       const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
       const isNativeApp = cap?.isNativePlatform?.() === true;
       const origin = isNativeApp
-        ? 'https://www.musicscan.app'
+        ? 'https://musicscans.com'
         : window.location.hostname.includes('lovableproject.com')
         ? 'https://musicscan.lovable.app'
         : window.location.origin;

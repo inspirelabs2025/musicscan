@@ -24,8 +24,8 @@ function generateFullHTML(data: any, contentType: string): string {
     const frontmatter = data.yaml_frontmatter || {};
     title = `${frontmatter.artist || 'Unknown Artist'} - ${frontmatter.album || data.slug} | MusicScan Plaatverhaal`;
     description = frontmatter.description || `Ontdek het verhaal achter ${frontmatter.album || 'dit album'} van ${frontmatter.artist || 'deze artiest'}.`;
-    image = data.album_cover_url || frontmatter.image || 'https://www.musicscan.app/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png';
-    url = `https://www.musicscan.app/plaat-verhaal/${data.slug}`;
+    image = data.album_cover_url || frontmatter.image || 'https://musicscans.com/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png';
+    url = `https://musicscans.com/plaat-verhaal/${data.slug}`;
     content = data.markdown_content || '';
 
     structuredData = {
@@ -45,7 +45,7 @@ function generateFullHTML(data: any, contentType: string): string {
         "name": "MusicScan",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://www.musicscan.app/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png"
+          "url": "https://musicscans.com/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png"
         }
       },
       "mainEntityOfPage": {
@@ -67,8 +67,8 @@ function generateFullHTML(data: any, contentType: string): string {
   } else if (contentType === 'music_story') {
     title = `${data.title || data.slug} | MusicScan Muziekverhaal`;
     description = data.meta_description || data.story_content?.substring(0, 160) || 'Ontdek het verhaal achter deze muziek.';
-    image = data.artwork_url || 'https://www.musicscan.app/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png';
-    url = `https://www.musicscan.app/muziek-verhaal/${data.slug}`;
+    image = data.artwork_url || 'https://musicscans.com/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png';
+    url = `https://musicscans.com/muziek-verhaal/${data.slug}`;
     content = data.story_content || '';
 
     structuredData = {
@@ -88,15 +88,15 @@ function generateFullHTML(data: any, contentType: string): string {
         "name": "MusicScan",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://www.musicscan.app/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png"
+          "url": "https://musicscans.com/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png"
         }
       }
     };
   } else if (contentType === 'product') {
     title = `${data.title} | MusicScan Shop`;
     description = data.description?.substring(0, 160) || `Koop ${data.title} bij MusicScan.`;
-    image = data.primary_image || 'https://www.musicscan.app/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png';
-    url = `https://www.musicscan.app/product/${data.slug}`;
+    image = data.primary_image || 'https://musicscans.com/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png';
+    url = `https://musicscans.com/product/${data.slug}`;
     content = data.description || '';
 
     structuredData = {
@@ -294,7 +294,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         fileName,
-        url: `https://www.musicscan.app/${contentType === 'blog_post' ? 'plaat-verhaal' : contentType === 'music_story' ? 'muziek-verhaal' : 'product'}/${slug}`,
+        url: `https://musicscans.com/${contentType === 'blog_post' ? 'plaat-verhaal' : contentType === 'music_story' ? 'muziek-verhaal' : 'product'}/${slug}`,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

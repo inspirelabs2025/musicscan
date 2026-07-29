@@ -36,11 +36,11 @@ const Home = () => {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "MusicScan",
-    "url": "https://www.musicscan.app",
+    "url": "https://musicscans.com",
     "description": "Scan je vinyl en CD collectie, ontdek de waarde van je platen, lees verhalen achter iconische albums.",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://www.musicscan.app/verhalen?search={search_term_string}",
+      "target": "https://musicscans.com/verhalen?search={search_term_string}",
       "query-input": "required name=search_term_string"
     },
     "inLanguage": "nl"
@@ -50,8 +50,8 @@ const Home = () => {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "MusicScan",
-    "url": "https://www.musicscan.app",
-    "logo": "https://www.musicscan.app/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png",
+    "url": "https://musicscans.com",
+    "logo": "https://musicscans.com/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png",
     "description": "MusicScan is hét muziekplatform voor vinyl- en CD-verzamelaars.",
     "foundingDate": "2024",
     "contactPoint": {

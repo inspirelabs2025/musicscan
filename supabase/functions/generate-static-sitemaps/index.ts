@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { INDEXABLE_PATHS } from '../_shared/indexable.ts';
+import { SITEMAP_PATHS } from '../_shared/indexable.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,12 +12,10 @@ const SITEMAP_BASE_URL = `${BASE_URL}/sm`;
 // SEO focus = scan + value. Only the allowlist is indexable, so the sitemap
 // contains nothing else. All content/image sitemaps are intentionally gone.
 function generateStaticSitemapXml(): string {
-  const now = new Date().toISOString().split('T')[0];
-  const urls = INDEXABLE_PATHS.map((path) => {
+  const urls = SITEMAP_PATHS.map((path) => {
     const loc = path === '/' ? `${BASE_URL}/` : `${BASE_URL}${path}`;
     return `  <url>
     <loc>${loc}</loc>
-    <lastmod>${now}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>${path === '/' ? '1.0' : '0.8'}</priority>
   </url>`;
@@ -35,7 +33,6 @@ function generateSitemapIndex(names: string[]): string {
     .map(
       (name) => `  <sitemap>
     <loc>${SITEMAP_BASE_URL}/${name}</loc>
-    <lastmod>${now}</lastmod>
   </sitemap>`,
     )
     .join('\n');
@@ -119,7 +116,7 @@ Deno.serve(async (req) => {
         success: true,
         sitemaps_updated: uploads.map((u) => u.name),
         legacy_sitemaps_removed: removed,
-        urls: INDEXABLE_PATHS,
+        urls: SITEMAP_PATHS,
         health_checks: healthChecks,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },

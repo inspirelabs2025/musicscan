@@ -51,6 +51,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   }, [location.pathname]);
 
+  // Keep <html lang> in sync with the active language (index.html ships nl).
+  useEffect(() => {
+    document.documentElement.setAttribute('lang', language);
+  }, [language]);
+
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem(STORAGE_KEY, lang);

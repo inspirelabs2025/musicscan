@@ -10,6 +10,9 @@ import { Button } from '@/components/ui/button';
 import { LogIn, UserPlus, LogOut } from 'lucide-react';
 import { SeoContentBlock } from '@/components/SEO/SeoContentBlock';
 import { ConditionalFooter } from '@/components/ConditionalFooter';
+import { AppLinks } from '@/components/core/AppLinks';
+import type { Locale } from '@/config/site';
+import { CORE_SEO } from '@/i18n/coreSeo';
 
 // Lazy load sections
 // ArtistsSection, StoriesSection, GenresSection, MagicMikePodcastSection
@@ -24,12 +27,15 @@ const AppInstallBanner = lazy(() => import('@/components/home/AppInstallBanner')
 const SectionFallback = () => <div className="py-10"><Skeleton className="h-48 mx-4 rounded-xl" /></div>;
 
 const Home = () => {
-  const { tr } = useLanguage();
+  const { tr, language } = useLanguage();
   const { user, signOut } = useAuth();
 
+  // Homepage meta comes from the localized core SEO copy (scan + value).
+  const homeSeo = CORE_SEO.home[(language as Locale)] ?? CORE_SEO.home.nl;
   useSEO({
-    title: tr.home.metaTitle,
-    description: tr.home.metaDesc,
+    title: homeSeo.title,
+    description: homeSeo.description,
+    keywords: homeSeo.keywords,
   });
 
   const websiteSchema = {
@@ -109,6 +115,11 @@ const Home = () => {
       <Suspense fallback={null}>
         <MobileInstallBanner />
       </Suspense>
+
+      {/* App + web links */}
+      <section className="container mx-auto px-4 py-8">
+        <AppLinks locale={language as Locale} />
+      </section>
 
       {/* SEO Content Block */}
       <SeoContentBlock text={tr.homeUI.seoBlock} />

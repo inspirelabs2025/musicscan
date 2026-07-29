@@ -1,4 +1,5 @@
 import React, { lazy, Suspense, Component, type ReactNode, type ErrorInfo } from 'react';
+import { LOCALES, corePath, type CorePageKey } from '@/config/site';
 
 // Retry wrapper for lazy imports — handles stale chunks after deploy
 function lazyWithRetry(importFn: () => Promise<any>) {

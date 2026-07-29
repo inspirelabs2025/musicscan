@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { LogIn, UserPlus, LogOut } from 'lucide-react';
 import { SeoContentBlock } from '@/components/SEO/SeoContentBlock';
 import { ConditionalFooter } from '@/components/ConditionalFooter';
+import { AppLinks } from '@/components/core/AppLinks';
+import type { Locale } from '@/config/site';
 
 // Lazy load sections
 // ArtistsSection, StoriesSection, GenresSection, MagicMikePodcastSection
@@ -24,7 +26,7 @@ const AppInstallBanner = lazy(() => import('@/components/home/AppInstallBanner')
 const SectionFallback = () => <div className="py-10"><Skeleton className="h-48 mx-4 rounded-xl" /></div>;
 
 const Home = () => {
-  const { tr } = useLanguage();
+  const { tr, language } = useLanguage();
   const { user, signOut } = useAuth();
 
   useSEO({
@@ -109,6 +111,11 @@ const Home = () => {
       <Suspense fallback={null}>
         <MobileInstallBanner />
       </Suspense>
+
+      {/* App + web links */}
+      <section className="container mx-auto px-4 py-8">
+        <AppLinks locale={language as Locale} />
+      </section>
 
       {/* SEO Content Block */}
       <SeoContentBlock text={tr.homeUI.seoBlock} />

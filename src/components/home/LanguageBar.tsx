@@ -3,8 +3,10 @@ import { Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const languages = [
-  { code: 'nl' as const, flag: '🇳🇱', label: 'Nederlands' },
-  { code: 'en' as const, flag: '🇬🇧', label: 'English' },
+  { code: 'nl' as const, flag: '🇳🇱', label: 'NL' },
+  { code: 'en' as const, flag: '🇬🇧', label: 'EN' },
+  { code: 'de' as const, flag: '🇩🇪', label: 'DE' },
+  { code: 'fr' as const, flag: '🇫🇷', label: 'FR' },
 ];
 
 export function LanguageBar() {

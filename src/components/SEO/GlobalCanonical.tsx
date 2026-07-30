@@ -15,7 +15,8 @@ export const GlobalCanonical = () => {
   const canonicalUrl = cleanPath === '/' ? `${SITE_URL}/` : `${SITE_URL}${cleanPath}`;
   const hasSearchParam = search.includes('search=');
   const isCore = matchCorePath(cleanPath) !== null;
-  const shouldNoindex = hasSearchParam || !isIndexablePath(normalizePath(pathname));
+  // Allowlist is authoritative; pages can never opt themselves back into indexing.
+  const shouldNoindex = hasSearchParam || !isIndexablePath(cleanPath);
 
   useEffect(() => {
     let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;

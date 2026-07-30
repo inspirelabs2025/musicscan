@@ -49,8 +49,9 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
       ...(coreSeo ? { ...coreSeo, locale: OG_LOCALE[pageLocale] } : {}),
       ...seoData,
     };
-    // Default indexing rule: only the scan + value pages stay indexable.
-    finalSEO.noindex = seoData?.noindex ?? !isIndexablePath(location.pathname);
+    // Allowlist is authoritative: a page can never index itself off-allowlist.
+    const forceNoindex = !isIndexablePath(canonicalPath);
+    finalSEO.noindex = forceNoindex || seoData?.noindex === true;
     const currentUrl = normalizeFullUrl(canonicalPath);
     
     

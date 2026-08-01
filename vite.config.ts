@@ -10,10 +10,10 @@ function buildVersionPlugin(): Plugin {
     name: 'build-version',
     transformIndexHtml(html) {
       return html.replace(
-        /content="[^\"]*"(\s*\/?>)\s*(?=\s*<!--\s*Favicon)/,
+        /content="[^"]*"(\s*\/?>)\s*(?=\s*<!--\s*Favicon)/,
         `content="${buildTimestamp}"$1\n    <!-- Favicon`
       ).replace(
-        /name="build-version"\s+content="[^\"]*"/,
+        /name="build-version"\s+content="[^"]*"/,
         `name="build-version" content="${buildTimestamp}"`
       );
     }
@@ -24,7 +24,7 @@ function buildVersionPlugin(): Plugin {
 export default defineConfig(({ mode }) => ({
   define: {
     __BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString()),
-    'process.env.VITE_AI_NUDGE_VARIANT': JSON.stringify(process.env.VITE_AI_NUDGE_VARIANT || ""),
+    'process.env.VITE_AI_NUDGE_VARIANT': JSON.stringify(process.env.VITE_AI_NUDGE_VARIANT),
   },
   server: {
     host: "::",

@@ -10,15 +10,14 @@
       ]
     },
     "skipLibCheck": true,
-    "strictNullChecks": false,
-    "types": ["vite/client"]
+    "strictNullChecks": false
   },
   "files": [],
   "references": [
     {
       "path": "./tsconfig.app.json"
     },
-    {
+    {s
       "path": "./tsconfig.node.json"
     }
   ]

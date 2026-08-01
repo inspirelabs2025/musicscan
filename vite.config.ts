@@ -10,7 +10,7 @@ function buildVersionPlugin(): Plugin {
     name: 'build-version',
     transformIndexHtml(html) {
       return html.replace(
-        /content="[^"]*"(\s*\/?>)\s*(?=\s*<!--\s*Favicon)/,
+        /content="[^"]*"(\s*\/?&gt;)\s*(?=\s*<!--\s*Favicon)/,
         `content="${buildTimestamp}"$1\n    <!-- Favicon`
       ).replace(
         /name="build-version"\s+content="[^"]*"/,

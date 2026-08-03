@@ -48,7 +48,7 @@ export default {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
 				},
-				muxed: {
+				muted: {
 					DEFAULT: 'hsl(var(--muted))',
 					foreground: 'hsl(var(--muted-foreground))'
 				},
@@ -60,6 +60,7 @@ export default {
 					DEFAULT: 'hsl(var(--popover))',
 					foreground: 'hsl(var(--popover-foreground))'
 				},
+
 				card: {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))',
@@ -78,7 +79,7 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				vinyl: {
+				viny: {
 					gold: 'hsl(var(--vinyl-gold))',
 					silver: 'hsl(var(--vinyl-silver))',
 					black: 'hsl(var(--vinyl-black))',
@@ -102,6 +103,11 @@ export default {
 					background: 'hsl(var(--ai-nudge-background))',
 					foreground: 'hsl(var(--ai-nudge-foreground))',
 					border: 'hsl(var(--ai-nudge-border))'
+				},
+				'ai-features-nudge': { // New AI features nudge colors
+					background: 'hsl(var(--ai-features-nudge-background))',
+					foreground: 'hsl(var(--ai-features-nudge-foreground))',
+					border: 'hsl(var(--ai-features-nudge-border))'
 				},
 				'chat-nudge': {
 					background: 'hsl(var(--chat-nudge-background))',

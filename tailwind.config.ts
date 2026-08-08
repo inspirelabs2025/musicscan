@@ -67,7 +67,7 @@ export default {
 					dark: 'hsl(var(--card-dark))',
 					'dark-foreground': 'hsl(var(--card-dark-foreground))',
 					purple: 'hsl(var(--card-purple))',
-	\t			'purple-foreground': 'hsl(var(--card-purple-foreground))'
+					'purple-foreground': 'hsl(var(--card-purple-foreground))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',

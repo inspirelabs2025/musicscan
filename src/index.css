@@ -5,31 +5,22 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --header-background: 260 84% 23%; /* Adjusted for purple header */
-    --header-foreground: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 222.2 47.4% 11.2%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222.2 47.4% 11.2%;
 
-    /* Darker card variant */
-    --card-dark: 217.2 32.6% 17.5%;
-    --card-dark-foreground: 210 40% 98%;
-
-    /* Purple card variant */
-    --card-purple: 260 84% 23%;
-    --card-purple-foreground: 0 0% 100%;
-
-    --primary: 260 84% 23%;
+    --primary: 222.2 84% 4.9%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -38,87 +29,81 @@
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 100% 50%;
     --destructive-foreground: 210 40% 98%;
-
-    --ring: 260 84% 23%;
 
     --radius: 0.5rem;
 
-    /* Sidebar Colors */
+    --header-background: 0 0% 100%;
+    --header-foreground: 222.2 47.4% 11.2%;
+
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222.2 84% 4.9%;
-    --sidebar-primary: 260 84% 23%;
+    --sidebar-foreground: 222.2 47.4% 11.2%;
+    --sidebar-primary: 222.2 84% 4.9%;
     --sidebar-primary-foreground: 210 40% 98%;
     --sidebar-accent: 210 40% 96.1%;
     --sidebar-accent-foreground: 222.2 47.4% 11.2%;
     --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 260 84% 23%;
+    --sidebar-ring: 222.2 84% 4.9%;
 
-    /* Vinyl Colors */
-    --vinyl-gold: 45 93% 47%;
-    --vinyl-silver: 210 20% 70%;
-    --vinyl-black: 0 0% 10%;
-    --vinyl-purple: 260 84% 23%;
+    --vinyl-gold: 40 89% 60%; /* Adjusted to be brighter */
+    --vinyl-silver: 210 20% 75%;
+    --vinyl-black: 220 10% 10%;
+    --vinyl-purple: 270 70% 60%;
 
-    /* Echo Colors */
-    --echo-violet: 260 84% 23%;
-    --echo-lavender: 260 40% 70%;
-    --echo-gold: 45 93% 47%;
-    --echo-cream: 30 100% 98%;
+    --gradient-vinyl: linear-gradient(135deg, hsl(var(--vinyl-gold)) 0%, hsl(var(--vinyl-silver)) 30%, hsl(var(--vinyl-black)) 60%, hsl(var(--vinyl-purple)) 100%);
+    --gradient-scan: conic-gradient(from 180deg at 50% 50%, rgba(200, 200, 200, 0) 0deg, #f0f0f0 180deg, rgba(200, 200, 200, 0) 360deg);
 
-    /* Christmas Colors */
-    --christmas-red: 0 76% 50%;
-    --christmas-green: 140 80% 30%;
-    --christmas-gold: 45 93% 47%;
-    --christmas-cream: 30 100% 98%;
-    --christmas-burgundy: 350 70% 30%;
-    --christmas-pine: 140 80% 20%;
+    --card-dark: 222.2 47.4% 11.2%;
+    --card-dark-foreground: 210 40% 98%;
+    --card-purple: 270 70% 60%;
+    --card-purple-foreground: 0 0% 100%;
 
-    /* AI Nudge Colors */
-    --ai-nudge-background: 217.2 32.6% 17.5%; /* A dark background */
-    --ai-nudge-foreground: 210 40% 98%; /* Light text */
-    --ai-nudge-border: 260 84% 23%; /* Primary purple border */
+    --echo-violet: 270 70% 40%;
+    --echo-lavender: 270 50% 70%;
+    --echo-gold: 40 89% 60%;
+    --echo-cream: 40 100% 95%;
 
-    /* AI Features Nudge Colors */
-    --ai-features-nudge-background: 260 84% 23%; /* Primary purple */
-    --ai-features-nudge-foreground: 0 0% 100%; /* White text */
-    --ai-features-nudge-border: 260 84% 23%; /* Primary purple border */
+    --christmas-red: 0 70% 50%;
+    --christmas-green: 120 70% 30%;
+    --christmas-gold: 40 89% 60%;
+    --christmas-cream: 40 100% 95%;
+    --christmas-burgundy: 340 70% 30%;
+    --christmas-pine: 140 60% 20%;
 
-    /* Chat Nudge Colors */
-    --chat-nudge-background: 210 40% 96.1%; /* Muted light background */
-    --chat-nudge-foreground: 222.2 47.4% 11.2%; /* Dark text */
-    --chat-nudge-border: 214.3 31.8% 91.4%; /* Light border */
+    --ai-nudge-background: 270 70% 60%; /* Purple */
+    --ai-nudge-foreground: 0 0% 100%; /* White */
+    --ai-nudge-border: 270 70% 50%; /* Darker Purple */
+
+    --ai-features-nudge-background: 261 74% 63%; /* Deep Lilac */
+    --ai-features-nudge-foreground: 0 0% 100%; /* White */
+    --ai-features-nudge-border: 261 74% 53%; /* Darker Deep Lilac */
+
+    --chat-nudge-background: 172 61% 50%; /* Teal */
+    --chat-nudge-foreground: 0 0% 100%; /* White */
+    --chat-nudge-border: 172 61% 40%; /* Darker Teal */
+
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222.2 47.4% 11.2%;
     --foreground: 210 40% 98%;
 
-    --header-background: 222.2 84% 4.9%; /* Dark header */
-    --header-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.4% 65%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 222.2 47.4% 11.2%;
     --popover-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --card: 222.2 84% 4.9%;
+    --ring: 212.7 26.8% 83.9%;
+
+    --card: 222.2 47.4% 11.2%;
     --card-foreground: 210 40% 98%;
 
-    /* Darker card variant */
-    --card-dark: 217.2 32.6% 17.5%;
-    --card-dark-foreground: 210 40% 98%;
-
-    /* Purple card variant */
-    --card-purple: 260 84% 23%;
-    --card-purple-foreground: 0 0% 100%;
-
-    --primary: 260 84% 23%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -126,92 +111,32 @@
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 63.9% 38.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --ring: 260 84% 23%;
+    --header-background: 222.2 47.4% 11.2%;
+    --header-foreground: 210 40% 98%;
 
-    /* Sidebar Colors */
-    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-background: 222.2 47.4% 11.2%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 260 84% 23%;
-    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
     --sidebar-accent: 217.2 32.6% 17.5%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 260 84% 23%;
+    --sidebar-ring: 212.7 26.8% 83.9%;
 
-    /* Vinyl Colors */
-    --vinyl-gold: 45 93% 47%;
-    --vinyl-silver: 210 20% 70%;
-    --vinyl-black: 0 0% 10%;
-    --vinyl-purple: 260 84% 23%;
+    --ai-nudge-background: 270 70% 60%; /* Purple */
+    --ai-nudge-foreground: 0 0% 100%; /* White */
+    --ai-nudge-border: 270 70% 50%; /* Darker Purple */
 
-    /* Echo Colors */
-    --echo-violet: 260 84% 23%;
-    --echo-lavender: 260 40% 70%;
-    --echo-gold: 45 93% 47%;
-    --echo-cream: 30 100% 98%;
+    --ai-features-nudge-background: 261 74% 63%; /* Deep Lilac */
+    --ai-features-nudge-foreground: 0 0% 100%; /* White */
+    --ai-features-nudge-border: 261 74% 53%; /* Darker Deep Lilac */
 
-    /* Christmas Colors */
-    --christmas-red: 0 76% 50%;
-    --christmas-green: 140 80% 30%;
-    --christmas-gold: 45 93% 47%;
-    --christmas-cream: 30 100% 98%;
-    --christmas-burgundy: 350 70% 30%;
-    --christmas-pine: 140 80% 20%;
+    --chat-nudge-background: 172 61% 50%; /* Teal */
+    --chat-nudge-foreground: 0 0% 100%; /* White */
+    --chat-nudge-border: 172 61% 40%; /* Darker Teal */
 
-    /* AI Nudge Colors */
-    --ai-nudge-background: 217.2 32.6% 17.5%; /* A dark background */
-    --ai-nudge-foreground: 210 40% 98%; /* Light text */
-    --ai-nudge-border: 260 84% 23%; /* Primary purple border */
-
-    /* AI Features Nudge Colors */
-    --ai-features-nudge-background: 260 84% 23%; /* Primary purple */
-    --ai-features-nudge-foreground: 0 0% 100%; /* White text */
-    --ai-features-nudge-border: 260 84% 23%; /* Primary purple border */
-
-    /* Chat Nudge Colors */
-    --chat-nudge-background: 217.2 32.6% 17.5%; /* Dark background */
-    --chat-nudge-foreground: 210 40% 98%; /* Light text */
-    --chat-nudge-border: 217.2 32.6% 17.5%; /* Dark border */
   }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
-/* Global scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--card);
-}
-
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--primary));
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary) / 0.8);
-}
-
-/* Styling for scrollbars in specific elements if needed */
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: var(--background);
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground));
 }

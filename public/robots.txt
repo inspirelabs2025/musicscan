@@ -17,26 +17,8 @@ Disallow: /slimme-tools
 Disallow: /universal-ssr-proxy/
 Disallow: /functions/v1/universal-ssr-proxy/
 
-# Content archive — kept online for users, out of the index
-Disallow: /plaat-verhaal/
-Disallow: /muziek-verhaal/
-Disallow: /singles/
-Disallow: /artists/
-Disallow: /artist-spotlight/
-Disallow: /anekdotes/
-Disallow: /nieuws/
-Disallow: /new-release/
-Disallow: /nummer/
-Disallow: /verhalen
-Disallow: /reviews/
-Disallow: /quiz
-Disallow: /quizzen
-Disallow: /shop
-Disallow: /art-shop
-Disallow: /marketplace
-Disallow: /catalogus
-Disallow: /podcasts
-Disallow: /vandaag-in-de-muziekgeschiedenis
+
+
 
 # Thin parameter URLs
 Disallow: /*?search=

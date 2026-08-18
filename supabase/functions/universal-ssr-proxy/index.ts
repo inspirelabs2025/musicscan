@@ -92,8 +92,9 @@ interface MetaData {
 
 const injectMetaTags = (html: string, meta: MetaData): string => {
   let result = html;
-  const ogImage = optimizeImageUrl(meta.image);
+  const ogImage = toAbsoluteUrl(optimizeImageUrl(meta.image));
   const escapedImage = escapeHtml(ogImage);
+
 
   // Replace <title>
   result = result.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(meta.title)}</title>`);

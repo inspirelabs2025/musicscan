@@ -77,9 +77,10 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     updateMetaTag('keywords', finalSEO.keywords!);
     
     // Open Graph tags
+    const absoluteImage = normalizeFullUrl(finalSEO.image || DEFAULT_SEO.image!);
     updateMetaTag('og:title', finalSEO.title!, true);
     updateMetaTag('og:description', finalSEO.description!, true);
-    updateMetaTag('og:image', finalSEO.image || DEFAULT_SEO.image!, true);
+    updateMetaTag('og:image', absoluteImage, true);
     updateMetaTag('og:url', finalSEO.canonicalUrl || currentUrl, true);
     updateMetaTag('og:type', finalSEO.type || DEFAULT_SEO.type!, true);
     updateMetaTag('og:site_name', finalSEO.siteName || DEFAULT_SEO.siteName!, true);
@@ -89,7 +90,8 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     updateMetaTag('twitter:card', 'summary_large_image');
     updateMetaTag('twitter:title', finalSEO.title!);
     updateMetaTag('twitter:description', finalSEO.description!);
-    updateMetaTag('twitter:image', finalSEO.image || DEFAULT_SEO.image!);
+    updateMetaTag('twitter:image', absoluteImage);
+
     updateMetaTag('twitter:site', '@musicscan_app');
     updateMetaTag('twitter:creator', '@musicscan_app');
     

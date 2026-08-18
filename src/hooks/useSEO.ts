@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 import { normalizeFullUrl } from '@/lib/utils';
 import {
   OG_LOCALE,
+  SITE_URL,
+
   SITE_NAME,
   canonicalPathFor,
   hreflangAlternates,

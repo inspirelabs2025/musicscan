@@ -76,8 +76,12 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     updateMetaTag('description', finalSEO.description!);
     updateMetaTag('keywords', finalSEO.keywords!);
     
-    // Open Graph tags
-    const absoluteImage = normalizeFullUrl(finalSEO.image || DEFAULT_SEO.image!);
+    // Open Graph tags — image must always be an absolute URL on the canonical domain.
+    const rawImage = finalSEO.image || DEFAULT_SEO.image!;
+    const absoluteImage = /^https?:\/\//i.test(rawImage)
+      ? rawImage
+      : `${SITE_URL}${rawImage.startsWith('/') ? '' : '/'}${rawImage}`;
+
     updateMetaTag('og:title', finalSEO.title!, true);
     updateMetaTag('og:description', finalSEO.description!, true);
     updateMetaTag('og:image', absoluteImage, true);

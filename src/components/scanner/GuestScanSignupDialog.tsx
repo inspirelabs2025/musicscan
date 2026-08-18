@@ -12,7 +12,7 @@ const isIOS = () =>
   typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 const APP_STORE_URL = "https://apps.apple.com/app/musicscan/id6739262838";
-const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.inspirelabs.musicscan";
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.musicscan.app";
 
 export function GuestScanSignupDialog({ open, onClose }: Props) {
   const navigate = useNavigate();

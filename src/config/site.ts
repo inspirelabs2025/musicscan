@@ -116,7 +116,7 @@ export function hreflangAlternates(pathname: string): Array<{ hreflang: string; 
 
 /** App + web links. iOS is not live yet — keep it disabled until it is. */
 export const PLAY_STORE_URL =
-  'https://play.google.com/store/apps/details?id=com.inspirelabs.musicscan';
+  'https://play.google.com/store/apps/details?id=com.musicscan.app';
 export const APP_STORE_URL = 'https://apps.apple.com/app/musicscan/id6739262838';
 export const APP_STORE_AVAILABLE = false;
 export const WEB_APP_URL = `${SITE_URL}/scan`;

@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 import { normalizeFullUrl } from '@/lib/utils';
 import {
   OG_LOCALE,
+  SITE_URL,
+
   SITE_NAME,
   canonicalPathFor,
   hreflangAlternates,
@@ -76,10 +78,15 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     updateMetaTag('description', finalSEO.description!);
     updateMetaTag('keywords', finalSEO.keywords!);
     
-    // Open Graph tags
+    // Open Graph tags — image must always be an absolute URL on the canonical domain.
+    const rawImage = finalSEO.image || DEFAULT_SEO.image!;
+    const absoluteImage = /^https?:\/\//i.test(rawImage)
+      ? rawImage
+      : `${SITE_URL}${rawImage.startsWith('/') ? '' : '/'}${rawImage}`;
+
     updateMetaTag('og:title', finalSEO.title!, true);
     updateMetaTag('og:description', finalSEO.description!, true);
-    updateMetaTag('og:image', finalSEO.image || DEFAULT_SEO.image!, true);
+    updateMetaTag('og:image', absoluteImage, true);
     updateMetaTag('og:url', finalSEO.canonicalUrl || currentUrl, true);
     updateMetaTag('og:type', finalSEO.type || DEFAULT_SEO.type!, true);
     updateMetaTag('og:site_name', finalSEO.siteName || DEFAULT_SEO.siteName!, true);
@@ -89,7 +96,8 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     updateMetaTag('twitter:card', 'summary_large_image');
     updateMetaTag('twitter:title', finalSEO.title!);
     updateMetaTag('twitter:description', finalSEO.description!);
-    updateMetaTag('twitter:image', finalSEO.image || DEFAULT_SEO.image!);
+    updateMetaTag('twitter:image', absoluteImage);
+
     updateMetaTag('twitter:site', '@musicscan_app');
     updateMetaTag('twitter:creator', '@musicscan_app');
     

@@ -43,6 +43,15 @@ const optimizeImageUrl = (url: string): string => {
   return url;
 };
 
+/** Social crawlers require absolute image URLs. */
+const toAbsoluteUrl = (url: string): string => {
+  if (!url) return `${BASE_URL}/og-image.jpg`;
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
+
+
 const escapeHtml = (str: string): string =>
   str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -92,8 +101,9 @@ interface MetaData {
 
 const injectMetaTags = (html: string, meta: MetaData): string => {
   let result = html;
-  const ogImage = optimizeImageUrl(meta.image);
+  const ogImage = toAbsoluteUrl(optimizeImageUrl(meta.image));
   const escapedImage = escapeHtml(ogImage);
+
 
   // Replace <title>
   result = result.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(meta.title)}</title>`);

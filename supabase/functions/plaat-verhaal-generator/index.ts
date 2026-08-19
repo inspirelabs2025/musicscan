@@ -333,6 +333,10 @@ serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+
+      if (existingArtistAlbumBlog && forceRegenerate) {
+        regenerateTarget = { id: existingArtistAlbumBlog.id, slug: existingArtistAlbumBlog.slug };
+      }
     }
 
     // PRIORITY 2: Check if blog already exists by album_id + album_type
@@ -355,19 +359,14 @@ serve(async (req) => {
       );
     }
 
-    // If forceRegenerate is true and blog exists, delete it first
     if (existingBlog && forceRegenerate) {
-      console.log('Force regenerate requested, deleting existing blog post');
-      const { error: deleteError } = await supabase
-        .from('blog_posts')
-        .delete()
-        .eq('id', existingBlog.id);
-      
-      if (deleteError) {
-        console.error('Error deleting existing blog:', deleteError);
-        throw deleteError;
-      }
+      regenerateTarget = { id: existingBlog.id, slug: existingBlog.slug };
     }
+
+    if (regenerateTarget) {
+      console.log('Force regenerate: updating existing blog post in place', regenerateTarget);
+    }
+
 
     // Prepare album data for prompt - focus on general album information only
     // Handle user_id - for releases table and platform_products, we need to provide a fallback

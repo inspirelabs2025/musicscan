@@ -4553,6 +4553,33 @@ export type Database = {
         }
         Relationships: []
       }
+      merge_duplicate_log: {
+        Row: {
+          blog_id: string
+          id: string
+          kept_slug: string | null
+          merged_at: string
+          previous_is_published: boolean | null
+          slug: string | null
+        }
+        Insert: {
+          blog_id: string
+          id?: string
+          kept_slug?: string | null
+          merged_at?: string
+          previous_is_published?: boolean | null
+          slug?: string | null
+        }
+        Update: {
+          blog_id?: string
+          id?: string
+          kept_slug?: string | null
+          merged_at?: string
+          previous_is_published?: boolean | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string

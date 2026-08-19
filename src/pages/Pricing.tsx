@@ -480,11 +480,14 @@ const Pricing = () => {
             </div>
           </div>
 
-          <div className="text-center mt-16">
+          <div className="text-center mt-16 space-y-4">
             <p className="text-muted-foreground mb-4">{p.questionsAboutPricing}</p>
-            <Button variant="outline" asChild>
-              <a href="mailto:support@musicscan.app">{p.contactUs}</a>
-            </Button>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button variant="outline" asChild>
+                <a href="mailto:support@musicscan.app">{p.contactUs}</a>
+              </Button>
+              <GooglePlayButton source="pricing" />
+            </div>
           </div>
         </div>
       </div>

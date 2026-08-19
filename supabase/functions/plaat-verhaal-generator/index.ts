@@ -739,7 +739,40 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
     const countryCode = await detectArtistCountry(effectiveArtist, LOVABLE_API_KEY!);
     console.log(`🌍 Country code detected: ${countryCode || 'unknown'}`);
 
-    // Save to database
+    // Bestaand verhaal? -> UPDATE in plaats van delete + insert.
+    // (1) FK's uit discogs_import_log / spotify_new_releases_processed blokkeren delete,
+    // (2) slug blijft ongewijzigd zodat de reeds ingediende sitemap-URL's blijven werken.
+    if (regenerateTarget) {
+      const { data: updatedPost, error: updateError } = await supabase
+        .from('blog_posts')
+        .update({
+          yaml_frontmatter: yamlFrontmatter,
+          markdown_content: markdownBody,
+          social_post: socialPost,
+          album_cover_url: albumCoverUrl,
+          country_code: countryCode,
+          updated_at: new Date().toISOString(),
+          ...(autoPublish ? { is_published: true, published_at: new Date().toISOString() } : {}),
+          // id en slug bewust NIET aanpassen
+        })
+        .eq('id', regenerateTarget.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Database update error:', updateError);
+        throw updateError;
+      }
+
+      console.log('Successfully updated existing blog post', { id: regenerateTarget.id, slug: regenerateTarget.slug });
+
+      return new Response(
+        JSON.stringify({ blog: updatedPost, cached: false, regenerated: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Save to database (nieuw verhaal)
     const { data: blogPost, error: insertError } = await supabase
       .from('blog_posts')
       .insert({
@@ -757,6 +790,7 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
       })
       .select()
       .single();
+
 
     if (insertError) {
       console.error('Database insert error:', insertError);

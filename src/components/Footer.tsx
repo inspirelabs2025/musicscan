@@ -23,6 +23,7 @@ export const Footer = () => {
             <p className="text-sm text-muted-foreground">
               {t('footer.description')}
             </p>
+            <GooglePlayButton source="footer" size="sm" className="w-full sm:w-auto" />
           </div>
 
           {/* Platform Links */}

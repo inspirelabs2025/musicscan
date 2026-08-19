@@ -305,8 +305,15 @@ serve(async (req) => {
     const preliminaryArtist = actualTableUsed === 'platform_products' ? discogsArtist : albumData.artist;
     const preliminaryTitle = actualTableUsed === 'platform_products' ? discogsTitle : albumData.title;
 
+    // Bij forceRegenerate updaten we het BESTAANDE record in plaats van delete + insert:
+    // (1) foreign keys uit discogs_import_log en spotify_new_releases_processed blokkeren het verwijderen,
+    // (2) de slug mag niet veranderen: die URL's staan in de sitemap die net bij Google is ingediend —
+    //     een nieuwe slug betekent dat de indexering van dat verhaal opnieuw begint.
+    let regenerateTarget: { id: string; slug: string } | null = null;
+
     // PRIORITY 1: Check if blog already exists for this artist+album combo (ignoring year)
     if (preliminaryArtist && preliminaryTitle) {
+
       const { data: existingArtistAlbumBlog } = await supabase
         .from('blog_posts')
         .select('*')
@@ -325,6 +332,10 @@ serve(async (req) => {
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      }
+
+      if (existingArtistAlbumBlog && forceRegenerate) {
+        regenerateTarget = { id: existingArtistAlbumBlog.id, slug: existingArtistAlbumBlog.slug };
       }
     }
 
@@ -348,19 +359,14 @@ serve(async (req) => {
       );
     }
 
-    // If forceRegenerate is true and blog exists, delete it first
     if (existingBlog && forceRegenerate) {
-      console.log('Force regenerate requested, deleting existing blog post');
-      const { error: deleteError } = await supabase
-        .from('blog_posts')
-        .delete()
-        .eq('id', existingBlog.id);
-      
-      if (deleteError) {
-        console.error('Error deleting existing blog:', deleteError);
-        throw deleteError;
-      }
+      regenerateTarget = { id: existingBlog.id, slug: existingBlog.slug };
     }
+
+    if (regenerateTarget) {
+      console.log('Force regenerate: updating existing blog post in place', regenerateTarget);
+    }
+
 
     // Prepare album data for prompt - focus on general album information only
     // Handle user_id - for releases table and platform_products, we need to provide a fallback
@@ -733,7 +739,40 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
     const countryCode = await detectArtistCountry(effectiveArtist, LOVABLE_API_KEY!);
     console.log(`🌍 Country code detected: ${countryCode || 'unknown'}`);
 
-    // Save to database
+    // Bestaand verhaal? -> UPDATE in plaats van delete + insert.
+    // (1) FK's uit discogs_import_log / spotify_new_releases_processed blokkeren delete,
+    // (2) slug blijft ongewijzigd zodat de reeds ingediende sitemap-URL's blijven werken.
+    if (regenerateTarget) {
+      const { data: updatedPost, error: updateError } = await supabase
+        .from('blog_posts')
+        .update({
+          yaml_frontmatter: yamlFrontmatter,
+          markdown_content: markdownBody,
+          social_post: socialPost,
+          album_cover_url: albumCoverUrl,
+          country_code: countryCode,
+          updated_at: new Date().toISOString(),
+          ...(autoPublish ? { is_published: true, published_at: new Date().toISOString() } : {}),
+          // id en slug bewust NIET aanpassen
+        })
+        .eq('id', regenerateTarget.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Database update error:', updateError);
+        throw updateError;
+      }
+
+      console.log('Successfully updated existing blog post', { id: regenerateTarget.id, slug: regenerateTarget.slug });
+
+      return new Response(
+        JSON.stringify({ blog: updatedPost, cached: false, regenerated: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Save to database (nieuw verhaal)
     const { data: blogPost, error: insertError } = await supabase
       .from('blog_posts')
       .insert({
@@ -751,6 +790,7 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
       })
       .select()
       .single();
+
 
     if (insertError) {
       console.error('Database insert error:', insertError);

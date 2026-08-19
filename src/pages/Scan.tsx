@@ -119,12 +119,15 @@ const Scan = () => {
           </div>
 
           {/* Footer Info */}
-          <div className="mt-12 text-center">
+          <div className="mt-12 text-center space-y-4">
             <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-vinyl-purple/10 to-vinyl-gold/10 rounded-full border border-vinyl-purple/20">
               <Smartphone className="w-5 h-5 text-vinyl-purple" />
               <span className="text-sm font-medium">
                 Werkt op alle mobiele apparaten - geen app download vereist!
               </span>
+            </div>
+            <div className="flex justify-center">
+              <GooglePlayButton source="scan-page" label="Liever de app? Download in Google Play" />
             </div>
           </div>
 

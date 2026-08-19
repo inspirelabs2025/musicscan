@@ -743,12 +743,17 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
     // (1) FK's uit discogs_import_log / spotify_new_releases_processed blokkeren delete,
     // (2) slug blijft ongewijzigd zodat de reeds ingediende sitemap-URL's blijven werken.
     if (regenerateTarget) {
+      // Veiligheid: nooit bestaande inhoud overschrijven met een lege AI-output.
+      if (!markdownBody || markdownBody.trim().length < 200) {
+        throw new Error('Gegenereerde inhoud is leeg of te kort; bestaand verhaal blijft ongewijzigd');
+      }
       const { data: updatedPost, error: updateError } = await supabase
         .from('blog_posts')
         .update({
           yaml_frontmatter: yamlFrontmatter,
           markdown_content: markdownBody,
           social_post: socialPost,
+
           album_cover_url: albumCoverUrl,
           country_code: countryCode,
           updated_at: new Date().toISOString(),

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Music, Heart, Mail, Github, Twitter, Instagram } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { GooglePlayButton } from '@/components/core/GooglePlayButton';
 
 export const Footer = () => {
   const { t } = useLanguage();

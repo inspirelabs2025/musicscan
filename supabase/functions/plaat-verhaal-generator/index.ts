@@ -305,8 +305,15 @@ serve(async (req) => {
     const preliminaryArtist = actualTableUsed === 'platform_products' ? discogsArtist : albumData.artist;
     const preliminaryTitle = actualTableUsed === 'platform_products' ? discogsTitle : albumData.title;
 
+    // Bij forceRegenerate updaten we het BESTAANDE record in plaats van delete + insert:
+    // (1) foreign keys uit discogs_import_log en spotify_new_releases_processed blokkeren het verwijderen,
+    // (2) de slug mag niet veranderen: die URL's staan in de sitemap die net bij Google is ingediend —
+    //     een nieuwe slug betekent dat de indexering van dat verhaal opnieuw begint.
+    let regenerateTarget: { id: string; slug: string } | null = null;
+
     // PRIORITY 1: Check if blog already exists for this artist+album combo (ignoring year)
     if (preliminaryArtist && preliminaryTitle) {
+
       const { data: existingArtistAlbumBlog } = await supabase
         .from('blog_posts')
         .select('*')

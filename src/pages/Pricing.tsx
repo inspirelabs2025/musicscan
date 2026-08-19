@@ -3,6 +3,7 @@ import { useSEO } from '@/hooks/useSEO';
 import { useIsIOS } from '@/hooks/useIsIOS';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { GooglePlayButton } from '@/components/core/GooglePlayButton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -480,11 +481,14 @@ const Pricing = () => {
             </div>
           </div>
 
-          <div className="text-center mt-16">
+          <div className="text-center mt-16 space-y-4">
             <p className="text-muted-foreground mb-4">{p.questionsAboutPricing}</p>
-            <Button variant="outline" asChild>
-              <a href="mailto:support@musicscan.app">{p.contactUs}</a>
-            </Button>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button variant="outline" asChild>
+                <a href="mailto:support@musicscan.app">{p.contactUs}</a>
+              </Button>
+              <GooglePlayButton source="pricing" />
+            </div>
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { Camera, Disc3, Sparkles, ArrowRight, Zap, LogIn, UserPlus } from 'lucid
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
+import { GooglePlayButton } from '@/components/core/GooglePlayButton';
 
 export const ScannerHero = () => {
   const { t, tr } = useLanguage();
@@ -113,6 +114,14 @@ export const ScannerHero = () => {
           <p className="text-white/50 text-xs mt-1">
             {t('hero.promoSub')}
           </p>
+
+          <div className="mt-6 flex justify-center">
+            <GooglePlayButton
+              source="home-hero"
+              variant="outline"
+              className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:text-white font-semibold"
+            />
+          </div>
         </div>
       </div>
     </section>

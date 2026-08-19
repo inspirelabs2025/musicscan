@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Music, Heart, Mail, Github, Twitter, Instagram } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { GooglePlayButton } from '@/components/core/GooglePlayButton';
 
 export const Footer = () => {
   const { t } = useLanguage();
@@ -23,6 +24,7 @@ export const Footer = () => {
             <p className="text-sm text-muted-foreground">
               {t('footer.description')}
             </p>
+            <GooglePlayButton source="footer" size="sm" className="w-full sm:w-auto" />
           </div>
 
           {/* Platform Links */}

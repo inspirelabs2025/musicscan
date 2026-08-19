@@ -2,6 +2,7 @@ import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Smartphone, Camera, Disc, Sparkles, Zap } from 'lucide-react';
+import { GooglePlayButton } from '@/components/core/GooglePlayButton';
 const Scan = () => {
   const currentUrl = window.location.origin;
   return <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background relative overflow-hidden">

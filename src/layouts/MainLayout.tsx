@@ -1,30 +1,47 @@
-import React from 'react';
 import { Outlet } from 'react-router-dom';
-const Header = () => null;
-const Sidebar = () => null;
+import { MainNav } from '@/components/MainNav';
+import { Footer } from '@/components/Footer';
+import { ModeToggle } from '@/components/mode-toggle';
 import { Toaster } from '@/components/ui/sonner';
-import { AiNudgeBanner } from '@/components/ui/ai-nudge-banner';
-import { useAINudgeStatus } from '@/hooks/use-ai-nudge-status';
+import AiFeaturesNudge from '@/components/AiFeaturesNudge'; // Import the new nudge component
 
-const MainLayout: React.FC = () => {
-  const { showNudge, dismissNudge } = useAINudgeStatus();
+export function MainLayout() {
+  // TODO: Replace with actual user AI usage count from backend/context
+  const aiUsageCount = 0; 
+  
+  // Example onDismiss handler - in a real app, this would update user preferences
+  const handleNudgeDismiss = () => {
+    console.log('AI Features Nudge dismissed');
+    // You might want to store this in local storage or user settings
+  };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {showNudge && (
-        <AiNudgeBanner onDismiss={dismissNudge} />
-      )}
-      
-      <Sidebar />
-      <div className={`flex flex-col flex-1 ${showNudge ? 'mt-12 md:mt-10' : ''}`}>
-        <Header />
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
+    <div className="flex min-h-screen flex-col">
+      <header className="sticky top-0 z-40 w-full border-b bg-background">
+        <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
+          <MainNav />
+          <div className="flex flex-1 items-center justify-end space-x-4">
+            <nav className="flex items-center space-x-1">
+              <ModeToggle />
+            </nav>
+          </div>
+        </div>
+      </header>
+      <main className="flex-1">
+        <div className="container py-6">
+          {/* AI Features Nudge positioned above the main content */}
+          <div className="mb-6">
+            <AiFeaturesNudge
+              aiUsageCount={aiUsageCount}
+              variant="growth"
+              onDismiss={handleNudgeDismiss}
+            />
+          </div>
           <Outlet />
-        </main>
-        <Toaster />
-      </div>
+        </div>
+      </main>
+      <Footer />
+      <Toaster />
     </div>
   );
-};
-
-export default MainLayout;
+}

@@ -125,9 +125,11 @@ function score(text: string, markers: string[]): number {
   return n;
 }
 
-function looksDutch(text: string): boolean {
+function _looksDutch(text: string): boolean {
   return score(text, DUTCH_MARKERS) >= score(text, ENGLISH_MARKERS);
 }
+void _looksDutch;
+
 
 function looksEnglish(text: string): boolean {
   const t = text.toLowerCase().trim();
@@ -150,9 +152,13 @@ function classify(row: Row, table: string): Reason | null {
   if (!md) return "empty";
   if (/^[#>*`|_-]/.test(md)) return "markdown";
 
-  const contentIsDutch = looksDutch((row.story_content ?? "").slice(0, 1200));
+  // English description: only a problem on Dutch-language pages. Dedicated
+  // English variants (content_language = "en", slug "-en") keep their own copy.
   const langIsEnglish = (row.content_language ?? "").toLowerCase().startsWith("en");
-  if (!langIsEnglish && contentIsDutch && looksEnglish(md)) return "english";
+  if (!langIsEnglish && looksEnglish(md)) return "english";
+
+
+
 
   if (table === "artist_stories" && md.length === 160 && !/[.!?…]$/.test(md)) return "truncated";
   return null;

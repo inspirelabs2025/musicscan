@@ -150,9 +150,9 @@ function classify(row: Row, table: string): Reason | null {
   if (!md) return "empty";
   if (/^[#>*`|_-]/.test(md)) return "markdown";
 
-  const contentIsDutch = looksDutch((row.story_content ?? "").slice(0, 1200));
-  const langIsEnglish = (row.content_language ?? "").toLowerCase().startsWith("en");
-  if (!langIsEnglish && contentIsDutch && looksEnglish(md)) return "english";
+  // English description: flag regardless of the language of the story content.
+  if (looksEnglish(md)) return "english";
+
 
   if (table === "artist_stories" && md.length === 160 && !/[.!?…]$/.test(md)) return "truncated";
   return null;

@@ -491,9 +491,13 @@ cron = "0 4 * * *"
 
 [functions.auto-generate-keywords]
 verify_jwt = true
+# Schedule removed on purpose: this job overwrites meta_description with keyword
+# strings. The function stays available for manual invocation only.
 
-[[functions.auto-generate-keywords.schedule]]
-cron = "0 3 * * *"
+[functions.fix-meta-descriptions]
+verify_jwt = false
+
+
 
 [functions.generate-longtail-keywords]
 verify_jwt = true

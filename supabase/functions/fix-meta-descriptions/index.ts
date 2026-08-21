@@ -125,9 +125,11 @@ function score(text: string, markers: string[]): number {
   return n;
 }
 
-function looksDutch(text: string): boolean {
+function _looksDutch(text: string): boolean {
   return score(text, DUTCH_MARKERS) >= score(text, ENGLISH_MARKERS);
 }
+void _looksDutch;
+
 
 function looksEnglish(text: string): boolean {
   const t = text.toLowerCase().trim();

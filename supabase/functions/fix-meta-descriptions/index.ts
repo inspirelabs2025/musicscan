@@ -20,8 +20,13 @@ function json(body: unknown, status = 200) {
 const MAX = 155;
 const CUT = 152;
 
+interface Para {
+  text: string;
+  bold: boolean;
+}
+
 /** Strip frontmatter, headings, markdown syntax, images and links. */
-function toPlainText(raw: string): string[] {
+function toPlainText(raw: string): Para[] {
   let text = raw ?? "";
   // YAML frontmatter
   text = text.replace(/^\uFEFF?\s*---\r?\n[\s\S]*?\r?\n---\s*/, "");
@@ -32,7 +37,7 @@ function toPlainText(raw: string): string[] {
   text = text.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1");
   text = text.replace(/<[^>]+>/g, " ");
 
-  const paragraphs: string[] = [];
+  const paragraphs: Para[] = [];
   for (const block of text.split(/\r?\n\s*\r?\n/)) {
     const lines = block
       .split(/\r?\n/)
@@ -40,12 +45,20 @@ function toPlainText(raw: string): string[] {
       // drop headings, quotes, list bullets, table rows, hrules
       .filter((l) => l && !/^#{1,6}\s/.test(l) && !/^[-*_]{3,}$/.test(l) && !/^\|/.test(l))
       .map((l) => l.replace(/^>+\s*/, "").replace(/^[-*+]\s+/, "").replace(/^\d+[.)]\s+/, ""));
-    let p = lines.join(" ");
+    let p = lines.join(" ").trim();
+    if (!p) continue;
+    // whole paragraph wrapped in bold/italic markers -> looks like a title line
+    const bold = /^(\*\*|__|\*|_)[\s\S]+(\*\*|__|\*|_)$/.test(p);
     // inline markers
     p = p.replace(/[*_`>|#]/g, " ").replace(/\s+/g, " ").trim();
-    if (p) paragraphs.push(p);
+    if (p) paragraphs.push({ text: p, bold });
   }
   return paragraphs;
+}
+
+/** A paragraph that reads like a title: bold, short, or without closing punctuation. */
+function looksLikeTitle(p: Para): boolean {
+  return p.bold || p.text.length < 60 || !/[.!?…]["'”’)]?$/.test(p.text.trim());
 }
 
 function splitSentences(p: string): string[] {
@@ -57,17 +70,20 @@ function splitSentences(p: string): string[] {
 export function buildDescription(storyContent: string | null): string | null {
   if (!storyContent) return null;
   const paragraphs = toPlainText(storyContent);
-  const startIdx = paragraphs.findIndex((p) => p.length >= 40);
+  // Prefer the first paragraph that is real prose, skipping title-like openers.
+  let startIdx = paragraphs.findIndex((p) => !looksLikeTitle(p));
+  if (startIdx < 0) startIdx = paragraphs.findIndex((p) => p.text.length >= 40);
   if (startIdx < 0) return null;
 
   // Collect sentences from the first real paragraph onwards, so a very short
   // opening sentence still yields a full description.
   const sentences: string[] = [];
   for (const p of paragraphs.slice(startIdx)) {
-    sentences.push(...splitSentences(p));
+    sentences.push(...splitSentences(p.text));
     if (sentences.join(" ").length > MAX) break;
   }
   if (sentences.length === 0) return null;
+
 
   let out = "";
   for (const s of sentences) {
@@ -229,10 +245,17 @@ Deno.serve(async (req) => {
     for (const t of tables) {
       const rows = await fetchAll(supabase, t.name, t.cols);
       const reasons: Record<Reason, number> = { empty: 0, markdown: 0, english: 0, truncated: 0 };
+      const updatedReasons: Record<Reason, number> = {
+        empty: 0,
+        markdown: 0,
+        english: 0,
+        truncated: 0,
+      };
       const noContent: string[] = [];
       const samples: unknown[] = [];
       let updated = 0;
       let candidates = 0;
+
 
       for (const row of rows) {
         const reason = classify(row, t.name);
@@ -280,6 +303,7 @@ Deno.serve(async (req) => {
         });
         if (lErr) throw new Error(`log insert ${row.id}: ${lErr.message}`);
         updated++;
+        updatedReasons[reason]++;
         remaining--;
       }
 
@@ -287,10 +311,12 @@ Deno.serve(async (req) => {
         publishedRows: rows.length,
         candidates,
         byReason: reasons,
+        updatedByReason: updatedReasons,
         skippedNoUsableContent: noContent.length,
         updated: dryRun ? 0 : updated,
         samples,
       };
+
     }
 
     return json({ mode: dryRun ? "dryRun" : "apply", limit, ...report });

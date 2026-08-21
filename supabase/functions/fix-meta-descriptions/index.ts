@@ -245,10 +245,17 @@ Deno.serve(async (req) => {
     for (const t of tables) {
       const rows = await fetchAll(supabase, t.name, t.cols);
       const reasons: Record<Reason, number> = { empty: 0, markdown: 0, english: 0, truncated: 0 };
+      const updatedReasons: Record<Reason, number> = {
+        empty: 0,
+        markdown: 0,
+        english: 0,
+        truncated: 0,
+      };
       const noContent: string[] = [];
       const samples: unknown[] = [];
       let updated = 0;
       let candidates = 0;
+
 
       for (const row of rows) {
         const reason = classify(row, t.name);

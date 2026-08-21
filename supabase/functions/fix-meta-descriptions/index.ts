@@ -303,6 +303,7 @@ Deno.serve(async (req) => {
         });
         if (lErr) throw new Error(`log insert ${row.id}: ${lErr.message}`);
         updated++;
+        updatedReasons[reason]++;
         remaining--;
       }
 
@@ -310,10 +311,12 @@ Deno.serve(async (req) => {
         publishedRows: rows.length,
         candidates,
         byReason: reasons,
+        updatedByReason: updatedReasons,
         skippedNoUsableContent: noContent.length,
         updated: dryRun ? 0 : updated,
         samples,
       };
+
     }
 
     return json({ mode: dryRun ? "dryRun" : "apply", limit, ...report });

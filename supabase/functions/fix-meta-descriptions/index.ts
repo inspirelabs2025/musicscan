@@ -152,8 +152,12 @@ function classify(row: Row, table: string): Reason | null {
   if (!md) return "empty";
   if (/^[#>*`|_-]/.test(md)) return "markdown";
 
-  // English description: flag regardless of the language of the story content.
-  if (looksEnglish(md)) return "english";
+  // English description: only a problem on Dutch-language pages. Dedicated
+  // English variants (content_language = "en", slug "-en") keep their own copy.
+  const langIsEnglish = (row.content_language ?? "").toLowerCase().startsWith("en");
+  if (!langIsEnglish && looksEnglish(md)) return "english";
+
+
 
 
   if (table === "artist_stories" && md.length === 160 && !/[.!?…]$/.test(md)) return "truncated";

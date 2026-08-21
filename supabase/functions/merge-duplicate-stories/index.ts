@@ -238,11 +238,18 @@ Deno.serve(async (req) => {
     if (dryRun) {
       return json({
         mode: "dryRun",
+        pass,
         publishedPosts: posts.length,
         duplicateGroupsTotal: dupGroups.length,
         recordsToUnpublishTotal: totalDropAll,
         groupsSelected: plan.length,
         recordsToUnpublishSelected: totalDropSelected,
+        slugPassGroups: slugDupGroups.length,
+        slugPassRecordsToUnpublish: slugDupGroups.reduce((n, [, l]) => n + l.length - 1, 0),
+        uncertainGroups: uncertain.length,
+        uncertainExamples: uncertain.slice(0, 20),
+        pairs: plan.slice(0, 20).map((g) => `${g.keep.slug}  ←  ${g.drop.map((d) => d.slug).join(", ")}`),
+
         examples: plan.slice(0, 20).map((g) => ({
           key: g.key,
           keep: { slug: g.keep.slug, length: (g.keep.markdown_content ?? "").length },

@@ -120,20 +120,94 @@ Deno.serve(async (req) => {
     }
 
     // ---------------- GROUP ----------------
+    // pass: "artistAlbum" (default leading pass), "slug" (fallback on slug pattern), "both"
+    const pass = typeof body.pass === "string" ? body.pass : "both";
+    const runArtistAlbum = pass === "artistAlbum" || pass === "both";
+    const runSlug = pass === "slug" || pass === "both";
+
     const groups = new Map<string, Post[]>();
+    const skipped: Post[] = []; // missing artist or album -> handled by slug pass
     for (const p of posts) {
       const fm = p.yaml_frontmatter ?? {};
       const artist = norm((fm as any).artist);
       const album = norm((fm as any).album);
-      if (!artist || !album) continue;
+      if (!artist || !album) {
+        skipped.push(p);
+        continue;
+      }
       const key = `${artist}|${album}`;
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key)!.push(p);
     }
 
-    const dupGroups = [...groups.entries()]
-      .filter(([, list]) => list.length > 1)
-      .sort((a, b) => a[0].localeCompare(b[0]));
+    // --- second pass: group on slug base, only for records the first pass skipped ---
+    // Strip exactly one trailing "-unknown" or "-<4 digits>" suffix, never repeated.
+    const baseSlug = (slug: string) => slug.replace(/-(?:unknown|\d{4})$/, "");
+
+    // Opening paragraph fingerprint, used to detect that a year suffix hides
+    // two genuinely different releases (e.g. nirvana-live-1992 vs -1994).
+    const opening = (p: Post) =>
+      (p.markdown_content ?? "")
+        .replace(/^---[\s\S]*?---/, "")
+        .replace(/[#*_>`\[\]()]/g, " ")
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 60);
+
+    const similarity = (a: string[], b: string[]) => {
+      if (!a.length || !b.length) return 1; // no content to compare on -> don't flag
+      const sa = new Set(a);
+      const sb = new Set(b);
+      let inter = 0;
+      for (const w of sa) if (sb.has(w)) inter++;
+      return inter / new Set([...sa, ...sb]).size;
+    };
+
+    const slugGroups = new Map<string, Post[]>();
+    if (runSlug) {
+      for (const p of skipped) {
+        const key = baseSlug(p.slug);
+        if (!slugGroups.has(key)) slugGroups.set(key, []);
+        slugGroups.get(key)!.push(p);
+      }
+    }
+
+    const uncertain: Array<{ key: string; reason: string; slugs: string[] }> = [];
+    const slugDupGroups: Array<[string, Post[]]> = [];
+    for (const [key, list] of slugGroups.entries()) {
+      if (list.length < 2) continue;
+      // album titles must not conflict
+      const albums = [...new Set(list.map((p) => norm((p.yaml_frontmatter as any)?.album)).filter(Boolean))];
+      if (albums.length > 1) {
+        uncertain.push({ key, reason: "different album titles", slugs: list.map((p) => p.slug) });
+        continue;
+      }
+      const heads = list.map(opening);
+      let minSim = 1;
+      for (let i = 0; i < heads.length; i++) {
+        for (let j = i + 1; j < heads.length; j++) {
+          minSim = Math.min(minSim, similarity(heads[i], heads[j]));
+        }
+      }
+      if (minSim < 0.35) {
+        uncertain.push({
+          key,
+          reason: `opening paragraphs differ (similarity ${minSim.toFixed(2)})`,
+          slugs: list.map((p) => p.slug),
+        });
+        continue;
+      }
+      slugDupGroups.push([`slug:${key}`, list]);
+    }
+    slugDupGroups.sort((a, b) => a[0].localeCompare(b[0]));
+
+    const faDupGroups: Array<[string, Post[]]> = runArtistAlbum
+      ? [...groups.entries()].filter(([, list]) => list.length > 1).sort((a, b) => a[0].localeCompare(b[0]))
+      : [];
+
+    // first pass stays leading; slug pass is appended
+    const dupGroups: Array<[string, Post[]]> = [...faDupGroups, ...slugDupGroups];
 
     const pick = (list: Post[]) =>
       [...list].sort((a, b) => {
@@ -159,6 +233,7 @@ Deno.serve(async (req) => {
 
     const totalDropAll = dupGroups.reduce((n, [, l]) => n + l.length - 1, 0);
     const totalDropSelected = plan.reduce((n, g) => n + g.drop.length, 0);
+
 
     if (dryRun) {
       return json({

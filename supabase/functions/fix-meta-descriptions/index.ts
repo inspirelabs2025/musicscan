@@ -57,10 +57,16 @@ function splitSentences(p: string): string[] {
 export function buildDescription(storyContent: string | null): string | null {
   if (!storyContent) return null;
   const paragraphs = toPlainText(storyContent);
-  const para = paragraphs.find((p) => p.length >= 40);
-  if (!para) return null;
+  const startIdx = paragraphs.findIndex((p) => p.length >= 40);
+  if (startIdx < 0) return null;
 
-  const sentences = splitSentences(para);
+  // Collect sentences from the first real paragraph onwards, so a very short
+  // opening sentence still yields a full description.
+  const sentences: string[] = [];
+  for (const p of paragraphs.slice(startIdx)) {
+    sentences.push(...splitSentences(p));
+    if (sentences.join(" ").length > MAX) break;
+  }
   if (sentences.length === 0) return null;
 
   let out = "";
@@ -70,6 +76,7 @@ export function buildDescription(storyContent: string | null): string | null {
     out = next;
   }
   if (out) return out;
+
 
   // First sentence does not fit: cut on the last word before 152 chars.
   const first = sentences[0];

@@ -75,16 +75,20 @@ export function buildDescription(storyContent: string | null): string | null {
     if (next.length > MAX) break;
     out = next;
   }
-  if (out) return out;
+  // Long enough to be a useful description: keep whole sentences.
+  if (out.length >= 60) return out;
 
-
-  // First sentence does not fit: cut on the last word before 152 chars.
-  const first = sentences[0];
-  const slice = first.slice(0, CUT);
-  const cut = slice.slice(0, slice.lastIndexOf(" ") > 0 ? slice.lastIndexOf(" ") : CUT).trim();
+  // Too short (or the first sentence does not fit): cut on the last word
+  // before 152 chars and close with an ellipsis.
+  const source = sentences.join(" ");
+  const slice = source.slice(0, CUT);
+  const lastSpace = slice.lastIndexOf(" ");
+  const cut = slice.slice(0, lastSpace > 0 ? lastSpace : CUT).trim();
   const cleaned = cut.replace(/[,;:\-–—]+$/, "").trim();
-  return cleaned ? `${cleaned}...` : null;
+  if (!cleaned) return out || null;
+  return source.length <= CUT ? source : `${cleaned}...`;
 }
+
 
 const ENGLISH_MARKERS = [
   "the ", "story behind", "discover", "explore", " its ", " and ", " was ", " with ",

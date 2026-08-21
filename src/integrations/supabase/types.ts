@@ -4641,6 +4641,39 @@ export type Database = {
           },
         ]
       }
+      meta_description_fix_log: {
+        Row: {
+          created_at: string
+          id: number
+          new_meta_description: string | null
+          previous_meta_description: string | null
+          reason: string | null
+          record_id: string
+          slug: string | null
+          table_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          new_meta_description?: string | null
+          previous_meta_description?: string | null
+          reason?: string | null
+          record_id: string
+          slug?: string | null
+          table_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          new_meta_description?: string | null
+          previous_meta_description?: string | null
+          reason?: string | null
+          record_id?: string
+          slug?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
       metricool_post_log: {
         Row: {
           content: string | null

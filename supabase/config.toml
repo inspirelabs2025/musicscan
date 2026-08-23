@@ -417,14 +417,16 @@ cron = "0 6 * * *"
 [functions.schedule-music-history-posts]
 verify_jwt = false
 
-[[functions.schedule-music-history-posts.schedule]]
-cron = "5 6 * * *"
+# UITGESCHAKELD (auto-posting naar Facebook uit)
+# [[functions.schedule-music-history-posts.schedule]]
+# cron = "5 6 * * *"
 
 [functions.post-scheduled-music-history]
 verify_jwt = false
 
-[[functions.post-scheduled-music-history.schedule]]
-cron = "0 8-22 * * *"
+# UITGESCHAKELD (auto-posting naar Facebook uit)
+# [[functions.post-scheduled-music-history.schedule]]
+# cron = "0 8-22 * * *"
 
 [functions.curated-artists-monitor]
 verify_jwt = false
@@ -614,26 +616,26 @@ verify_jwt = false
 [[functions.extract-singles-from-albums.schedule]]
 cron = "0 */4 * * *"
 
-# Singles posten naar Facebook (elke 2 uur op :30)
+# Singles posten naar Facebook - UITGESCHAKELD (auto-posting uit)
 [functions.post-scheduled-singles]
 verify_jwt = false
 
-[[functions.post-scheduled-singles.schedule]]
-cron = "30 9-21/2 * * *"
+# [[functions.post-scheduled-singles.schedule]]
+# cron = "30 9-21/2 * * *"
 
-# Albums posten naar Facebook (elke 2 uur op :00)
+# Albums posten naar Facebook - UITGESCHAKELD (auto-posting uit)
 [functions.post-scheduled-albums]
 verify_jwt = false
 
-[[functions.post-scheduled-albums.schedule]]
-cron = "0 10-22/2 * * *"
+# [[functions.post-scheduled-albums.schedule]]
+# cron = "0 10-22/2 * * *"
 
-# Facebook queues recyclen (elk uur)
+# Facebook queues recyclen - UITGESCHAKELD (auto-posting uit)
 [functions.recycle-facebook-queue]
 verify_jwt = false
 
-[[functions.recycle-facebook-queue.schedule]]
-cron = "45 * * * *"
+# [[functions.recycle-facebook-queue.schedule]]
+# cron = "45 * * * *"
 
 # ============================================
 # CORE PIPELINE - 1x per uur elk

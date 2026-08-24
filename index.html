@@ -84,6 +84,23 @@
         window.addEventListener("hashchange",track);
       })();
     </script>
+  <script>
+    (function(){
+      var k="musicscan",u="https://progress-pilot-pad.lovable.app/api/public/track";
+      function hit(){
+        try{
+          var s=sessionStorage.getItem("rcc_sid");
+          if(!s){s=Math.random().toString(36).slice(2)+Date.now().toString(36);sessionStorage.setItem("rcc_sid",s);}
+          var b=JSON.stringify({k:k,p:location.pathname,r:document.referrer,s:s});
+          var sent=navigator.sendBeacon&&navigator.sendBeacon(u,new Blob([b],{type:"text/plain"}));
+          if(!sent){fetch(u,{method:"POST",body:b,keepalive:true,headers:{"Content-Type":"text/plain"}});}
+        }catch(e){}
+      }
+      hit();
+      var p=history.pushState;history.pushState=function(){p.apply(this,arguments);hit();};
+      addEventListener("popstate",hit);
+    })();
+  </script>
   </head>
   <body>
     <div id="root"></div>

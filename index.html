@@ -60,6 +60,30 @@
     </script>
     <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1635291241045529&ev=PageView&noscript=1" /></noscript>
     <!-- End Meta Pixel Code -->
+
+    <!-- Visitor counter (Progress Pilot Pad) -->
+    <script>
+      (function(){
+        var k="musicscan",u="https://progress-pilot-pad.lovable.app/api/public/track";
+        var lastPath=null;
+        function track(){
+          try{
+            var p=location.pathname;
+            if(p===lastPath)return;
+            lastPath=p;
+            var s=sessionStorage.getItem("rcc_sid");
+            if(!s){s=Math.random().toString(36).slice(2)+Date.now().toString(36);sessionStorage.setItem("rcc_sid",s);}
+            var b=JSON.stringify({k:k,p:p,r:document.referrer,s:s});
+            var sent=navigator.sendBeacon&&navigator.sendBeacon(u,new Blob([b],{type:"text/plain"}));
+            if(!sent){fetch(u,{method:"POST",body:b,keepalive:true,headers:{"Content-Type":"text/plain"}});}
+          }catch(e){}
+        }
+        track();
+        setInterval(track,500);
+        window.addEventListener("popstate",track);
+        window.addEventListener("hashchange",track);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

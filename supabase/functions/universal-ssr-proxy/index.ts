@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { isVariantSingle, isDuplicateNonCanonical } from '../_shared/thin-singles.ts';
+import { VALUE_TYPES, renderValueBody, valueDescription, valueJsonLd, valueTitle, valuePath, isIndexable, type ValueRow } from './value-page.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -99,6 +100,8 @@ interface MetaData {
   noindex?: boolean;
   /** Alleen true voor contenttypes die in de index horen (waardepagina's). */
   indexable?: boolean;
+  /** Leesbare body voor crawlers zonder JavaScript; React vervangt hem bij mount. */
+  bodyHtml?: string;
 }
 
 const injectMetaTags = (html: string, meta: MetaData): string => {
@@ -160,11 +163,43 @@ const injectMetaTags = (html: string, meta: MetaData): string => {
     result = result.replace('</head>', `<meta name="robots" content="${robotsContent}">\n</head>`);
   }
 
+  // Body-injectie: crawlers die geen JavaScript draaien lezen anders een lege
+  // shell. React wist de inhoud van #root zodra de app mount.
+  if (meta.bodyHtml) {
+    result = result.replace('<div id="root"></div>', `<div id="root">${meta.bodyHtml}</div>`);
+  }
+
   return result;
 };
 
 const getMetaForContent = async (sb: any, contentType: string, slug: string): Promise<MetaData | null> => {
   switch (contentType) {
+    // Waardepagina's: /waarde/{artiest}/{album} en /value/{artist}/{album}.
+    // Slug komt hier binnen als "artiest/album".
+    case 'waarde':
+    case 'value': {
+      const locale = VALUE_TYPES[contentType];
+      const [artistSlug, albumSlug] = slug.split('/');
+      if (!artistSlug || !albumSlug) return null;
+      const { data } = await sb
+        .from('value_pages')
+        .select('*')
+        .eq('group_slug', `${artistSlug}-${albumSlug}`)
+        .maybeSingle();
+      if (!data) return null;
+      const row = data as ValueRow;
+      return {
+        title: valueTitle(row, locale),
+        description: valueDescription(row, locale),
+        image: row.artwork_url || LOGO_URL,
+        url: valuePath(row, locale),
+        type: 'website',
+        jsonLd: valueJsonLd(row, locale),
+        indexable: isIndexable(row),
+        bodyHtml: renderValueBody(row, locale),
+      };
+    }
+
     case 'plaat-verhaal': {
       const { data: blog } = await sb.from('blog_posts').select('slug, yaml_frontmatter, markdown_content, album_cover_url, published_at, created_at, updated_at').eq('slug', slug).eq('is_published', true).maybeSingle();
       if (!blog) return null;

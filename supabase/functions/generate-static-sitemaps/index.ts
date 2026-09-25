@@ -27,6 +27,43 @@ ${urls}
 </urlset>`;
 }
 
+/**
+ * Waardepagina's. Alleen rijen met een prijsvork: zonder vork zet de pagina
+ * zelf noindex, en een noindex-URL hoort niet in een sitemap.
+ * Nederlands en Engels verwijzen via hreflang naar elkaar.
+ */
+function generateValueSitemapXml(
+  rows: Array<{ artist_slug: string; album_slug: string; priced_at: string | null }>,
+): string {
+  const urls = rows
+    .map(({ artist_slug, album_slug, priced_at }) => {
+      const nl = `${BASE_URL}/waarde/${artist_slug}/${album_slug}`;
+      const en = `${BASE_URL}/value/${artist_slug}/${album_slug}`;
+      const lastmod = priced_at ? `\n    <lastmod>${priced_at.slice(0, 10)}</lastmod>` : '';
+      const alts = [
+        `    <xhtml:link rel="alternate" hreflang="nl" href="${nl}"/>`,
+        `    <xhtml:link rel="alternate" hreflang="en" href="${en}"/>`,
+        `    <xhtml:link rel="alternate" hreflang="x-default" href="${en}"/>`,
+      ].join('\n');
+      return [nl, en]
+        .map(
+          (loc) => `  <url>
+    <loc>${loc}</loc>${lastmod}
+${alts}
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`,
+        )
+        .join('\n');
+    })
+    .join('\n');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+${urls}
+</urlset>`;
+}
+
 function generateSitemapIndex(names: string[]): string {
   const now = new Date().toISOString();
   const sitemaps = names
@@ -54,11 +91,31 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    const keep = new Set(['sitemap-static.xml', 'sitemap-index.xml']);
+    // Waardepagina's met een vork ophalen; zonder vork staan ze op noindex.
+    const { data: valueRows, error: valueError } = await supabase
+      .from('value_pages')
+      .select('artist_slug, album_slug, priced_at')
+      .not('price_range_min', 'is', null)
+      .not('price_range_max', 'is', null)
+      .order('artist_slug');
+
+    if (valueError) {
+      console.error('value_pages ophalen mislukt:', valueError.message);
+    }
+    const rows = valueRows ?? [];
+    console.log(`Waardepagina's in de sitemap: ${rows.length}`);
+
+    const names = ['sitemap-static.xml'];
+    if (rows.length) names.push('sitemap-waarde.xml');
+
+    const keep = new Set(['sitemap-static.xml', 'sitemap-waarde.xml', 'sitemap-index.xml']);
 
     const uploads = [
       { name: 'sitemap-static.xml', data: generateStaticSitemapXml() },
-      { name: 'sitemap-index.xml', data: generateSitemapIndex(['sitemap-static.xml']) },
+      ...(rows.length
+        ? [{ name: 'sitemap-waarde.xml', data: generateValueSitemapXml(rows) }]
+        : []),
+      { name: 'sitemap-index.xml', data: generateSitemapIndex(names) },
     ];
 
     for (const upload of uploads) {

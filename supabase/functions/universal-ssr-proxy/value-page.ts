@@ -82,6 +82,13 @@ export const valuePath = (row: ValueRow, locale: 'nl' | 'en'): string => {
   return `${BASE_URL}/${seg}/${row.artist_slug}/${row.album_slug}`;
 };
 
+/** Wederzijdse hreflang: nl en en wijzen naar elkaar, en-versie is x-default. */
+export const valueAlternates = (row: ValueRow) => [
+  { hreflang: 'nl', href: valuePath(row, 'nl') },
+  { hreflang: 'en', href: valuePath(row, 'en') },
+  { hreflang: 'x-default', href: valuePath(row, 'en') },
+];
+
 /** Geen vork, geen antwoord, dus ook niet in de index. */
 export const isIndexable = (row: ValueRow): boolean =>
   num(row.price_range_min) !== null && num(row.price_range_max) !== null;

@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { isVariantSingle, isDuplicateNonCanonical } from '../_shared/thin-singles.ts';
-import { VALUE_TYPES, renderValueBody, valueDescription, valueJsonLd, valueTitle, valuePath, isIndexable, type ValueRow } from './value-page.ts';
+import { VALUE_TYPES, renderValueBody, valueDescription, valueJsonLd, valueTitle, valuePath, valueAlternates, isIndexable, type ValueRow } from './value-page.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -102,6 +102,8 @@ interface MetaData {
   indexable?: boolean;
   /** Leesbare body voor crawlers zonder JavaScript; React vervangt hem bij mount. */
   bodyHtml?: string;
+  /** Wederzijdse hreflang-verwijzingen; alleen gezet waar echte vertalingen bestaan. */
+  alternates?: Array<{ hreflang: string; href: string }>;
 }
 
 const injectMetaTags = (html: string, meta: MetaData): string => {
@@ -142,9 +144,27 @@ const injectMetaTags = (html: string, meta: MetaData): string => {
   // Replace canonical URL
   result = result.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/, `<link rel="canonical" href="${escapeHtml(meta.url)}">`);
 
-  // Replace hreflang tags
-  result = result.replace(/<link\s+rel="alternate"\s+hreflang="nl"\s+href="[^"]*"\s*\/?>/, `<link rel="alternate" hreflang="nl" href="${escapeHtml(meta.url)}">`);
-  result = result.replace(/<link\s+rel="alternate"\s+hreflang="x-default"\s+href="[^"]*"\s*\/?>/, `<link rel="alternate" hreflang="x-default" href="${escapeHtml(meta.url)}">`);
+  // Replace hreflang tags. Waar echte vertalingen bestaan (waardepagina's)
+  // wijzen ze naar elkaar; anders blijft het gedrag zoals het was.
+  if (meta.alternates?.length) {
+    // Eerst x-default, dan pas de nl-regel vervangen. Andersom zou de tweede
+    // replace de zojuist geïnjecteerde x-default treffen in plaats van de oude.
+    const xDefault = meta.alternates.find((a) => a.hreflang === 'x-default');
+    if (xDefault) {
+      result = result.replace(
+        /<link\s+rel="alternate"\s+hreflang="x-default"\s+href="[^"]*"\s*\/?>/,
+        `<link rel="alternate" hreflang="x-default" href="${escapeHtml(xDefault.href)}">`,
+      );
+    }
+    const links = meta.alternates
+      .filter((a) => a.hreflang !== 'x-default')
+      .map((a) => `<link rel="alternate" hreflang="${escapeHtml(a.hreflang)}" href="${escapeHtml(a.href)}">`)
+      .join('\n    ');
+    result = result.replace(/<link\s+rel="alternate"\s+hreflang="nl"\s+href="[^"]*"\s*\/?>/, links);
+  } else {
+    result = result.replace(/<link\s+rel="alternate"\s+hreflang="nl"\s+href="[^"]*"\s*\/?>/, `<link rel="alternate" hreflang="nl" href="${escapeHtml(meta.url)}">`);
+    result = result.replace(/<link\s+rel="alternate"\s+hreflang="x-default"\s+href="[^"]*"\s*\/?>/, `<link rel="alternate" hreflang="x-default" href="${escapeHtml(meta.url)}">`);
+  }
 
   // Inject page-specific JSON-LD before closing </head> (keep the existing Organization schema)
   if (meta.jsonLd) {
@@ -197,6 +217,7 @@ const getMetaForContent = async (sb: any, contentType: string, slug: string): Pr
         jsonLd: valueJsonLd(row, locale),
         indexable: isIndexable(row),
         bodyHtml: renderValueBody(row, locale),
+        alternates: valueAlternates(row),
       };
     }
 

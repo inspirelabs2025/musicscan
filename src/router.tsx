@@ -70,6 +70,7 @@ const Auth = lazyWithRetry(() => import('./pages/Auth'));
 const Welkom = lazyWithRetry(() => import('./pages/Welkom'));
 const Dashboard = lazyWithRetry(() => import('./pages/Dashboard'));
 const NotFound = lazyWithRetry(() => import('./pages/NotFound'));
+const Waarde = lazyWithRetry(() => import('./pages/Waarde'));
 const Settings = lazyWithRetry(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
 // Shop verwijderd
 const Artists = lazyWithRetry(() => import('./pages/Artists'));
@@ -281,6 +282,12 @@ export const router = createBrowserRouter([
       { path: 'singles/:slug', element: wrap(SingleDetail) },
       { path: 'muziek-verhaal/:slug', element: wrap(MuziekVerhaal) },
       { path: 'plaat-verhaal/:slug', element: wrap(PlaatVerhaal) },
+
+      // Waardepagina's per album. Nederlands op de root, Engels onder /en.
+      // Duits en Frans volgen zodra de teksten er zijn.
+      { path: 'waarde/:artistSlug/:albumSlug', element: wrap(Waarde) },
+      { path: 'value/:artistSlug/:albumSlug', element: wrap(Waarde) },
+      { path: 'en/value/:artistSlug/:albumSlug', element: wrap(Waarde) },
       { path: 'anekdotes', element: wrap(AnecdotesOverview) },
       { path: 'anekdotes/:slug', element: wrap(AnecdoteDetail) },
       { path: 'nieuws', element: wrap(Nieuws) },

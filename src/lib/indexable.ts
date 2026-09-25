@@ -32,6 +32,18 @@ export const LOCALIZED_INDEXABLE_PATHS = [
 /** Trust pages (single language, self-canonical, no hreflang). */
 export const TRUST_INDEXABLE_PATHS = ['/privacy', '/terms'] as const;
 
+/**
+ * Waardepagina's per album: /waarde/{artiest}/{album} en de vertaalde paden.
+ * Dit zijn er te veel voor een allowlist, dus ze matchen op patroon. Of een
+ * losse pagina daadwerkelijk index,follow krijgt hangt af van de prijsvork:
+ * de pagina zelf zet noindex zolang die ontbreekt.
+ */
+const VALUE_PATH_RE = /^\/(?:(?:en|de|fr)\/)?(?:waarde|value|wert|valeur)\/[^/]+\/[^/]+$/;
+
+export function isValuePath(pathname: string): boolean {
+  return VALUE_PATH_RE.test(normalizePath(pathname));
+}
+
 /** Alias that stays crawlable but canonicalizes to the NL scan page. */
 export const ALIAS_INDEXABLE_PATHS = ['/scanner'] as const;
 
@@ -53,5 +65,6 @@ export function normalizePath(pathname: string): string {
 }
 
 export function isIndexablePath(pathname: string): boolean {
-  return (INDEXABLE_PATHS as readonly string[]).includes(normalizePath(pathname));
+  const path = normalizePath(pathname);
+  return (INDEXABLE_PATHS as readonly string[]).includes(path) || isValuePath(path);
 }

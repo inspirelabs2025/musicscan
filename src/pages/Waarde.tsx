@@ -23,6 +23,8 @@ interface ValueRow {
   story_url: string | null;
   price_range_min: number | string | null;
   price_range_max: number | string | null;
+  price_median: number | string | null;
+  price_observations: number | null;
   priced_at: string | null;
   pressing_rows: Array<{ year?: number; country?: string; label?: string; catno?: string; format?: string }> | null;
 }
@@ -52,10 +54,11 @@ const dateText = (iso: string | null, loc: Locale) => {
 const COPY = {
   nl: {
     h1: (a: string, t: string) => `Wat is ${t} van ${a} waard?`,
-    priceLabel: 'Prijsvork',
-    priceNote: (d: string, n: number) => `samengesteld uit ${n} persingen${d ? `, bijgewerkt op ${d}` : ''}`,
+    priceLabel: 'Meestal rond',
+    rangeLabel: 'Vork',
+    priceNote: (d: string, n: number) => `gemeten over ${n} persingen${d ? `, bijgewerkt op ${d}` : ''}`,
     noPrice: 'De prijsvork voor dit album stellen we nog samen uit meerdere bronnen. De persingen hieronder staan er al wel: die bepalen uiteindelijk het verschil.',
-    lead: (lo: string, hi: string) => `Een exemplaar gaat doorgaans voor ${lo} tot ${hi} van eigenaar. Wat jouw exemplaar waard is hangt af van de persing en de conditie — dat verschil is groter dan het bedrag zelf.`,
+    lead: (lo: string, hi: string) => `Wat jouw exemplaar waard is hangt af van de persing en de conditie — dat verschil is groter dan het bedrag zelf. De vork van ${lo} tot ${hi} is precies dat verschil.`,
     spread: (v: string, c: number) => `Van dit album bestaan ${v} verschillende uitgaven, verdeeld over ${c} landen. Dat is precies waarom één prijs niet bestaat.`,
     exampleHead: 'Voorbeeldpersing',
     exampleWhy: 'De uitgave die de meeste verzamelaars bezitten',
@@ -78,10 +81,11 @@ const COPY = {
   },
   en: {
     h1: (a: string, t: string) => `What is ${t} by ${a} worth?`,
-    priceLabel: 'Price range',
-    priceNote: (d: string, n: number) => `compiled from ${n} pressings${d ? `, updated ${d}` : ''}`,
+    priceLabel: 'Usually around',
+    rangeLabel: 'Range',
+    priceNote: (d: string, n: number) => `measured across ${n} pressings${d ? `, updated ${d}` : ''}`,
     noPrice: 'We are still compiling the price range for this album from several sources. The pressings below are already listed: they are what makes the difference.',
-    lead: (lo: string, hi: string) => `Copies typically change hands for ${lo} to ${hi}. What your copy is worth depends on the pressing and its condition — that gap matters more than the figure itself.`,
+    lead: (lo: string, hi: string) => `What your copy is worth depends on the pressing and its condition — that gap matters more than the figure itself. The range from ${lo} to ${hi} is exactly that gap.`,
     spread: (v: string, c: number) => `This album exists in ${v} different editions across ${c} countries. That is exactly why a single price does not exist.`,
     exampleHead: 'Example pressing',
     exampleWhy: 'The edition most collectors own',
@@ -132,6 +136,7 @@ const Waarde: React.FC = () => {
 
   const lo = num(row?.price_range_min);
   const hi = num(row?.price_range_max);
+  const med = num(row?.price_median);
   const hasPrice = lo !== null && hi !== null;
   const versions = versionsText(row?.version_count ?? null, locale);
 
@@ -182,11 +187,20 @@ const Waarde: React.FC = () => {
 
       {hasPrice ? (
         <div className="mt-6 rounded-xl border bg-card p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{t.priceLabel}</p>
-          <p className="mt-1 text-3xl font-bold tabular-nums">
-            {money(lo!, locale)} – {money(hi!, locale)}
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            {med !== null ? t.priceLabel : t.rangeLabel}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">{t.priceNote(dateText(row.priced_at, locale), rows.length)}</p>
+          <p className="mt-1 text-4xl font-bold tabular-nums">
+            {med !== null ? money(med, locale) : `${money(lo!, locale)} – ${money(hi!, locale)}`}
+          </p>
+          {med !== null ? (
+            <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+              {t.rangeLabel} {money(lo!, locale)} – {money(hi!, locale)}
+            </p>
+          ) : null}
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t.priceNote(dateText(row.priced_at, locale), row.price_observations || rows.length)}
+          </p>
           <p className="mt-3 text-sm">{t.lead(money(lo!, locale), money(hi!, locale))}</p>
         </div>
       ) : (

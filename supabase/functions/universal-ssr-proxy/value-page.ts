@@ -35,6 +35,8 @@ export interface ValueRow {
   story_url: string | null;
   price_range_min: number | string | null;
   price_range_max: number | string | null;
+  price_median: number | string | null;
+  price_observations: number | null;
   priced_at: string | null;
   db_pressings: number | null;
   total_scans: number | null;
@@ -42,6 +44,14 @@ export interface ValueRow {
 
 const esc = (s: unknown): string =>
   String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/** Afkappen op een woordgrens; halve woorden in een snippet zien er slordig uit. */
+const clip = (t: string, max = 155): string => {
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const sp = cut.lastIndexOf(' ');
+  return (sp > 60 ? cut.slice(0, sp) : cut).replace(/[\s,.;:\u2013\u2014]+$/, '') + '\u2026';
+};
 
 const num = (v: unknown): number | null => {
   const n = typeof v === 'string' ? parseFloat(v) : (v as number);
@@ -84,10 +94,12 @@ const T = {
   nl: {
     h1: (a: string, t: string) => `Wat is ${t} van ${a} waard?`,
     metaTitle: (a: string, t: string) => `${t} – ${a}: waarde van de lp of cd | MusicScan`,
-    priceLead: (lo: string, hi: string, d: string) =>
-      `Een exemplaar van deze plaat gaat doorgaans voor ${lo} tot ${hi} van eigenaar. ` +
-      (d ? `Vork samengesteld uit meerdere bronnen, bijgewerkt op ${d}. ` : '') +
-      `Wat jouw exemplaar waard is hangt af van de persing en de conditie — dat verschil is groter dan het bedrag zelf.`,
+    priceLead: (lo: string, hi: string, med: string, n: number, d: string) =>
+      (med ? `De meeste exemplaren gaan weg voor rond ${med}. ` : '') +
+      `De vork loopt van ${lo} tot ${hi}` +
+      (n ? `, gemeten over ${n} persingen` : '') +
+      (d ? `, bijgewerkt op ${d}` : '') +
+      `. Wat jouw exemplaar waard is hangt af van de persing en de conditie — dat verschil is groter dan het bedrag zelf.`,
     noPriceLead:
       'Voor deze uitgave stellen we de prijsvork nog samen uit meerdere bronnen. De persingen hieronder staan er al wel: die bepalen uiteindelijk het verschil.',
     spreadLead: (v: string, c: number) =>
@@ -116,10 +128,12 @@ const T = {
   en: {
     h1: (a: string, t: string) => `What is ${t} by ${a} worth?`,
     metaTitle: (a: string, t: string) => `${t} – ${a}: what the record is worth | MusicScan`,
-    priceLead: (lo: string, hi: string, d: string) =>
-      `Copies of this record typically change hands for ${lo} to ${hi}. ` +
-      (d ? `Range compiled from several sources, updated ${d}. ` : '') +
-      `What your copy is worth depends on the pressing and its condition — that gap matters more than the figure itself.`,
+    priceLead: (lo: string, hi: string, med: string, n: number, d: string) =>
+      (med ? `Most copies change hands for around ${med}. ` : '') +
+      `The range runs from ${lo} to ${hi}` +
+      (n ? `, measured across ${n} pressings` : '') +
+      (d ? `, updated ${d}` : '') +
+      `. What your copy is worth depends on the pressing and its condition — that gap matters more than the figure itself.`,
     noPriceLead:
       'We are still compiling the price range for this release from several sources. The pressings below are already listed: they are what makes the difference.',
     spreadLead: (v: string, c: number) =>
@@ -163,7 +177,8 @@ export const renderValueBody = (row: ValueRow, locale: 'nl' | 'en'): string => {
   parts.push(`<h1>${esc(t.h1(row.artist, row.album_title))}</h1>`);
 
   if (lo !== null && hi !== null) {
-    parts.push(`<p>${esc(t.priceLead(money(lo, locale), money(hi, locale), dateText(row.priced_at, locale)))}</p>`);
+    const med = num(row.price_median);
+    parts.push(`<p>${esc(t.priceLead(money(lo, locale), money(hi, locale), med !== null ? money(med, locale) : '', row.price_observations || 0, dateText(row.priced_at, locale)))}</p>`);
   } else {
     parts.push(`<p>${esc(t.noPriceLead)}</p>`);
   }
@@ -237,15 +252,21 @@ export const valueDescription = (row: ValueRow, locale: 'nl' | 'en'): string => 
   const hi = num(row.price_range_max);
   const versions = versionsText(row.version_count, locale);
   if (locale === 'nl') {
+    const med = num(row.price_median);
     const head = lo !== null && hi !== null
-      ? `${row.album_title} van ${row.artist} gaat doorgaans voor ${money(lo, 'nl')} tot ${money(hi, 'nl')}.`
+      ? (med !== null
+          ? `${row.album_title} van ${row.artist} gaat meestal weg voor rond ${money(med, 'nl')}, vork ${money(lo, 'nl')} tot ${money(hi, 'nl')}.`
+          : `${row.album_title} van ${row.artist} gaat doorgaans voor ${money(lo, 'nl')} tot ${money(hi, 'nl')}.`)
       : `Wat is ${row.album_title} van ${row.artist} waard?`;
-    return `${head} ${versions ? `${versions} persingen` : 'Alle persingen'} op een rij, met catalogusnummers en conditie.`.substring(0, 158);
+    return clip(`${head} ${versions ? `${versions} persingen` : 'Alle persingen'} op een rij, met catalogusnummers en conditie.`);
   }
+  const med2 = num(row.price_median);
   const head = lo !== null && hi !== null
-    ? `${row.album_title} by ${row.artist} typically sells for ${money(lo, 'en')} to ${money(hi, 'en')}.`
+    ? (med2 !== null
+        ? `${row.album_title} by ${row.artist} usually sells for around ${money(med2, 'en')}, range ${money(lo, 'en')} to ${money(hi, 'en')}.`
+        : `${row.album_title} by ${row.artist} typically sells for ${money(lo, 'en')} to ${money(hi, 'en')}.`)
     : `What is ${row.album_title} by ${row.artist} worth?`;
-  return `${head} ${versions ? `${versions} pressings` : 'Every pressing'} listed, with catalogue numbers and condition.`.substring(0, 158);
+  return clip(`${head} ${versions ? `${versions} pressings` : 'Every pressing'} listed, with catalogue numbers and condition.`);
 };
 
 export const valueJsonLd = (row: ValueRow, locale: 'nl' | 'en'): string => {

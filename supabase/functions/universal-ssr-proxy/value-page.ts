@@ -85,6 +85,14 @@ const dateText = (iso: string | null, locale: 'nl' | 'en'): string => {
   return d.toLocaleDateString(locale === 'nl' ? 'nl-NL' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 };
 
+/** Welke hub boven dit album hangt, afgeleid uit de dragers in de data. */
+export const hubForRow = (row: ValueRow): HubSlug => {
+  const f = row.format_counts ?? {};
+  const cd = Number(f['CD'] ?? 0);
+  const vinyl = Number(f['Vinyl'] ?? 0);
+  return cd > vinyl ? 'cd' : 'lp';
+};
+
 export const valuePath = (row: ValueRow, locale: 'nl' | 'en'): string => {
   const seg = locale === 'nl' ? 'waarde' : 'value';
   return `${BASE_URL}/${seg}/${row.artist_slug}/${row.album_slug}`;
@@ -188,7 +196,11 @@ const T = {
 // Body
 // ---------------------------------------------------------------------------
 
-export const renderValueBody = (row: ValueRow, locale: 'nl' | 'en'): string => {
+export const renderValueBody = (
+  row: ValueRow,
+  locale: 'nl' | 'en',
+  siblings: Array<{ artist_slug: string; album_slug: string; artist: string; album_title: string }> = [],
+): string => {
   const t = T[locale];
   const a = esc(row.artist);
   const title = esc(row.album_title);
@@ -259,6 +271,26 @@ export const renderValueBody = (row: ValueRow, locale: 'nl' | 'en'): string => {
   parts.push('<section><h2>FAQ</h2>' + faq.map((f) => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('') + '</section>');
 
   parts.push(`<section><h2>${esc(t.ctaHead)}</h2><p>${esc(t.cta)}</p></section>`);
+
+  // Kruimelpad en zusterlinks. Zonder deze links is elke albumpagina een
+  // doodlopend eind: een crawler komt binnen en kan geen kant op.
+  if (locale === 'nl') {
+    const hub = hubForRow(row);
+    const hubLabel = hub === 'cd' ? 'Wat is je cd waard' : 'Wat is je lp waard';
+    parts.unshift(
+      `<nav aria-label="kruimelpad"><a href="${BASE_URL}/">MusicScan</a> &rsaquo; ` +
+      `<a href="${BASE_URL}/waarde/${hub}">${esc(hubLabel)}</a> &rsaquo; ` +
+      `<span>${esc(row.album_title)}</span></nav>`,
+    );
+    if (siblings.length) {
+      const items = siblings
+        .map((s) =>
+          `<li><a href="${BASE_URL}/waarde/${esc(s.artist_slug)}/${esc(s.album_slug)}">` +
+          `${esc(s.album_title)} \u2013 ${esc(s.artist)}</a></li>`)
+        .join('');
+      parts.push(`<section><h2>Andere albums</h2><ul>${items}</ul></section>`);
+    }
+  }
 
   // aria-hidden niet zetten: crawlers moeten dit juist lezen. React vervangt
   // de inhoud van #root zodra de app mount, dus de bezoeker ziet dit hooguit

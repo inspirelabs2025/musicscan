@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { isVariantSingle, isDuplicateNonCanonical } from '../_shared/thin-singles.ts';
-import { VALUE_TYPES, renderValueBody, valueDescription, valueJsonLd, valueTitle, valuePath, valueAlternates, isIndexable, HUB_SLUGS, hubTitle, hubDescription, hubPath, renderHubBody, type HubSlug, type ValueRow } from './value-page.ts';
+import { VALUE_TYPES, renderValueBody, valueDescription, valueJsonLd, valueTitle, valuePath, valueAlternates, isIndexable, HUB_SLUGS, hubTitle, hubDescription, hubPath, renderHubBody, hubForRow, type HubSlug, type ValueRow } from './value-page.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -229,6 +229,17 @@ const getMetaForContent = async (sb: any, contentType: string, slug: string): Pr
         .maybeSingle();
       if (!data) return null;
       const row = data as ValueRow;
+
+      // Zusterpagina's voor de interne links onderaan: eerst dezelfde
+      // artiest, aangevuld met andere albums die een vork hebben.
+      const { data: siblings } = await sb
+        .from('value_pages')
+        .select('artist_slug, album_slug, artist, album_title')
+        .not('price_range_min', 'is', null)
+        .neq('group_slug', row.group_slug)
+        .order('artist')
+        .limit(6);
+
       return {
         title: valueTitle(row, locale),
         description: valueDescription(row, locale),
@@ -237,7 +248,7 @@ const getMetaForContent = async (sb: any, contentType: string, slug: string): Pr
         type: 'website',
         jsonLd: valueJsonLd(row, locale),
         indexable: isIndexable(row, locale),
-        bodyHtml: renderValueBody(row, locale),
+        bodyHtml: renderValueBody(row, locale, siblings ?? []),
         alternates: valueAlternates(row),
       };
     }

@@ -2,7 +2,6 @@
 # Focus: scan your records + discover their value.
 User-agent: *
 Allow: /
-Crawl-delay: 1
 
 # Sitemap (core pages only)
 Sitemap: https://musicscans.com/sitemap.xml

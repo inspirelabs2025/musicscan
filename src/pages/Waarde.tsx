@@ -5,7 +5,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSEO } from '@/hooks/useSEO';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Camera } from 'lucide-react';
+import { ValuePageLinks } from '@/components/ValuePageLinks';
 import { INDEXABLE_VALUE_LOCALES } from '@/lib/indexable';
+import { JsonLd } from '@/components/SEO/JsonLd';
+import { SITE_URL } from '@/config/site';
 
 type Locale = 'nl' | 'en';
 
@@ -24,6 +27,7 @@ interface ValueRow {
   story_url: string | null;
   price_range_min: number | string | null;
   price_range_max: number | string | null;
+  group_slug: string;
   price_median: number | string | null;
   price_observations: number | null;
   priced_at: string | null;
@@ -179,13 +183,40 @@ const Waarde: React.FC = () => {
     );
   }
 
+  // Welke hub boven dit album hangt, afgeleid uit de dragers in de data.
+  const fc = row.format_counts ?? {};
+  const hub: 'lp' | 'cd' = Number(fc['CD'] ?? 0) > Number(fc['Vinyl'] ?? 0) ? 'cd' : 'lp';
+  const hubLabel = hub === 'cd' ? 'Wat is je cd waard' : 'Wat is je lp waard';
+
   const ex = row.example_pressing_by_locale?.[locale] || row.example_pressing_by_locale?.en;
   const fp = row.first_pressing;
   const fpUsable = !!fp?.catno && !['none', 'None', '-', ''].includes(String(fp.catno));
   const rows = row.pressing_rows || [];
 
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'MusicScan', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: hubLabel, item: `${SITE_URL}/waarde/${hub}` },
+      { '@type': 'ListItem', position: 3, name: row.album_title },
+    ],
+  };
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
+      {locale === 'nl' ? <JsonLd data={breadcrumb} /> : null}
+
+      {locale === 'nl' ? (
+        <nav aria-label="Kruimelpad" className="mb-4 text-sm text-muted-foreground">
+          <Link to="/" className="hover:underline">MusicScan</Link>
+          <span className="mx-1.5">&rsaquo;</span>
+          <Link to={`/waarde/${hub}`} className="hover:underline">{hubLabel}</Link>
+          <span className="mx-1.5">&rsaquo;</span>
+          <span className="text-foreground">{row.album_title}</span>
+        </nav>
+      ) : null}
+
       <h1 className="text-3xl font-bold leading-tight text-balance">{t.h1(row.artist, row.album_title)}</h1>
 
       {hasPrice ? (
@@ -283,6 +314,12 @@ const Waarde: React.FC = () => {
         <p className="mt-8">
           <a href={row.story_url} rel="noopener" className="text-primary underline">{t.story}</a>
         </p>
+      ) : null}
+
+      {locale === 'nl' ? (
+        <Section title="Andere albums">
+          <ValuePageLinks limit={6} />
+        </Section>
       ) : null}
 
       <Section title={t.ctaHead}>

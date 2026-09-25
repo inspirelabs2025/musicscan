@@ -1,0 +1,13 @@
+name = "musicscan-edge"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+# De worker draait op de hele zone en laat alles wat hij niet herkent door
+# naar de origin (Lovable-hosting, 185.158.133.1).
+[[routes]]
+pattern = "musicscans.com/*"
+zone_name = "musicscans.com"
+
+[[routes]]
+pattern = "www.musicscans.com/*"
+zone_name = "musicscans.com"

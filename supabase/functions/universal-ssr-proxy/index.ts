@@ -97,6 +97,8 @@ interface MetaData {
   type: string;
   jsonLd?: string;
   noindex?: boolean;
+  /** Alleen true voor contenttypes die in de index horen (waardepagina's). */
+  indexable?: boolean;
 }
 
 const injectMetaTags = (html: string, meta: MetaData): string => {
@@ -146,9 +148,12 @@ const injectMetaTags = (html: string, meta: MetaData): string => {
     result = result.replace('</head>', `<script type="application/ld+json">${meta.jsonLd}</script>\n</head>`);
   }
 
-  // Robots meta: the proxy only serves the story/catalog archive, which is
-  // intentionally kept out of the index (focus = scan + value pages).
-  const robotsContent = 'noindex, follow';
+  // Robots meta: het verhalen- en catalogusarchief blijft bewust uit de index;
+  // de waardepagina's horen er juist wel in (focus = scan + value pages).
+  // Expliciet opt-in: alleen een contenttype dat zelf indexable:true zet komt
+  // in de index. Het bestaande meta.noindex blijft doen wat het deed (het is
+  // bij singles een berekende waarde) en wordt hier niet voor hergebruikt.
+  const robotsContent = meta.indexable === true ? 'index, follow' : 'noindex, follow';
   if (/<meta\s+name="robots"[^>]*>/i.test(result)) {
     result = result.replace(/<meta\s+name="robots"[^>]*>/i, `<meta name="robots" content="${robotsContent}">`);
   } else {

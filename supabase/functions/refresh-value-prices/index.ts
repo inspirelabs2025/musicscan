@@ -94,10 +94,16 @@ Deno.serve(async (req) => {
   try {
     // Oudste prijs eerst; rijen zonder prijs hebben voorrang.
     const albums = await rest(
-      `value_pages?select=group_slug,artist_slug,album_slug,priced_at&order=priced_at.asc.nullsfirst&limit=${limit}`,
+      `value_pages?select=group_slug,artist_slug,album_slug,priced_at,price_range_min,price_range_max` +
+        `&order=priced_at.asc.nullsfirst&limit=${limit}`,
     );
 
-    for (const album of albums as Array<{ group_slug: string; priced_at: string | null }>) {
+    for (const album of albums as Array<{
+      group_slug: string;
+      priced_at: string | null;
+      price_range_min: number | string | null;
+      price_range_max: number | string | null;
+    }>) {
       if (Date.now() - started > DEADLINE_MS) {
         skipped.push({ group_slug: album.group_slug, reason: 'deadline' });
         continue;
@@ -144,6 +150,13 @@ Deno.serve(async (req) => {
         at,
       }];
 
+      // priced_at schuift elke run op, price_changed_at alleen als de vork
+      // echt beweegt. Een lastmod die opschuift zonder inhoudelijke wijziging
+      // leert Google die lastmod te negeren.
+      const prevLow = Number(album.price_range_min);
+      const prevHigh = Number(album.price_range_max);
+      const changed = prevLow !== low || prevHigh !== high;
+
       await rest(
         `releases?group_slug=eq.${encodeURIComponent(album.group_slug)}&enriched_at=not.is.null`,
         {
@@ -155,12 +168,13 @@ Deno.serve(async (req) => {
             price_sources: sources,
             priced_at: at,
             status: 'priced',
+            ...(changed ? { price_changed_at: at } : {}),
           }),
         },
       );
 
-      done.push({ group_slug: album.group_slug, low, high, median: sources[0].median, n: prices.length });
-      console.log(`${album.group_slug}: EUR ${low}-${high}, mediaan ${sources[0].median}, n=${prices.length}`);
+      done.push({ group_slug: album.group_slug, low, high, median: sources[0].median, n: prices.length, changed });
+      console.log(`${album.group_slug}: EUR ${low}-${high}, mediaan ${sources[0].median}, n=${prices.length}${changed ? ' (vork gewijzigd)' : ''}`);
     }
 
     return new Response(

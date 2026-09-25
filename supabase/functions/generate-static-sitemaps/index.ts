@@ -34,12 +34,21 @@ ${urls}
  * Nederlandse variant zolang dat de enige geïndexeerde taal is.
  */
 function generateValueSitemapXml(
-  rows: Array<{ artist_slug: string; album_slug: string; priced_at: string | null }>,
+  rows: Array<{
+    artist_slug: string;
+    album_slug: string;
+    priced_at: string | null;
+    price_changed_at: string | null;
+  }>,
 ): string {
   const urls = rows
-    .map(({ artist_slug, album_slug, priced_at }) => {
+    .map(({ artist_slug, album_slug, priced_at, price_changed_at }) => {
       const loc = `${BASE_URL}/waarde/${artist_slug}/${album_slug}`;
-      const lastmod = priced_at ? `\n    <lastmod>${priced_at.slice(0, 10)}</lastmod>` : '';
+      // lastmod is wanneer de vork veranderde, niet wanneer we keken. Een
+      // lastmod die opschuift zonder inhoudelijke wijziging leert Google hem
+      // te negeren.
+      const changed = price_changed_at ?? priced_at;
+      const lastmod = changed ? `\n    <lastmod>${changed.slice(0, 10)}</lastmod>` : '';
       return `  <url>
     <loc>${loc}</loc>${lastmod}
     <changefreq>weekly</changefreq>
@@ -84,7 +93,7 @@ Deno.serve(async (req) => {
     // Waardepagina's met een vork ophalen; zonder vork staan ze op noindex.
     const { data: valueRows, error: valueError } = await supabase
       .from('value_pages')
-      .select('artist_slug, album_slug, priced_at')
+      .select('artist_slug, album_slug, priced_at, price_changed_at')
       .not('price_range_min', 'is', null)
       .not('price_range_max', 'is', null)
       .order('artist_slug');

@@ -12,6 +12,14 @@
 
 const BASE_URL = 'https://musicscans.com';
 
+/**
+ * Welke taal in de index mag. Bewust één taal bij de start: twee URL's per
+ * album verdubbelt het aantal dunne pagina's op een domein dat zich nog moet
+ * bewijzen. De Engelse pagina blijft bereikbaar en crawlbaar, maar staat op
+ * noindex tot de Nederlandse lichting aantoonbaar gecrawld wordt.
+ */
+export const INDEXABLE_VALUE_LOCALES: ReadonlyArray<'nl' | 'en'> = ['nl'];
+
 /** URL-segment per taal. Alleen talen waarvoor de teksten bestaan. */
 export const VALUE_TYPES: Record<string, 'nl' | 'en'> = {
   waarde: 'nl',
@@ -82,16 +90,24 @@ export const valuePath = (row: ValueRow, locale: 'nl' | 'en'): string => {
   return `${BASE_URL}/${seg}/${row.artist_slug}/${row.album_slug}`;
 };
 
-/** Wederzijdse hreflang: nl en en wijzen naar elkaar, en-versie is x-default. */
-export const valueAlternates = (row: ValueRow) => [
-  { hreflang: 'nl', href: valuePath(row, 'nl') },
-  { hreflang: 'en', href: valuePath(row, 'en') },
-  { hreflang: 'x-default', href: valuePath(row, 'en') },
-];
+/**
+ * Wederzijdse hreflang, maar alleen zodra er meer dan één taal geïndexeerd
+ * wordt. Naar een noindex-variant verwijzen is een tegenstrijdig signaal.
+ */
+export const valueAlternates = (row: ValueRow) =>
+  INDEXABLE_VALUE_LOCALES.length < 2
+    ? undefined
+    : [
+        { hreflang: 'nl', href: valuePath(row, 'nl') },
+        { hreflang: 'en', href: valuePath(row, 'en') },
+        { hreflang: 'x-default', href: valuePath(row, 'en') },
+      ];
 
-/** Geen vork, geen antwoord, dus ook niet in de index. */
-export const isIndexable = (row: ValueRow): boolean =>
-  num(row.price_range_min) !== null && num(row.price_range_max) !== null;
+/** Geen vork, geen antwoord, dus ook niet in de index. Taal beslist mee. */
+export const isIndexable = (row: ValueRow, locale: 'nl' | 'en'): boolean =>
+  INDEXABLE_VALUE_LOCALES.includes(locale) &&
+  num(row.price_range_min) !== null &&
+  num(row.price_range_max) !== null;
 
 // ---------------------------------------------------------------------------
 // Teksten
@@ -304,3 +320,57 @@ export const valueJsonLd = (row: ValueRow, locale: 'nl' | 'en'): string => {
 
 export const valueTitle = (row: ValueRow, locale: 'nl' | 'en'): string =>
   T[locale].metaTitle(row.artist, row.album_title);
+
+// ---------------------------------------------------------------------------
+// Hubs: /waarde/lp en /waarde/cd
+// ---------------------------------------------------------------------------
+
+/**
+ * De hubs zijn de gecrawlde ingang naar de albumpagina's. De volledige tekst
+ * staat in de React-pagina; hier injecteren we de kop, een korte inleiding en
+ * vooral de linklijst, want dat is wat een crawler zonder JavaScript nodig
+ * heeft om verder te komen.
+ */
+export const HUB_SLUGS = ['lp', 'cd'] as const;
+export type HubSlug = (typeof HUB_SLUGS)[number];
+
+const HUB = {
+  lp: {
+    title: 'Waarde van je lp bepalen | MusicScan',
+    description:
+      'Wat is je lp waard? De prijs hangt af van de persing en de conditie, niet van het album. Zo lees je het catalogusnummer en de matrixcode van je plaat.',
+    h1: 'Wat is je lp waard?',
+    intro:
+      'Van een bekend album bestaan al snel honderden uitgaven, en tussen de goedkoopste en de duurste zit vaak een factor tien. Het catalogusnummer op het label en de matrixcode in de uitloopgroef bepalen welke je hebt.',
+  },
+  cd: {
+    title: 'Waarde van je cd bepalen | MusicScan',
+    description:
+      'Wat is je cd waard? Oplage, persland en de matrixcode in de binnenring bepalen de prijs. Zo herken je welke uitgave je in handen hebt.',
+    h1: 'Wat is je cd waard?',
+    intro:
+      'De meeste cd\u2019s gaan voor een paar euro van eigenaar, maar de uitzonderingen zijn scherp: vroege West-Duitse persingen, Japanse uitgaven met obi en korte oplagen liggen daar ver boven.',
+  },
+} as const;
+
+export const hubTitle = (slug: HubSlug) => HUB[slug].title;
+export const hubDescription = (slug: HubSlug) => HUB[slug].description;
+export const hubPath = (slug: HubSlug) => `${BASE_URL}/waarde/${slug}`;
+
+export const renderHubBody = (
+  slug: HubSlug,
+  rows: Array<{ artist_slug: string; album_slug: string; artist: string; album_title: string; price_median: number | string | null }>,
+): string => {
+  const h = HUB[slug];
+  const items = rows
+    .map((r) => {
+      const med = num(r.price_median);
+      const price = med !== null ? ` \u2014 meestal rond ${money(med, 'nl')}` : '';
+      return `<li><a href="${BASE_URL}/waarde/${esc(r.artist_slug)}/${esc(r.album_slug)}">` +
+        `${esc(r.album_title)} \u2013 ${esc(r.artist)}</a>${esc(price)}</li>`;
+    })
+    .join('');
+  return `<div data-ssr="waarde-hub"><h1>${esc(h.h1)}</h1><p>${esc(h.intro)}</p>` +
+    (items ? `<h2>Albums waarvan de waarde al is uitgezocht</h2><ul>${items}</ul>` : '') +
+    `</div>`;
+};

@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSEO } from '@/hooks/useSEO';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Camera } from 'lucide-react';
+import { INDEXABLE_VALUE_LOCALES } from '@/lib/indexable';
 
 type Locale = 'nl' | 'en';
 
@@ -153,8 +154,10 @@ const Waarde: React.FC = () => {
       : undefined,
     image: row?.artwork_url || undefined,
     // Geen vork betekent geen antwoord op de vraag in de H1; dan hoort de
-    // pagina ook niet in de index. Dit spiegelt isIndexable() in de SSR-proxy.
-    noindex: !hasPrice,
+    // pagina niet in de index. En zolang alleen Nederlands geïndexeerd wordt,
+    // staat de Engelse variant er ook buiten. Dit spiegelt isIndexable() in
+    // de SSR-proxy; die twee mogen nooit uiteenlopen.
+    noindex: !hasPrice || !INDEXABLE_VALUE_LOCALES.includes(locale),
   });
 
   if (isLoading) {

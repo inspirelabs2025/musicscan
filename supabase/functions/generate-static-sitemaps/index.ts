@@ -28,38 +28,28 @@ ${urls}
 }
 
 /**
- * Waardepagina's. Alleen rijen met een prijsvork: zonder vork zet de pagina
- * zelf noindex, en een noindex-URL hoort niet in een sitemap.
- * Nederlands en Engels verwijzen via hreflang naar elkaar.
+ * Waardepagina's. Twee filters, allebei bewust:
+ * alleen rijen met een prijsvork (zonder vork zet de pagina zichzelf op
+ * noindex, en een noindex-URL hoort niet in een sitemap), en alleen de
+ * Nederlandse variant zolang dat de enige geïndexeerde taal is.
  */
 function generateValueSitemapXml(
   rows: Array<{ artist_slug: string; album_slug: string; priced_at: string | null }>,
 ): string {
   const urls = rows
     .map(({ artist_slug, album_slug, priced_at }) => {
-      const nl = `${BASE_URL}/waarde/${artist_slug}/${album_slug}`;
-      const en = `${BASE_URL}/value/${artist_slug}/${album_slug}`;
+      const loc = `${BASE_URL}/waarde/${artist_slug}/${album_slug}`;
       const lastmod = priced_at ? `\n    <lastmod>${priced_at.slice(0, 10)}</lastmod>` : '';
-      const alts = [
-        `    <xhtml:link rel="alternate" hreflang="nl" href="${nl}"/>`,
-        `    <xhtml:link rel="alternate" hreflang="en" href="${en}"/>`,
-        `    <xhtml:link rel="alternate" hreflang="x-default" href="${en}"/>`,
-      ].join('\n');
-      return [nl, en]
-        .map(
-          (loc) => `  <url>
+      return `  <url>
     <loc>${loc}</loc>${lastmod}
-${alts}
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-  </url>`,
-        )
-        .join('\n');
+  </url>`;
     })
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls}
 </urlset>`;
 }

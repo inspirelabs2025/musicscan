@@ -29,6 +29,13 @@ export const LOCALIZED_INDEXABLE_PATHS = [
   '/fr/valeur-de-vos-disques',
 ] as const;
 
+/**
+ * Hubs boven de waardepagina's. Deze zijn bewust wél in de statische sitemap
+ * opgenomen: ze zijn de enige gecrawlde ingang naar de albumpagina's, en
+ * zonder interne links komt Google daar niet.
+ */
+export const VALUE_HUB_PATHS = ['/waarde/lp', '/waarde/cd'] as const;
+
 /** Trust pages (single language, self-canonical, no hreflang). */
 export const TRUST_INDEXABLE_PATHS = ['/privacy', '/terms'] as const;
 
@@ -40,6 +47,14 @@ export const TRUST_INDEXABLE_PATHS = ['/privacy', '/terms'] as const;
  */
 const VALUE_PATH_RE = /^\/(?:(?:en|de|fr)\/)?(?:waarde|value|wert|valeur)\/[^/]+\/[^/]+$/;
 
+/**
+ * Welke taal van de waardepagina's in de index mag. Bewust één taal bij de
+ * start: twee URL's per album verdubbelt het aantal dunne pagina's op een
+ * domein dat zich nog moet bewijzen. Zet 'en' erbij zodra de Nederlandse
+ * lichting aantoonbaar gecrawld wordt.
+ */
+export const INDEXABLE_VALUE_LOCALES: readonly string[] = ['nl'];
+
 export function isValuePath(pathname: string): boolean {
   return VALUE_PATH_RE.test(normalizePath(pathname));
 }
@@ -49,6 +64,7 @@ export const ALIAS_INDEXABLE_PATHS = ['/scanner'] as const;
 
 export const INDEXABLE_PATHS = [
   ...LOCALIZED_INDEXABLE_PATHS,
+  ...VALUE_HUB_PATHS,
   ...TRUST_INDEXABLE_PATHS,
   ...ALIAS_INDEXABLE_PATHS,
 ] as const;
@@ -56,6 +72,7 @@ export const INDEXABLE_PATHS = [
 /** Only these go into sitemap-static.xml (aliases are excluded). */
 export const SITEMAP_PATHS = [
   ...LOCALIZED_INDEXABLE_PATHS,
+  ...VALUE_HUB_PATHS,
   ...TRUST_INDEXABLE_PATHS,
 ] as const;
 

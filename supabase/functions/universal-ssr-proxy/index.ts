@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { isVariantSingle, isDuplicateNonCanonical } from '../_shared/thin-singles.ts';
-import { VALUE_TYPES, renderValueBody, valueDescription, valueJsonLd, valueTitle, valuePath, valueAlternates, isIndexable, type ValueRow } from './value-page.ts';
+import { VALUE_TYPES, renderValueBody, valueDescription, valueJsonLd, valueTitle, valuePath, valueAlternates, isIndexable, HUB_SLUGS, hubTitle, hubDescription, hubPath, renderHubBody, type HubSlug, type ValueRow } from './value-page.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -200,6 +200,27 @@ const getMetaForContent = async (sb: any, contentType: string, slug: string): Pr
     case 'value': {
       const locale = VALUE_TYPES[contentType];
       const [artistSlug, albumSlug] = slug.split('/');
+
+      // /waarde/lp en /waarde/cd zijn hubs, geen albums.
+      if (contentType === 'waarde' && !albumSlug && (HUB_SLUGS as readonly string[]).includes(artistSlug)) {
+        const hub = artistSlug as HubSlug;
+        const { data: links } = await sb
+          .from('value_pages')
+          .select('artist_slug, album_slug, artist, album_title, price_median')
+          .not('price_range_min', 'is', null)
+          .order('artist')
+          .limit(60);
+        return {
+          title: hubTitle(hub),
+          description: hubDescription(hub),
+          image: LOGO_URL,
+          url: hubPath(hub),
+          type: 'website',
+          indexable: true,
+          bodyHtml: renderHubBody(hub, links ?? []),
+        };
+      }
+
       if (!artistSlug || !albumSlug) return null;
       const { data } = await sb
         .from('value_pages')
@@ -215,7 +236,7 @@ const getMetaForContent = async (sb: any, contentType: string, slug: string): Pr
         url: valuePath(row, locale),
         type: 'website',
         jsonLd: valueJsonLd(row, locale),
-        indexable: isIndexable(row),
+        indexable: isIndexable(row, locale),
         bodyHtml: renderValueBody(row, locale),
         alternates: valueAlternates(row),
       };

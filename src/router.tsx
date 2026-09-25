@@ -71,6 +71,7 @@ const Welkom = lazyWithRetry(() => import('./pages/Welkom'));
 const Dashboard = lazyWithRetry(() => import('./pages/Dashboard'));
 const NotFound = lazyWithRetry(() => import('./pages/NotFound'));
 const Waarde = lazyWithRetry(() => import('./pages/Waarde'));
+const WaardeHub = lazyWithRetry(() => import('./pages/WaardeHub'));
 const Settings = lazyWithRetry(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
 // Shop verwijderd
 const Artists = lazyWithRetry(() => import('./pages/Artists'));
@@ -282,6 +283,11 @@ export const router = createBrowserRouter([
       { path: 'singles/:slug', element: wrap(SingleDetail) },
       { path: 'muziek-verhaal/:slug', element: wrap(MuziekVerhaal) },
       { path: 'plaat-verhaal/:slug', element: wrap(PlaatVerhaal) },
+
+      // Hubs boven de waardepagina's. Dit zijn de gecrawlde ingangen: zonder
+      // interne links vanaf hier blijven de albumpagina's wezen.
+      { path: 'waarde/lp', element: wrap(WaardeHub) },
+      { path: 'waarde/cd', element: wrap(WaardeHub) },
 
       // Waardepagina's per album. Nederlands op de root, Engels onder /en.
       // Duits en Frans volgen zodra de teksten er zijn.

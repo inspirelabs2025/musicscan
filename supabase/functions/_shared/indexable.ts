@@ -23,6 +23,9 @@ export const LOCALIZED_INDEXABLE_PATHS = [
 ] as const;
 
 /** Trust pages (single language, self-canonical, no hreflang). */
+/** Hubs boven de waardepagina's; de enige gecrawlde ingang naar de albums. */
+export const VALUE_HUB_PATHS = ['/waarde/lp', '/waarde/cd'] as const;
+
 export const TRUST_INDEXABLE_PATHS = ['/privacy', '/terms'] as const;
 
 /** Alias that stays crawlable but canonicalizes to the NL scan page. */
@@ -30,6 +33,7 @@ export const ALIAS_INDEXABLE_PATHS = ['/scanner'] as const;
 
 export const INDEXABLE_PATHS = [
   ...LOCALIZED_INDEXABLE_PATHS,
+  ...VALUE_HUB_PATHS,
   ...TRUST_INDEXABLE_PATHS,
   ...ALIAS_INDEXABLE_PATHS,
 ] as const;
@@ -37,6 +41,7 @@ export const INDEXABLE_PATHS = [
 /** Only these go into sitemap-static.xml (aliases are excluded). */
 export const SITEMAP_PATHS = [
   ...LOCALIZED_INDEXABLE_PATHS,
+  ...VALUE_HUB_PATHS,
   ...TRUST_INDEXABLE_PATHS,
 ] as const;
 

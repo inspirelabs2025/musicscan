@@ -4,6 +4,7 @@ import { useSEO } from '@/hooks/useSEO';
 import { JsonLd } from '@/components/SEO/JsonLd';
 import { Button } from '@/components/ui/button';
 import { AppLinks } from '@/components/core/AppLinks';
+import { ValuePageLinks } from '@/components/ValuePageLinks';
 import { SITE_URL, corePath, localeFromPath, matchCorePath } from '@/config/site';
 import { VALUE_COPY, CORE_SEO } from '@/i18n/coreSeo';
 
@@ -73,6 +74,22 @@ export default function ValueLanding() {
             );
           })}
         </section>
+
+        {/* De enige gecrawlde pagina die naar de waardepagina's kan wijzen.
+            Alleen nl, want dat is voorlopig de enige geindexeerde taal. */}
+        {locale === 'nl' ? (
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold mb-4">Wat is jouw drager waard?</h2>
+            <p className="text-muted-foreground mb-4">
+              De prijs hangt af van de persing en de conditie, niet van het album.{' '}
+              <Link to="/waarde/lp" className="text-primary underline">Bij lp&apos;s</Link> bepalen
+              catalogusnummer en matrixcode het verschil,{' '}
+              <Link to="/waarde/cd" className="text-primary underline">bij cd&apos;s</Link> oplage en
+              persland.
+            </p>
+            <ValuePageLinks limit={12} />
+          </section>
+        ) : null}
 
         <section className="mb-16">
           <AppLinks locale={locale} />

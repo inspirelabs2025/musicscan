@@ -27,7 +27,6 @@ interface ValueRow {
   story_url: string | null;
   price_range_min: number | string | null;
   price_range_max: number | string | null;
-  group_slug: string;
   price_median: number | string | null;
   price_observations: number | null;
   priced_at: string | null;
@@ -47,6 +46,19 @@ const money = (v: number, loc: Locale) =>
   loc === 'nl'
     ? '€' + v.toFixed(2).replace('.', ',').replace(/,00$/, ',–')
     : '€' + v.toFixed(2).replace(/\.00$/, '');
+
+/**
+ * Knipt een meta description af op een woordgrens. Google toont de eerste ~155
+ * tekens; een afkapping midden in een woord leest als een fout en kost klikken.
+ * Spiegelt clip() in de SSR-proxy.
+ */
+const clip = (text: string, max = 158): string => {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  const space = cut.lastIndexOf(' ');
+  const body = space > max * 0.6 ? cut.slice(0, space) : cut;
+  return body.replace(/[\s,;:.–—-]+$/, '') + '\u2026';
+};
 
 const dateText = (iso: string | null, loc: Locale) => {
   if (!iso) return '';
@@ -83,6 +95,20 @@ const COPY = {
     ctaBtn: 'Start scannen',
     notFound: 'Deze waardepagina bestaat nog niet.',
     back: 'Terug naar de homepage',
+    faq: (album: string, versions: string) => [
+      {
+        q: `Hoeveel verschillende persingen van ${album} bestaan er?`,
+        a: `${versions} uitgaven staan geregistreerd, van de eerste persing tot de heruitgaven.`,
+      },
+      {
+        q: 'Waarom loopt de waarde zo uiteen?',
+        a: 'Land van uitgave, persingsjaar, label en conditie bepalen samen de prijs. Een eerste persing in nette staat kan een veelvoud opbrengen van een latere heruitgave.',
+      },
+      {
+        q: 'Hoe weet ik welke persing ik heb?',
+        a: 'Kijk naar het catalogusnummer op het label of de rug van de hoes en vergelijk dat met de tabel hierboven.',
+      },
+    ],
   },
   en: {
     h1: (a: string, t: string) => `What is ${t} by ${a} worth?`,
@@ -110,6 +136,20 @@ const COPY = {
     ctaBtn: 'Start scanning',
     notFound: 'This value page does not exist yet.',
     back: 'Back to the homepage',
+    faq: (album: string, versions: string) => [
+      {
+        q: `How many pressings of ${album} exist?`,
+        a: `${versions} editions are on record, from the first pressing through the reissues.`,
+      },
+      {
+        q: 'Why does the value vary so much?',
+        a: 'Country of release, pressing year, label and condition together set the price. A first pressing in clean condition can fetch several times what a later reissue does.',
+      },
+      {
+        q: 'How do I tell which pressing I have?',
+        a: 'Check the catalogue number on the label or the spine of the sleeve and compare it with the table above.',
+      },
+    ],
   },
 } as const;
 
@@ -153,8 +193,8 @@ const Waarde: React.FC = () => {
       : undefined,
     description: row
       ? hasPrice
-        ? t.lead(money(lo!, locale), money(hi!, locale)).slice(0, 158)
-        : t.h1(row.artist, row.album_title).slice(0, 158)
+        ? clip(t.lead(money(lo!, locale), money(hi!, locale)))
+        : clip(t.h1(row.artist, row.album_title))
       : undefined,
     image: row?.artwork_url || undefined,
     // Geen vork betekent geen antwoord op de vraag in de H1; dan hoort de
@@ -203,9 +243,33 @@ const Waarde: React.FC = () => {
     ],
   };
 
+  // Dezelfde drie blokken als de SSR-proxy uitlevert. Zolang die proxy niet
+  // op de apex draait, is dit de enige plek waar Google ze te zien krijgt.
+  const canonical = `${SITE_URL}/waarde/${row.artist_slug}/${row.album_slug}`;
+  const musicAlbum = {
+    '@context': 'https://schema.org',
+    '@type': 'MusicAlbum',
+    name: row.album_title,
+    byArtist: { '@type': 'MusicGroup', name: row.artist },
+    url: canonical,
+    ...(row.artwork_url ? { image: row.artwork_url } : {}),
+    ...(fp?.year ? { datePublished: String(fp.year) } : {}),
+  };
+  const faqPage = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: t.faq(row.album_title, versions || '\u2014').map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  };
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       {locale === 'nl' ? <JsonLd data={breadcrumb} /> : null}
+      {locale === 'nl' ? <JsonLd data={musicAlbum} /> : null}
+      {locale === 'nl' ? <JsonLd data={faqPage} /> : null}
 
       {locale === 'nl' ? (
         <nav aria-label="Kruimelpad" className="mb-4 text-sm text-muted-foreground">

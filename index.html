@@ -18,12 +18,15 @@
     <!-- Title & description -->
     <title>Scan je platen en ontdek de waarde | MusicScan</title>
     <meta name="description" content="Maak een foto van je LP, vinyl of CD en weet binnen 3-6 seconden welke plaat het is en wat hij waard is. Gratis proberen in de app of op het web." />
-    <link rel="canonical" href="https://musicscans.com/" />
-    <link rel="alternate" hreflang="nl" href="https://musicscans.com/" />
-    <link rel="alternate" hreflang="en" href="https://musicscans.com/en" />
-    <link rel="alternate" hreflang="de" href="https://musicscans.com/de" />
-    <link rel="alternate" hreflang="fr" href="https://musicscans.com/fr" />
-    <link rel="alternate" hreflang="x-default" href="https://musicscans.com/" />
+    <!--
+      Geen canonical en geen hreflang in de schil. Deze index.html wordt voor
+      elke route uitgeleverd, dus een vaste canonical naar de homepage zou op
+      25 URL's het signaal "dit is de homepage" geven aan elke crawler die geen
+      JavaScript uitvoert. GlobalCanonical zet de juiste self-referencing
+      canonical en robots-meta zodra de app draait; liever geen signaal dan een
+      verkeerd signaal. De hreflang-regels wezen bovendien naar /en /de /fr,
+      terwijl alleen Nederlands in de index hoort.
+    -->
     <!-- Open Graph -->
     <meta property="og:title" content="Scan je platen en ontdek de waarde | MusicScan" />
     <meta property="og:description" content="Foto maken, plaat herkennen, waarde zien. In 3-6 seconden." />

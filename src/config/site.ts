@@ -6,7 +6,7 @@
  * Change the domain here and everywhere in the frontend follows.
  */
 
-import { isIndexablePath as isAllowlistedPath } from '@/lib/indexable';
+import { ACTIVE_LOCALES, isIndexablePath as isAllowlistedPath } from '@/lib/indexable';
 
 export const SITE_URL = 'https://musicscans.com';
 export const SITE_NAME = 'MusicScan';
@@ -102,10 +102,18 @@ export function canonicalPathFor(pathname: string): string {
 export function hreflangAlternates(pathname: string): Array<{ hreflang: string; href: string }> {
   const match = matchCorePath(canonicalPathFor(pathname));
   if (!match) return [];
-  const alternates: Array<{ hreflang: string; href: string }> = LOCALES.map((locale) => ({
-    hreflang: locale as string,
-    href: `${SITE_URL}${corePath(match.key, locale)}`.replace(/\/$/, '') || SITE_URL,
-  }));
+  // Hreflang mag alleen naar indexeerbare URL's wijzen. Zolang alleen
+  // Nederlands in de index staat, zou een set van vier alternates Google naar
+  // drie noindex-pagina's sturen — precies de URL's die nu in Search Console
+  // op "gevonden, niet geindexeerd" staan. Bij een enkele actieve taal heeft
+  // hreflang geen functie, dus laten we het weg.
+  if (ACTIVE_LOCALES.length < 2) return [];
+  const alternates: Array<{ hreflang: string; href: string }> = (LOCALES as readonly string[])
+    .filter((locale) => ACTIVE_LOCALES.includes(locale))
+    .map((locale) => ({
+      hreflang: locale as string,
+      href: `${SITE_URL}${corePath(match.key, locale as Locale)}`.replace(/\/$/, '') || SITE_URL,
+    }));
   alternates.push({
     hreflang: 'x-default',
     href: `${SITE_URL}${corePath(match.key, DEFAULT_LOCALE)}`.replace(/\/$/, '') || SITE_URL,

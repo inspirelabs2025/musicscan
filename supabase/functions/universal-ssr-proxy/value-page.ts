@@ -85,6 +85,70 @@ const dateText = (iso: string | null, locale: 'nl' | 'en'): string => {
   return d.toLocaleDateString(locale === 'nl' ? 'nl-NL' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 };
 
+/**
+ * De mediaan op een getal dat je hardop zou zeggen. "Meestal rond €8,97"
+ * suggereert een precisie die een mediaan over vijftien vraagprijzen niet
+ * heeft, en botst met de vork die al in ronde stappen staat. De stap groeit
+ * mee met het bedrag; daarna terug binnen de vork als afronding hem eruit duwt.
+ */
+export const roundMedian = (med: number, lo: number | null, hi: number | null): number => {
+  const step = med < 20 ? 1 : med < 100 ? 5 : med < 500 ? 10 : 25;
+  let r = Math.round(med / step) * step;
+  if (lo !== null && r < lo) r = lo;
+  if (hi !== null && r > hi) r = hi;
+  return r;
+};
+
+/**
+ * Discogs zet "none" als er geen catalogusnummer is, soms als een van
+ * meerdere ("88985415681, none"). Die delen eruit; blijft er niets over, dan
+ * is er geen nummer om te tonen.
+ */
+export const cleanCatno = (c: unknown): string | null => {
+  const parts = String(c ?? '')
+    .split(',')
+    .map((x) => x.trim())
+    .filter((x) => x && !/^(none|n\/a|-)$/i.test(x));
+  return parts.length ? parts.join(', ') : null;
+};
+export const usableCatno = (c: unknown): boolean => cleanCatno(c) !== null;
+
+/** Voorbeeldpersing voor deze taal, anders de Engelse, maar nooit een lege. */
+export const examplePressing = (row: Pick<ValueRow, 'example_pressing_by_locale'>, locale: 'nl' | 'en') => {
+  const all = row.example_pressing_by_locale ?? {};
+  for (const key of [locale, 'en']) {
+    const ex = all[key];
+    const catno = cleanCatno(ex?.catno);
+    if (ex && catno) return { ...ex, catno };
+  }
+  return null;
+};
+
+type LinkRow = { artist_slug: string; album_slug: string; artist: string; album_title: string };
+
+/** Vaste volgorde voor alle linklijsten, zodat React en prerender gelijk lopen. */
+export const compareAlbums = (a: LinkRow, b: LinkRow): number =>
+  a.artist.localeCompare(b.artist, 'nl', { sensitivity: 'base' }) ||
+  a.album_title.localeCompare(b.album_title, 'nl', { sensitivity: 'base' });
+
+/**
+ * Zusterlinks: de volgende n albums in een ronde volgorde, beginnend na het
+ * huidige. Elke albumpagina wijst zo naar een ander rijtje, en elk album
+ * krijgt precies n inkomende links. Met een vast "eerste zes" kregen zes
+ * albums er achttien en de rest nul.
+ */
+export const pickSiblings = <T extends LinkRow>(all: T[], current: { artist_slug: string; album_slug: string } | null, n: number): T[] => {
+  const sorted = [...all].sort(compareAlbums);
+  if (!current) return sorted.slice(0, n);
+  const i = sorted.findIndex((r) => r.artist_slug === current.artist_slug && r.album_slug === current.album_slug);
+  if (i < 0) return sorted.slice(0, n);
+  const out: T[] = [];
+  for (let k = 1; k < sorted.length && out.length < n; k += 1) out.push(sorted[(i + k) % sorted.length]);
+  return out;
+};
+
+const capFirst = (t: string): string => (t ? t.charAt(0).toUpperCase() + t.slice(1) : t);
+
 /** Welke hub boven dit album hangt, afgeleid uit de dragers in de data. */
 export const hubForRow = (row: ValueRow): HubSlug => {
   const f = row.format_counts ?? {};
@@ -213,7 +277,8 @@ export const renderValueBody = (
 
   if (lo !== null && hi !== null) {
     const med = num(row.price_median);
-    parts.push(`<p>${esc(t.priceLead(money(lo, locale), money(hi, locale), med !== null ? money(med, locale) : '', row.price_observations || 0, dateText(row.priced_at, locale)))}</p>`);
+    const medText = med !== null ? money(roundMedian(med, lo, hi), locale) : '';
+    parts.push(`<p>${esc(t.priceLead(money(lo, locale), money(hi, locale), medText, row.price_observations || 0, dateText(row.priced_at, locale)))}</p>`);
   } else {
     parts.push(`<p>${esc(t.noPriceLead)}</p>`);
   }
@@ -222,7 +287,7 @@ export const renderValueBody = (
     parts.push(`<p>${esc(t.spreadLead(versions, row.country_count))}</p>`);
   }
 
-  const ex = row.example_pressing_by_locale?.[locale] || row.example_pressing_by_locale?.en;
+  const ex = examplePressing(row, locale);
   if (ex?.catno) {
     parts.push(
       `<section><h2>${esc(t.exampleHead)}</h2><p>${esc(t.exampleWhy)}: ` +
@@ -234,9 +299,9 @@ export const renderValueBody = (
   }
 
   const fp = row.first_pressing;
-  const fpUsable = !!fp?.catno && !['none', 'None', '-', ''].includes(String(fp.catno));
+  const fpUsable = usableCatno(fp?.catno);
   if (fpUsable && fp?.year && fp.country && fp.label) {
-    parts.push(`<section><h2>${esc(t.firstHead)}</h2><p>${esc(t.firstLead(fp.year, fp.country, fp.label, fp.catno))}</p></section>`);
+    parts.push(`<section><h2>${esc(t.firstHead)}</h2><p>${esc(t.firstLead(fp.year, fp.country, fp.label, cleanCatno(fp.catno) as string))}</p></section>`);
   }
 
   const rows = (row as any).pressing_rows as Array<Record<string, unknown>> | null;
@@ -310,18 +375,24 @@ export const valueDescription = (row: ValueRow, locale: 'nl' | 'en'): string => 
     const med = num(row.price_median);
     const head = lo !== null && hi !== null
       ? (med !== null
-          ? `${row.album_title} van ${row.artist} gaat meestal weg voor rond ${money(med, 'nl')}, vork ${money(lo, 'nl')} tot ${money(hi, 'nl')}.`
+          ? `${row.album_title} van ${row.artist} gaat meestal weg voor rond ${money(roundMedian(med, lo, hi), 'nl')}, vork ${money(lo, 'nl')} tot ${money(hi, 'nl')}.`
           : `${row.album_title} van ${row.artist} gaat doorgaans voor ${money(lo, 'nl')} tot ${money(hi, 'nl')}.`)
       : `Wat is ${row.album_title} van ${row.artist} waard?`;
-    return clip(`${head} ${versions ? `${versions} persingen` : 'Alle persingen'} op een rij, met catalogusnummers en conditie.`);
+    const tail = versions
+      ? `${capFirst(versions)} uitgaven bekend; zo herken je aan het catalogusnummer welke jij hebt.`
+      : 'Zo herken je aan het catalogusnummer welke uitgave jij hebt.';
+    return clip(`${head} ${tail}`);
   }
   const med2 = num(row.price_median);
   const head = lo !== null && hi !== null
     ? (med2 !== null
-        ? `${row.album_title} by ${row.artist} usually sells for around ${money(med2, 'en')}, range ${money(lo, 'en')} to ${money(hi, 'en')}.`
+        ? `${row.album_title} by ${row.artist} usually sells for around ${money(roundMedian(med2, lo, hi), 'en')}, range ${money(lo, 'en')} to ${money(hi, 'en')}.`
         : `${row.album_title} by ${row.artist} typically sells for ${money(lo, 'en')} to ${money(hi, 'en')}.`)
     : `What is ${row.album_title} by ${row.artist} worth?`;
-  return clip(`${head} ${versions ? `${versions} pressings` : 'Every pressing'} listed, with catalogue numbers and condition.`);
+  const tail = versions
+    ? `${capFirst(versions)} editions on record; the catalogue number tells you which one you have.`
+    : 'The catalogue number tells you which edition you have.';
+  return clip(`${head} ${tail}`);
 };
 
 export const valueJsonLd = (row: ValueRow, locale: 'nl' | 'en'): string => {
@@ -397,7 +468,9 @@ export const renderHubBody = (
   const items = rows
     .map((r) => {
       const med = num(r.price_median);
-      const price = med !== null ? ` \u2014 meestal rond ${money(med, 'nl')}` : '';
+      const price = med !== null
+        ? ` \u2014 meestal rond ${money(roundMedian(med, num((r as any).price_range_min), num((r as any).price_range_max)), 'nl')}`
+        : '';
       return `<li><a href="${BASE_URL}/waarde/${esc(r.artist_slug)}/${esc(r.album_slug)}">` +
         `${esc(r.album_title)} \u2013 ${esc(r.artist)}</a>${esc(price)}</li>`;
     })

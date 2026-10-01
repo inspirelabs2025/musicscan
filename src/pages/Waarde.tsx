@@ -9,6 +9,14 @@ import { ValuePageLinks } from '@/components/ValuePageLinks';
 import { INDEXABLE_VALUE_LOCALES } from '@/lib/indexable';
 import { JsonLd } from '@/components/SEO/JsonLd';
 import { SITE_URL } from '@/config/site';
+// Gedeeld met de prerender en de SSR-proxy, zodat bezoeker en crawler hetzelfde lezen.
+import {
+  roundMedian,
+  examplePressing,
+  usableCatno,
+  cleanCatno,
+  valueDescription,
+} from '../../supabase/functions/universal-ssr-proxy/value-page';
 
 type Locale = 'nl' | 'en';
 
@@ -46,19 +54,6 @@ const money = (v: number, loc: Locale) =>
   loc === 'nl'
     ? '€' + v.toFixed(2).replace('.', ',').replace(/,00$/, ',–')
     : '€' + v.toFixed(2).replace(/\.00$/, '');
-
-/**
- * Knipt een meta description af op een woordgrens. Google toont de eerste ~155
- * tekens; een afkapping midden in een woord leest als een fout en kost klikken.
- * Spiegelt clip() in de SSR-proxy.
- */
-const clip = (text: string, max = 158): string => {
-  if (text.length <= max) return text;
-  const cut = text.slice(0, max);
-  const space = cut.lastIndexOf(' ');
-  const body = space > max * 0.6 ? cut.slice(0, space) : cut;
-  return body.replace(/[\s,;:.–—-]+$/, '') + '\u2026';
-};
 
 const dateText = (iso: string | null, loc: Locale) => {
   if (!iso) return '';
@@ -181,7 +176,8 @@ const Waarde: React.FC = () => {
 
   const lo = num(row?.price_range_min);
   const hi = num(row?.price_range_max);
-  const med = num(row?.price_median);
+  const medRaw = num(row?.price_median);
+  const med = medRaw !== null ? roundMedian(medRaw, num(row?.price_range_min), num(row?.price_range_max)) : null;
   const hasPrice = lo !== null && hi !== null;
   const versions = versionsText(row?.version_count ?? null, locale);
 
@@ -191,11 +187,7 @@ const Waarde: React.FC = () => {
         ? `${row.album_title} – ${row.artist}: waarde van de lp of cd | MusicScan`
         : `${row.album_title} – ${row.artist}: what the record is worth | MusicScan`
       : undefined,
-    description: row
-      ? hasPrice
-        ? clip(t.lead(money(lo!, locale), money(hi!, locale)))
-        : clip(t.h1(row.artist, row.album_title))
-      : undefined,
+    description: row ? valueDescription(row as any, locale) : undefined,
     image: row?.artwork_url || undefined,
     // Geen vork betekent geen antwoord op de vraag in de H1; dan hoort de
     // pagina niet in de index. En zolang alleen Nederlands geïndexeerd wordt,
@@ -228,9 +220,9 @@ const Waarde: React.FC = () => {
   const hub: 'lp' | 'cd' = Number(fc['CD'] ?? 0) > Number(fc['Vinyl'] ?? 0) ? 'cd' : 'lp';
   const hubLabel = hub === 'cd' ? 'Wat is je cd waard' : 'Wat is je lp waard';
 
-  const ex = row.example_pressing_by_locale?.[locale] || row.example_pressing_by_locale?.en;
+  const ex = examplePressing(row as any, locale);
   const fp = row.first_pressing;
-  const fpUsable = !!fp?.catno && !['none', 'None', '-', ''].includes(String(fp.catno));
+  const fpUsable = usableCatno(fp?.catno);
   const rows = row.pressing_rows || [];
 
   const breadcrumb = {
@@ -321,7 +313,7 @@ const Waarde: React.FC = () => {
 
       {fpUsable && fp?.year && fp.country && fp.label ? (
         <Section title={t.firstHead}>
-          <p className="text-[15px] leading-relaxed">{t.firstLead(fp.year, fp.country, fp.label, String(fp.catno))}</p>
+          <p className="text-[15px] leading-relaxed">{t.firstLead(fp.year, fp.country, fp.label, cleanCatno(fp.catno) as string)}</p>
         </Section>
       ) : null}
 
@@ -382,7 +374,7 @@ const Waarde: React.FC = () => {
 
       {locale === 'nl' ? (
         <Section title="Andere albums">
-          <ValuePageLinks limit={6} />
+          <ValuePageLinks limit={6} around={{ artist_slug: row.artist_slug, album_slug: row.album_slug }} />
         </Section>
       ) : null}
 

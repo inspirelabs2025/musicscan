@@ -87,7 +87,7 @@ export default function ValueLanding() {
               <Link to="/waarde/cd" className="text-primary underline">bij cd&apos;s</Link> oplage en
               persland.
             </p>
-            <ValuePageLinks limit={12} />
+            <ValuePageLinks limit={60} />
           </section>
         ) : null}
 

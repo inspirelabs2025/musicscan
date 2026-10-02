@@ -46,7 +46,10 @@ const rest = async (path: string, init: RequestInit = {}) => {
     },
   });
   if (!res.ok) throw new Error(`${path}: ${res.status} ${await res.text()}`);
-  return res.status === 204 ? null : await res.json();
+  // Met Prefer: return=minimal antwoordt PostgREST met 201 en een lege body.
+  // res.json() struikelt daarover, dus eerst als tekst lezen.
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 };
 
 interface Version {

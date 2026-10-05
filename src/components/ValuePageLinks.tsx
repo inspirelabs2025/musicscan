@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 // Dezelfde volgorde, afronding en zusterkeuze als de voorgerenderde HTML.
-import { pickSiblings, roundMedian } from '../../supabase/functions/universal-ssr-proxy/value-page';
+import { hubForRow, pickSiblings, roundMedian } from '../../supabase/functions/universal-ssr-proxy/value-page';
 
 interface Row {
   artist_slug: string;
@@ -13,6 +13,7 @@ interface Row {
   price_range_min: number | string | null;
   price_range_max: number | string | null;
   price_median: number | string | null;
+  format_counts: Record<string, number> | null;
 }
 
 const toNum = (v: unknown): number | null => {
@@ -34,13 +35,15 @@ export const ValuePageLinks: React.FC<{
   heading?: string;
   /** Album waarvan dit de zusterlinks zijn: dan de volgende `limit` in ronde volgorde. */
   around?: { artist_slug: string; album_slug: string };
-}> = ({ limit = 24, heading, around }) => {
+  /** Alleen de albums onder deze hub (lp of cd), zoals de voorgerenderde hub. */
+  hub?: 'lp' | 'cd';
+}> = ({ limit = 24, heading, around, hub }) => {
   const { data: all } = useQuery({
     queryKey: ['value-page-links'],
     queryFn: async () => {
       const { data } = await supabase
         .from('value_pages' as any)
-        .select('artist_slug, album_slug, artist, album_title, price_range_min, price_range_max, price_median')
+        .select('artist_slug, album_slug, artist, album_title, price_range_min, price_range_max, price_median, format_counts')
         .not('price_range_min', 'is', null)
         .not('price_range_max', 'is', null)
         .limit(1000);
@@ -48,7 +51,8 @@ export const ValuePageLinks: React.FC<{
     },
   });
 
-  const data = all ? pickSiblings(all, around ?? null, limit) : [];
+  const pool = all ? (hub ? all.filter((r) => hubForRow(r as any) === hub) : all) : [];
+  const data = pickSiblings(pool, around ?? null, limit);
   if (!data.length) return null;
 
   return (

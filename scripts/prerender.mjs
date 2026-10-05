@@ -38,6 +38,8 @@ const TMP = path.join(ROOT, '.prerender');
 const SOURCE = 'scripts/prerender-entry.ts';
 const SITE = 'https://musicscans.com';
 const SIBLING_LIMIT = 6;
+/** Zelfde aantal als PILLAR_LINKS in ValueLanding.tsx. */
+const PILLAR_LINKS = 24;
 
 const warn = (msg) => console.warn(`[prerender] ${msg}`);
 const info = (msg) => console.log(`[prerender] ${msg}`);
@@ -213,33 +215,45 @@ function renderLanding(mod, key, copy, rows) {
 }
 
 /**
- * De sitemap uit public/ is al door vite naar dist/ gekopieerd. Hier krijgen de
- * waardepagina's hun lastmod uit price_changed_at: de dag dat de vork echt
- * bewoog, niet de dag dat we keken. De hubs en de pijlerpagina tonen alle
- * albums met hun prijs, dus die nemen de laatste wijziging van allemaal over.
+ * De sitemap uit public/ is al door vite naar dist/ gekopieerd. Hier worden
+ * de albumregels opnieuw opgebouwd uit de data: elke indexeerbare waardepagina
+ * erin, met als lastmod de dag dat de vork echt bewoog (price_changed_at), niet
+ * de dag dat we keken. Zo groeit de sitemap mee met de verrijkingspijplijn in
+ * plaats van op de eerste achttien te blijven staan. De hubs en de pijlerpagina
+ * tonen albums met hun prijs, dus die nemen de laatste wijziging van allemaal over.
  */
 async function writeSitemap(rows) {
   const file = path.join(DIST, 'sitemap.xml');
   if (!existsSync(file)) {
-    warn('geen dist/sitemap.xml, lastmod niet bijgewerkt');
+    warn('geen dist/sitemap.xml, niet bijgewerkt');
     return;
   }
   const day = (iso) => (iso ? String(iso).slice(0, 10) : null);
-  const byUrl = new Map(rows.map((r) => [albumUrl(r), day(r.price_changed_at) || day(r.priced_at)]));
-  const latest = [...byUrl.values()].filter(Boolean).sort().pop();
-  for (const u of [`${SITE}/waarde/lp`, `${SITE}/waarde/cd`, `${SITE}/waarde-van-je-platen`]) {
-    if (latest) byUrl.set(u, latest);
-  }
+  const albums = [...rows].sort((a, b) => a.artist.localeCompare(b.artist, 'nl') || a.album_title.localeCompare(b.album_title, 'nl'));
+  const lastmods = albums.map((r) => day(r.price_changed_at) || day(r.priced_at)).filter(Boolean);
+  const latest = lastmods.sort().pop();
+
   let xml = await readFile(file, 'utf8');
-  let changed = 0;
-  xml = xml.replace(/<url>\s*<loc>([^<]+)<\/loc>\s*<lastmod>([^<]+)<\/lastmod>/g, (m, loc, lastmod) => {
-    const next = byUrl.get(loc.trim());
-    if (!next || next <= lastmod) return m;
-    changed += 1;
-    return m.replace(`<lastmod>${lastmod}</lastmod>`, `<lastmod>${next}</lastmod>`);
-  });
+  // Albumregels uit het statische bestand eruit; die komen hieronder uit de data terug.
+  const isAlbum = (loc) => /^https:\/\/musicscans\.com\/waarde\/[^/]+\/[^/]+$/.test(loc);
+  xml = xml.replace(/\s*<url>\s*<loc>([^<]+)<\/loc>[\s\S]*?<\/url>/g, (m, loc) => (isAlbum(loc.trim()) ? '' : m));
+  if (latest) {
+    for (const p of ['/waarde/lp', '/waarde/cd', '/waarde-van-je-platen']) {
+      xml = xml.replace(
+        new RegExp(`(<loc>${SITE}${p}</loc>\\s*<lastmod>)([^<]+)(</lastmod>)`),
+        (m, a, cur, b) => (latest > cur ? `${a}${latest}${b}` : m),
+      );
+    }
+  }
+  const entries = albums
+    .map((r) => {
+      const lm = day(r.price_changed_at) || day(r.priced_at);
+      return `  <url>\n    <loc>${albumUrl(r)}</loc>\n${lm ? `    <lastmod>${lm}</lastmod>\n` : ''}    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`;
+    })
+    .join('\n');
+  xml = xml.replace('</urlset>', `${entries}\n</urlset>`);
   await writeFile(file, xml, 'utf8');
-  info(`sitemap: ${changed} lastmod bijgewerkt`);
+  info(`sitemap: ${albums.length} waardepagina's`);
 }
 
 async function main() {
@@ -287,6 +301,7 @@ async function main() {
 
   for (const slug of mod.HUB_SLUGS) {
     const copy = mod.WAARDE_HUB_COPY[slug];
+    const hubRows = links.filter((r) => mod.hubForRow(r) === slug);
     const canonical = mod.hubPath(slug);
     await writePage(
       `/waarde/${slug}`,
@@ -294,8 +309,8 @@ async function main() {
         title: copy.title,
         description: copy.description,
         canonical,
-        body: renderHub(mod, slug, copy, links),
-        jsonLd: JSON.stringify([faqLd(copy.faq), itemListLd(mod, links)]),
+        body: renderHub(mod, slug, copy, hubRows),
+        jsonLd: JSON.stringify([faqLd(copy.faq), itemListLd(mod, hubRows)]),
       }),
     );
     written += 1;
@@ -311,8 +326,8 @@ async function main() {
         title: seo.title,
         description: seo.description,
         canonical: `${SITE}${route}`,
-        body: renderLanding(mod, key, copy, links),
-        jsonLd: JSON.stringify([faqLd(copy.faq), ...(key === 'value' ? [itemListLd(mod, links)] : [])]),
+        body: renderLanding(mod, key, copy, links.slice(0, PILLAR_LINKS)),
+        jsonLd: JSON.stringify([faqLd(copy.faq), ...(key === 'value' ? [itemListLd(mod, links.slice(0, PILLAR_LINKS))] : [])]),
       }),
     );
     written += 1;

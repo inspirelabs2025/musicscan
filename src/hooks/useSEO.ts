@@ -37,10 +37,18 @@ const DEFAULT_SEO: SEOData = {
   locale: 'nl_NL',
 };
 
-export const useSEO = (seoData?: Partial<SEOData>) => {
+/**
+ * `seoData === null` betekent: de pagina weet het nog niet (data laadt nog).
+ * Dan raken we de kop niet aan, zodat de voorgerenderde titel, beschrijving en
+ * robots-meta blijven staan. Zonder dit zette een waardepagina tijdens het
+ * laden noindex en de homepagetitel neer, en wie op dat moment een snapshot
+ * nam (Googlebot op 4 oktober bij /waarde/george-michael/faith) zag noindex.
+ */
+export const useSEO = (seoData?: Partial<SEOData> | null) => {
   const location = useLocation();
   
   useEffect(() => {
+    if (seoData === null) return;
     const canonicalPath = canonicalPathFor(location.pathname);
     const core = matchCorePath(canonicalPath);
     const pageLocale = core?.locale ?? localeFromPath(canonicalPath);
@@ -135,6 +143,7 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     
   }, [
     location.pathname,
+    seoData === null,
     seoData?.title,
     seoData?.description,
     seoData?.keywords,

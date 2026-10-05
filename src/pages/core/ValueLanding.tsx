@@ -8,6 +8,9 @@ import { ValuePageLinks } from '@/components/ValuePageLinks';
 import { SITE_URL, corePath, localeFromPath, matchCorePath } from '@/config/site';
 import { VALUE_COPY, CORE_SEO } from '@/i18n/coreSeo';
 
+/** Zelfde aantal als de voorgerenderde pijlerpagina; de hubs dragen de volledige lijst. */
+const PILLAR_LINKS = 24;
+
 export default function ValueLanding() {
   const { pathname } = useLocation();
   const locale = matchCorePath(pathname)?.locale ?? localeFromPath(pathname);
@@ -87,7 +90,7 @@ export default function ValueLanding() {
               <Link to="/waarde/cd" className="text-primary underline">bij cd&apos;s</Link> oplage en
               persland.
             </p>
-            <ValuePageLinks limit={60} />
+            <ValuePageLinks limit={PILLAR_LINKS} />
           </section>
         ) : null}
 

@@ -161,7 +161,7 @@ const Waarde: React.FC = () => {
   const locale: Locale = /^\/(en\/)?value\//.test(pathname) ? 'en' : 'nl';
   const t = COPY[locale];
 
-  const { data: row, isLoading } = useQuery({
+  const { data: row, isLoading, isError } = useQuery({
     queryKey: ['value-page', artistSlug, albumSlug],
     enabled: !!artistSlug && !!albumSlug,
     queryFn: async () => {
@@ -181,7 +181,10 @@ const Waarde: React.FC = () => {
   const hasPrice = lo !== null && hi !== null;
   const versions = versionsText(row?.version_count ?? null, locale);
 
-  useSEO({
+  // Pas iets aan de kop veranderen als we het antwoord hebben. Tijdens het
+  // laden (of als de query faalt) blijft de voorgerenderde kop staan; alleen
+  // een geslaagde query zonder rij of zonder vork mag noindex zetten.
+  useSEO(isLoading || isError ? null : {
     title: row
       ? locale === 'nl'
         ? `${row.album_title} – ${row.artist}: waarde van de lp of cd | MusicScan`

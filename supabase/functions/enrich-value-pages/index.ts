@@ -126,16 +126,25 @@ const pressingOf = (v: Version) => ({
 });
 
 /**
+ * Een titel moet leesbaar zijn boven een Nederlandse pagina: Latijns schrift,
+ * cijfers en leestekens. Getallen alleen ("1999", "21") mogen; Japans of
+ * Cyrillisch niet.
+ */
+const LATIN_TITLE = /^[\p{Script=Latin}\p{N}\p{P}\p{S}\s]+$/u;
+
+/**
  * Een titel die niemand hier kan lezen hoort niet boven een Nederlandse
  * pagina. Bij Japanse of Chinese uitgaven draagt de groep soms die titel;
  * dan pakken we de meest voorkomende titel met Latijnse letters.
  */
 const readableTitle = (current: string, versions: Version[]): string => {
-  if (/[A-Za-z]/.test(current)) return current;
+  // Een titel van alleen cijfers ("1999", "21") is leesbaar en blijft staan;
+  // eerder koos deze functie dan "Nineteen Ninety Nine" of "21 + Instrumentals".
+  if (LATIN_TITLE.test(current)) return current;
   const tally = new Map<string, number>();
   for (const v of versions) {
     const t = (v.title ?? '').trim();
-    if (t && /[A-Za-z]/.test(t)) tally.set(t, (tally.get(t) ?? 0) + 1);
+    if (t && LATIN_TITLE.test(t)) tally.set(t, (tally.get(t) ?? 0) + 1);
   }
   let best = current;
   let bestN = 0;
@@ -178,13 +187,23 @@ const findMaster = async (artist: string, title: string): Promise<number | null>
   const data = await discogsJson(`https://api.discogs.com/database/search?${params}&${tokenParam}`);
   await sleep(SPACING_MS);
   const want = normTitle(title);
-  const hits = (data?.results ?? []) as Array<{ id: number; title: string; community?: { have?: number } }>;
-  const ok = hits.filter((h) => {
-    const t = normTitle(String(h.title).split(' - ').slice(1).join(' - ') || h.title);
-    return t === want || t.startsWith(want) || want.startsWith(t);
-  });
-  ok.sort((a, b) => (b.community?.have ?? 0) - (a.community?.have ?? 0));
-  return ok[0]?.id ?? null;
+  const various = !artist || artist.toLowerCase() === 'various';
+  const wantArtist = normTitle(artist);
+  const hits = (data?.results ?? []) as Array<{ id: number; title: string }>;
+  // Discogs geeft "Artiest - Titel". De artiest moet kloppen (bij een
+  // verzamelalbum: "Various"), anders wordt "Grease" een single van Frankie
+  // Valli en "Saturday Night Fever" een album van The Devil Dogs.
+  const parsed = hits.map((h) => {
+    const [a, ...rest] = String(h.title).split(' - ');
+    return { id: h.id, artist: normTitle(a.replace(/\s*\(\d+\)$/, '').replace(/\*$/, '')), title: normTitle(rest.join(' - ')) };
+  }).filter((h) => (various ? h.artist === 'various' : h.artist === wantArtist || h.artist.startsWith(wantArtist)));
+  // Exacte titel eerst, in de volgorde van Discogs. Een titel die met de
+  // gezochte begint ("1989 (Taylor's Version)") alleen als er niets exacts is,
+  // en nooit bij korte titels als "21" of "4".
+  const exact = parsed.find((h) => h.title === want);
+  if (exact) return exact.id;
+  if (want.length < 5) return null;
+  return parsed.find((h) => h.title.startsWith(want))?.id ?? null;
 };
 
 /** Van een master de nette artiestnaam en titel, zodat slug en kop kloppen. */
@@ -321,13 +340,6 @@ const enrichAlbum = async (
   console.log(`${album.group_slug}: ${items} versies, ${countries.length} landen, ${rows.length} persingen bewaard`);
   return { ok: true, info };
 };
-
-/**
- * Een titel moet leesbaar zijn boven een Nederlandse pagina: Latijns schrift,
- * cijfers en leestekens. Getallen alleen ("1999", "21") mogen; Japans of
- * Cyrillisch niet.
- */
-const LATIN_TITLE = /^[\p{Script=Latin}\p{N}\p{P}\p{S}\s]+$/u;
 
 /** Seeds hebben een hogere lat: een pagina met minder dan acht persingen is te dun. */
 const SEED_MIN_USABLE = 8;

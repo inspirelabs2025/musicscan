@@ -182,28 +182,31 @@ interface Album {
  */
 const findMaster = async (artist: string, title: string): Promise<number | null> => {
   if (!DISCOGS_TOKEN) return null;
-  const params = new URLSearchParams({ type: 'master', release_title: title.replace(/\(.*?\)/g, '').trim(), per_page: '10' });
-  if (artist && artist.toLowerCase() !== 'various') params.set('artist', artist);
+  const params = new URLSearchParams({ type: 'master', release_title: title.replace(/\(.*?\)/g, '').trim(), per_page: '25' });
+  params.set('artist', artist || 'Various');
   const data = await discogsJson(`https://api.discogs.com/database/search?${params}&${tokenParam}`);
   await sleep(SPACING_MS);
   const want = normTitle(title);
   const various = !artist || artist.toLowerCase() === 'various';
   const wantArtist = normTitle(artist);
-  const hits = (data?.results ?? []) as Array<{ id: number; title: string }>;
+  const hits = (data?.results ?? []) as Array<{ id: number; title: string; community?: { have?: number } }>;
   // Discogs geeft "Artiest - Titel". De artiest moet kloppen (bij een
   // verzamelalbum: "Various"), anders wordt "Grease" een single van Frankie
   // Valli en "Saturday Night Fever" een album van The Devil Dogs.
   const parsed = hits.map((h) => {
     const [a, ...rest] = String(h.title).split(' - ');
-    return { id: h.id, artist: normTitle(a.replace(/\s*\(\d+\)$/, '').replace(/\*$/, '')), title: normTitle(rest.join(' - ')) };
+    return { id: h.id, have: h.community?.have ?? 0, artist: normTitle(a.replace(/\s*\(\d+\)$/, '').replace(/\*$/, '')), title: normTitle(rest.join(' - ')) };
   }).filter((h) => (various ? h.artist === 'various' : h.artist === wantArtist || h.artist.startsWith(wantArtist)));
-  // Exacte titel eerst, in de volgorde van Discogs. Een titel die met de
-  // gezochte begint ("1989 (Taylor's Version)") alleen als er niets exacts is,
-  // en nooit bij korte titels als "21" of "4".
-  const exact = parsed.find((h) => h.title === want);
-  if (exact) return exact.id;
+  // Exacte titel eerst. Een titel die met de gezochte begint ("1989 (Taylor's
+  // Version)") alleen als er niets exacts is, en nooit bij korte titels.
+  // Meerdere masters kunnen dezelfde titel dragen (een heruitgave uit 2016
+  // van Pet Sounds heeft een eigen master). De echte is die met de meeste
+  // verzamelaars.
+  const most = (xs: typeof parsed) => xs.sort((a, b) => b.have - a.have)[0]?.id ?? null;
+  const exact = parsed.filter((h) => h.title === want);
+  if (exact.length) return most(exact);
   if (want.length < 5) return null;
-  return parsed.find((h) => h.title.startsWith(want))?.id ?? null;
+  return most(parsed.filter((h) => h.title.startsWith(want)));
 };
 
 /** Van een master de nette artiestnaam en titel, zodat slug en kop kloppen. */

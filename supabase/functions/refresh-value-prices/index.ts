@@ -87,6 +87,8 @@ Deno.serve(async (req) => {
   const started = Date.now();
   const url = new URL(req.url);
   const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') ?? '1', 10) || 1, 1), 10);
+  // ?pressings=15 voor een snelle eerste ronde; de uurlijkse run gebruikt de volle 25.
+  const maxPressings = Math.min(Math.max(parseInt(url.searchParams.get('pressings') ?? String(MAX_PRESSINGS), 10) || MAX_PRESSINGS, MIN_OBSERVATIONS), MAX_PRESSINGS);
 
   const done: Array<Record<string, unknown>> = [];
   const skipped: Array<Record<string, unknown>> = [];
@@ -111,7 +113,7 @@ Deno.serve(async (req) => {
 
       const releases = await rest(
         `releases?select=discogs_id&group_slug=eq.${encodeURIComponent(album.group_slug)}` +
-          `&enriched_at=not.is.null&discogs_id=not.is.null&limit=${MAX_PRESSINGS}`,
+          `&enriched_at=not.is.null&discogs_id=not.is.null&limit=${maxPressings}`,
       ) as Array<{ discogs_id: number }>;
 
       const prices: number[] = [];

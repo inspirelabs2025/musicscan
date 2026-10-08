@@ -151,7 +151,7 @@ const faqLd = (faq) => ({
 const itemListLd = (mod, rows) => ({
   '@context': 'https://schema.org',
   '@type': 'ItemList',
-  itemListElement: rows.map((r, i) => ({ '@type': 'ListItem', position: i + 1, url: albumUrl(r), name: `${r.album_title} – ${r.artist}` })),
+  itemListElement: rows.map((r, i) => ({ '@type': 'ListItem', position: i + 1, url: albumUrl(r), name: mod.albumLabel(r.album_title, r.artist) })),
 });
 
 const toNum = (v) => {
@@ -161,14 +161,25 @@ const toNum = (v) => {
 const eur = (v) => '€' + v.toFixed(2).replace('.', ',').replace(/,00$/, ',–');
 
 /** Dezelfde lijst als ValuePageLinks in React: alle albums, met de afgeronde mediaan. */
-function albumList(mod, rows) {
+function albumList(mod, rows, byLetter = false) {
+  if (byLetter) {
+    const groups = [];
+    for (const r of rows) {
+      const l = mod.letterOf(r);
+      const last = groups[groups.length - 1];
+      if (last && last[0] === l) last[1].push(r);
+      else groups.push([l, [r]]);
+    }
+    const nav = `<nav aria-label="Letters">${groups.map(([l]) => `<a href="#letter-${l}">${l}</a>`).join(' ')}</nav>`;
+    return nav + groups.map(([l, rs]) => `<h3 id="letter-${l}">${l}</h3>${albumList(mod, rs)}`).join('');
+  }
   const items = rows
     .map((r) => {
       const lo = toNum(r.price_range_min);
       const hi = toNum(r.price_range_max);
       const med = toNum(r.price_median);
       const price = med !== null ? ` — meestal rond ${eur(mod.roundMedian(med, lo, hi))}` : '';
-      return `<li><a href="${albumUrl(r)}">${escapeText(r.album_title)} – ${escapeText(r.artist)}</a>${escapeText(price)}</li>`;
+      return `<li><a href="${albumUrl(r)}">${escapeText(mod.albumLabel(r.album_title, r.artist))}</a>${escapeText(price)}</li>`;
     })
     .join('');
   return `<ul>${items}</ul>`;
@@ -187,7 +198,7 @@ function renderHub(mod, slug, copy, rows) {
     `<h1>${escapeText(copy.h1)}</h1>` +
     copy.intro.map((p) => `<p>${escapeText(p)}</p>`).join('') +
     copy.sections.map((s) => `<section><h2>${escapeText(s.h)}</h2>${s.p.map((p) => `<p>${escapeText(p)}</p>`).join('')}</section>`).join('') +
-    `<section><h2>${escapeText(copy.linksHeading)}</h2>${albumList(mod, rows)}</section>` +
+    `<section><h2>${escapeText(copy.linksHeading)}</h2>${albumList(mod, rows, true)}</section>` +
     faqHtml('Veelgestelde vragen', copy.faq) +
     `<p>Ook handig: <a href="${SITE}/waarde/${other}">wat is je ${other} waard</a> en <a href="${SITE}/waarde-van-je-platen">de waarde van je platencollectie</a>.</p>` +
     `</div>`

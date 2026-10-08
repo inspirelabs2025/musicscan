@@ -128,8 +128,14 @@ type LinkRow = { artist_slug: string; album_slug: string; artist: string; album_
 
 /** Vaste volgorde voor alle linklijsten, zodat React en prerender gelijk lopen. */
 export const compareAlbums = (a: LinkRow, b: LinkRow): number =>
-  a.artist.localeCompare(b.artist, 'nl', { sensitivity: 'base' }) ||
+  sortName(a).localeCompare(sortName(b), 'nl', { sensitivity: 'base' }) ||
   a.album_title.localeCompare(b.album_title, 'nl', { sensitivity: 'base' });
+
+/** Letter waaronder een album in de hub staat: 0-9 voor cijfers, anders de beginletter. */
+export const letterOf = (r: LinkRow): string => {
+  const c = sortName(r).normalize('NFD').replace(/[\u0300-\u036f]/g, '').charAt(0).toUpperCase();
+  return /[A-Z]/.test(c) ? c : '0-9';
+};
 
 /**
  * Zusterlinks: de volgende n albums in een ronde volgorde, beginnend na het
@@ -146,6 +152,21 @@ export const pickSiblings = <T extends LinkRow>(all: T[], current: { artist_slug
   for (let k = 1; k < sorted.length && out.length < n; k += 1) out.push(sorted[(i + k) % sorted.length]);
   return out;
 };
+
+/**
+ * Verzamelalbums en soundtracks staan bij Discogs onder "Various". "Grease van
+ * Various" leest als een fout; dan laten we de artiest gewoon weg.
+ */
+export const isVarious = (artist: string | null | undefined): boolean =>
+  /^(various|various artists|diverse artiesten)$/i.test(String(artist ?? '').trim());
+const van = (a: string) => (isVarious(a) ? '' : ` van ${a}`);
+const by = (a: string) => (isVarious(a) ? '' : ` by ${a}`);
+/** "Titel – Artiest" in lijsten, of alleen de titel bij een verzamelalbum. */
+export const albumLabel = (title: string, artist: string): string =>
+  isVarious(artist) ? title : `${title} \u2013 ${artist}`;
+
+/** Op artiest sorteren, maar een verzamelalbum op zijn eigen titel. */
+const sortName = (r: { artist: string; album_title: string }) => (isVarious(r.artist) ? r.album_title : r.artist);
 
 const capFirst = (t: string): string => (t ? t.charAt(0).toUpperCase() + t.slice(1) : t);
 
@@ -187,8 +208,8 @@ export const isIndexable = (row: ValueRow, locale: 'nl' | 'en'): boolean =>
 
 const T = {
   nl: {
-    h1: (a: string, t: string) => `Wat is ${t} van ${a} waard?`,
-    metaTitle: (a: string, t: string) => `${t} – ${a}: waarde van de lp of cd | MusicScan`,
+    h1: (a: string, t: string) => `Wat is ${t}${van(a)} waard?`,
+    metaTitle: (a: string, t: string) => `${albumLabel(t, a)}: waarde van de lp of cd | MusicScan`,
     priceLead: (lo: string, hi: string, med: string, n: number, d: string) =>
       (med ? `De meeste exemplaren gaan weg voor rond ${med}. ` : '') +
       `De vork loopt van ${lo} tot ${hi}` +
@@ -221,8 +242,8 @@ const T = {
     ],
   },
   en: {
-    h1: (a: string, t: string) => `What is ${t} by ${a} worth?`,
-    metaTitle: (a: string, t: string) => `${t} – ${a}: what the record is worth | MusicScan`,
+    h1: (a: string, t: string) => `What is ${t}${by(a)} worth?`,
+    metaTitle: (a: string, t: string) => `${albumLabel(t, a)}: what the record is worth | MusicScan`,
     priceLead: (lo: string, hi: string, med: string, n: number, d: string) =>
       (med ? `Most copies change hands for around ${med}. ` : '') +
       `The range runs from ${lo} to ${hi}` +
@@ -351,7 +372,7 @@ export const renderValueBody = (
       const items = siblings
         .map((s) =>
           `<li><a href="${BASE_URL}/waarde/${esc(s.artist_slug)}/${esc(s.album_slug)}">` +
-          `${esc(s.album_title)} \u2013 ${esc(s.artist)}</a></li>`)
+          `${esc(albumLabel(s.album_title, s.artist))}</a></li>`)
         .join('');
       parts.push(`<section><h2>Andere albums</h2><ul>${items}</ul></section>`);
     }
@@ -375,9 +396,9 @@ export const valueDescription = (row: ValueRow, locale: 'nl' | 'en'): string => 
     const med = num(row.price_median);
     const head = lo !== null && hi !== null
       ? (med !== null
-          ? `${row.album_title} van ${row.artist} gaat meestal weg voor rond ${money(roundMedian(med, lo, hi), 'nl')}, vork ${money(lo, 'nl')} tot ${money(hi, 'nl')}.`
-          : `${row.album_title} van ${row.artist} gaat doorgaans voor ${money(lo, 'nl')} tot ${money(hi, 'nl')}.`)
-      : `Wat is ${row.album_title} van ${row.artist} waard?`;
+          ? `${row.album_title}${van(row.artist)} gaat meestal weg voor rond ${money(roundMedian(med, lo, hi), 'nl')}, vork ${money(lo, 'nl')} tot ${money(hi, 'nl')}.`
+          : `${row.album_title}${van(row.artist)} gaat doorgaans voor ${money(lo, 'nl')} tot ${money(hi, 'nl')}.`)
+      : `Wat is ${row.album_title}${van(row.artist)} waard?`;
     const tail = versions
       ? `${capFirst(versions)} uitgaven bekend; zo herken je aan het catalogusnummer welke jij hebt.`
       : 'Zo herken je aan het catalogusnummer welke uitgave jij hebt.';
@@ -386,9 +407,9 @@ export const valueDescription = (row: ValueRow, locale: 'nl' | 'en'): string => 
   const med2 = num(row.price_median);
   const head = lo !== null && hi !== null
     ? (med2 !== null
-        ? `${row.album_title} by ${row.artist} usually sells for around ${money(roundMedian(med2, lo, hi), 'en')}, range ${money(lo, 'en')} to ${money(hi, 'en')}.`
-        : `${row.album_title} by ${row.artist} typically sells for ${money(lo, 'en')} to ${money(hi, 'en')}.`)
-    : `What is ${row.album_title} by ${row.artist} worth?`;
+        ? `${row.album_title}${by(row.artist)} usually sells for around ${money(roundMedian(med2, lo, hi), 'en')}, range ${money(lo, 'en')} to ${money(hi, 'en')}.`
+        : `${row.album_title}${by(row.artist)} typically sells for ${money(lo, 'en')} to ${money(hi, 'en')}.`)
+    : `What is ${row.album_title}${by(row.artist)} worth?`;
   const tail = versions
     ? `${capFirst(versions)} editions on record; the catalogue number tells you which one you have.`
     : 'The catalogue number tells you which edition you have.';
@@ -404,7 +425,7 @@ export const valueJsonLd = (row: ValueRow, locale: 'nl' | 'en'): string => {
       '@context': 'https://schema.org',
       '@type': 'MusicAlbum',
       name: row.album_title,
-      byArtist: { '@type': 'MusicGroup', name: row.artist },
+      ...(isVarious(row.artist) ? {} : { byArtist: { '@type': 'MusicGroup', name: row.artist } }),
       url,
       ...(row.artwork_url ? { image: row.artwork_url } : {}),
       ...(row.first_pressing?.year ? { datePublished: row.first_pressing.year } : {}),
@@ -472,7 +493,7 @@ export const renderHubBody = (
         ? ` \u2014 meestal rond ${money(roundMedian(med, num((r as any).price_range_min), num((r as any).price_range_max)), 'nl')}`
         : '';
       return `<li><a href="${BASE_URL}/waarde/${esc(r.artist_slug)}/${esc(r.album_slug)}">` +
-        `${esc(r.album_title)} \u2013 ${esc(r.artist)}</a>${esc(price)}</li>`;
+        `${esc(albumLabel(r.album_title, r.artist))}</a>${esc(price)}</li>`;
     })
     .join('');
   return `<div data-ssr="waarde-hub"><h1>${esc(h.h1)}</h1><p>${esc(h.intro)}</p>` +

@@ -16,6 +16,8 @@ import {
   usableCatno,
   cleanCatno,
   valueDescription,
+  albumLabel,
+  isVarious,
 } from '../../supabase/functions/universal-ssr-proxy/value-page';
 
 type Locale = 'nl' | 'en';
@@ -65,7 +67,7 @@ const dateText = (iso: string | null, loc: Locale) => {
 
 const COPY = {
   nl: {
-    h1: (a: string, t: string) => `Wat is ${t} van ${a} waard?`,
+    h1: (a: string, t: string) => `Wat is ${t}${isVarious(a) ? '' : ` van ${a}`} waard?`,
     priceLabel: 'Meestal rond',
     rangeLabel: 'Vork',
     priceNote: (d: string, n: number) => `gemeten over ${n} persingen${d ? `, bijgewerkt op ${d}` : ''}`,
@@ -106,7 +108,7 @@ const COPY = {
     ],
   },
   en: {
-    h1: (a: string, t: string) => `What is ${t} by ${a} worth?`,
+    h1: (a: string, t: string) => `What is ${t}${isVarious(a) ? '' : ` by ${a}`} worth?`,
     priceLabel: 'Usually around',
     rangeLabel: 'Range',
     priceNote: (d: string, n: number) => `measured across ${n} pressings${d ? `, updated ${d}` : ''}`,
@@ -187,8 +189,8 @@ const Waarde: React.FC = () => {
   useSEO(isLoading || isError ? null : {
     title: row
       ? locale === 'nl'
-        ? `${row.album_title} – ${row.artist}: waarde van de lp of cd | MusicScan`
-        : `${row.album_title} – ${row.artist}: what the record is worth | MusicScan`
+        ? `${albumLabel(row.album_title, row.artist)}: waarde van de lp of cd | MusicScan`
+        : `${albumLabel(row.album_title, row.artist)}: what the record is worth | MusicScan`
       : undefined,
     description: row ? valueDescription(row as any, locale) : undefined,
     image: row?.artwork_url || undefined,
@@ -245,7 +247,7 @@ const Waarde: React.FC = () => {
     '@context': 'https://schema.org',
     '@type': 'MusicAlbum',
     name: row.album_title,
-    byArtist: { '@type': 'MusicGroup', name: row.artist },
+    ...(isVarious(row.artist) ? {} : { byArtist: { '@type': 'MusicGroup', name: row.artist } }),
     url: canonical,
     ...(row.artwork_url ? { image: row.artwork_url } : {}),
     ...(fp?.year ? { datePublished: String(fp.year) } : {}),

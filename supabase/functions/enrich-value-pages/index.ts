@@ -176,37 +176,70 @@ interface Album {
 }
 
 /**
- * Een master zoeken bij Discogs. De zoekfunctie geeft "Artiest - Titel" terug;
- * we nemen het eerste resultaat waarvan de titel de gezochte titel bevat, met
- * de meeste verzamelaars bovenaan. Zonder token zoekt Discogs niet.
+ * Spelling gelijktrekken voor vergelijken: apostrofs weg ("Goat's" = "Goats"),
+ * "the" en "and" weg ("Rolling Stones*" = "The Rolling Stones", "Bob Marley
+ * And The Wailers" = "Bob Marley & The Wailers"), spaties weg ("Neworder" =
+ * "New Order").
+ */
+const squash = (s: string, keepParens = false) =>
+  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/['’]/g, '')
+    .replace(keepParens ? /$^/ : /\(.*?\)/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim()
+    .split(' ').filter((w) => w && w !== 'the' && w !== 'and').join('');
+
+/** Onder dit aantal verzamelaars is een master een heruitgave of bootleg, niet het album. */
+const MIN_HAVE = 1000;
+
+/**
+ * Een master zoeken bij Discogs. Eerst gericht (artiest + titel), daarna vrij
+ * zoeken als dat niets groots oplevert. De artiest moet kloppen (Various voor
+ * soundtracks). Een exacte titel gaat voor; anders telt een titel die de
+ * gezochte bevat ("Deep Purple In Rock" voor "In Rock"). Binnen die groep wint
+ * de master met de meeste verzamelaars, want een heruitgave of outtakes-
+ * verzameling heeft vaak een eigen master met dezelfde naam.
  */
 const findMaster = async (artist: string, title: string): Promise<number | null> => {
   if (!DISCOGS_TOKEN) return null;
-  const params = new URLSearchParams({ type: 'master', release_title: title.replace(/\(.*?\)/g, '').trim(), per_page: '25' });
-  params.set('artist', artist || 'Various');
-  const data = await discogsJson(`https://api.discogs.com/database/search?${params}&${tokenParam}`);
-  await sleep(SPACING_MS);
-  const want = normTitle(title);
   const various = !artist || artist.toLowerCase() === 'various';
-  const wantArtist = normTitle(artist);
-  const hits = (data?.results ?? []) as Array<{ id: number; title: string; community?: { have?: number } }>;
-  // Discogs geeft "Artiest - Titel". De artiest moet kloppen (bij een
-  // verzamelalbum: "Various"), anders wordt "Grease" een single van Frankie
-  // Valli en "Saturday Night Fever" een album van The Devil Dogs.
-  const parsed = hits.map((h) => {
-    const [a, ...rest] = String(h.title).split(' - ');
-    return { id: h.id, have: h.community?.have ?? 0, artist: normTitle(a.replace(/\s*\(\d+\)$/, '').replace(/\*$/, '')), title: normTitle(rest.join(' - ')) };
-  }).filter((h) => (various ? h.artist === 'various' : h.artist === wantArtist || h.artist.startsWith(wantArtist)));
-  // Exacte titel eerst. Een titel die met de gezochte begint ("1989 (Taylor's
-  // Version)") alleen als er niets exacts is, en nooit bij korte titels.
-  // Meerdere masters kunnen dezelfde titel dragen (een heruitgave uit 2016
-  // van Pet Sounds heeft een eigen master). De echte is die met de meeste
-  // verzamelaars.
-  const most = (xs: typeof parsed) => xs.sort((a, b) => b.have - a.have)[0]?.id ?? null;
-  const exact = parsed.filter((h) => h.title === want);
-  if (exact.length) return most(exact);
-  if (want.length < 5) return null;
-  return most(parsed.filter((h) => h.title.startsWith(want)));
+  const wantArtist = squash(various ? 'various' : artist);
+  const want = squash(title);
+  if (!want) return null;
+
+  const pick = (hits: Array<{ id: number; title: string; community?: { have?: number } }>) => {
+    const parsed = hits.map((h) => {
+      const [a, ...rest] = String(h.title).split(' - ');
+      return {
+        id: h.id,
+        have: h.community?.have ?? 0,
+        artist: squash(a.replace(/\s*\(\d+\)$/, '').replace(/\*$/, '')),
+        title: squash(rest.join(' - '), true),
+        bare: squash(rest.join(' - ')),
+      };
+    }).filter((h) => h.artist === wantArtist || (!various && (h.artist.startsWith(wantArtist) || wantArtist.startsWith(h.artist))));
+    const most = (xs: typeof parsed) => xs.sort((a, b) => b.have - a.have)[0];
+    // Volledig gelijk (met wat tussen haakjes staat) gaat voor: "1989" is niet
+    // "1989 (Taylor's Version)", ook al heeft die laatste meer verzamelaars.
+    const full = most(parsed.filter((h) => h.title === want));
+    if (full && full.have >= MIN_HAVE) return full;
+    const exact = most(parsed.filter((h) => h.bare === want)) ?? full;
+    if (exact && exact.have >= MIN_HAVE) return exact;
+    // Korte titels ("4", "21") alleen exact; anders vangt "bevat" van alles.
+    const loose = want.length >= 4 ? most(parsed.filter((h) => h.title.includes(want))) : undefined;
+    if (loose && loose.have >= MIN_HAVE) return loose;
+    return exact ?? null;
+  };
+
+  const search = async (params: Record<string, string>) => {
+    const qs = new URLSearchParams({ type: 'master', per_page: '25', ...params });
+    const data = await discogsJson(`https://api.discogs.com/database/search?${qs}&${tokenParam}`);
+    await sleep(SPACING_MS);
+    return (data?.results ?? []) as Array<{ id: number; title: string; community?: { have?: number } }>;
+  };
+
+  const first = pick(await search({ artist: various ? 'Various' : artist, release_title: title.replace(/\(.*?\)/g, '').trim() }));
+  if (first && first.have >= MIN_HAVE) return first.id;
+  const second = pick(await search({ q: `${various ? '' : artist} ${title.replace(/\(.*?\)/g, '')}`.trim() }));
+  if (second && (!first || second.have > first.have)) return second.id;
+  return first?.id ?? null;
 };
 
 /** Van een master de nette artiestnaam en titel, zodat slug en kop kloppen. */

@@ -123,6 +123,21 @@ Deno.serve(async (req) => {
       }
 
       if (prices.length < MIN_OBSERVATIONS) {
+        // Toch priced_at zetten. Zonder dat blijft een album zonder vork met
+        // priced_at = null eeuwig vooraan in de rij staan (nullsfirst) en
+        // blokkeert het elke run; bij honderden nieuwe albums legt dat de
+        // hele cron stil. De vork blijft leeg, dus de pagina blijft noindex.
+        // Een album dat al een vork had, houdt die; we hebben gekeken, de
+        // markt was even te dun om hem te verschuiven.
+        const unpriced = album.price_range_min === null || album.price_range_min === undefined;
+        await rest(
+          `releases?group_slug=eq.${encodeURIComponent(album.group_slug)}&enriched_at=not.is.null`,
+          {
+            method: 'PATCH',
+            headers: { Prefer: 'return=minimal' },
+            body: JSON.stringify({ priced_at: new Date().toISOString(), ...(unpriced ? { status: 'unpriced' } : {}) }),
+          },
+        );
         skipped.push({ group_slug: album.group_slug, reason: 'te weinig waarnemingen', n: prices.length });
         continue;
       }

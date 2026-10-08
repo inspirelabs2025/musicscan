@@ -63,7 +63,7 @@ const WaardeHub: React.FC = () => {
           </section>
         ))}
 
-        <ValuePageLinks limit={1000} hub={media} heading={copy.linksHeading} />
+        <ValuePageLinks limit={1000} hub={media} byLetter heading={copy.linksHeading} />
         {stats?.pages ? (
           <p className="mt-3 text-sm text-muted-foreground">
             {stats.pages} albums uitgezocht, en er komen er wekelijks bij.

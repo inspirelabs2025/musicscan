@@ -416,7 +416,11 @@ Deno.serve(async (req) => {
           skipped.push({ seed: `${seed.artist} – ${seed.title}`, reason: 'geen master gevonden' });
           continue;
         }
-        const m = await masterInfo(masterId);
+        const fromMaster = await masterInfo(masterId);
+        // Een handmatig gezette master houdt de titel van de seed: Discogs kent
+        // Led Zeppelin IV als "Untitled" en Kraftwerk onder Duitse titels, maar
+        // gezocht wordt op "Led Zeppelin IV" en "Trans-Europe Express".
+        const m = fromMaster && seed.master_id ? { ...fromMaster, title: seed.title } : fromMaster;
         if (!m) {
           if (!dryRun) await setSeed(seed.id, { status: 'skipped', master_id: masterId, note: 'master niet leesbaar' });
           skipped.push({ seed: `${seed.artist} – ${seed.title}`, reason: 'master niet leesbaar' });

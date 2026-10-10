@@ -326,6 +326,10 @@ const enrichAlbum = async (
     have_count: owners(byOwners[0]),
     want_count: wanters(byOwners[0]),
     album_title: title,
+    // Oude gescande rijen in dezelfde groep kunnen een afwijkende artiest-slug
+    // hebben ("pink-floyd-pink-floyd"); de view maakt daar anders een tweede,
+    // kapotte pagina van.
+    artist_slug: album.artist_slug,
     ...(art ? { artwork_url: art } : {}),
     enriched_at: now,
     status: 'enriched',

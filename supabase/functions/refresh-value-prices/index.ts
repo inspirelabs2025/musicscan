@@ -154,6 +154,18 @@ Deno.serve(async (req) => {
       if (med < low) low = floorTo(med);
       if (med > high) high = ceilTo(med);
 
+      // Een vork die bij elke run een stap op en neer gaat, laat de voorgerenderde
+      // pagina afwijken van de database en maakt lastmod zinloos. Daarom blijft
+      // de oude vork staan zolang de mediaan erin valt en geen van beide grenzen
+      // meer dan één stap verschuift.
+      const prevLowN = Number(album.price_range_min);
+      const prevHighN = Number(album.price_range_max);
+      if (album.price_range_min !== null && album.price_range_max !== null && prevLowN > 0 && prevHighN > prevLowN) {
+        const moved = (a: number, b: number) => Math.abs(a - b) > step(Math.min(a, b));
+        const keep = med >= prevLowN && med <= prevHighN && !moved(low, prevLowN) && !moved(high, prevHighN);
+        if (keep) { low = prevLowN; high = prevHighN; }
+      }
+
       const at = new Date().toISOString();
       const sources = [{
         source: 'discogs_api',

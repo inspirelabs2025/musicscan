@@ -167,11 +167,15 @@ const Waarde: React.FC = () => {
     queryKey: ['value-page', artistSlug, albumSlug],
     enabled: !!artistSlug && !!albumSlug,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('value_pages' as any)
         .select('*')
         .eq('group_slug', `${artistSlug}-${albumSlug}`)
         .maybeSingle();
+      // Een fout (time-out, rate limit, meer dan één rij) is geen "bestaat niet".
+      // Zonder deze throw werd elke fout een lege rij en zette de pagina
+      // noindex; zo viel Foreigner 4 op 10 oktober uit de index.
+      if (error) throw error;
       return (data as unknown as ValueRow) || null;
     },
   });

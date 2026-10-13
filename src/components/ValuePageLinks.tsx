@@ -43,12 +43,14 @@ export const ValuePageLinks: React.FC<{
   const { data: all } = useQuery({
     queryKey: ['value-page-links'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('value_pages' as any)
         .select('artist_slug, album_slug, artist, album_title, price_range_min, price_range_max, price_median, format_counts')
         .not('price_range_min', 'is', null)
         .not('price_range_max', 'is', null)
         .limit(1000);
+      // Bij een fout opnieuw proberen in plaats van een lege lijst te tonen.
+      if (error) throw error;
       return (data as unknown as Row[]) ?? [];
     },
   });

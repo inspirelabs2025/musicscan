@@ -57,6 +57,18 @@ export const WAARDE_HUB_COPY: Record<Media, {
     ],
     faq: [
       {
+        q: 'Wat is mijn lp waard?',
+        a: 'Dat hangt af van de persing en de conditie, niet van het album zelf. Scan het catalogusnummer en de matrixcode en je ziet de vork waartussen vergelijkbare exemplaren daadwerkelijk worden verkocht.',
+      },
+      {
+        q: 'Hoe bepaal ik de waarde van mijn platen?',
+        a: 'Zoek niet op artiest en titel, maar op het catalogusnummer van het label en de matrixcode in de gladde ring bij het label. Die twee samen bepalen welke persing je hebt, en de conditie van plaat en hoes bepaalt waar in de vork je uitkomt.',
+      },
+      {
+        q: 'Wat zijn oude lp\'s waard?',
+        a: 'Ouderdom alleen zegt weinig: een veel geperste plaat uit de jaren zeventig kan minder waard zijn dan een recente, kleine heruitgave. Bepalend is welke persing het is en hoeveel verzamelaars ernaar zoeken tegenover hoeveel exemplaren er te koop staan.',
+      },
+      {
         q: 'Waarom krijg ik overal een ander bedrag te zien?',
         a: 'Omdat de meeste bronnen prijzen van verschillende persingen door elkaar halen. Een Amerikaanse eerste persing en een Europese heruitgave uit 2015 staan onder dezelfde albumtitel, terwijl ze tientallen euro’s uit elkaar liggen.',
       },

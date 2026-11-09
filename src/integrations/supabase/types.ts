@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.12 (cd3cf9e)"
+    PostgrestVersion: "12.2.12"
   }
   public: {
     Tables: {
@@ -7157,75 +7157,165 @@ export type Database = {
       }
       releases: {
         Row: {
+          album_title: string | null
           artist: string
+          artist_slug: string | null
           artwork_url: string | null
           catalog_number: string | null
+          cheapest_pressing: Json | null
           condition_counts: Json | null
           country: string | null
+          country_count: number | null
           created_at: string
+          dearest_pressing: Json | null
           discogs_id: number
           discogs_url: string | null
+          enriched_at: string | null
+          example_pressing: Json | null
+          example_pressing_by_locale: Json | null
+          faq_nl: Json | null
+          first_pressing: Json | null
           first_scan_date: string | null
           format: string | null
+          format_prices: Json | null
           genre: string | null
+          group_slug: string | null
+          have_count: number | null
           id: string
+          intro_nl: string | null
           label: string | null
           last_scan_date: string | null
           master_id: number | null
+          media_kind: string | null
+          pressings: Json | null
+          pressings_by_country: Json | null
+          price_changed_at: string | null
+          price_currency: string | null
+          price_quarter: string | null
           price_range_max: number | null
           price_range_min: number | null
+          price_sources: Json | null
+          priced_at: string | null
+          published_at: string | null
+          reissue_years: number[] | null
+          scanned_copy: Json | null
+          slug: string | null
+          status: string | null
+          story_url: string | null
           style: string[] | null
           title: string
           total_scans: number | null
           updated_at: string
+          version_count: number | null
+          want_count: number | null
           year: number | null
         }
         Insert: {
+          album_title?: string | null
           artist: string
+          artist_slug?: string | null
           artwork_url?: string | null
           catalog_number?: string | null
+          cheapest_pressing?: Json | null
           condition_counts?: Json | null
           country?: string | null
+          country_count?: number | null
           created_at?: string
+          dearest_pressing?: Json | null
           discogs_id: number
           discogs_url?: string | null
+          enriched_at?: string | null
+          example_pressing?: Json | null
+          example_pressing_by_locale?: Json | null
+          faq_nl?: Json | null
+          first_pressing?: Json | null
           first_scan_date?: string | null
           format?: string | null
+          format_prices?: Json | null
           genre?: string | null
+          group_slug?: string | null
+          have_count?: number | null
           id?: string
+          intro_nl?: string | null
           label?: string | null
           last_scan_date?: string | null
           master_id?: number | null
+          media_kind?: string | null
+          pressings?: Json | null
+          pressings_by_country?: Json | null
+          price_changed_at?: string | null
+          price_currency?: string | null
+          price_quarter?: string | null
           price_range_max?: number | null
           price_range_min?: number | null
+          price_sources?: Json | null
+          priced_at?: string | null
+          published_at?: string | null
+          reissue_years?: number[] | null
+          scanned_copy?: Json | null
+          slug?: string | null
+          status?: string | null
+          story_url?: string | null
           style?: string[] | null
           title: string
           total_scans?: number | null
           updated_at?: string
+          version_count?: number | null
+          want_count?: number | null
           year?: number | null
         }
         Update: {
+          album_title?: string | null
           artist?: string
+          artist_slug?: string | null
           artwork_url?: string | null
           catalog_number?: string | null
+          cheapest_pressing?: Json | null
           condition_counts?: Json | null
           country?: string | null
+          country_count?: number | null
           created_at?: string
+          dearest_pressing?: Json | null
           discogs_id?: number
           discogs_url?: string | null
+          enriched_at?: string | null
+          example_pressing?: Json | null
+          example_pressing_by_locale?: Json | null
+          faq_nl?: Json | null
+          first_pressing?: Json | null
           first_scan_date?: string | null
           format?: string | null
+          format_prices?: Json | null
           genre?: string | null
+          group_slug?: string | null
+          have_count?: number | null
           id?: string
+          intro_nl?: string | null
           label?: string | null
           last_scan_date?: string | null
           master_id?: number | null
+          media_kind?: string | null
+          pressings?: Json | null
+          pressings_by_country?: Json | null
+          price_changed_at?: string | null
+          price_currency?: string | null
+          price_quarter?: string | null
           price_range_max?: number | null
           price_range_min?: number | null
+          price_sources?: Json | null
+          priced_at?: string | null
+          published_at?: string | null
+          reissue_years?: number[] | null
+          scanned_copy?: Json | null
+          slug?: string | null
+          status?: string | null
+          story_url?: string | null
           style?: string[] | null
           title?: string
           total_scans?: number | null
           updated_at?: string
+          version_count?: number | null
+          want_count?: number | null
           year?: number | null
         }
         Relationships: []
@@ -10047,6 +10137,48 @@ export type Database = {
           },
         ]
       }
+      value_seeds: {
+        Row: {
+          artist: string
+          attempted_at: string | null
+          created_at: string
+          group_slug: string | null
+          id: number
+          master_id: number | null
+          note: string | null
+          priority: number
+          source: string
+          status: string
+          title: string
+        }
+        Insert: {
+          artist: string
+          attempted_at?: string | null
+          created_at?: string
+          group_slug?: string | null
+          id?: number
+          master_id?: number | null
+          note?: string | null
+          priority?: number
+          source?: string
+          status?: string
+          title: string
+        }
+        Update: {
+          artist?: string
+          attempted_at?: string | null
+          created_at?: string
+          group_slug?: string | null
+          id?: number
+          master_id?: number | null
+          note?: string | null
+          priority?: number
+          source?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
       vehicle_parts: {
         Row: {
           alternative_numbers: string[] | null
@@ -10812,6 +10944,51 @@ export type Database = {
         }
         Relationships: []
       }
+      value_candidates: {
+        Row: {
+          album_slug: string | null
+          album_title: string | null
+          artist: string | null
+          artist_slug: string | null
+          catnos: number | null
+          db_rijen: number | null
+          group_slug: string | null
+          landen: number | null
+          master_id: number | null
+          scans: number | null
+          score: number | null
+        }
+        Relationships: []
+      }
+      value_pages: {
+        Row: {
+          album_slug: string | null
+          album_title: string | null
+          artist: string | null
+          artist_slug: string | null
+          artwork_url: string | null
+          country_count: number | null
+          db_pressings: number | null
+          enriched_at: string | null
+          example_pressing_by_locale: Json | null
+          first_pressing: Json | null
+          format_counts: Json | null
+          group_slug: string | null
+          pressing_rows: Json | null
+          pressings_by_country: Json | null
+          price_changed_at: string | null
+          price_median: number | null
+          price_observations: number | null
+          price_range_max: number | null
+          price_range_min: number | null
+          priced_at: string | null
+          reissue_years: number | null
+          story_url: string | null
+          total_scans: number | null
+          version_count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_user_credits: {
@@ -10896,6 +11073,7 @@ export type Database = {
       }
       deduct_chat_credit: { Args: { p_user_id: string }; Returns: boolean }
       deduct_scan_credit: { Args: { p_user_id: string }; Returns: boolean }
+      dedup_labels: { Args: { txt: string }; Returns: string }
       extract_and_update_discogs_ids: { Args: never; Returns: number }
       extract_discogs_id_from_url: {
         Args: { url_text: string }
@@ -11381,12 +11559,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -11410,11 +11588,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -11435,11 +11613,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -11460,11 +11638,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -11477,11 +11655,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

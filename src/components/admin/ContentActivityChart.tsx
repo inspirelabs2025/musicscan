@@ -119,7 +119,7 @@ export function ContentActivityChart() {
             <ChartTooltip 
               content={
                 <ChartTooltipContent 
-                  labelFormatter={(value) => format(new Date(value), 'EEEE d MMMM', { locale: nl })}
+                  labelFormatter={(value) => format(new Date(String(value)), 'EEEE d MMMM', { locale: nl })}
                 />
               }
             />

@@ -100,6 +100,7 @@ export default function SingleDetail() {
   useEffect(() => {
     const fetchSingle = async () => {
       if (!slug) return;
+      let redirected = false;
       try {
         setLoading(true);
         const { data, error } = await supabase
@@ -143,6 +144,7 @@ export default function SingleDetail() {
             .limit(1)
             .maybeSingle();
           if (moved?.slug && moved.slug !== slug) {
+            redirected = true;
             setRedirectSlug(moved.slug);
             return;
           }
@@ -151,7 +153,8 @@ export default function SingleDetail() {
         }
         setNotFound(true);
       } finally {
-        setLoading(false);
+        // Stay in the loading state while redirecting to the current slug
+        if (!redirected) setLoading(false);
       }
     };
     fetchSingle();
@@ -191,7 +194,7 @@ export default function SingleDetail() {
 
   if (!slug) { navigate('/singles'); return null; }
 
-  if (redirectSlug) return <Navigate to={`/singles/${redirectSlug}`} replace />;
+  if (redirectSlug && redirectSlug !== slug) return <Navigate to={`/singles/${redirectSlug}`} replace />;
 
   if (loading) {
     return (

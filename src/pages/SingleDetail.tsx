@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -54,6 +54,7 @@ export default function SingleDetail() {
   const [singleNoindex, setSingleNoindex] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [redirectSlug, setRedirectSlug] = useState<string | null>(null);
   const [hasIncrementedView, setHasIncrementedView] = useState(false);
   const { toast } = useToast();
   const { tr, language } = useLanguage();
@@ -130,6 +131,24 @@ export default function SingleDetail() {
         }
         setSingleNoindex(noindex);
       } catch {
+        // Not found under its current slug: check whether it's an old slug
+        // (kept in previous_slugs) and redirect to the current URL if so.
+        try {
+          const { data: moved } = await supabase
+            .from('music_stories')
+            .select('slug')
+            .contains('previous_slugs', [slug])
+            .eq('is_published', true)
+            .not('single_name', 'is', null)
+            .limit(1)
+            .maybeSingle();
+          if (moved?.slug && moved.slug !== slug) {
+            setRedirectSlug(moved.slug);
+            return;
+          }
+        } catch {
+          // fall through to not-found
+        }
         setNotFound(true);
       } finally {
         setLoading(false);
@@ -171,6 +190,8 @@ export default function SingleDetail() {
   }, [single, hasIncrementedView]);
 
   if (!slug) { navigate('/singles'); return null; }
+
+  if (redirectSlug) return <Navigate to={`/singles/${redirectSlug}`} replace />;
 
   if (loading) {
     return (

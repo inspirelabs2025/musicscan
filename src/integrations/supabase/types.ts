@@ -4828,6 +4828,7 @@ export type Database = {
           label: string | null
           meta_description: string | null
           meta_title: string | null
+          previous_slugs: string[]
           query: string
           reading_time: number | null
           regenerate_pending: boolean | null
@@ -4861,6 +4862,7 @@ export type Database = {
           label?: string | null
           meta_description?: string | null
           meta_title?: string | null
+          previous_slugs?: string[]
           query: string
           reading_time?: number | null
           regenerate_pending?: boolean | null
@@ -4894,6 +4896,7 @@ export type Database = {
           label?: string | null
           meta_description?: string | null
           meta_title?: string | null
+          previous_slugs?: string[]
           query?: string
           reading_time?: number | null
           regenerate_pending?: boolean | null

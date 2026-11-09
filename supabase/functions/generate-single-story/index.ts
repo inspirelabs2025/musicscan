@@ -29,8 +29,15 @@ serve(async (req) => {
     console.log(`📝 ${isRegeneration ? 'REGENERATING' : 'Generating'} story for: ${artist} - ${single_name}`);
 
     // Generate slug
-    const slug = `${artist.toLowerCase()}-${single_name.toLowerCase()}`
-      .replace(/[^a-z0-9-]/g, '-')
+    // Accenten eerst omzetten naar hun basisletter (NFD + diakritische tekens strippen),
+    // anders verdwijnt bv. de 'e' van "Andre Hazes" i.p.v. dat 'e' overblijft.
+    const slugify = (s: string) =>
+      s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+    const slug = `${slugify(artist)}-${slugify(single_name)}`
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
 

@@ -62,10 +62,10 @@ export const CORE_SEO: Record<CorePageKey, Record<Locale, CoreSeoEntry>> = {
   },
   value: {
     nl: {
-      title: 'Ontdek de waarde van je platen | MusicScan',
+      title: 'Waarde van je platen gratis opzoeken | MusicScan',
       description:
-        'Weet wat je vinyl, LP of CD waard is. MusicScan toont actuele marktprijzen per persing en conditie, zodat je nooit te goedkoop verkoopt.',
-      keywords: 'waarde vinyl, lp waarde bepalen, platen taxeren, wat is mijn plaat waard, cd waarde',
+        'Wat is je vinyl, lp of cd waard? Begin gratis: scan je platen en zie direct de actuele marktprijs per persing en conditie, zodat je nooit te goedkoop verkoopt.',
+      keywords: 'waarde vinyl, lp waarde bepalen, waarde lp opzoeken, platen taxeren, wat is mijn plaat waard, cd waarde',
     },
     en: {
       title: 'Discover what your records are worth | MusicScan',

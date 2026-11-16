@@ -18,9 +18,9 @@ export const WAARDE_HUB_COPY: Record<Media, {
   linksHeading: string;
 }> = {
   lp: {
-    title: 'Waarde van je lp bepalen | MusicScan',
+    title: 'Waarde van je lp opzoeken en bepalen | MusicScan',
     description:
-      'Wat is je lp waard? De prijs hangt af van de persing en de conditie, niet van het album. Zo lees je het catalogusnummer en de matrixcode van je plaat.',
+      'Waarde van je lp (langspeelplaat) opzoeken? De prijs hangt af van de persing en de conditie, niet van het album. Zo lees je het catalogusnummer en de matrixcode van je plaat.',
     h1: 'Wat is je lp waard?',
     intro: [
       'De vraag "wat is deze plaat waard" heeft zelden één antwoord. Van een bekend album bestaan al snel honderden uitgaven: een eerste persing uit het land van herkomst, licentiepersingen voor andere markten, heruitgaven, jubileumedities, kleurvinyl. Tussen de goedkoopste en de duurste daarvan zit vaak een factor tien of meer, en het verschil zit niet in de muziek maar in welk exemplaar je in handen hebt.',
@@ -65,7 +65,7 @@ export const WAARDE_HUB_COPY: Record<Media, {
         a: 'Zoek niet op artiest en titel, maar op het catalogusnummer van het label en de matrixcode in de gladde ring bij het label. Die twee samen bepalen welke persing je hebt, en de conditie van plaat en hoes bepaalt waar in de vork je uitkomt.',
       },
       {
-        q: 'Wat zijn oude lp\'s waard?',
+        q: 'Wat zijn oude lp\'s (langspeelplaten) waard?',
         a: 'Ouderdom alleen zegt weinig: een veel geperste plaat uit de jaren zeventig kan minder waard zijn dan een recente, kleine heruitgave. Bepalend is welke persing het is en hoeveel verzamelaars ernaar zoeken tegenover hoeveel exemplaren er te koop staan.',
       },
       {
@@ -84,9 +84,9 @@ export const WAARDE_HUB_COPY: Record<Media, {
     linksHeading: 'Albums waarvan de waarde al is uitgezocht',
   },
   cd: {
-    title: 'Waarde van je cd bepalen | MusicScan',
+    title: 'Waarde van je cd opzoeken en bepalen | MusicScan',
     description:
-      'Wat is je cd waard? Oplage, persland en de matrixcode in de binnenring bepalen de prijs. Zo herken je welke uitgave je in handen hebt.',
+      'Waarde van je cd opzoeken? Oplage, persland en de matrixcode in de binnenring bepalen de prijs. Zo herken je welke uitgave je in handen hebt.',
     h1: 'Wat is je cd waard?',
     intro: [
       'Cd’s hebben een slechtere reputatie dan ze verdienen. Het klopt dat de meeste titels uit de jaren negentig voor een paar euro van eigenaar gaan: er zijn er miljoenen van geperst en het aanbod is enorm. Maar de uitzonderingen zijn scherp. Vroege West-Duitse persingen, Japanse uitgaven met obi-strook, korte oplagen en titels die nooit zijn heruitgegeven lopen ver boven dat niveau uit.',

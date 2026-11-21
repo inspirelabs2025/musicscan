@@ -1141,7 +1141,9 @@ export type Database = {
           content_language: string
           country_code: string | null
           created_at: string
+          featured_date: string | null
           id: string
+          is_daily_featured: boolean
           is_published: boolean | null
           markdown_content: string
           product_card: Json | null
@@ -1161,7 +1163,9 @@ export type Database = {
           content_language?: string
           country_code?: string | null
           created_at?: string
+          featured_date?: string | null
           id?: string
+          is_daily_featured?: boolean
           is_published?: boolean | null
           markdown_content: string
           product_card?: Json | null
@@ -1181,7 +1185,9 @@ export type Database = {
           content_language?: string
           country_code?: string | null
           created_at?: string
+          featured_date?: string | null
           id?: string
+          is_daily_featured?: boolean
           is_published?: boolean | null
           markdown_content?: string
           product_card?: Json | null
@@ -1972,6 +1978,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      content_growth_log: {
+        Row: {
+          added_at: string
+          decade: string | null
+          id: string
+          item_id: string
+          kind: string
+          slug: string | null
+        }
+        Insert: {
+          added_at?: string
+          decade?: string | null
+          id?: string
+          item_id: string
+          kind: string
+          slug?: string | null
+        }
+        Update: {
+          added_at?: string
+          decade?: string | null
+          id?: string
+          item_id?: string
+          kind?: string
+          slug?: string | null
+        }
+        Relationships: []
       }
       conversation_participants: {
         Row: {
@@ -3459,6 +3492,36 @@ export type Database = {
           sync_type?: string | null
           total_products?: number | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      fb_distribution_log: {
+        Row: {
+          id: string
+          item_id: string
+          kind: string
+          posted_at: string
+          target_group: string | null
+          target_page: boolean
+          target_profile: boolean
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          kind: string
+          posted_at?: string
+          target_group?: string | null
+          target_page?: boolean
+          target_profile?: boolean
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          kind?: string
+          posted_at?: string
+          target_group?: string | null
+          target_page?: boolean
+          target_profile?: boolean
         }
         Relationships: []
       }
@@ -5074,6 +5137,7 @@ export type Database = {
           source: string | null
           source_page: string | null
           subscribed_at: string
+          unsubscribe_token: string
           unsubscribed_at: string | null
           updated_at: string
           welcome_email_sent: boolean | null
@@ -5088,6 +5152,7 @@ export type Database = {
           source?: string | null
           source_page?: string | null
           subscribed_at?: string
+          unsubscribe_token?: string
           unsubscribed_at?: string | null
           updated_at?: string
           welcome_email_sent?: boolean | null
@@ -5102,6 +5167,7 @@ export type Database = {
           source?: string | null
           source_page?: string | null
           subscribed_at?: string
+          unsubscribe_token?: string
           unsubscribed_at?: string | null
           updated_at?: string
           welcome_email_sent?: boolean | null

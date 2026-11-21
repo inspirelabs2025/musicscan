@@ -1,99 +1,64 @@
-# Strategiewijziging MusicScan → musicscans.com
+# Trading Desk: een nieuwe handelspagina voor Discogs-verkopers en -verzamelaars
 
-Analyse op basis van `src/router.tsx`, `supabase/functions/generate-static-sitemaps/index.ts`, `src/hooks/useSEO.ts`, `public/sitemap.xml`, `public/robots.txt` en live tellingen uit de database.
+Een nieuwe, aparte pagina **/trading** ("Trading Desk"). Bestaande pagina's (Mijn Discogs, Marktplaats, Berichten, Collectie) blijven exact zoals ze zijn. De nieuwe pagina gebruikt de Discogs-koppeling die gebruikers al hebben, en bestaande gegevens worden alleen gelezen.
 
-## 1. Route-inventaris (nu indexeerbaar)
+## Wat de gebruiker krijgt
 
-Statische sitemap (`sitemap-static.xml`) bevat nu 34 URL's; daarnaast 34 dynamische sitemapbestanden. Gemeten aantallen:
+```text
+/trading
+ ├─ Overzicht      : portefeuillewaarde, grafiek, "te duur / te goedkoop" teller
+ ├─ Mijn listings  : per plaat je prijs vs. marktprijs, signaal + mini-grafiek
+ ├─ Plaat-detail   : prijsverloop (lijn/candle-achtig), laagste/mediaan/hoogste
+ ├─ Matches        : wie zoekt jouw platen (wantlist) → "Stuur bericht"
+ ├─ Wantlist-alerts: jouw gezochte platen die net te koop zijn verschenen
+ ├─ Auto-prijs     : per plaat aan/uit, strategie + minimumprijs
+ └─ Meldingen      : feed + instellingen (push, geluid, welke soorten)
+```
 
-| Type | Route | Aantal URLs |
-|---|---|---|
-| Blog/plaat-verhalen | `/plaat-verhaal/:slug`, `/muziek-verhaal/:slug` | 8.060 gepubliceerd |
-| Singles | `/singles/:slug` | 1.780 (86 al noindex) |
-| Artiestverhalen | `/artists/:slug` | 239 |
-| Nieuws | `/nieuws/:slug` | 212 (timestamp-slugs al noindex) |
-| Producten (posters/canvas/shirts/metal) | `/product/:slug` + shopoverzichten | 11.042 (detailpagina's 301 naar /art-shop via `_redirects`) |
-| New releases | `/new-release/:slug` | 108 |
-| Anekdotes | `/anekdotes/:slug` | 32 |
-| Muziekgeschiedenis | `/vandaag-in-de-muziekgeschiedenis` + events | 30 events |
-| Overige hubs | `/nederland`, `/frankrijk`, `/dance-house`, `/filmmuziek`, `/kerst`, `/top-2000-analyse`, `/podcasts*`, `/tijdmachine*`, `/studio-stories*`, `/artist-spotlight*`, `/fan-wall*`, `/photo/:id`, `/reviews*`, `/quizzen` | enkele honderden + fanwall/foto-sitemaps |
-| Statisch/functioneel | `/`, `/scanner`, `/pricing`, `/over-ons`, `/privacy`, `/voorwaarden`, `/auth`, `/retourbeleid` | 8 |
+1. **Prijs-check van je voorraad**: elke listing in je Discogs-inventory wordt vergeleken met de actuele marktprijs (Discogs prijssuggestie per conditie, plus laagste prijs en aantal te koop). Label: *Te duur* (>10% boven markt), *Te goedkoop* (>10% onder), *Marktconform*. De drempel kun je instellen.
+2. **Marktalerts**: een melding als een plaat die jij hebt of verkoopt opnieuw op de Discogs-markt verschijnt bij een andere verkoper, met de prijsvergelijking erbij.
+3. **Trading-grafieken**: een prijsverloop per plaat en de totale portefeuillewaarde door de tijd, met een tickerbalk met de grootste stijgers en dalers. De prijzen worden elk uur ververst, niet live per seconde. Discogs staat niet meer verzoeken toe.
+4. **Automatisch prijs aanpassen (opt-in)**: dit staat standaard uit en zet je per plaat aan. Je kiest een strategie: *net onder de laagste*, *gelijk aan de mediaan* of *marktprijs ± %*. Er geldt altijd een minimumprijs die jij instelt. Elke wijziging wordt gelogd en is terug te draaien. De nieuwe prijs wordt via je Discogs-koppeling direct op Discogs gezet.
+5. **Wishlist-matches tussen gebruikers**: als jouw te-koop-plaat op de wantlist van een andere MusicScan-gebruiker staat, krijgen jullie allebei een melding. Je opent dan een gesprek in de bestaande berichtenfunctie.
+6. **Wantlist-alerts voor kopers**: een plaat op je wantlist die nieuw te koop staat, op Discogs of bij een MusicScan-verkoper, levert direct een melding op.
+7. **Discogs-nieuws en -alerts**: een melding bij nieuwe Discogs-nieuwsberichten. Dit hergebruikt de bestaande nieuwsbron.
+8. **Push met geluid op mobiel en pc**: browsermeldingen op pc en Android, en pushmeldingen in de telefoon-app, met een meldingsgeluid. Binnen de pagina zelf verschijnt ook een melding met geluid. Per soort melding aan of uit te zetten.
 
-Totaal indexeerbaar nu: grofweg 22.000+ URL's, waarvan <10 aansluiten op de nieuwe propositie.
+Alles draait automatisch via geplande taken, zonder dat de admin iets hoeft te doen. In het adminmenu komt een monitor-pagina met de status van de taken, het aantal alerts en eventuele fouten.
 
-Let op: `/scanner` staat wel in de statische sitemap maar bestaat **niet** als route in `src/router.tsx` (de scanroutes zijn `/scan`, `/unified-scanner`, `/quick-price-check`) — dat is nu een dode sitemap-URL.
+## Aannames (corrigeer gerust)
 
-## 2. Behouden vs noindex
+- "Wishlist" = de **Discogs-wantlist** van gebruikers die Discogs hebben gekoppeld. Matchen kan alleen tussen MusicScan-gebruikers, want Discogs geeft geen lijst van wantlists van onbekende mensen.
+- De pagina is alleen voor ingelogde gebruikers met een Discogs-koppeling. Wie geen koppeling heeft, ziet de knop "Koppel Discogs", die al bestaat.
+- De pagina staat in het menu onder Scan & Collectie als "Trading Desk". Op publieke pagina's komt geen "AI"-woordgebruik.
 
-### Blijft indexeerbaar (kern scan + waarde), per taal
-- `/` homepage — scan + waarde propositie
-- Scanpagina (nieuwe SEO-landingspagina, bv. `/scan-je-platen`) — "scan je LP/CD/vinyl"
-- Waardepagina (nieuw, bv. `/waarde-van-je-platen`) — "ontdek de waarde", gekoppeld aan `/quick-price-check`
-- How-it-works / uitleg (kan sectie of eigen pagina zijn)
-- `/pricing` (credits/prijzen)
-- App-downloadpagina (nieuw, bv. `/app`)
-- `/over-ons`, `/privacy`, `/voorwaarden` (index, lage prioriteit — vertrouwenssignalen)
+## Wat ik van jou nodig heb
 
-Dat is ca. 8 pagina's × 4 talen = ~32 indexeerbare URL's.
+- **Pushmeldingen vereisen een Firebase-project (gratis)**. Ik open een koppelkaart. Zonder die koppeling werken de meldingen in de app en de browsermeldingen terwijl de site open is, maar komen er geen meldingen binnen als de app dicht is.
+- Voor push in de iPhone- en Android-app is daarna een nieuwe app-build in de stores nodig. Dat kan ik niet zelf doen.
 
-### Naar noindex + uit alle sitemaps
-Alles wat content/catalogus is: plaat-verhaal + muziek-verhaal (8.060), singles (1.780), artists (239), nieuws (212), producten en shopoverzichten (11.042), new releases (108), anekdotes (32), muziekgeschiedenis (30), plus quizzen, podcasts, tijdmachine, studio-stories, artist-spotlights, fan-wall, foto's, land-/genrehubs, top-2000, kerst, reviews, forum/social.
+## Testen
 
-Pagina's blijven gewoon bereikbaar voor gebruikers; alleen `robots: noindex, follow` + weg uit sitemaps.
+Ik test elke taak los met echte Discogs-data van een gekoppeld account: prijs-check, alerts, matches en auto-prijs. Auto-prijs test ik eerst als proefronde zonder schrijven. Daarna loop ik de pagina in de browser door. Ingelogd testen in de preview kan alleen als er een sessie beschikbaar is. Wat ik niet kan testen, noem ik expliciet (bijvoorbeeld push op een echte iPhone).
 
-### Twijfelgevallen (expliciet)
-- `/quizzen`: kan verkeer + engagement geven, maar past niet bij scan+waarde. Voorstel: noindex.
-- `/nederland`, `/frankrijk`, `/dance-house`: hebben potentieel autoriteit; voorstel noindex, later heroverwegen.
-- `/artists` overzicht: kan later dienen als "waarde per artiest"-hub; nu noindex.
-- `/auth` staat nu in de sitemap terwijl robots.txt hem blokkeert — tegenstrijdig, weghalen.
+## Technische details
 
-## 3. Meertalige SEO (NL/EN/DE/FR)
+**Nieuwe tabellen** (allemaal met RLS en eigen GRANTs, eigenaar = `auth.uid()`):
+- `trading_inventory_items`: een snapshot van iemands Discogs-listings (listing_id, release_id, conditie, eigen prijs, status).
+- `trading_price_snapshots`: elk uur per release en conditie: suggestie, laagste, mediaan, aantal te koop. Dit is de bron voor de grafieken.
+- `trading_price_signals`: het actuele label per item (te duur / te goedkoop / markt), afwijking in %.
+- `trading_wantlist_items`: de gesynchroniseerde Discogs-wantlist per gebruiker.
+- `trading_auto_price_rules` en `trading_price_adjustments_log`: strategie, minimumprijs, oude en nieuwe prijs, en terugdraaien.
+- `trading_alerts`: de meldingenfeed (type: overpriced, underpriced, market_listing, wishlist_match, wantlist_available, discogs_news), dedupe-sleutel.
+- `trading_alert_preferences`: per type aan/uit, geluid, drempel-%.
+- `push_subscriptions`: FCM-tokens per apparaat.
 
-Bestaande situatie:
-- i18n bestaat, maar alleen NL/EN: `src/i18n/translations.ts` (5.728 regels), `type Language = 'nl' | 'en'`, `LanguageContext` met localStorage + browserdetectie. Er is **geen** taal in de URL.
-- hreflang is nu kapot: `src/hooks/useSEO.ts` en `universal-ssr-proxy` schrijven `<link rel="alternate" n="nl">` in plaats van `hreflang="nl"`. Zoekmachines zien dus geen hreflang.
+**Edge functions** (cron, in batches binnen de Discogs-limiet van ongeveer 60 verzoeken per minuut):
+- `trading-sync-inventory` en `trading-sync-wantlist` (elk uur, per gebruiker): ze gebruiken de bestaande OAuth-ondertekening.
+- `trading-market-check` (elk uur): `marketplace/price_suggestions` + `marketplace/stats`, schrijft snapshots en signalen, en maakt alerts.
+- `trading-match-wishlists` (elke 15 min): koppelt inventory aan andere gebruikers' wantlists, maakt alerts aan beide kanten met een bericht-link naar de bestaande `conversations`/`messages`.
+- `trading-auto-price` (elk uur): past regels toe met `POST /marketplace/listings/{id}`, respecteert de minimumprijs, maximaal één wijziging per listing per 6 uur, en heeft een dryRun-modus.
+- `trading-discogs-news-alerts`: haakt in op de bestaande `latest-discogs-news`.
+- `send-push` (gedeeld): FCM via de Firebase-connector, en ruimt verlopen tokens op.
 
-Voorstel:
-- URL-prefix per taal voor uitsluitend de kernpagina's: `/nl/...`, `/en/...`, `/de/...`, `/fr/...`, met `/` → NL (of x-default). Prefix alleen invoeren voor de kernset, niet voor de hele (nu noindex) contentberg.
-- `Language` uitbreiden naar `'nl' | 'en' | 'de' | 'fr'`; alleen de kernpagina-keys vertalen naar DE/FR (niet de 5.700 regels).
-- hreflang-bug fixen (`n=` → `hreflang=`) en per kernpagina 4 alternates + `x-default` uitschrijven, zelfrefererende canonical per taalvariant.
-- Vertaalde title/description/OG per taal per kernpagina, via `useSEO` met taalbewuste defaults.
-
-Geraakte bestanden: `src/i18n/translations.ts`, `src/contexts/LanguageContext.tsx`, `src/router.tsx`, `src/hooks/useSEO.ts`, `src/components/SEO/GlobalCanonical.tsx`, `index.html`, `supabase/functions/generate-static-sitemaps/index.ts`, `supabase/functions/universal-ssr-proxy/index.ts`, `public/robots.txt`, `public/sitemap.xml`.
-
-Belangrijke beperking: dit is een client-side SPA. Google verwerkt de door JS gezette hreflang/canonical wel, maar voor zekerheid horen de kernpagina's ook in de SSR-proxy (`universal-ssr-proxy`) te zitten, die nu alleen contentroutes afhandelt.
-
-## 4. App- en weblinks
-
-Huidige links zijn inconsistent: `AppInstallBanner.tsx` wijst naar package `com.musicscan.app`, terwijl de echte Android-package `com.inspirelabs.musicscan` is (zie `GuestScanSignupDialog.tsx` en `android/app/build.gradle`).
-
-Voorstel:
-- Eén constantenbestand met `PLAY_STORE_URL` (live), `APP_STORE_URL` (placeholder/verborgen tot live) en de webversie-URL.
-- Plaatsing: header-CTA, homepage-hero, nieuwe `/app`-pagina, footer, scan- en waardepagina, plus `GuestScanSignupDialog`.
-- SoftwareApplication JSON-LD op de app-pagina met Play Store-link, later uitgebreid met iOS.
-
-## 5. Domeinomslag naar musicscans.com
-
-Kernbestanden die de hardcoded `www.musicscan.app` bevatten (het patroon komt in ~160 bestanden voor; deze zijn SEO-kritisch):
-- `index.html` — canonical, og:url, og:image, twitter:image
-- `src/lib/utils.ts` — `normalizeFullUrl()` met `canonicalOrigin` en host-regex (centrale plek)
-- `src/components/SEO/GlobalCanonical.tsx` — hardcoded canonical-origin
-- `src/components/SEO/*` — StructuredData, BreadcrumbSchema, PodcastStructuredData, PosterStructuredData
-- `public/robots.txt`, `public/sitemap.xml`, `public/manifest.json`, `public/llms-full.txt`
-- `src/utils/sitemap.ts`, `src/components/Footer.tsx`, `src/components/ShareButtons.tsx`
-- Edge functions: `generate-static-sitemaps`, `universal-ssr-proxy`, `sitemap-proxy`, `generate-llm-sitemap`, `generate-photo-sitemap`, `generate-podcast-sitemap`, `llm-content`, `serve-llms-txt`, `indexnow-*`, `gsc-sitemap-submit`, `google-sitemap-ping`, `canonical-checker`, `blog-meta-proxy`, plus e-mail/social-functies met linkopbouw
-- `public/_redirects` — proxy-rewrites blijven functioneel, maar de content-routes kunnen grotendeels vervallen als die noindex worden
-- `capacitor.config.ts`, `android/app/build.gradle` — app-server/deeplinkhost
-
-Aanpak: één gedeelde `SITE_URL`-constante frontend + één `_shared/site.ts` voor edge functions, zodat er nog maar twee plekken zijn om te wisselen. Geen redirects vanaf musicscan.app, conform je keuze (dat betekent: bestaande rankings verdwijnen — bewust geaccepteerd).
-
-## Uitvoeringsvolgorde
-
-1. Domeinconstante centraliseren (frontend + edge shared) en alles op `https://musicscans.com` zetten.
-2. hreflang-bug fixen (`n=` → `hreflang=`) in `useSEO` en SSR-proxy.
-3. Kernpagina's bouwen/aanscherpen: home, scanpagina, waardepagina, app-pagina, pricing.
-4. Sitemaps herbouwen: statische sitemap terugbrengen tot alleen de kernset (× 4 talen), alle content-sitemaps uit `sitemap-index.xml` en `public/sitemap.xml`.
-5. Noindex globaal: alle niet-kernroutes `noindex, follow` via een centrale routelijst in `useSEO` + SSR-proxy.
-6. i18n uitbreiden naar DE/FR voor de kernset, taalprefix-routes en hreflang-set van 4 + x-default.
-7. App-links consolideren (juiste Play Store-package, iOS placeholder) en overal plaatsen.
-8. robots.txt herschrijven, sitemap opnieuw indienen in Search Console op het nieuwe domein, IndexNow-queue leegmaken/opnieuw richten.
+**Frontend**: `src/pages/TradingDesk.tsx` met tabs, recharts-grafieken (al aanwezig), hooks `useTradingInventory`, `useTradingAlerts` (realtime met opruiming), `usePriceHistory`. Een in-app toast met geluid via een klein audiobestand in `public/`. Push op web via `firebase-messaging-sw.js`, in de app via `@capacitor/push-notifications`. Er komt een nieuwe route en een menulink. Bestaande pagina's en hooks blijven onaangeroerd. Admin: `/admin/trading-monitor` in het adminmenu.

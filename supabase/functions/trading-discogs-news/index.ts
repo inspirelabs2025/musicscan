@@ -33,7 +33,7 @@ async function feedItems(): Promise<NewsItem[]> {
   } catch (e) { feedInfo.direct_error = (e as Error).message; return [] }
 }
 
-/** Fallback: recent Discogs blog articles via Firecrawl web search (past week). */
+/** Fallback: recent Discogs blog posts, or news about Discogs, via Firecrawl web search. */
 async function searchItems(): Promise<NewsItem[]> {
   const key = Deno.env.get('FIRECRAWL_API_KEY')
   if (!key) return []
@@ -52,7 +52,13 @@ async function searchItems(): Promise<NewsItem[]> {
     const data = await res.json().catch(() => null)
     const found: any[] = res.ok ? (data?.data?.web ?? []) : []
     tried.push({ ...a, status: res.status, results: found.length, ...(res.ok ? {} : { error: JSON.stringify(data)?.slice(0, 160) }) })
-    web = found.filter((w) => typeof w.url === 'string' && /blog\.discogs\.com\/[a-z]{2}\/[^/?#]+/.test(w.url))
+    web = found.filter((w) => {
+      if (typeof w.url !== 'string') return false
+      if (/blog\.discogs\.com\/[a-z]{2}\/[^/?#]+/.test(w.url)) return true
+      // Other news sites, as long as the article is about Discogs (not catalogue pages).
+      if (/(^|\.)discogs\.com\/(release|master|sell|artist|label|user|seller|search|buy)\b/.test(w.url.replace(/^https?:\/\//, ''))) return false
+      return /discogs/i.test(`${w.title ?? ''} ${w.description ?? ''}`)
+    })
     if (web.length) break
   }
   feedInfo.search = tried

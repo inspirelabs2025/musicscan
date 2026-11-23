@@ -79,7 +79,7 @@ export function MatchesPanel({ alerts }: { alerts: TradingAlert[] }) {
           </div>
           <div className="flex shrink-0 gap-2">
             {a.data?.listing_uri && (
-              <Button asChild size="sm" variant="outline"><a href={a.data.listing_uri} target="_blank" rel="noreferrer">Listing <ExternalLink className="ml-1 h-3 w-3" /></a></Button>
+              <Button asChild size="sm" variant="outline" className="border-trade-grid bg-transparent text-trade-panel-foreground hover:bg-trade-grid hover:text-trade-panel-foreground"><a href={a.data.listing_uri} target="_blank" rel="noreferrer">Listing <ExternalLink className="ml-1 h-3 w-3" /></a></Button>
             )}
             <Button size="sm" onClick={() => startCompose(a)}><MessageCircle className="mr-1 h-4 w-4" />Stuur bericht</Button>
           </div>

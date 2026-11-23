@@ -37,7 +37,7 @@ export function AutoPricePanel({ rules, items }: { rules: AutoPriceRule[]; items
         <p className="mr-auto text-sm text-trade-muted">
           {active ? `${active} plaat/platen worden elk uur automatisch geprijsd.` : 'Nog geen automatische prijzen. Zet het aan per plaat via "Auto" in je listings.'}
         </p>
-        <Button size="sm" variant="outline" onClick={() => run('preview')} disabled={!active || action.isPending}><Eye className="mr-1 h-4 w-4" />Bekijk voorstel</Button>
+        <Button size="sm" variant="outline" className="border-trade-grid bg-transparent text-trade-panel-foreground hover:bg-trade-grid hover:text-trade-panel-foreground" onClick={() => run('preview')} disabled={!active || action.isPending}><Eye className="mr-1 h-4 w-4" />Bekijk voorstel</Button>
         <Button size="sm" onClick={() => run('apply_now')} disabled={!active || action.isPending}><Play className="mr-1 h-4 w-4" />Nu toepassen</Button>
       </div>
 

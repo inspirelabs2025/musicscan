@@ -92,7 +92,7 @@ export default function TradingDesk() {
   const notLinked = linked.isFetched && !linked.data;
 
   return (
-    <main className="min-h-screen bg-trade-panel text-trade-panel-foreground">
+    <main className="-mt-4 min-h-screen bg-trade-panel pt-4 text-trade-panel-foreground">
       <div className="container max-w-7xl space-y-4 py-6">
         <header className="flex flex-wrap items-end justify-between gap-3">
           <div>

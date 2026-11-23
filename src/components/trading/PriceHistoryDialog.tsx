@@ -51,7 +51,7 @@ export function PriceHistoryDialog({ item, snaps, onOpenChange }: {
         </div>
         <div className="flex gap-2 justify-end">
           {inv?.listing_uri && (
-            <Button asChild variant="outline" size="sm"><a href={inv.listing_uri} target="_blank" rel="noreferrer">Jouw listing <ExternalLink className="h-3 w-3 ml-1" /></a></Button>
+            <Button asChild variant="outline" size="sm" className="border-trade-grid bg-transparent text-trade-panel-foreground hover:bg-trade-grid hover:text-trade-panel-foreground"><a href={inv.listing_uri} target="_blank" rel="noreferrer">Jouw listing <ExternalLink className="h-3 w-3 ml-1" /></a></Button>
           )}
           <Button asChild size="sm"><a href={`https://www.discogs.com/sell/release/${item.release_id}`} target="_blank" rel="noreferrer">Bekijk de markt <ExternalLink className="h-3 w-3 ml-1" /></a></Button>
         </div>

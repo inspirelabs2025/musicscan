@@ -126,7 +126,7 @@ export function AlertSettings({ prefs }: { prefs: AlertPrefs }) {
             </div>
             <Switch id="push" checked={prefs.push_enabled} onCheckedChange={(v) => update({ push_enabled: v })} />
           </div>
-          <Button size="sm" variant="outline" onClick={turnOnPush}><BellRing className="mr-1 h-4 w-4" />Meldingen toestaan</Button>
+          <Button size="sm" variant="outline" className="border-trade-grid bg-transparent text-trade-panel-foreground hover:bg-trade-grid hover:text-trade-panel-foreground" onClick={turnOnPush}><BellRing className="mr-1 h-4 w-4" />Meldingen toestaan</Button>
           {pushState && <p className="text-xs text-trade-muted">{pushState}</p>}
         </div>
       </div>

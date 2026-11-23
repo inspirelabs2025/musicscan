@@ -29,6 +29,7 @@ export function Sparkline({ values, positive }: { values: number[]; positive?: b
     <div className="h-8 w-24">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
+          <YAxis hide domain={['dataMin', 'dataMax']} />
           <Line type="monotone" dataKey="v" stroke={color} strokeWidth={1.75} dot={false} isAnimationActive={false} />
         </LineChart>
       </ResponsiveContainer>
@@ -54,7 +55,7 @@ export function PortfolioChart({ data, currency }: { data: { day: string; value:
           </defs>
           <CartesianGrid stroke={grid} strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="day" tickFormatter={shortDate} stroke={muted} fontSize={11} tickLine={false} axisLine={false} />
-          <YAxis stroke={muted} fontSize={11} tickLine={false} axisLine={false} width={64} tickFormatter={(v) => money(v, currency).replace(/,00$/, '')} />
+          <YAxis domain={['auto', 'auto']} stroke={muted} fontSize={11} tickLine={false} axisLine={false} width={64} tickFormatter={(v) => money(v, currency).replace(/,00$/, '')} />
           <Tooltip contentStyle={tooltipStyle} labelFormatter={shortDate} formatter={(v: number, n: string) => [money(v, currency), n === 'value' ? 'Marktwaarde' : 'Jouw vraagprijs']} />
           <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2} fill="url(#pf)" />
           <Line type="monotone" dataKey="asking" stroke={gold} strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
@@ -84,7 +85,7 @@ export function PriceHistoryChart({ snaps, condition, myPrice, currency }: {
         <ComposedChart data={series} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
           <CartesianGrid stroke={grid} strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="t" tickFormatter={shortDate} stroke={muted} fontSize={11} tickLine={false} axisLine={false} minTickGap={24} />
-          <YAxis yAxisId="p" stroke={muted} fontSize={11} tickLine={false} axisLine={false} width={60} tickFormatter={(v) => money(v, currency).replace(/,00$/, '')} />
+          <YAxis yAxisId="p" domain={['auto', 'auto']} stroke={muted} fontSize={11} tickLine={false} axisLine={false} width={60} tickFormatter={(v) => money(v, currency).replace(/,00$/, '')} />
           <YAxis yAxisId="s" orientation="right" stroke={muted} fontSize={11} tickLine={false} axisLine={false} width={32} />
           <Tooltip contentStyle={tooltipStyle} labelFormatter={dateTime} formatter={(v: number, n: string) => {
             const names: Record<string, string> = { market: 'Marktprijs', lowest: 'Laagste prijs', supply: 'Aantal te koop', mine: 'Jouw prijs' };

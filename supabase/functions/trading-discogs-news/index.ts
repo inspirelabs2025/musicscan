@@ -19,40 +19,49 @@ const decode = (s: string) => s
 const FEED_URL = 'https://blog.discogs.com/en/feed/'
 const feedInfo: Record<string, unknown> = {}
 
-/** The feed sits behind a bot check; fetch it via Firecrawl when a direct request is blocked. */
-async function feedXml(): Promise<string> {
+/** Direct RSS read; the feed sits behind a bot check, so this often fails. */
+async function feedItems(): Promise<NewsItem[]> {
   try {
     const res = await fetch(FEED_URL, { headers: { 'User-Agent': 'MusicScan/1.0 +https://musicscans.com', Accept: 'application/rss+xml' } })
-    const xml = await res.text()
     feedInfo.direct_status = res.status
-    if (res.ok && xml.includes('<rss')) return xml
-  } catch { /* fall through */ }
-  const key = Deno.env.get('FIRECRAWL_API_KEY')
-  if (!key) return ''
-  const res = await fetch('https://api.firecrawl.dev/v2/scrape', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: FEED_URL, formats: ['rawHtml'], onlyMainContent: false }),
-  })
-  const data = await res.json().catch(() => null)
-  feedInfo.firecrawl_status = res.status
-  if (!res.ok) { console.error('firecrawl', res.status, JSON.stringify(data)?.slice(0, 300)); feedInfo.firecrawl_error = JSON.stringify(data)?.slice(0, 200); return '' }
-  const raw: string = data?.data?.rawHtml ?? ''
-  feedInfo.firecrawl_length = raw.length
-  feedInfo.firecrawl_head = raw.slice(0, 120)
-  return raw
-}
-
-async function discogsBlog(): Promise<NewsItem[]> {
-  try {
-    const xml = await feedXml()
-    feedInfo.feed_items = (xml.match(/<item>/g) ?? []).length
-    if (!xml.includes('<item>')) return []
+    const xml = await res.text()
+    if (!res.ok || !xml.includes('<item>')) return []
     return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 5).map((m) => {
       const tag = (t: string) => decode(m[1].match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`))?.[1] ?? '')
       return { title: tag('title'), link: tag('link'), summary: tag('description').slice(0, 180), published: new Date(tag('pubDate')).toISOString() }
     }).filter((i) => i.title && i.link)
-  } catch (e) { console.error('discogs blog', (e as Error).message); return [] }
+  } catch (e) { feedInfo.direct_error = (e as Error).message; return [] }
+}
+
+/** Fallback: recent Discogs blog articles via Firecrawl web search (past week). */
+async function searchItems(): Promise<NewsItem[]> {
+  const key = Deno.env.get('FIRECRAWL_API_KEY')
+  if (!key) return []
+  const res = await fetch('https://api.firecrawl.dev/v2/search', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: 'site:blog.discogs.com', tbs: 'qdr:w', limit: 6 }),
+  })
+  const data = await res.json().catch(() => null)
+  feedInfo.search_status = res.status
+  if (!res.ok) { feedInfo.search_error = JSON.stringify(data)?.slice(0, 200); return [] }
+  const web: any[] = data?.data?.web ?? []
+  feedInfo.search_results = web.length
+  return web
+    .filter((w) => typeof w.url === 'string' && /blog\.discogs\.com\/[a-z]{2}\/[^/]+/.test(w.url) && !/\/(category|tag|author|page)\//.test(w.url))
+    .map((w) => ({
+      title: decode(String(w.title ?? '')).replace(/\s*[-|–]\s*Discogs.*$/i, ''),
+      link: w.url,
+      summary: decode(String(w.description ?? '')).slice(0, 180),
+      published: new Date().toISOString(),
+    }))
+    .filter((i) => i.title)
+}
+
+async function discogsBlog(): Promise<NewsItem[]> {
+  const direct = await feedItems()
+  if (direct.length) return direct
+  return searchItems()
 }
 
 async function siteNews(sc: SupabaseClient): Promise<NewsItem[]> {

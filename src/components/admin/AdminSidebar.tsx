@@ -72,6 +72,7 @@ const menuItems: MenuSection[] = [
       { title: "Discogs Bulk Berichten", url: "/admin/discogs-messages", icon: MessageSquare },
       { title: "Discogs Email Box", url: "/admin/discogs-bulk-email", icon: Mail },
       { title: "Email Center", url: "/admin/email-center", icon: Mail },
+      { title: "Trading Desk Monitor", url: "/admin/trading-monitor", icon: BarChart3 },
     ]
   },
   {

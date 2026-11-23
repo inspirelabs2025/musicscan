@@ -152,6 +152,7 @@ const Top2000Analyse = lazyWithRetry(() => import('./pages/Top2000Analyse'));
 const YouTubeDiscoveries = lazyWithRetry(() => import('./pages/YouTubeDiscoveries'));
 const Christmas = lazyWithRetry(() => import('./pages/Christmas'));
 const MijnDiscogs = lazyWithRetry(() => import('./pages/MijnDiscogs'));
+const TradingDesk = lazyWithRetry(() => import('./pages/TradingDesk'));
 const DiscogsMessages = lazyWithRetry(() => import('./pages/DiscogsMessages'));
 const SpotifyProfile = lazyWithRetry(() => import('./pages/SpotifyProfile'));
 const SpotifyCallback = lazyWithRetry(() => import('./pages/SpotifyCallback'));
@@ -214,6 +215,7 @@ const AdminBulkCleanup = lazyWithRetry(() => import('./pages/admin/BulkProductCl
 const AdminAutoCleanupToday = lazyWithRetry(() => import('./pages/admin/AutoCleanupToday'));
 const AdminBlogWriter = lazyWithRetry(() => import('./pages/admin/BlogWriter'));
 const AdminBlogManager = lazyWithRetry(() => import('./pages/admin/BlogManager'));
+const AdminTradingMonitor = lazyWithRetry(() => import('./pages/admin/TradingMonitor'));
 const AdminBlogEditor = lazyWithRetry(() => import('./pages/admin/BlogEditor'));
 const AdminBackfillFanwalls = lazyWithRetry(() => import('./pages/admin/BackfillArtistFanwalls'));
 const AdminCreateFanwall = lazyWithRetry(() => import('./pages/admin/CreateArtistFanwall'));
@@ -380,6 +382,7 @@ export const router = createBrowserRouter([
       // Tools
       { path: 'slimme-tools', element: wrap(AIFeaturesPage) },
       { path: 'mijn-discogs', element: wrap(MijnDiscogs) },
+      { path: 'trading', element: wrap(TradingDesk) },
       { path: 'discogs-messages', element: wrap(DiscogsMessages) },
       { path: 'spotify-profile', element: wrap(SpotifyProfile) },
       { path: 'spotify-callback', element: wrap(SpotifyCallback) },
@@ -448,6 +451,7 @@ export const router = createBrowserRouter([
           { path: 'auto-cleanup-today', element: wrap(AdminAutoCleanupToday) },
           { path: 'blog-writer', element: wrap(AdminBlogWriter) },
           { path: 'blogs', element: wrap(AdminBlogManager) },
+          { path: 'trading-monitor', element: wrap(AdminTradingMonitor) },
           { path: 'blogs/:id', element: wrap(AdminBlogEditor) },
           { path: 'backfill-artist-fanwalls', element: wrap(AdminBackfillFanwalls) },
           { path: 'create-artist-fanwall', element: wrap(AdminCreateFanwall) },

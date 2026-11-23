@@ -103,6 +103,7 @@ export function StickyHeader() {
     { label: t('nav.myCollection'), href: '/my-collection', icon: Music, requiresAuth: true },
     { label: t('nav.myDiscogs'), href: '/mijn-discogs', icon: Disc3, requiresAuth: true },
     { label: nl ? 'Discogs Berichten' : 'Discogs Messages', href: '/discogs-messages', icon: MessageSquare, requiresAuth: true },
+    { label: 'Trading Desk', href: '/trading', icon: BarChart3, requiresAuth: true },
     { label: t('nav.collectionInsight'), href: '/collection-overview', icon: BarChart3, requiresAuth: true },
   ];
 

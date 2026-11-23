@@ -5,6 +5,7 @@ import { StickyHeader } from './components/layout/StickyHeader';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { GlobalCanonical } from './components/SEO/GlobalCanonical';
 import { useMetaPixelPageviews } from './hooks/useMetaPixelPageviews';
+import { TradingAlertListener } from './components/trading/TradingAlertListener';
 
 function App() {
   const location = useLocation();
@@ -14,6 +15,7 @@ function App() {
   return (
     <Providers>
       <GlobalCanonical />
+      <TradingAlertListener />
       {!isAdmin && <StickyHeader />}
       <div className={!isAdmin ? 'pt-16 pb-20 md:pb-0' : ''}>
         <Outlet />

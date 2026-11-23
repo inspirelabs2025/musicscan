@@ -17,12 +17,14 @@ const decode = (s: string) => s
   .replace(/&#8211;/g, '–').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
 
 const FEED_URL = 'https://blog.discogs.com/en/feed/'
+const feedInfo: Record<string, unknown> = {}
 
 /** The feed sits behind a bot check; fetch it via Firecrawl when a direct request is blocked. */
 async function feedXml(): Promise<string> {
   try {
     const res = await fetch(FEED_URL, { headers: { 'User-Agent': 'MusicScan/1.0 +https://musicscans.com', Accept: 'application/rss+xml' } })
     const xml = await res.text()
+    feedInfo.direct_status = res.status
     if (res.ok && xml.includes('<rss')) return xml
   } catch { /* fall through */ }
   const key = Deno.env.get('FIRECRAWL_API_KEY')
@@ -33,13 +35,18 @@ async function feedXml(): Promise<string> {
     body: JSON.stringify({ url: FEED_URL, formats: ['rawHtml'], onlyMainContent: false }),
   })
   const data = await res.json().catch(() => null)
-  if (!res.ok) { console.error('firecrawl', res.status, JSON.stringify(data)?.slice(0, 300)); return '' }
-  return data?.data?.rawHtml ?? ''
+  feedInfo.firecrawl_status = res.status
+  if (!res.ok) { console.error('firecrawl', res.status, JSON.stringify(data)?.slice(0, 300)); feedInfo.firecrawl_error = JSON.stringify(data)?.slice(0, 200); return '' }
+  const raw: string = data?.data?.rawHtml ?? ''
+  feedInfo.firecrawl_length = raw.length
+  feedInfo.firecrawl_head = raw.slice(0, 120)
+  return raw
 }
 
 async function discogsBlog(): Promise<NewsItem[]> {
   try {
     const xml = await feedXml()
+    feedInfo.feed_items = (xml.match(/<item>/g) ?? []).length
     if (!xml.includes('<item>')) return []
     return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 5).map((m) => {
       const tag = (t: string) => decode(m[1].match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`))?.[1] ?? '')
@@ -83,7 +90,7 @@ Deno.serve(async (req) => {
         })) alerts++
       }
     }
-    await finishRun(sc, runId, { status: 'ok', users_processed: users.length, items_processed: items.length, alerts_created: alerts, details: { source } })
+    await finishRun(sc, runId, { status: 'ok', users_processed: users.length, items_processed: items.length, alerts_created: alerts, details: { source, ...feedInfo } })
     return json({ ok: true, source, items: items.length, alerts })
   } catch (e) {
     await finishRun(sc, runId, { status: 'error', error: (e as Error).message })

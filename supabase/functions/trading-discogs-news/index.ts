@@ -18,6 +18,11 @@ const decode = (s: string) => s
 
 const FEED_URL = 'https://blog.discogs.com/en/feed/'
 const feedInfo: Record<string, unknown> = {}
+const NEWS_SITES = [
+  'musicbusinessworldwide.com', 'digitalmusicnews.com', 'billboard.com', 'completemusicupdate.com',
+  'musically.com', 'thevinylfactory.com', 'recordcollectornews.com', 'musicweek.com', 'pitchfork.com',
+  'rollingstone.com', 'nme.com', 'loudersound.com', 'goldminemag.com',
+]
 
 /** Direct RSS read; the feed sits behind a bot check, so this often fails. */
 async function feedItems(): Promise<NewsItem[]> {
@@ -54,10 +59,11 @@ async function searchItems(): Promise<NewsItem[]> {
     tried.push({ ...a, status: res.status, results: found.length, ...(res.ok ? {} : { error: JSON.stringify(data)?.slice(0, 160) }) })
     web = found.filter((w) => {
       if (typeof w.url !== 'string') return false
-      if (/blog\.discogs\.com\/[a-z]{2}\/[^/?#]+/.test(w.url)) return true
-      // Other news sites, as long as the article is about Discogs (not catalogue pages).
-      if (/(^|\.)discogs\.com\/(release|master|sell|artist|label|user|seller|search|buy)\b/.test(w.url.replace(/^https?:\/\//, ''))) return false
-      return /discogs/i.test(`${w.title ?? ''} ${w.description ?? ''}`)
+      let host = ''
+      try { host = new URL(w.url).hostname.replace(/^www\./, '') } catch { return false }
+      if (host === 'blog.discogs.com') return /\/[a-z]{2}\/[^/?#]+/.test(new URL(w.url).pathname)
+      // Other trusted music-industry news sites, only when the article is about Discogs.
+      return NEWS_SITES.includes(host) && /discogs/i.test(`${w.title ?? ''} ${w.description ?? ''}`)
     })
     if (web.length) break
   }
@@ -66,7 +72,7 @@ async function searchItems(): Promise<NewsItem[]> {
     .filter((w) => !/\/(category|tag|author|page)\//.test(w.url))
     .map((w) => ({
       title: decode(String(w.title ?? '')).replace(/\s*[-|–]\s*Discogs.*$/i, ''),
-      link: w.url,
+      link: w.url.replace(/[?&]srsltid=[^&]*/, '').replace(/\?$/, ''),
       summary: decode(String(w.description ?? '')).slice(0, 180),
       published: new Date().toISOString(),
     }))

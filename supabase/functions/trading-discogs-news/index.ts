@@ -45,6 +45,7 @@ async function searchItems(): Promise<NewsItem[]> {
   const attempts = [
     { query: 'site:blog.discogs.com', tbs: 'qdr:m' },
     { query: 'Discogs blog news', tbs: 'qdr:w' },
+    { query: 'Discogs marketplace news', tbs: 'qdr:w' },
   ]
   let web: any[] = []
   const tried: unknown[] = []

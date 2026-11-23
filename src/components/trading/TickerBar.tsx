@@ -11,7 +11,7 @@ export function TickerBar({ entries, snaps }: { entries: Entry[]; snaps: PriceSn
     return entries.filter((e) => (seen.has(e.release_id) ? false : (seen.add(e.release_id), true))).map((e) => {
       const s = snaps.filter((x) => x.release_id === e.release_id && x.condition === 'all');
       const values = s.map((x) => (x.suggested_price ?? x.lowest_price) as number | null);
-      return { ...e, change: seriesChange(values), last: values.filter((v) => v != null).at(-1) ?? null };
+      return { ...e, change: seriesChange(values), last: values.filter((v) => v != null).slice(-1)[0] ?? null };
     }).filter((m) => m.last != null)
       .sort((a, b) => Math.abs(b.change ?? 0) - Math.abs(a.change ?? 0)).slice(0, 14);
   }, [entries, snaps]);

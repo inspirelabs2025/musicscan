@@ -37,18 +37,27 @@ async function feedItems(): Promise<NewsItem[]> {
 async function searchItems(): Promise<NewsItem[]> {
   const key = Deno.env.get('FIRECRAWL_API_KEY')
   if (!key) return []
-  const res = await fetch('https://api.firecrawl.dev/v2/search', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: 'site:blog.discogs.com', tbs: 'qdr:w', limit: 6 }),
-  })
-  const data = await res.json().catch(() => null)
-  feedInfo.search_status = res.status
-  if (!res.ok) { feedInfo.search_error = JSON.stringify(data)?.slice(0, 200); return [] }
-  const web: any[] = data?.data?.web ?? []
-  feedInfo.search_results = web.length
+  const attempts = [
+    { query: 'site:blog.discogs.com', tbs: 'qdr:m' },
+    { query: 'Discogs blog news', tbs: 'qdr:w' },
+  ]
+  let web: any[] = []
+  const tried: unknown[] = []
+  for (const a of attempts) {
+    const res = await fetch('https://api.firecrawl.dev/v2/search', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...a, limit: 8 }),
+    })
+    const data = await res.json().catch(() => null)
+    const found: any[] = res.ok ? (data?.data?.web ?? []) : []
+    tried.push({ ...a, status: res.status, results: found.length, ...(res.ok ? {} : { error: JSON.stringify(data)?.slice(0, 160) }) })
+    web = found.filter((w) => typeof w.url === 'string' && /blog\.discogs\.com\/[a-z]{2}\/[^/?#]+/.test(w.url))
+    if (web.length) break
+  }
+  feedInfo.search = tried
   return web
-    .filter((w) => typeof w.url === 'string' && /blog\.discogs\.com\/[a-z]{2}\/[^/]+/.test(w.url) && !/\/(category|tag|author|page)\//.test(w.url))
+    .filter((w) => !/\/(category|tag|author|page)\//.test(w.url))
     .map((w) => ({
       title: decode(String(w.title ?? '')).replace(/\s*[-|–]\s*Discogs.*$/i, ''),
       link: w.url,

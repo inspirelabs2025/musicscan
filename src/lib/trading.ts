@@ -141,7 +141,7 @@ export function portfolioSeries(items: InventoryItem[], snaps: PriceSnapshot[]) 
         .filter((s) => s.captured_at.slice(0, 10) <= day && (s.condition === it.condition || s.condition === 'all'))
         .sort((a, b) => a.captured_at.localeCompare(b.captured_at));
       const exact = series.filter((s) => s.condition === it.condition);
-      const last = (exact.length ? exact : series).at(-1);
+      const last = (exact.length ? exact : series).slice(-1)[0];
       const price = last ? (last.suggested_price ?? last.lowest_price) : null;
       if (price != null) { value += Number(price); asking += Number(it.price ?? 0); }
     }

@@ -24,7 +24,7 @@ const dateTime = (d: string) => new Date(d).toLocaleString('nl-NL', { day: 'nume
 export function Sparkline({ values, positive }: { values: number[]; positive?: boolean }) {
   if (values.length < 2) return <div className="h-8 w-24 text-xs text-trade-muted flex items-center">—</div>;
   const data = values.map((v, i) => ({ i, v }));
-  const color = positive === undefined ? (values.at(-1)! >= values[0] ? up : down) : positive ? up : down;
+  const color = positive === undefined ? (values.slice(-1)[0]! >= values[0] ? up : down) : positive ? up : down;
   return (
     <div className="h-8 w-24">
       <ResponsiveContainer width="100%" height="100%">
@@ -40,7 +40,7 @@ export function PortfolioChart({ data, currency }: { data: { day: string; value:
   if (data.length === 0) {
     return <div className="h-64 flex items-center justify-center text-sm text-trade-muted">Nog geen prijsgeschiedenis. De eerste meetpunten verschijnen na de volgende marktcheck.</div>;
   }
-  const rising = data.length > 1 && data.at(-1)!.value >= data[0].value;
+  const rising = data.length > 1 && data.slice(-1)[0]!.value >= data[0].value;
   const color = rising ? up : down;
   return (
     <div className="h-64">

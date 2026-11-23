@@ -66,7 +66,7 @@ export default function TradingDesk() {
       over: items.filter((i) => i.signal === 'overpriced').length,
       under: items.filter((i) => i.signal === 'underpriced').length,
       change: seriesChange(series.map((s) => s.value)),
-      lastCheck: items.map((i) => i.market_checked_at).filter(Boolean).sort().at(-1),
+      lastCheck: items.map((i) => i.market_checked_at).filter(Boolean).sort().slice(-1)[0],
     };
   }, [items, series]);
   const unread = (alerts.data ?? []).filter((a) => !a.is_read).length;

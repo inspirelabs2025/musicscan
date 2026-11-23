@@ -79,6 +79,14 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
+				trade: {
+					up: 'hsl(var(--trade-up))',
+					down: 'hsl(var(--trade-down))',
+					panel: 'hsl(var(--trade-panel))',
+					'panel-foreground': 'hsl(var(--trade-panel-foreground))',
+					grid: 'hsl(var(--trade-grid))',
+					muted: 'hsl(var(--trade-muted))'
+				},
 				vinyl: {
 					gold: 'hsl(var(--vinyl-gold))',
 					silver: 'hsl(var(--vinyl-silver))',
@@ -140,6 +148,10 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'trading-ticker': {
+					from: { transform: 'translateX(0)' },
+					to: { transform: 'translateX(-50%)' }
 				},
 				'vinyl-spin': {
 					from: {

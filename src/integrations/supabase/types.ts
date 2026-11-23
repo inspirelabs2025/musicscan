@@ -6434,6 +6434,36 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen_at: string
+          platform: string
+          token: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       quiz_categories: {
         Row: {
           created_at: string | null
@@ -9442,6 +9472,400 @@ export type Database = {
           total_entries?: number | null
           unique_insights?: string[] | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      trading_alert_preferences: {
+        Row: {
+          created_at: string
+          enabled_types: string[]
+          push_enabled: boolean
+          share_wantlist: boolean
+          sound_enabled: boolean
+          threshold_pct: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled_types?: string[]
+          push_enabled?: boolean
+          share_wantlist?: boolean
+          sound_enabled?: boolean
+          threshold_pct?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled_types?: string[]
+          push_enabled?: boolean
+          share_wantlist?: boolean
+          sound_enabled?: boolean
+          threshold_pct?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trading_alerts: {
+        Row: {
+          body: string | null
+          created_at: string
+          data: Json
+          dedupe_key: string
+          id: string
+          is_read: boolean
+          link: string | null
+          pushed_at: string | null
+          related_user_id: string | null
+          release_id: number | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          data?: Json
+          dedupe_key: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          pushed_at?: string | null
+          related_user_id?: string | null
+          release_id?: number | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          data?: Json
+          dedupe_key?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          pushed_at?: string | null
+          related_user_id?: string | null
+          release_id?: number | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trading_auto_price_rules: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          inventory_item_id: string
+          last_applied_at: string | null
+          max_price: number | null
+          min_price: number
+          offset_pct: number
+          strategy: string
+          undercut_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          inventory_item_id: string
+          last_applied_at?: string | null
+          max_price?: number | null
+          min_price: number
+          offset_pct?: number
+          strategy?: string
+          undercut_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          inventory_item_id?: string
+          last_applied_at?: string | null
+          max_price?: number | null
+          min_price?: number
+          offset_pct?: number
+          strategy?: string
+          undercut_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trading_auto_price_rules_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: true
+            referencedRelation: "trading_inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trading_inventory_items: {
+        Row: {
+          artist: string | null
+          condition: string | null
+          created_at: string
+          currency: string | null
+          deviation_pct: number | null
+          format: string | null
+          id: string
+          last_synced_at: string | null
+          listing_id: number
+          listing_uri: string | null
+          lowest_price: number | null
+          market_checked_at: string | null
+          market_price: number | null
+          num_for_sale: number | null
+          posted_at: string | null
+          prev_num_for_sale: number | null
+          price: number | null
+          release_id: number
+          signal: string | null
+          sleeve_condition: string | null
+          status: string | null
+          thumb: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          artist?: string | null
+          condition?: string | null
+          created_at?: string
+          currency?: string | null
+          deviation_pct?: number | null
+          format?: string | null
+          id?: string
+          last_synced_at?: string | null
+          listing_id: number
+          listing_uri?: string | null
+          lowest_price?: number | null
+          market_checked_at?: string | null
+          market_price?: number | null
+          num_for_sale?: number | null
+          posted_at?: string | null
+          prev_num_for_sale?: number | null
+          price?: number | null
+          release_id: number
+          signal?: string | null
+          sleeve_condition?: string | null
+          status?: string | null
+          thumb?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          artist?: string | null
+          condition?: string | null
+          created_at?: string
+          currency?: string | null
+          deviation_pct?: number | null
+          format?: string | null
+          id?: string
+          last_synced_at?: string | null
+          listing_id?: number
+          listing_uri?: string | null
+          lowest_price?: number | null
+          market_checked_at?: string | null
+          market_price?: number | null
+          num_for_sale?: number | null
+          posted_at?: string | null
+          prev_num_for_sale?: number | null
+          price?: number | null
+          release_id?: number
+          signal?: string | null
+          sleeve_condition?: string | null
+          status?: string | null
+          thumb?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trading_job_runs: {
+        Row: {
+          alerts_created: number
+          details: Json
+          error: string | null
+          finished_at: string | null
+          id: string
+          items_processed: number
+          job: string
+          started_at: string
+          status: string
+          users_processed: number
+        }
+        Insert: {
+          alerts_created?: number
+          details?: Json
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          items_processed?: number
+          job: string
+          started_at?: string
+          status?: string
+          users_processed?: number
+        }
+        Update: {
+          alerts_created?: number
+          details?: Json
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          items_processed?: number
+          job?: string
+          started_at?: string
+          status?: string
+          users_processed?: number
+        }
+        Relationships: []
+      }
+      trading_price_adjustments_log: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          inventory_item_id: string | null
+          listing_id: number
+          new_price: number | null
+          old_price: number | null
+          status: string
+          strategy: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          inventory_item_id?: string | null
+          listing_id: number
+          new_price?: number | null
+          old_price?: number | null
+          status?: string
+          strategy?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          inventory_item_id?: string | null
+          listing_id?: number
+          new_price?: number | null
+          old_price?: number | null
+          status?: string
+          strategy?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trading_price_adjustments_log_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "trading_inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trading_price_snapshots: {
+        Row: {
+          captured_at: string
+          condition: string
+          currency: string | null
+          id: string
+          lowest_price: number | null
+          num_for_sale: number | null
+          release_id: number
+          suggested_price: number | null
+        }
+        Insert: {
+          captured_at?: string
+          condition?: string
+          currency?: string | null
+          id?: string
+          lowest_price?: number | null
+          num_for_sale?: number | null
+          release_id: number
+          suggested_price?: number | null
+        }
+        Update: {
+          captured_at?: string
+          condition?: string
+          currency?: string | null
+          id?: string
+          lowest_price?: number | null
+          num_for_sale?: number | null
+          release_id?: number
+          suggested_price?: number | null
+        }
+        Relationships: []
+      }
+      trading_wantlist_items: {
+        Row: {
+          added_at: string | null
+          artist: string | null
+          created_at: string
+          currency: string | null
+          id: string
+          last_synced_at: string | null
+          lowest_price: number | null
+          market_checked_at: string | null
+          num_for_sale: number | null
+          prev_num_for_sale: number | null
+          release_id: number
+          thumb: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+          year: number | null
+        }
+        Insert: {
+          added_at?: string | null
+          artist?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          last_synced_at?: string | null
+          lowest_price?: number | null
+          market_checked_at?: string | null
+          num_for_sale?: number | null
+          prev_num_for_sale?: number | null
+          release_id: number
+          thumb?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+          year?: number | null
+        }
+        Update: {
+          added_at?: string | null
+          artist?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          last_synced_at?: string | null
+          lowest_price?: number | null
+          market_checked_at?: string | null
+          num_for_sale?: number | null
+          prev_num_for_sale?: number | null
+          release_id?: number
+          thumb?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+          year?: number | null
         }
         Relationships: []
       }

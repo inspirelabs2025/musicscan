@@ -54,6 +54,13 @@
 
     /* Vinyl */
     --vinyl-gold: 45 100% 50%;
+    /* Trading Desk */
+    --trade-up: 152 69% 36%;
+    --trade-down: 0 72% 50%;
+    --trade-panel: 222 47% 8%;
+    --trade-panel-foreground: 210 40% 96%;
+    --trade-grid: 217 33% 18%;
+    --trade-muted: 215 20% 65%;
     --vinyl-silver: 210 20% 90%;
     --vinyl-black: 222.2 84% 4.9%;
     --vinyl-purple: 262 83% 50%;
@@ -148,6 +155,13 @@
 
     /* Vinyl */
     --vinyl-gold: 45 100% 50%;
+    /* Trading Desk */
+    --trade-up: 152 60% 45%;
+    --trade-down: 0 75% 60%;
+    --trade-panel: 222 47% 8%;
+    --trade-panel-foreground: 210 40% 96%;
+    --trade-grid: 217 33% 18%;
+    --trade-muted: 215 20% 65%;
     --vinyl-silver:
       210 20% 90%; /* Keeping silver light for contrast on dark background */
     --vinyl-black: 222.2 84% 4.9%;

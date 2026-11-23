@@ -772,3 +772,15 @@ verify_jwt = false
 
 [functions.merge-duplicate-stories]
 verify_jwt = true
+
+[functions.trading-sync]
+verify_jwt = false
+
+[functions.trading-market-check]
+verify_jwt = false
+
+[functions.trading-auto-price]
+verify_jwt = false
+
+[functions.trading-discogs-news]
+verify_jwt = false

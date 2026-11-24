@@ -14,10 +14,10 @@ export function PriceHistoryDialog({ item, snaps, onOpenChange }: {
   const inv = item.kind !== 'want' ? (item as InventoryItem) : null;
   const releaseSnaps = snaps.filter((s) => s.release_id === item.release_id);
   const stats = [
-    { label: 'Jouw prijs', value: inv ? money(inv.price, inv.currency) : '–' },
+    { href: undefined as string | undefined, label: 'Jouw prijs', value: inv ? money(inv.price, inv.currency) : '–' },
     { label: 'Marktprijs', value: inv ? money(inv.market_price, inv.currency) : '–' },
     { label: 'Laagste nu', value: money(item.lowest_price, item.currency) },
-    { label: 'Te koop', value: item.num_for_sale ?? '–' },
+    { label: 'Te koop', value: item.num_for_sale ?? '–', href: `https://www.discogs.com/sell/release/${item.release_id}?sort=price%2Casc` },
   ];
   return (
     <Dialog open onOpenChange={onOpenChange}>
@@ -35,14 +35,17 @@ export function PriceHistoryDialog({ item, snaps, onOpenChange }: {
           </div>
         </DialogHeader>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {stats.map((s) => (
-            <div key={s.label} className="rounded-md border border-trade-grid p-2">
-              <div className="text-[11px] uppercase tracking-wide text-trade-muted">{s.label}</div>
+          {stats.map((s) => {
+            const body = (<>
+              <div className="text-[11px] uppercase tracking-wide text-trade-muted">{s.label}{s.href && <ExternalLink className="inline h-3 w-3 ml-1" />}</div>
               <div className="text-base font-semibold tabular-nums">{s.value}</div>
-            </div>
-          ))}
+            </>);
+            return s.href
+              ? <a key={s.label} href={s.href} target="_blank" rel="noreferrer" title="Bekijk verkopers van dit item op Discogs" className="rounded-md border border-trade-grid p-2 hover:border-vinyl-gold transition-colors">{body}</a>
+              : <div key={s.label} className="rounded-md border border-trade-grid p-2">{body}</div>;
+          })}
         </div>
-        <QuoteChart snaps={releaseSnaps} condition={inv?.condition} myPrice={inv?.price} currency={item.currency} />
+        <QuoteChart releaseId={item.release_id} snaps={releaseSnaps} condition={inv?.condition} myPrice={inv?.price} currency={item.currency} />
         <PriceHistoryChart snaps={releaseSnaps} condition={inv?.condition} myPrice={inv?.price} currency={item.currency} />
         <div className="flex flex-wrap gap-3 text-xs text-trade-muted">
           <span><span className="inline-block h-2 w-3 rounded-sm bg-trade-up mr-1" />Marktprijs</span>

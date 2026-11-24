@@ -110,8 +110,8 @@ const FRAMES = [
 ] as const;
 
 /** Trading-app style quote: price header, timeframe tabs, area chart with reference line, tick list and volume. */
-export function QuoteChart({ snaps, condition, myPrice, currency }: {
-  snaps: PriceSnapshot[]; condition?: string | null; myPrice?: number | null; currency?: string | null;
+export function QuoteChart({ snaps, condition, myPrice, currency, releaseId }: {
+  snaps: PriceSnapshot[]; condition?: string | null; myPrice?: number | null; currency?: string | null; releaseId?: number | string | null;
 }) {
   const [frame, setFrame] = useState<(typeof FRAMES)[number]['key']>('1M');
   const exact = condition ? snaps.filter((s) => s.condition === condition) : [];
@@ -156,7 +156,12 @@ export function QuoteChart({ snaps, condition, myPrice, currency }: {
         <div><span className="text-trade-muted">Hoog </span><span className="text-trade-up tabular-nums">{fmt(high)}</span></div>
         <div><span className="text-trade-muted">Open </span><span className="tabular-nums">{fmt(open)}</span></div>
         <div><span className="text-trade-muted">Laag </span><span className="text-trade-down tabular-nums">{fmt(low)}</span></div>
-        <div><span className="text-trade-muted">Te koop </span><span className="tabular-nums">{supplyNow ?? '–'}</span></div>
+        <div>{releaseId ? (
+          <a href={`https://www.discogs.com/sell/release/${releaseId}?sort=price%2Casc`} target="_blank" rel="noreferrer"
+            title="Bekijk verkopers van dit item op Discogs" className="underline decoration-dotted underline-offset-2 hover:text-vinyl-gold">
+            <span className="text-trade-muted">Te koop </span><span className="tabular-nums">{supplyNow ?? '–'}</span> ↗
+          </a>
+        ) : (<><span className="text-trade-muted">Te koop </span><span className="tabular-nums">{supplyNow ?? '–'}</span></>)}</div>
       </div>
 
       <div className="flex border-y border-trade-grid text-xs">

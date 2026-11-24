@@ -246,3 +246,29 @@ export async function openConversationWith(myId: string, otherId: string, firstM
   if (firstMessage) await db.from('messages').insert({ conversation_id: conv.id, sender_id: myId, content: firstMessage, message_type: 'text' });
   return conv.id as string;
 }
+
+export interface CollectionItem {
+  id: string; kind: 'vinyl' | 'cd'; release_id: number; artist: string | null; title: string | null;
+  thumb: string | null; condition: string | null; value: number | null; lowest_price: number | null;
+}
+
+/** Scanned records (vinyl + cd) that have a Discogs release id, for collection price tracking. */
+export const useTradingCollection = () => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['trading-collection', user?.id],
+    enabled: !!user,
+    queryFn: async (): Promise<CollectionItem[]> => {
+      const cols = 'id, discogs_id, artist, title, condition_grade, calculated_advice_price, median_price, lowest_price';
+      const [v, c] = await Promise.all([
+        db.from('vinyl2_scan').select(cols).eq('user_id', user!.id).not('discogs_id', 'is', null).limit(500),
+        db.from('cd_scan').select(cols + ', front_image').eq('user_id', user!.id).not('discogs_id', 'is', null).limit(500),
+      ]);
+      const map = (kind: 'vinyl' | 'cd') => (r: any): CollectionItem => ({
+        id: r.id, kind, release_id: Number(r.discogs_id), artist: r.artist, title: r.title, thumb: r.front_image ?? null,
+        condition: r.condition_grade, value: r.calculated_advice_price ?? r.median_price ?? null, lowest_price: r.lowest_price ?? null,
+      });
+      return [...(v.data ?? []).map(map('vinyl')), ...(c.data ?? []).map(map('cd'))].filter((i) => i.release_id > 0);
+    },
+  });
+};

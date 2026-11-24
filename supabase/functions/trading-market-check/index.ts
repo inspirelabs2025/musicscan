@@ -50,6 +50,23 @@ Deno.serve(async (req) => {
       if (r.kind === 'inv') { m.sold = true; m.currency = r.currency || m.currency }
     }
 
+    // Collection (scanned records with a Discogs id): lowest priority, at most every 12h per release.
+    if (Date.now() < deadline) {
+      const owners = [...tokenByUser.keys()].filter((u) => !userId || u === userId)
+      const since = new Date(Date.now() - 12 * 3600e3).toISOString()
+      const [{ data: v }, { data: c }, { data: recent }] = await Promise.all([
+        sc.from('vinyl2_scan').select('discogs_id, user_id').in('user_id', owners).not('discogs_id', 'is', null).limit(2000),
+        sc.from('cd_scan').select('discogs_id, user_id').in('user_id', owners).not('discogs_id', 'is', null).limit(2000),
+        sc.from('trading_price_snapshots').select('release_id').eq('condition', 'all').gte('captured_at', since).limit(5000),
+      ])
+      const fresh = new Set((recent ?? []).map((r) => Number(r.release_id)))
+      for (const r of [...(v ?? []), ...(c ?? [])]) {
+        const id = Number(r.discogs_id)
+        if (!id || meta.has(id) || fresh.has(id)) continue
+        order.push(id); meta.set(id, { owners: [r.user_id], currency: 'EUR', sold: false })
+      }
+    }
+
     const firstCheck = new Map<string, { over: number; under: number }>()
 
     for (const releaseId of order) {

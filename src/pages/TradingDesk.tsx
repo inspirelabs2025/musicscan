@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Activity, Bell, Bot, Handshake, ListChecks, RefreshCw, Settings2, Star } from 'lucide-react';
+import { Activity, Bell, Bot, Handshake, ListChecks, RefreshCw, Settings2, Star, Disc3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,12 +9,13 @@ import { useSEO } from '@/hooks/useSEO';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   useAlertPrefs, useAutoPriceRules, useDiscogsLinked, usePriceSnapshots, useRefreshTrading,
-  useTradingAlerts, useTradingInventory, useTradingWantlist,
+  useTradingAlerts, useTradingInventory, useTradingWantlist, useTradingCollection,
 } from '@/hooks/useTradingDesk';
 import { money, portfolioSeries, seriesChange, type InventoryItem, type WantlistItem } from '@/lib/trading';
 import { PortfolioChart } from '@/components/trading/TradingCharts';
 import { TickerBar } from '@/components/trading/TickerBar';
 import { ListingsPanel } from '@/components/trading/ListingsPanel';
+import { CollectionPanel } from '@/components/trading/CollectionPanel';
 import { WantlistPanel } from '@/components/trading/WantlistPanel';
 import { MatchesPanel } from '@/components/trading/MatchesPanel';
 import { AutoPricePanel } from '@/components/trading/AutoPricePanel';
@@ -22,7 +23,7 @@ import { AlertsFeed, AlertSettings } from '@/components/trading/AlertsPanel';
 import { PriceHistoryDialog } from '@/components/trading/PriceHistoryDialog';
 import { Change } from '@/components/trading/SignalBadge';
 
-const TABS = ['listings', 'wantlist', 'matches', 'auto', 'alerts', 'settings'] as const;
+const TABS = ['listings', 'wantlist', 'collection', 'matches', 'auto', 'alerts', 'settings'] as const;
 type Tab = typeof TABS[number];
 
 function Stat({ label, value, sub, tone }: { label: string; value: React.ReactNode; sub?: React.ReactNode; tone?: string }) {
@@ -45,6 +46,7 @@ export default function TradingDesk() {
   const linked = useDiscogsLinked();
   const inv = useTradingInventory();
   const want = useTradingWantlist();
+  const coll = useTradingCollection();
   const alerts = useTradingAlerts();
   const prefs = useAlertPrefs();
   const rules = useAutoPriceRules();
@@ -53,7 +55,8 @@ export default function TradingDesk() {
 
   const items = inv.data ?? [];
   const wants = want.data ?? [];
-  const releaseIds = useMemo(() => [...new Set([...items, ...wants].map((i) => i.release_id))], [items, wants]);
+  const collection = coll.data ?? [];
+  const releaseIds = useMemo(() => [...new Set([...items, ...wants, ...collection].map((i) => i.release_id))], [items, wants, collection]);
   const snaps = usePriceSnapshots(releaseIds);
   const series = useMemo(() => portfolioSeries(items, snaps.data ?? []), [items, snaps.data]);
 
@@ -136,8 +139,9 @@ export default function TradingDesk() {
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="h-auto w-full justify-start gap-1 overflow-x-auto bg-trade-grid/40 p-1">
-            <TabsTrigger value="listings"><ListChecks className="mr-1 h-4 w-4" />Listings</TabsTrigger>
+            <TabsTrigger value="listings"><ListChecks className="mr-1 h-4 w-4" />Inventory</TabsTrigger>
             <TabsTrigger value="wantlist"><Star className="mr-1 h-4 w-4" />Wantlist</TabsTrigger>
+            <TabsTrigger value="collection"><Disc3 className="mr-1 h-4 w-4" />Collectie</TabsTrigger>
             <TabsTrigger value="matches"><Handshake className="mr-1 h-4 w-4" />Matches{matchCount > 0 && <span className="ml-1 rounded bg-trade-up px-1 text-[10px] text-trade-panel">{matchCount}</span>}</TabsTrigger>
             <TabsTrigger value="auto"><Bot className="mr-1 h-4 w-4" />Auto-prijs</TabsTrigger>
             <TabsTrigger value="alerts"><Bell className="mr-1 h-4 w-4" />Meldingen{unread > 0 && <span className="ml-1 rounded bg-vinyl-gold px-1 text-[10px] text-vinyl-black">{unread}</span>}</TabsTrigger>
@@ -151,6 +155,10 @@ export default function TradingDesk() {
             </TabsContent>
             <TabsContent value="wantlist" className="mt-0">
               {want.isLoading ? <Skeleton className="h-48 w-full bg-trade-grid" /> : <WantlistPanel items={wants} snaps={snaps.data ?? []} onOpen={(w) => setOpen({ ...w, kind: 'want' })} />}
+            </TabsContent>
+            <TabsContent value="collection" className="mt-0">
+              {coll.isLoading ? <Skeleton className="h-48 w-full bg-trade-grid" /> : <CollectionPanel items={collection} snaps={snaps.data ?? []}
+                onOpen={(c) => setOpen({ id: c.id, kind: 'want', release_id: c.release_id, artist: c.artist, title: c.title, thumb: c.thumb, lowest_price: c.lowest_price, currency: 'EUR', num_for_sale: null } as unknown as WantlistItem & { kind: 'want' })} />}
             </TabsContent>
             <TabsContent value="matches" className="mt-0"><MatchesPanel alerts={alerts.data ?? []} /></TabsContent>
             <TabsContent value="auto" className="mt-0"><AutoPricePanel rules={rules.data ?? []} items={items} /></TabsContent>

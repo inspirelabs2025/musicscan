@@ -10,3 +10,4 @@
 - [ ] Live test with real Discogs listings/wantlist (waiting on: connected accounts currently have no listings for sale)
 - [x] Trading-app grafiek in prijsdetail
 - [x] Koop nu knop (koop via Discogs, laagste aanbod)
+- [x] Prijsgrafieken per item: inventory, wantlist, collectie

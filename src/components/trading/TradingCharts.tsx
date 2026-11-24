@@ -129,9 +129,9 @@ export function QuoteChart({ snaps, condition, myPrice, currency }: {
     .filter((d): d is { t: string; p: number; supply: number } => d.p != null);
 
   const fmt = (v: number | null | undefined) => money(v ?? null, currency);
-  const last = series.at(-1)?.p ?? null;
+  const last = series[series.length - 1]?.p ?? null;
   const open = series[0]?.p ?? null;
-  const prev = series.length > 1 ? series.at(-2)!.p : open;
+  const prev = series.length > 1 ? series[series.length - 2].p : open;
   const change = last != null && open != null ? last - open : 0;
   const pct = open ? (change / open) * 100 : 0;
   const isUp = change >= 0;
@@ -139,7 +139,7 @@ export function QuoteChart({ snaps, condition, myPrice, currency }: {
   const prices = series.map((d) => d.p);
   const high = prices.length ? Math.max(...prices) : null;
   const low = prices.length ? Math.min(...prices) : null;
-  const supplyNow = series.at(-1)?.supply ?? null;
+  const supplyNow = series[series.length - 1]?.supply ?? null;
   const ticks = series.slice(-9).reverse();
 
   return (

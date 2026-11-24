@@ -8,3 +8,5 @@
 - [x] Menu link + admin trading monitor in admin menu
 - [x] Test: job security, scheduled runs, pricing rules, page with sample data
 - [ ] Live test with real Discogs listings/wantlist (waiting on: connected accounts currently have no listings for sale)
+- [x] Trading-app grafiek in prijsdetail
+- [x] Koop nu knop (koop via Discogs, laagste aanbod)

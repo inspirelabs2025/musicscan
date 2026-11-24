@@ -2,7 +2,7 @@ import { ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { itemLabel, money, type InventoryItem, type PriceSnapshot, type WantlistItem } from '@/lib/trading';
-import { PriceHistoryChart } from './TradingCharts';
+import { PriceHistoryChart, QuoteChart } from './TradingCharts';
 import { SignalBadge } from './SignalBadge';
 
 type Item = (InventoryItem & { kind?: 'inv' }) | (WantlistItem & { kind: 'want' });
@@ -42,6 +42,7 @@ export function PriceHistoryDialog({ item, snaps, onOpenChange }: {
             </div>
           ))}
         </div>
+        <QuoteChart snaps={releaseSnaps} condition={inv?.condition} myPrice={inv?.price} currency={item.currency} />
         <PriceHistoryChart snaps={releaseSnaps} condition={inv?.condition} myPrice={inv?.price} currency={item.currency} />
         <div className="flex flex-wrap gap-3 text-xs text-trade-muted">
           <span><span className="inline-block h-2 w-3 rounded-sm bg-trade-up mr-1" />Marktprijs</span>
@@ -49,11 +50,12 @@ export function PriceHistoryDialog({ item, snaps, onOpenChange }: {
           <span><span className="inline-block h-2 w-3 rounded-sm bg-vinyl-gold mr-1" />Jouw prijs</span>
           <span><span className="inline-block h-2 w-3 rounded-sm bg-trade-grid mr-1" />Aantal te koop</span>
         </div>
-        <div className="flex gap-2 justify-end">
+        <div className="flex flex-wrap items-center gap-2 justify-end">
           {inv?.listing_uri && (
             <Button asChild variant="outline" size="sm" className="border-trade-grid bg-transparent text-trade-panel-foreground hover:bg-trade-grid hover:text-trade-panel-foreground"><a href={inv.listing_uri} target="_blank" rel="noreferrer">Jouw listing <ExternalLink className="h-3 w-3 ml-1" /></a></Button>
           )}
-          <Button asChild size="sm"><a href={`https://www.discogs.com/sell/release/${item.release_id}`} target="_blank" rel="noreferrer">Bekijk de markt <ExternalLink className="h-3 w-3 ml-1" /></a></Button>
+          <Button asChild size="sm" variant="outline" className="border-trade-grid bg-transparent text-trade-panel-foreground hover:bg-trade-grid hover:text-trade-panel-foreground"><a href={`https://www.discogs.com/release/${item.release_id}`} target="_blank" rel="noreferrer">Bekijk de markt <ExternalLink className="h-3 w-3 ml-1" /></a></Button>
+          <Button asChild size="lg" className="rounded-full px-8 bg-vinyl-gold text-background hover:bg-vinyl-gold/90 font-bold"><a href={`https://www.discogs.com/sell/release/${item.release_id}?sort=price%2Casc`} target="_blank" rel="noreferrer">Koop nu {item.lowest_price != null ? `· ${money(item.lowest_price, item.currency)}` : ''}</a></Button>
         </div>
       </DialogContent>
     </Dialog>

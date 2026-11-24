@@ -66,6 +66,8 @@ export const usePriceSnapshots = (releaseIds: number[], days = 30) => {
   return useQuery({
     queryKey: ['trading', 'snapshots', key, days],
     enabled: releaseIds.length > 0,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
     queryFn: async (): Promise<PriceSnapshot[]> => {
       const since = new Date(Date.now() - days * 86400_000).toISOString();
       const out: PriceSnapshot[] = [];

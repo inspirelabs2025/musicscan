@@ -15,7 +15,7 @@ import { playAlertSound } from '@/lib/tradingSound';
 const typeLabel = (t: AlertType) => ALERT_TYPES.find((a) => a.type === t)?.label ?? t;
 const typeTone: Record<AlertType, string> = {
   overpriced: 'text-trade-down', underpriced: 'text-vinyl-gold', market_listing: 'text-trade-muted',
-  wishlist_match: 'text-trade-up', wantlist_available: 'text-trade-up', discogs_news: 'text-trade-panel-foreground',
+  wishlist_match: 'text-trade-up', wantlist_available: 'text-trade-up', discogs_news: 'text-trade-panel-foreground', price_move: 'text-vinyl-gold',
 };
 
 function AlertLink({ a, children }: { a: TradingAlert; children: React.ReactNode }) {

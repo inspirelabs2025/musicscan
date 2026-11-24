@@ -1,7 +1,7 @@
 import { SupabaseClient } from 'npm:@supabase/supabase-js@2'
 
 export const ALL_ALERT_TYPES = [
-  'overpriced', 'underpriced', 'market_listing', 'wishlist_match', 'wantlist_available', 'discogs_news',
+  'overpriced', 'underpriced', 'market_listing', 'wishlist_match', 'wantlist_available', 'discogs_news', 'price_move',
 ] as const
 export type AlertType = typeof ALL_ALERT_TYPES[number]
 

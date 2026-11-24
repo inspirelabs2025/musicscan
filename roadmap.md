@@ -14,3 +14,5 @@
 
 - [x] Prijswijzigingen-dashboard (duurder/goedkoper) in Trading Desk
 - [x] Koopformulier (prijs, verkoper, afrekening, Koop nu -> Discogs)
+- [ ] Alert bij flinke prijswijziging collectie/wantlist -> koopformulier
+- [ ] Prijswijzigingen automatisch verversen

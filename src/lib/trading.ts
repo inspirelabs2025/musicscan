@@ -1,7 +1,7 @@
 // Trading Desk shared types and helpers.
 export type Signal = 'overpriced' | 'underpriced' | 'fair' | 'unknown';
 export type AlertType =
-  | 'overpriced' | 'underpriced' | 'market_listing' | 'wishlist_match' | 'wantlist_available' | 'discogs_news';
+  | 'overpriced' | 'underpriced' | 'market_listing' | 'wishlist_match' | 'wantlist_available' | 'discogs_news' | 'price_move';
 
 export const ALERT_TYPES: { type: AlertType; label: string; description: string }[] = [
   { type: 'overpriced', label: 'Te duur', description: 'Je vraagt duidelijk meer dan de markt' },
@@ -9,6 +9,7 @@ export const ALERT_TYPES: { type: AlertType; label: string; description: string 
   { type: 'market_listing', label: 'Nieuw op de markt', description: 'Een andere verkoper biedt jouw plaat aan' },
   { type: 'wishlist_match', label: 'Koper gevonden', description: 'Jouw plaat staat op iemands wantlist' },
   { type: 'wantlist_available', label: 'Gezocht en te koop', description: 'Een plaat van je wantlist is te koop' },
+  { type: 'price_move', label: 'Flinke prijswijziging', description: 'Een plaat in je collectie of wantlist wordt 15% of meer duurder of goedkoper' },
   { type: 'discogs_news', label: 'Discogs-nieuws', description: 'Nieuws en updates over Discogs' },
 ];
 

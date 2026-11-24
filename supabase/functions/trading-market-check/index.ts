@@ -8,6 +8,7 @@ import { discogsFetch, DiscogsToken, sleep, DISCOGS_DELAY_MS } from '../_shared/
 import { authorizeCaller, classify, createAlert, finishRun, fmt, getPrefs, startRun } from '../_shared/trading.ts'
 
 const BUDGET_MS = 110_000
+const PRICE_MOVE_PCT = 15
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
@@ -143,7 +144,36 @@ Deno.serve(async (req) => {
           snaps.push({ release_id: releaseId, condition: c, suggested_price: suggestions![c].value, lowest_price: lowest, num_for_sale: numForSale, currency: m.currency, captured_at: now })
         }
       }
+      // Big price move vs the previous overall snapshot → alert collection + wantlist owners.
+      const { data: prevSnap } = await sc.from('trading_price_snapshots').select('lowest_price')
+        .eq('release_id', releaseId).eq('condition', 'all').not('lowest_price', 'is', null)
+        .order('captured_at', { ascending: false }).limit(1).maybeSingle()
       await sc.from('trading_price_snapshots').insert(snaps)
+      const prev = Number(prevSnap?.lowest_price)
+      if (lowest != null && prev > 0) {
+        const pct = Math.round(((lowest - prev) / prev) * 1000) / 10
+        if (Math.abs(pct) >= PRICE_MOVE_PCT) {
+          const [{ data: vo }, { data: co }, { data: wo }] = await Promise.all([
+            sc.from('vinyl2_scan').select('user_id, artist, title').eq('discogs_id', releaseId).limit(50),
+            sc.from('cd_scan').select('user_id, artist, title').eq('discogs_id', releaseId).limit(50),
+            sc.from('trading_wantlist_items').select('user_id, artist, title, thumb').eq('release_id', releaseId).limit(50),
+          ])
+          const who = new Map<string, { label: string; source: string; thumb?: string | null }>()
+          for (const r of [...(vo ?? []), ...(co ?? [])]) if (r.user_id && tokenByUser.has(r.user_id)) who.set(r.user_id, { label: `${r.artist ?? ''} – ${r.title ?? ''}`, source: 'collectie' })
+          for (const r of wo ?? []) if (tokenByUser.has(r.user_id) && !who.has(r.user_id)) who.set(r.user_id, { label: `${r.artist ?? ''} – ${r.title ?? ''}`, source: 'wantlist', thumb: r.thumb })
+          const up = pct > 0
+          for (const [uid, w] of who) {
+            if (await createAlert(sc, {
+              user_id: uid, type: 'price_move',
+              title: `${up ? 'Duurder' : 'Goedkoper'}: ${w.label}`,
+              body: `Laagste prijs ${up ? 'gestegen' : 'gedaald'} van ${fmt(prev, m.currency)} naar ${fmt(lowest, m.currency)} (${up ? '+' : ''}${pct}%) – uit je ${w.source}.`,
+              link: `/trading?tab=changes&buy=${releaseId}`, release_id: releaseId,
+              data: { from: prev, to: lowest, pct, thumb: w.thumb ?? null, label: w.label },
+              dedupe_key: `move:${releaseId}:${lowest}`,
+            })) alerts++
+          }
+        }
+      }
 
       // Wantlist side.
       const { data: wl } = await sc.from('trading_wantlist_items')

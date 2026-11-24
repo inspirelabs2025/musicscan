@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Activity, Bell, Bot, Handshake, ListChecks, RefreshCw, Settings2, Star, Disc3, TrendingUp } from 'lucide-react';
@@ -78,6 +78,16 @@ export default function TradingDesk() {
     ...wants.map((w) => ({ key: 'w' + w.id, release_id: w.release_id, label: [w.artist, w.title].filter(Boolean).join(' – ') || `Release ${w.release_id}`, thumb: w.thumb, source: 'Wantlist', currency: w.currency })),
     ...collection.map((c) => ({ key: 'c' + c.kind + c.id, release_id: c.release_id, label: [c.artist, c.title].filter(Boolean).join(' – ') || `Release ${c.release_id}`, thumb: c.thumb, source: 'Collectie', baseline: c.lowest_price })),
   ], snaps.data ?? []), [items, wants, collection, snaps.data]);
+  // Deep link from a price alert: /trading?tab=changes&buy=<release_id> opens the order ticket.
+  const buyParam = Number(params.get('buy')) || null;
+  useEffect(() => {
+    if (!buyParam || snaps.isLoading) return;
+    const hit = changes.find((c) => c.release_id === buyParam);
+    const last = (snaps.data ?? []).filter((s) => s.release_id === buyParam && s.condition === 'all').slice(-1)[0];
+    setOpen({ id: `buy-${buyParam}`, kind: 'want', release_id: buyParam, artist: hit?.label ?? `Release ${buyParam}`, title: null, thumb: hit?.thumb ?? null,
+      lowest_price: hit?.to ?? (last ? Number(last.lowest_price) : null), currency: hit?.currency ?? 'EUR', num_for_sale: last?.num_for_sale ?? null } as unknown as WantlistItem & { kind: 'want' });
+    setParams((p) => { p.delete('buy'); return p; }, { replace: true });
+  }, [buyParam, snaps.isLoading, changes]);
   const unread = (alerts.data ?? []).filter((a) => !a.is_read).length;
   const matchCount = (alerts.data ?? []).filter((a) => a.related_user_id && (a.type === 'wishlist_match' || a.type === 'wantlist_available')).length;
 

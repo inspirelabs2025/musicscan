@@ -1,0 +1,2 @@
+ALTER TABLE public.trading_alert_preferences ALTER COLUMN enabled_types SET DEFAULT ARRAY['overpriced','underpriced','market_listing','wishlist_match','wantlist_available','discogs_news','price_move']::text[];
+UPDATE public.trading_alert_preferences SET enabled_types = array_append(enabled_types, 'price_move') WHERE NOT ('price_move' = ANY(enabled_types));

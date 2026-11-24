@@ -22,7 +22,7 @@ export function PriceHistoryDialog({ item, snaps, onOpenChange }: {
   ];
   return (
     <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl bg-trade-panel text-trade-panel-foreground border-trade-grid">
+      <DialogContent className="max-w-3xl max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6 bg-trade-panel text-trade-panel-foreground border-trade-grid">
         <DialogHeader>
           <div className="flex items-start gap-3">
             {item.thumb && <img src={item.thumb} alt="" className="h-14 w-14 rounded object-cover" />}

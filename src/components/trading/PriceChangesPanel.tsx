@@ -32,11 +32,11 @@ export function computePriceChanges(items: ChangeSource[], snaps: PriceSnapshot[
 function Row({ c, onOpen }: { c: PriceChange; onOpen: (c: PriceChange) => void }) {
   const up = c.pct > 0;
   return (
-    <button onClick={() => onOpen(c)} className="flex w-full items-center gap-3 rounded-md p-2 text-left hover:bg-trade-grid/30">
+    <button onClick={() => onOpen(c)} className="flex w-full items-center gap-3 rounded-md p-2 min-h-14 text-left active:bg-trade-grid/40 hover:bg-trade-grid/30">
       {c.thumb ? <img src={c.thumb} alt="" className="h-10 w-10 rounded object-cover" loading="lazy" /> : <div className="h-10 w-10 rounded bg-trade-grid" />}
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium text-trade-panel-foreground">{c.label}</div>
-        <div className="text-xs text-trade-muted tabular-nums">{c.source} · {money(c.from, c.currency ?? 'EUR')} → {money(c.to, c.currency ?? 'EUR')}</div>
+        <div className="truncate text-xs text-trade-muted tabular-nums">{c.source} · {money(c.from, c.currency ?? 'EUR')} → {money(c.to, c.currency ?? 'EUR')}</div>
       </div>
       <div className={`text-right text-sm font-semibold tabular-nums ${up ? 'text-trade-up' : 'text-trade-down'}`}>
         {up ? '+' : ''}{c.pct.toFixed(1)}%
@@ -54,12 +54,12 @@ export function PriceChangesPanel({ changes, onOpen }: { changes: PriceChange[];
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-3 gap-2">
-        <div className="rounded-lg border border-trade-grid p-3"><div className="text-[11px] uppercase text-trade-muted">Duurder</div><div className="text-xl font-bold text-trade-up tabular-nums">{up.length}</div></div>
-        <div className="rounded-lg border border-trade-grid p-3"><div className="text-[11px] uppercase text-trade-muted">Goedkoper</div><div className="text-xl font-bold text-trade-down tabular-nums">{down.length}</div></div>
-        <div className="rounded-lg border border-trade-grid p-3"><div className="text-[11px] uppercase text-trade-muted">Netto verschil</div><div className={`text-xl font-bold tabular-nums ${net >= 0 ? 'text-trade-up' : 'text-trade-down'}`}>{net >= 0 ? '+' : ''}{money(net, 'EUR')}</div></div>
+        <div className="rounded-lg border border-trade-grid p-2 sm:p-3"><div className="text-[10px] sm:text-[11px] uppercase text-trade-muted">Duurder</div><div className="text-base sm:text-xl font-bold text-trade-up tabular-nums">{up.length}</div></div>
+        <div className="rounded-lg border border-trade-grid p-2 sm:p-3"><div className="text-[10px] sm:text-[11px] uppercase text-trade-muted">Goedkoper</div><div className="text-base sm:text-xl font-bold text-trade-down tabular-nums">{down.length}</div></div>
+        <div className="rounded-lg border border-trade-grid p-2 sm:p-3"><div className="text-[10px] sm:text-[11px] uppercase text-trade-muted">Netto verschil</div><div className={`text-base sm:text-xl font-bold tabular-nums ${net >= 0 ? 'text-trade-up' : 'text-trade-down'}`}>{net >= 0 ? '+' : ''}{money(net, 'EUR')}</div></div>
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
-        {[{ t: 'Duurder geworden', list: up, Icon: ArrowUpRight, tone: 'text-trade-up' }, { t: 'Goedkoper geworden', list: down, Icon: ArrowDownRight, tone: 'text-trade-down' }].map(({ t, list, Icon, tone }) => (
+        {[...[{ t: 'Duurder geworden', list: up, Icon: ArrowUpRight, tone: 'text-trade-up' }, { t: 'Goedkoper geworden', list: down, Icon: ArrowDownRight, tone: 'text-trade-down' }]].sort((a) => (a.t.startsWith('Goedkoper') ? -1 : 1)).map(({ t, list, Icon, tone }) => (
           <section key={t} className="rounded-lg border border-trade-grid p-2">
             <h3 className={`mb-1 flex items-center gap-1 px-2 text-sm font-semibold ${tone}`}><Icon className="h-4 w-4" />{t} ({list.length})</h3>
             {list.length ? list.map((c) => <Row key={c.key} c={c} onOpen={onOpen} />) : <p className="p-2 text-xs text-trade-muted">Geen.</p>}

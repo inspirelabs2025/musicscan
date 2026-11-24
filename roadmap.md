@@ -11,3 +11,6 @@
 - [x] Trading-app grafiek in prijsdetail
 - [x] Koop nu knop (koop via Discogs, laagste aanbod)
 - [x] Prijsgrafieken per item: inventory, wantlist, collectie
+
+- [x] Prijswijzigingen-dashboard (duurder/goedkoper) in Trading Desk
+- [x] Koopformulier (prijs, verkoper, afrekening, Koop nu -> Discogs)

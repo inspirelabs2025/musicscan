@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Activity, Bell, Bot, Handshake, ListChecks, RefreshCw, Settings2, Star, Disc3 } from 'lucide-react';
+import { Activity, Bell, Bot, Handshake, ListChecks, RefreshCw, Settings2, Star, Disc3, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,6 +15,7 @@ import { money, portfolioSeries, seriesChange, type InventoryItem, type Wantlist
 import { PortfolioChart } from '@/components/trading/TradingCharts';
 import { TickerBar } from '@/components/trading/TickerBar';
 import { ListingsPanel } from '@/components/trading/ListingsPanel';
+import { PriceChangesPanel, computePriceChanges } from '@/components/trading/PriceChangesPanel';
 import { CollectionPanel } from '@/components/trading/CollectionPanel';
 import { WantlistPanel } from '@/components/trading/WantlistPanel';
 import { MatchesPanel } from '@/components/trading/MatchesPanel';
@@ -23,7 +24,7 @@ import { AlertsFeed, AlertSettings } from '@/components/trading/AlertsPanel';
 import { PriceHistoryDialog } from '@/components/trading/PriceHistoryDialog';
 import { Change } from '@/components/trading/SignalBadge';
 
-const TABS = ['listings', 'wantlist', 'collection', 'matches', 'auto', 'alerts', 'settings'] as const;
+const TABS = ['changes', 'listings', 'wantlist', 'collection', 'matches', 'auto', 'alerts', 'settings'] as const;
 type Tab = typeof TABS[number];
 
 function Stat({ label, value, sub, tone }: { label: string; value: React.ReactNode; sub?: React.ReactNode; tone?: string }) {
@@ -72,6 +73,11 @@ export default function TradingDesk() {
       lastCheck: items.map((i) => i.market_checked_at).filter(Boolean).sort().slice(-1)[0],
     };
   }, [items, series]);
+  const changes = useMemo(() => computePriceChanges([
+    ...items.map((i) => ({ key: 'i' + i.id, release_id: i.release_id, label: [i.artist, i.title].filter(Boolean).join(' – ') || `Release ${i.release_id}`, thumb: i.thumb, source: 'Inventory', currency: i.currency })),
+    ...wants.map((w) => ({ key: 'w' + w.id, release_id: w.release_id, label: [w.artist, w.title].filter(Boolean).join(' – ') || `Release ${w.release_id}`, thumb: w.thumb, source: 'Wantlist', currency: w.currency })),
+    ...collection.map((c) => ({ key: 'c' + c.kind + c.id, release_id: c.release_id, label: [c.artist, c.title].filter(Boolean).join(' – ') || `Release ${c.release_id}`, thumb: c.thumb, source: 'Collectie', baseline: c.lowest_price })),
+  ], snaps.data ?? []), [items, wants, collection, snaps.data]);
   const unread = (alerts.data ?? []).filter((a) => !a.is_read).length;
   const matchCount = (alerts.data ?? []).filter((a) => a.related_user_id && (a.type === 'wishlist_match' || a.type === 'wantlist_available')).length;
 
@@ -139,6 +145,7 @@ export default function TradingDesk() {
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="h-auto w-full justify-start gap-1 overflow-x-auto bg-trade-grid/40 p-1">
+            <TabsTrigger value="changes"><TrendingUp className="mr-1 h-4 w-4" />Prijswijzigingen</TabsTrigger>
             <TabsTrigger value="listings"><ListChecks className="mr-1 h-4 w-4" />Inventory</TabsTrigger>
             <TabsTrigger value="wantlist"><Star className="mr-1 h-4 w-4" />Wantlist</TabsTrigger>
             <TabsTrigger value="collection"><Disc3 className="mr-1 h-4 w-4" />Collectie</TabsTrigger>
@@ -148,6 +155,10 @@ export default function TradingDesk() {
             <TabsTrigger value="settings"><Settings2 className="mr-1 h-4 w-4" />Instellingen</TabsTrigger>
           </TabsList>
           <div className="mt-3 rounded-lg border border-trade-grid p-3">
+            <TabsContent value="changes" className="mt-0">
+              {snaps.isLoading ? <Skeleton className="h-48 w-full bg-trade-grid" /> : <PriceChangesPanel changes={changes}
+                onOpen={(c) => setOpen({ id: c.key, kind: 'want', release_id: c.release_id, artist: c.label, title: null, thumb: c.thumb, lowest_price: c.to, currency: c.currency ?? 'EUR', num_for_sale: null } as unknown as WantlistItem & { kind: 'want' })} />}
+            </TabsContent>
             <TabsContent value="listings" className="mt-0">
               {inv.isLoading ? <Skeleton className="h-48 w-full bg-trade-grid" /> : items.length === 0 ? (
                 <p className="py-10 text-center text-sm text-trade-muted">Je hebt nog geen platen te koop op Discogs, of ze zijn nog niet opgehaald. Klik op “Nu bijwerken”.</p>

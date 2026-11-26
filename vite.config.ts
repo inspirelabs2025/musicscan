@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import { execFileSync } from "node:child_process";
 import { componentTagger } from "lovable-tagger";
 
 // Plugin to inject dynamic build version into index.html at build time
@@ -20,6 +21,26 @@ function buildVersionPlugin(): Plugin {
   };
 }
 
+// Lovable's hosting runs `vite build` directly, not `npm run build`, so the
+// prerender step must hook into vite itself to end up in the deployed dist/.
+function prerenderPlugin(): Plugin {
+  return {
+    name: 'musicscan-prerender',
+    apply: 'build',
+    closeBundle() {
+      if (process.env.MUSICSCAN_PRERENDER_CHILD) return;
+      try {
+        execFileSync(process.execPath, ['scripts/prerender.mjs'], {
+          stdio: 'inherit',
+          env: { ...process.env, MUSICSCAN_PRERENDER_CHILD: '1' },
+        });
+      } catch (e) {
+        console.warn('[prerender] overgeslagen:', e);
+      }
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   define: {
@@ -32,6 +53,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     buildVersionPlugin(),
+    mode === 'production' && prerenderPlugin(),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
